@@ -3,6 +3,9 @@ import OpenAI from "openai";
 
 export const runtime = "nodejs";
 
+/**
+ * Extract the first JSON object block from a response.
+ */
 function extractJsonBlock(text: string) {
   const start = text.indexOf("{");
   const end = text.lastIndexOf("}");
@@ -10,6 +13,9 @@ function extractJsonBlock(text: string) {
   return text;
 }
 
+/**
+ * Make JSON parsing more forgiving (remove control chars + trailing commas).
+ */
 function sanitizeJson(jsonLike: string) {
   let s = jsonLike;
   s = s.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "");
@@ -21,7 +27,11 @@ async function callOpenAIText(client: OpenAI, prompt: string, maxTokens: number)
   const resp = await client.chat.completions.create({
     model: "gpt-4o-mini",
     messages: [
-      { role: "system", content: "You are an expert HVAC/R technician assistant. Return ONLY valid JSON. No markdown." },
+      {
+        role: "system",
+        content:
+          "You are an expert HVAC/R technician assistant. Return ONLY valid JSON. No markdown. No commentary.",
+      },
       { role: "user", content: prompt },
     ],
     temperature: 0.15,
@@ -71,41 +81,87 @@ function formatPath(pathLog: any): string {
   return pathLog.map((p: any) => `- Step ${p?.step}: ${p?.decision} -> ${p?.nextStep}`).join("\n");
 }
 
+type FinalJson = {
+  summary: string;
+  likely_causes: {
+    cause: string;
+    probability_percent: number;
+    why: string;
+    what_points_to_it: string[];
+    what_rules_it_out: string[];
+  }[];
+  field_measurements_to_collect: {
+    measurement: string;
+    where: string;
+    how: string;
+    expected_range: string;
+    why_it_matters: string;
+  }[];
+  decision_tree: {
+    step: number;
+    check: string;
+    how: string;
+    pass_condition: string;
+    fail_condition: string;
+    if_pass_next_step: number;
+    if_fail_next_step: number;
+    notes: string;
+  }[];
+  parts_to_check: {
+    part: string;
+    why_suspect: string;
+    quick_test: string;
+    common_failure_modes: string[];
+    priority: "High" | "Medium" | "Low";
+  }[];
+  safety_notes: string[];
+  when_to_escalate: string[];
+};
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    const propertyType = body?.propertyType;
-    const equipmentType = body?.equipmentType;
-    const manufacturer = body?.manufacturer;
-    const model = body?.model;
-    const symptom = body?.symptom;
+    const propertyType = String(body?.propertyType ?? "").trim();
+    const equipmentType = String(body?.equipmentType ?? "").trim();
+    const manufacturer = String(body?.manufacturer ?? "").trim();
+    const model = String(body?.model ?? "").trim();
+    const symptom = String(body?.symptom ?? "").trim();
 
-    const refrigerantType = body?.refrigerantType || body?.refrigerant || "Unknown";
-    const observations = body?.observations || [];
-    const pathLog = body?.pathLog || [];
+    const refrigerantType = String(body?.refrigerantType ?? body?.refrigerant ?? "Unknown").trim();
+    const observations = body?.observations ?? [];
+    const pathLog = body?.pathLog ?? [];
 
     const apiKey = process.env.OPENAI_API_KEY || "";
+
+    // Fail early with a clear message (prevents misleading 401 loops)
     if (!apiKey || !apiKey.startsWith("sk-")) {
       return NextResponse.json(
         {
           result:
             `Server misconfigured: OPENAI_API_KEY missing/invalid. ` +
             `prefix=${apiKey.slice(0, 10)} len=${apiKey.length}. ` +
-            `Set in Vercel → Settings → Environment Variables (Production) then redeploy.`,
+            `Set it in Vercel → Settings → Environment Variables (Production), then redeploy.`,
         },
         { status: 500 }
+      );
+    }
+
+    if (!manufacturer || !symptom) {
+      return NextResponse.json(
+        { result: "Please fill in at least Manufacturer and Symptom." },
+        { status: 400 }
       );
     }
 
     const client = new OpenAI({ apiKey });
 
     const context = `
-Property Type: ${propertyType}
-Equipment Type: ${equipmentType}
+Property Type: ${propertyType || "Unknown"}
+Equipment Type: ${equipmentType || "Unknown"}
 Manufacturer: ${manufacturer}
 Model: ${model || "Unknown"}
-Refrigerant: ${refrigerantType}
+Refrigerant: ${refrigerantType || "Unknown"}
 Symptom: ${symptom}
 
 Field Observations / Measurements:
@@ -114,43 +170,6 @@ ${formatObservations(observations)}
 Guided Path Taken (optional):
 ${formatPath(pathLog)}
 `.trim();
-
-    type FinalJson = {
-      summary: string;
-      likely_causes: {
-        cause: string;
-        probability_percent: number;
-        why: string;
-        what_points_to_it: string[];
-        what_rules_it_out: string[];
-      }[];
-      field_measurements_to_collect: {
-        measurement: string;
-        where: string;
-        how: string;
-        expected_range: string;
-        why_it_matters: string;
-      }[];
-      decision_tree: {
-        step: number;
-        check: string;
-        how: string;
-        pass_condition: string;
-        fail_condition: string;
-        if_pass_next_step: number;
-        if_fail_next_step: number;
-        notes: string;
-      }[];
-      parts_to_check: {
-        part: string;
-        why_suspect: string;
-        quick_test: string;
-        common_failure_modes: string[];
-        priority: "High" | "Medium" | "Low";
-      }[];
-      safety_notes: string[];
-      when_to_escalate: string[];
-    };
 
     const prompt = `
 You are an expert HVAC/R service technician.
@@ -178,9 +197,11 @@ Return JSON ONLY with EXACTLY these keys:
 }
 
 Rules:
-- likely_causes MUST be exactly 6 items and add to 100%.
+- likely_causes MUST be exactly 6 items.
+- probability_percent across the 6 MUST add up to 100.
 - field_measurements_to_collect MUST be exactly 4 items.
-- decision_tree MUST be exactly 7 steps (1..7) and step 7 ends (both next = 0).
+- decision_tree MUST be exactly 7 steps numbered 1..7.
+- Step 7 MUST have if_pass_next_step=0 and if_fail_next_step=0.
 - parts_to_check MUST be exactly 6 items.
 - safety_notes MUST be exactly 2 items.
 - when_to_escalate MUST be exactly 2 items.
@@ -192,8 +213,13 @@ Rules:
 `.trim();
 
     const final = await callOpenAIJson<FinalJson>(client, prompt, 1200);
+
+    // Always return valid JSON string (UI already parses/pretty-prints)
     return NextResponse.json({ result: JSON.stringify(final, null, 2) });
   } catch (err: any) {
-    return NextResponse.json({ result: "Server error: " + (err?.message || String(err)) }, { status: 500 });
+    return NextResponse.json(
+      { result: "Server error: " + (err?.message || String(err)) },
+      { status: 500 }
+    );
   }
 }
