@@ -1,11 +1,8 @@
+
 import { NextRequest, NextResponse } from "next/server";
-import OpenAI from "openai";
 
 export const runtime = "nodejs";
 
-/**
- * Extract the first JSON object block from a response.
- */
 function extractJsonBlock(text: string) {
   const start = text.indexOf("{");
   const end = text.lastIndexOf("}");
@@ -13,9 +10,6 @@ function extractJsonBlock(text: string) {
   return text;
 }
 
-/**
- * Make JSON parsing more forgiving (remove control chars + trailing commas).
- */
 function sanitizeJson(jsonLike: string) {
   let s = jsonLike;
   s = s.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "");
@@ -23,31 +17,47 @@ function sanitizeJson(jsonLike: string) {
   return s;
 }
 
-async function callOpenAIText(client: OpenAI, prompt: string, maxTokens: number) {
-  const resp = await client.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [
-      {
-        role: "system",
-        content:
-          "You are an expert HVAC/R technician assistant. Return ONLY valid JSON. No markdown. No commentary.",
-      },
-      { role: "user", content: prompt },
-    ],
-    temperature: 0.15,
-    max_tokens: maxTokens,
+async function callOpenAIText(apiKey: string, prompt: string, maxTokens: number) {
+  const r = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are an expert HVAC/R technician assistant. Return ONLY valid JSON. No markdown. No commentary.",
+        },
+        { role: "user", content: prompt },
+      ],
+      temperature: 0.15,
+      max_tokens: maxTokens,
+      response_format: { type: "json_object" },
+    }),
   });
 
-  return resp.choices?.[0]?.message?.content ?? "";
+  const data = await r.json();
+  if (!r.ok) {
+    const code = data?.error?.code;
+    const msg = data?.error?.message || "OpenAI request failed";
+    throw new Error(`OpenAI error (${r.status}) ${code || ""}: ${msg}`);
+  }
+
+  return data?.choices?.[0]?.message?.content ?? "";
 }
 
-async function callOpenAIJson<T>(client: OpenAI, prompt: string, maxTokens: number): Promise<T> {
-  const raw1 = await callOpenAIText(client, prompt, maxTokens);
+async function callOpenAIJson<T>(apiKey: string, prompt: string, maxTokens: number): Promise<T> {
+  const raw1 = await callOpenAIText(apiKey, prompt, maxTokens);
   const block1 = sanitizeJson(extractJsonBlock(raw1));
 
   try {
     return JSON.parse(block1) as T;
   } catch {
+    // repair pass
     const repairPrompt = `
 You are a strict JSON repair tool.
 Return ONLY valid JSON. No markdown. No commentary. No trailing commas.
@@ -57,7 +67,7 @@ BROKEN_JSON:
 ${block1}
 `.trim();
 
-    const raw2 = await callOpenAIText(client, repairPrompt, Math.min(650, maxTokens));
+    const raw2 = await callOpenAIText(apiKey, repairPrompt, Math.min(650, maxTokens));
     const block2 = sanitizeJson(extractJsonBlock(raw2));
     return JSON.parse(block2) as T;
   }
@@ -122,19 +132,18 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    const propertyType = String(body?.propertyType ?? "").trim();
-    const equipmentType = String(body?.equipmentType ?? "").trim();
     const manufacturer = String(body?.manufacturer ?? "").trim();
-    const model = String(body?.model ?? "").trim();
     const symptom = String(body?.symptom ?? "").trim();
 
+    const propertyType = String(body?.propertyType ?? "").trim();
+    const equipmentType = String(body?.equipmentType ?? "").trim();
+    const model = String(body?.model ?? "").trim();
     const refrigerantType = String(body?.refrigerantType ?? body?.refrigerant ?? "Unknown").trim();
+
     const observations = body?.observations ?? [];
     const pathLog = body?.pathLog ?? [];
 
     const apiKey = process.env.OPENAI_API_KEY || "";
-
-    // Fail early with a clear message (prevents misleading 401 loops)
     if (!apiKey || !apiKey.startsWith("sk-")) {
       return NextResponse.json(
         {
@@ -148,13 +157,8 @@ export async function POST(req: NextRequest) {
     }
 
     if (!manufacturer || !symptom) {
-      return NextResponse.json(
-        { result: "Please fill in at least Manufacturer and Symptom." },
-        { status: 400 }
-      );
+      return NextResponse.json({ result: "Please fill in at least Manufacturer and Symptom." }, { status: 400 });
     }
-
-    const client = new OpenAI({ apiKey });
 
     const context = `
 Property Type: ${propertyType || "Unknown"}
@@ -200,26 +204,16 @@ Rules:
 - likely_causes MUST be exactly 6 items.
 - probability_percent across the 6 MUST add up to 100.
 - field_measurements_to_collect MUST be exactly 4 items.
-- decision_tree MUST be exactly 7 steps numbered 1..7.
-- Step 7 MUST have if_pass_next_step=0 and if_fail_next_step=0.
+- decision_tree MUST be exactly 7 steps numbered 1..7 (step 7 ends with both next=0).
 - parts_to_check MUST be exactly 6 items.
 - safety_notes MUST be exactly 2 items.
 - when_to_escalate MUST be exactly 2 items.
-- You MUST react to Field Observations:
-  - If a measurement is already provided, do NOT ask to measure it again.
-  - Adjust likely cause probabilities based on observations.
-  - Suggest next best measurements not already present.
 - Keep each string one sentence max.
 `.trim();
 
-    const final = await callOpenAIJson<FinalJson>(client, prompt, 1200);
-
-    // Always return valid JSON string (UI already parses/pretty-prints)
+    const final = await callOpenAIJson<FinalJson>(apiKey, prompt, 1200);
     return NextResponse.json({ result: JSON.stringify(final, null, 2) });
   } catch (err: any) {
-    return NextResponse.json(
-      { result: "Server error: " + (err?.message || String(err)) },
-      { status: 500 }
-    );
+    return NextResponse.json({ result: "Server error: " + (err?.message || String(err)) }, { status: 500 });
   }
 }
