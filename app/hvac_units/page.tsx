@@ -1,5 +1,7 @@
 "use client";
-
+<div style={{ fontSize: 12, color: "#666", marginTop: 6 }}>
+  BUILD STAMP: 5815e7b — {new Date().toISOString()}
+</div>
 import React, { useEffect, useMemo, useState } from "react";
 
 type Observation = {
