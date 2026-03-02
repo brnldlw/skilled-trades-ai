@@ -911,9 +911,9 @@ export default function HVACUnitsPage() {
                   </div>
                 </div>
               ) : (
-                <SmallHint style={{}}>
-                  After you Diagnose, the model can populate “Parts to check.” If you don’t see it yet, we’ll upgrade the API prompt next so it returns better parts + tests.
-                </SmallHint>
+              <SmallHint>
+  After you Diagnose, the model can populate “Parts to check.” If you don’t see it yet, we’ll upgrade the API prompt next so it returns better parts + tests.
+</SmallHint>
               )}
             </div>
           </div>
