@@ -6,7 +6,7 @@ export const runtime = "nodejs";
  * POST { text?: string }
  * Simple nameplate parser stub:
  * - Returns structured fields from pasted nameplate text
- * - (Later we'll upgrade to image upload + OCR/vision)
+ * - (Later we'll upgrade to image upload + vision extraction)
  */
 export async function POST(req: NextRequest) {
   try {
@@ -52,14 +52,9 @@ export async function POST(req: NextRequest) {
       pick(/\b(\d{3})\s*\/\s*(1|3)\s*ph\b/i) ||
       pick(/\b(208\/230|460|575)\b/i);
 
-    const phase =
-      pick(/\b(1|3)\s*ph\b/i);
-
-    const tonnage =
-      pick(/ton(?:nage)?[:\s]+([^\n]+)/i);
-
-    const hz =
-      pick(/\b(50|60)\s*hz\b/i);
+    const phase = pick(/\b(1|3)\s*ph\b/i);
+    const hz = pick(/\b(50|60)\s*hz\b/i);
+    const tonnage = pick(/ton(?:nage)?[:\s]+([^\n]+)/i);
 
     const result = {
       manufacturer: manufacturer || "Unknown",
