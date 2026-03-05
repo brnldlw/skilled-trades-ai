@@ -1,13 +1,36 @@
+
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
 export async function GET() {
+  // Vercel commonly provides these env vars (some may be empty depending on setup)
+  const sha =
+    process.env.VERCEL_GIT_COMMIT_SHA ||
+    process.env.GIT_COMMIT_SHA ||
+    process.env.COMMIT_SHA ||
+    "";
+
+  const ref =
+    process.env.VERCEL_GIT_COMMIT_REF ||
+    process.env.GIT_BRANCH ||
+    "";
+
+  const msg =
+    process.env.VERCEL_GIT_COMMIT_MESSAGE ||
+    "";
+
+  const deploymentId = process.env.VERCEL_DEPLOYMENT_ID || "";
+  const env = process.env.VERCEL_ENV || process.env.NODE_ENV || "";
+  const now = new Date().toISOString();
+
   return NextResponse.json({
-    vercel_git_commit_sha: process.env.VERCEL_GIT_COMMIT_SHA || null,
-    vercel_git_commit_ref: process.env.VERCEL_GIT_COMMIT_REF || null,
-    vercel_env: process.env.VERCEL_ENV || null,
-    node_env: process.env.NODE_ENV || null,
-    now: new Date().toISOString(),
+    ok: true,
+    env,
+    deploymentId,
+    sha,
+    ref,
+    msg,
+    serverTime: now,
   });
 }
