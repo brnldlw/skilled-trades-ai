@@ -1,70 +1,82 @@
-
 import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
-/**
- * Nameplate parse (image -> structured fields)
- * Uses OpenAI Responses API with strict JSON schema for reliability.
- * Docs: Responses API + structured JSON schema formatting. :contentReference[oaicite:1]{index=1}
- */
-
 type NameplateResult = {
-  manufacturer: string;
-  model: string;
-  serial: string;
-  equipment_type: string;
-  tonnage: string;
-  voltage: string;
-  phase: string;
-  hz: string;
-  refrigerant: string;
-  gas_input_btu: string;
-  notes: string[];
-  confidence: "High" | "Medium" | "Low";
+  manufacturer: string | null;
+  model: string | null;
+  serial: string | null;
+  equipment_type: string | null;
+  refrigerant: string | null;
+  voltage: string | null;
+  phase: string | null;
+  hz: string | null;
+  mca: string | null;
+  mop: string | null;
+  rla: string | null;
+  fla: string | null;
+  tonnage: string | null;
+  heat_type: string | null; // gas / electric / heat pump / unknown
+  gas_type: string | null; // natural gas / propane / unknown
+  notes: string;
+  confidence: "high" | "medium" | "low";
 };
 
-function requireEnv(name: string) {
-  const v = process.env[name];
-  if (!v) throw new Error(`Missing ${name} (set it in Vercel + Codespaces secrets).`);
-  return v;
-}
-
-function toDataUrl(base64: string, mime: string) {
-  return `data:${mime};base64,${base64}`;
+function getOutputText(resp: any): string {
+  // Responses API returns output items; grab the first output_text
+  const out = resp?.output;
+  if (!Array.isArray(out)) return "";
+  for (const item of out) {
+    const content = item?.content;
+    if (!Array.isArray(content)) continue;
+    for (const c of content) {
+      if (c?.type === "output_text" && typeof c?.text === "string") return c.text;
+    }
+  }
+  // fallback
+  return resp?.output_text ?? "";
 }
 
 async function callOpenAIJsonSchema<T>(args: {
   apiKey: string;
   model: string;
   prompt: string;
-  imageDataUrl?: string;
   schemaName: string;
   schema: any;
   maxOutputTokens?: number;
+  temperature?: number;
+  imageDataUrl?: string;
 }): Promise<T> {
-  const { apiKey, model, prompt, imageDataUrl, schemaName, schema, maxOutputTokens } = args;
-
-  // Responses API request (multimodal input + strict json schema)
-  // See OpenAI docs for Responses + input_image + text.format json_schema. :contentReference[oaicite:2]{index=2}
-  const body: any = {
+  const {
+    apiKey,
     model,
-    input: [
-      {
-        role: "user",
-        content: [
-          { type: "input_text", text: prompt },
-          ...(imageDataUrl ? [{ type: "input_image", image_url: imageDataUrl }] : []),
-        ],
-      },
-    ],
-    max_output_tokens: maxOutputTokens ?? 700,
+    prompt,
+    schemaName,
+    schema,
+    maxOutputTokens = 900,
+    temperature = 0.1,
+    imageDataUrl,
+  } = args;
+
+  const inputContent: any[] = [{ type: "input_text", text: prompt }];
+
+  // Image input is supported as { type:"input_image", image_url:"..." } :contentReference[oaicite:2]{index=2}
+  if (imageDataUrl) {
+    inputContent.push({ type: "input_image", image_url: imageDataUrl, detail: "high" });
+  }
+
+  // Structured output uses text.format with json_schema :contentReference[oaicite:3]{index=3}
+  const body = {
+    model,
+    input: [{ role: "user", content: inputContent }],
+    temperature,
+    max_output_tokens: maxOutputTokens,
     text: {
       format: {
         type: "json_schema",
         name: schemaName,
-        strict: true,
         schema,
+        strict: true,
       },
     },
   };
@@ -78,70 +90,85 @@ async function callOpenAIJsonSchema<T>(args: {
     body: JSON.stringify(body),
   });
 
-  const data = await r.json().catch(() => ({} as any));
+  const rawText = await r.text();
+  let data: any = null;
+  try {
+    data = JSON.parse(rawText);
+  } catch {
+    // if OpenAI returns non-JSON (rare), raise a readable error
+    throw new Error(`OpenAI returned non-JSON (${r.status}): ${rawText.slice(0, 200)}`);
+  }
+
   if (!r.ok) {
     const code = data?.error?.code;
     const msg = data?.error?.message || "OpenAI request failed";
     throw new Error(`OpenAI error (${r.status}) ${code || ""}: ${msg}`);
   }
 
-  // Responses API returns output text in a few shapes; the easiest is to read output_text.
-  const jsonText: string =
-    data?.output_text ||
-    data?.output?.[0]?.content?.find((c: any) => c?.type?.includes("output_text"))?.text ||
-    "";
-
-  if (!jsonText) throw new Error("OpenAI returned empty output_text.");
-
-  return JSON.parse(jsonText) as T;
+  const txt = getOutputText(data);
+  if (!txt) throw new Error("OpenAI response had no output_text.");
+  return JSON.parse(txt) as T;
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const apiKey = requireEnv("OPENAI_API_KEY");
+    const body = await req.json();
+    const imageDataUrl = String(body?.imageDataUrl || "");
+    const hintEquipmentType = String(body?.equipmentType || "").trim();
 
-    // Accept multipart/form-data with "image"
-    const form = await req.formData();
-    const file = form.get("image");
-
-    if (!file || typeof file === "string") {
-      return NextResponse.json({ error: "Missing image file (form field name must be 'image')." }, { status: 400 });
+    if (!imageDataUrl.startsWith("data:image/")) {
+      return NextResponse.json(
+        { ok: false, error: "Missing or invalid imageDataUrl (must be a data:image/... URL)." },
+        { status: 400 }
+      );
     }
 
-    const f = file as File;
-    const mime = f.type || "image/jpeg";
-    const buf = Buffer.from(await f.arrayBuffer());
-    const base64 = buf.toString("base64");
-    const imageDataUrl = toDataUrl(base64, mime);
+    const apiKey = process.env.OPENAI_API_KEY || "";
+    if (!apiKey) {
+      return NextResponse.json(
+        { ok: false, error: "Server misconfigured: OPENAI_API_KEY missing." },
+        { status: 500 }
+      );
+    }
 
     const schema = {
       type: "object",
       additionalProperties: false,
       properties: {
-        manufacturer: { type: "string" },
-        model: { type: "string" },
-        serial: { type: "string" },
-        equipment_type: { type: "string" },
-        tonnage: { type: "string" },
-        voltage: { type: "string" },
-        phase: { type: "string" },
-        hz: { type: "string" },
-        refrigerant: { type: "string" },
-        gas_input_btu: { type: "string" },
-        notes: { type: "array", items: { type: "string" }, minItems: 0, maxItems: 6 },
-        confidence: { type: "string", enum: ["High", "Medium", "Low"] },
+        manufacturer: { type: ["string", "null"] },
+        model: { type: ["string", "null"] },
+        serial: { type: ["string", "null"] },
+        equipment_type: { type: ["string", "null"] },
+        refrigerant: { type: ["string", "null"] },
+        voltage: { type: ["string", "null"] },
+        phase: { type: ["string", "null"] },
+        hz: { type: ["string", "null"] },
+        mca: { type: ["string", "null"] },
+        mop: { type: ["string", "null"] },
+        rla: { type: ["string", "null"] },
+        fla: { type: ["string", "null"] },
+        tonnage: { type: ["string", "null"] },
+        heat_type: { type: ["string", "null"] },
+        gas_type: { type: ["string", "null"] },
+        notes: { type: "string" },
+        confidence: { type: "string", enum: ["high", "medium", "low"] },
       },
       required: [
         "manufacturer",
         "model",
         "serial",
         "equipment_type",
-        "tonnage",
+        "refrigerant",
         "voltage",
         "phase",
         "hz",
-        "refrigerant",
-        "gas_input_btu",
+        "mca",
+        "mop",
+        "rla",
+        "fla",
+        "tonnage",
+        "heat_type",
+        "gas_type",
         "notes",
         "confidence",
       ],
@@ -149,30 +176,30 @@ export async function POST(req: NextRequest) {
 
     const prompt = `
 You are reading an HVAC equipment nameplate photo.
-Extract the fields EXACTLY and conservatively.
-
-Rules:
-- If a field is not visible, return "" (empty string).
-- Use short strings (no paragraphs) except notes.
-- refrigerant should be like "R-410A" or "R-22" when visible; else "".
-- confidence: High if model+serial are clearly readable, Medium if one is uncertain, Low if both are uncertain.
+Return ONLY valid JSON matching the schema.
+- If a field is not visible, set it to null.
+- Keep notes short.
+Equipment type hint (if provided): ${hintEquipmentType || "Unknown"}
 `.trim();
 
-    // Model choice: keep it cost-friendly; you can upgrade later.
-    const model = "gpt-4o-mini";
+    const aiModel = "gpt-4o-mini";
 
     const result = await callOpenAIJsonSchema<NameplateResult>({
       apiKey,
-      model,
+      model: aiModel,
       prompt,
-      imageDataUrl,
-      schemaName: "nameplate_parse_v1",
+      schemaName: "nameplate_parse",
       schema,
-      maxOutputTokens: 650,
+      imageDataUrl,
+      maxOutputTokens: 900,
+      temperature: 0.1,
     });
 
-    return NextResponse.json({ ok: true, result });
+    return NextResponse.json({ ok: true, data: result });
   } catch (err: any) {
-    return NextResponse.json({ ok: false, error: err?.message || String(err) }, { status: 500 });
+    return NextResponse.json(
+      { ok: false, error: "Server error: " + (err?.message || String(err)) },
+      { status: 500 }
+    );
   }
 }

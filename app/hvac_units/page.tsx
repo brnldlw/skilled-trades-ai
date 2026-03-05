@@ -1,29 +1,11 @@
-
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 
-/* =========================
-   Types
-========================= */
-
-type Observation = {
-  label: string;
-  value: string;
-  unit: string;
-  note?: string;
-};
+type Observation = { label: string; value: string; unit: string; note?: string };
 
 type Diagnosis = {
   summary?: string;
-
-  derived_calculations?: {
-    deltaT_f?: number | null;
-    superheat_f?: number | null;
-    subcool_f?: number | null;
-    notes?: string[];
-  };
-
   likely_causes?: {
     cause: string;
     probability_percent?: number;
@@ -31,7 +13,6 @@ type Diagnosis = {
     what_points_to_it?: string[];
     what_rules_it_out?: string[];
   }[];
-
   field_measurements_to_collect?: {
     measurement: string;
     where?: string;
@@ -39,7 +20,6 @@ type Diagnosis = {
     expected_range?: string;
     why_it_matters?: string;
   }[];
-
   decision_tree?: {
     step: number;
     check: string;
@@ -50,7 +30,6 @@ type Diagnosis = {
     if_fail_next_step?: number;
     notes?: string;
   }[];
-
   parts_to_check?: {
     part: string;
     why_suspect?: string;
@@ -58,62 +37,51 @@ type Diagnosis = {
     common_failure_modes?: string[];
     priority?: "High" | "Medium" | "Low" | string;
   }[];
-
   safety_notes?: string[];
   when_to_escalate?: string[];
 };
 
 type NameplateResult = {
-  manufacturer: string;
-  model: string;
-  serial: string;
-  equipment_type: string;
-  tonnage: string;
-  voltage: string;
-  phase: string;
-  hz: string;
-  refrigerant: string;
-  gas_input_btu: string;
-  notes: string[];
-  confidence: "High" | "Medium" | "Low";
+  manufacturer: string | null;
+  model: string | null;
+  serial: string | null;
+  equipment_type: string | null;
+  refrigerant: string | null;
+  voltage: string | null;
+  phase: string | null;
+  hz: string | null;
+  mca: string | null;
+  mop: string | null;
+  rla: string | null;
+  fla: string | null;
+  tonnage: string | null;
+  heat_type: string | null;
+  gas_type: string | null;
+  notes: string;
+  confidence: "high" | "medium" | "low";
 };
 
-/* =========================
-   UI helpers
-========================= */
+type LinkItem = { title: string; url: string; note?: string };
 
-function Card(props: { title: string; children: React.ReactNode }) {
+type ManualsParts = {
+  summary: string;
+  suggested_search_terms: string[];
+  manuals: LinkItem[];
+  parts: LinkItem[];
+  probable_parts_to_check: { part: string; why: string }[];
+};
+
+/** ---------- UI ---------- */
+
+function SectionCard(props: { title: string; children: React.ReactNode; right?: React.ReactNode }) {
   return (
     <div style={{ border: "1px solid #ddd", borderRadius: 12, padding: 14, background: "white" }}>
-      <div style={{ fontWeight: 900, marginBottom: 10 }}>{props.title}</div>
-      {props.children}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+        <div style={{ fontWeight: 900 }}>{props.title}</div>
+        {props.right ? <div>{props.right}</div> : null}
+      </div>
+      <div style={{ marginTop: 10 }}>{props.children}</div>
     </div>
-  );
-}
-
-function SmallHint(props: { children: React.ReactNode; style?: React.CSSProperties }) {
-  return (
-    <div style={{ fontSize: 12, color: "#555", lineHeight: 1.35, ...(props.style || {}) }}>
-      {props.children}
-    </div>
-  );
-}
-
-function Badge({ text }: { text: string }) {
-  return (
-    <span
-      style={{
-        display: "inline-block",
-        padding: "2px 8px",
-        borderRadius: 999,
-        border: "1px solid #ddd",
-        fontSize: 12,
-        background: "#f7f7f7",
-        marginLeft: 8,
-      }}
-    >
-      {text}
-    </span>
   );
 }
 
@@ -129,17 +97,45 @@ function ProbBar({ pct }: { pct: number }) {
   );
 }
 
-function ChipButton(props: { text: string; onClick: () => void }) {
+function Badge({ text }: { text: string }) {
+  return (
+    <span
+      style={{
+        display: "inline-block",
+        padding: "2px 8px",
+        borderRadius: 999,
+        border: "1px solid #ddd",
+        fontSize: 12,
+        background: "#f7f7f7",
+        marginLeft: 8,
+        whiteSpace: "nowrap",
+      }}
+    >
+      {text}
+    </span>
+  );
+}
+
+function SmallHint(props: { children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={{ fontSize: 12, color: "#555", lineHeight: 1.35, ...props.style }}>
+      {props.children}
+    </div>
+  );
+}
+
+function PillButton(props: { text: string; onClick: () => void; disabled?: boolean }) {
   return (
     <button
       onClick={props.onClick}
+      disabled={props.disabled}
       style={{
-        padding: "6px 10px",
+        padding: "8px 12px",
         borderRadius: 999,
         border: "1px solid #ddd",
-        background: "#fff",
-        fontWeight: 800,
-        cursor: "pointer",
+        background: props.disabled ? "#f5f5f5" : "#fff",
+        fontWeight: 900,
+        cursor: props.disabled ? "not-allowed" : "pointer",
       }}
     >
       {props.text}
@@ -147,9 +143,18 @@ function ChipButton(props: { text: string; onClick: () => void }) {
   );
 }
 
-/* =========================
-   Unit conversion helpers
-========================= */
+/** ---------- Helpers ---------- */
+
+async function safeJson(res: Response) {
+  // Fixes: "Unexpected end of JSON input"
+  const txt = await res.text();
+  if (!txt) return null;
+  try {
+    return JSON.parse(txt);
+  } catch {
+    return { result: txt };
+  }
+}
 
 function toNumber(s: string): number | null {
   const n = Number(String(s).replace(/[^\d.\-]/g, ""));
@@ -184,9 +189,16 @@ function guessDefaultUnit(label: string) {
   return "other";
 }
 
-/* =========================
-   Page
-========================= */
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result || ""));
+    r.onerror = () => reject(new Error("Could not read file"));
+    r.readAsDataURL(file);
+  });
+}
+
+/** ---------- Page ---------- */
 
 export default function HVACUnitsPage() {
   const [propertyType, setPropertyType] = useState("Commercial");
@@ -222,18 +234,17 @@ export default function HVACUnitsPage() {
   const [obsNote, setObsNote] = useState("");
   const [autoConvert, setAutoConvert] = useState(true);
 
-  // Guided Mode
-  const [viewMode, setViewMode] = useState<"flow" | "guided">("guided");
-  const [guidedStarted, setGuidedStarted] = useState(false);
-  const [currentStep, setCurrentStep] = useState<number>(1);
-  const [pathLog, setPathLog] = useState<{ step: number; decision: "PASS" | "FAIL"; nextStep: number }[]>([]);
+  // Nameplate
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [nameplateImage, setNameplateImage] = useState<string>("");
+  const [nameplate, setNameplate] = useState<NameplateResult | null>(null);
+  const [nameplateBusy, setNameplateBusy] = useState(false);
+  const [nameplateErr, setNameplateErr] = useState("");
 
-  // Nameplate (photo)
-  const [nameplateFile, setNameplateFile] = useState<File | null>(null);
-  const [nameplatePreview, setNameplatePreview] = useState<string>("");
-  const [nameplateLoading, setNameplateLoading] = useState(false);
-  const [nameplateResult, setNameplateResult] = useState<NameplateResult | null>(null);
-  const [nameplateError, setNameplateError] = useState<string>("");
+  // Manuals/Parts
+  const [mpBusy, setMpBusy] = useState(false);
+  const [mpErr, setMpErr] = useState("");
+  const [manualsParts, setManualsParts] = useState<ManualsParts | null>(null);
 
   const parsed = useMemo(() => {
     if (!rawResult) return null;
@@ -247,85 +258,33 @@ export default function HVACUnitsPage() {
     }
   }, [rawResult]);
 
-  const decisionSteps = useMemo(() => {
-    const steps = parsed?.decision_tree || [];
-    return steps.slice().sort((a, b) => (a.step ?? 0) - (b.step ?? 0));
-  }, [parsed]);
-
-  const stepMap = useMemo(() => {
-    const m = new Map<number, NonNullable<Diagnosis["decision_tree"]>[number]>();
-    for (const s of decisionSteps) m.set(s.step, s);
-    return m;
-  }, [decisionSteps]);
-
-  const current = useMemo(() => stepMap.get(currentStep), [stepMap, currentStep]);
-
+  const measurementOptions = parsed?.field_measurements_to_collect?.map((m) => m.measurement) || [];
   const unitOptions = ["psi", "kPa", "bar", "°F", "°C", "amps", "volts", "inWC", "Pa", "ohms", "µA", "%", "other"];
 
-  const suggestedForCurrentStep = useMemo(() => {
-    if (!parsed?.field_measurements_to_collect?.length) return null;
-    const stepText = (current?.check || "").toLowerCase();
-    if (!stepText) return null;
+  const coolingPresets = [
+    { label: "Suction Pressure", unit: "psi" },
+    { label: "Liquid Pressure", unit: "psi" },
+    { label: "Superheat", unit: "°F" },
+    { label: "Subcool", unit: "°F" },
+    { label: "Return Air Temp", unit: "°F" },
+    { label: "Supply Air Temp", unit: "°F" },
+    { label: "Delta T (Return-Supply)", unit: "°F" },
+    { label: "Compressor Amps", unit: "amps" },
+    { label: "Line Voltage", unit: "volts" },
+    { label: "Control Voltage (R-C)", unit: "volts" },
+    { label: "External Static Pressure", unit: "inWC" },
+  ];
 
-    let best: { score: number; m: any } | null = null;
-
-    for (const m of parsed.field_measurements_to_collect) {
-      const hay = `${m.measurement || ""} ${m.where || ""} ${m.how || ""} ${m.expected_range || ""}`.toLowerCase();
-      let score = 0;
-
-      const keywords = ["suction","liquid","discharge","head","pressure","superheat","subcool","delta","supply","return","airflow","static","voltage","amps","flame","gas","manifold","thermostat","control","sensor","temperature"];
-
-      for (const k of keywords) {
-        if (stepText.includes(k) && hay.includes(k)) score += 3;
-      }
-
-      const words = String(m.measurement || "").toLowerCase().split(/\s+/).filter(Boolean);
-      for (const w of words) {
-        if (w.length >= 4 && stepText.includes(w)) score += 1;
-      }
-
-      if (!best || score > best.score) best = { score, m };
-    }
-
-    if (!best || best.score <= 0) return null;
-    return best.m;
-  }, [parsed, current]);
-
-  function resetGuided() {
-    setGuidedStarted(false);
-    setCurrentStep(1);
-    setPathLog([]);
-  }
-
-  function startGuided() {
-    setGuidedStarted(true);
-    setCurrentStep(1);
-    setPathLog([]);
-    const first = stepMap.get(1);
-    if (first?.check) {
-      setObsLabel(first.check);
-      setObsUnit(guessDefaultUnit(first.check));
-    }
-  }
-
-  function advance(decision: "PASS" | "FAIL") {
-    if (!current) return;
-    const nextStep = decision === "PASS" ? (current.if_pass_next_step ?? 0) : (current.if_fail_next_step ?? 0);
-
-    setPathLog((prev) => [...prev, { step: current.step, decision, nextStep }]);
-
-    if (!nextStep || nextStep === 0) {
-      setCurrentStep(0);
-      return;
-    }
-
-    setCurrentStep(nextStep);
-    const nextObj = stepMap.get(nextStep);
-    if (nextObj?.check) {
-      setObsLabel(nextObj.check);
-      setObsUnit(guessDefaultUnit(nextObj.check));
-    }
-  }
+  const heatingPresets = [
+    { label: "Gas Inlet Pressure", unit: "inWC" },
+    { label: "Manifold Pressure", unit: "inWC" },
+    { label: "Heat Rise", unit: "°F" },
+    { label: "Inducer Amps", unit: "amps" },
+    { label: "Flame Sensor", unit: "µA" },
+    { label: "Limit Switch Continuity", unit: "ohms" },
+    { label: "Line Voltage", unit: "volts" },
+    { label: "Control Voltage (R-W)", unit: "volts" },
+  ];
 
   function applyPreset(label: string, unit: string) {
     setObsLabel(label);
@@ -369,31 +328,18 @@ export default function HVACUnitsPage() {
     setObservations((prev) => prev.filter((_, i) => i !== idx));
   }
 
-  async function safeReadJson(res: Response): Promise<any> {
-    // Avoid: "Unexpected end of JSON input"
-    const text = await res.text();
-    if (!text) return {};
-    try {
-      return JSON.parse(text);
-    } catch {
-      return { result: text };
-    }
-  }
-
   async function postDiagnose(payload: any) {
     const res = await fetch("/api/hvac-diagnose", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-
-    const data = await safeReadJson(res);
+    const data = await safeJson(res);
 
     if (!res.ok) {
       setRawResult(data?.result || data?.error || `Server error (${res.status})`);
       return;
     }
-
     setRawResult(data?.result || "No result returned.");
   }
 
@@ -407,8 +353,6 @@ export default function HVACUnitsPage() {
 
     setLoading(true);
     setRawResult("");
-    resetGuided();
-
     try {
       await postDiagnose({
         propertyType,
@@ -434,7 +378,6 @@ export default function HVACUnitsPage() {
 
     setLoading(true);
     try {
-      resetGuided();
       await postDiagnose({
         propertyType,
         equipmentType,
@@ -443,154 +386,174 @@ export default function HVACUnitsPage() {
         symptom: s,
         refrigerantType,
         observations,
-        pathLog,
       });
     } finally {
       setLoading(false);
     }
   }
 
-  async function handleNameplateSelected(f: File | null) {
-    setNameplateFile(f);
-    setNameplateResult(null);
-    setNameplateError("");
-    if (!f) {
-      setNameplatePreview("");
-      return;
-    }
-    const url = URL.createObjectURL(f);
-    setNameplatePreview(url);
+  async function onPickNameplateFile(file: File) {
+    setNameplateErr("");
+    setNameplate(null);
+    const dataUrl = await readFileAsDataUrl(file);
+    setNameplateImage(dataUrl);
   }
 
   async function parseNameplate() {
-    if (!nameplateFile) {
-      setNameplateError("Pick a nameplate photo first.");
-      return;
-    }
-    setNameplateLoading(true);
-    setNameplateError("");
-    setNameplateResult(null);
-
+    if (!nameplateImage) return;
+    setNameplateBusy(true);
+    setNameplateErr("");
     try {
-      const fd = new FormData();
-      fd.append("image", nameplateFile);
-
       const res = await fetch("/api/nameplate-parse", {
         method: "POST",
-        body: fd,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageDataUrl: nameplateImage, equipmentType }),
       });
-
-      const data = await safeReadJson(res);
+      const data = await safeJson(res);
       if (!res.ok || !data?.ok) {
-        setNameplateError(data?.error || `Nameplate parse failed (${res.status}).`);
+        setNameplateErr(data?.error || `Server error (${res.status})`);
         return;
       }
+      const np = data.data as NameplateResult;
+      setNameplate(np);
 
-      setNameplateResult(data.result as NameplateResult);
+      // Auto-fill fields if present
+      if (np.manufacturer && !manufacturer.trim()) setManufacturer(np.manufacturer);
+      if (np.model && !model.trim()) setModel(np.model);
+      if (np.equipment_type && equipmentType === "RTU") setEquipmentType(np.equipment_type);
+      if (np.refrigerant && refrigerantType === "Unknown") setRefrigerantType(np.refrigerant);
     } finally {
-      setNameplateLoading(false);
+      setNameplateBusy(false);
     }
   }
 
-  function applyNameplateToForm() {
-    if (!nameplateResult) return;
-    if (nameplateResult.manufacturer) setManufacturer(nameplateResult.manufacturer);
-    if (nameplateResult.model) setModel(nameplateResult.model);
-    if (nameplateResult.equipment_type) setEquipmentType(nameplateResult.equipment_type);
-    if (nameplateResult.refrigerant) setRefrigerantType(nameplateResult.refrigerant);
+  async function findManualsParts() {
+    setMpBusy(true);
+    setMpErr("");
+    setManualsParts(null);
+    try {
+      const res = await fetch("/api/manuals-parts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          manufacturer: manufacturer.trim(),
+          model: model.trim(),
+          equipmentType,
+          symptom: symptom.trim(),
+          serial: nameplate?.serial || "",
+        }),
+      });
+      const data = await safeJson(res);
+      if (!res.ok || !data?.ok) {
+        setMpErr(data?.error || `Server error (${res.status})`);
+        return;
+      }
+      setManualsParts(data.data as ManualsParts);
+    } finally {
+      setMpBusy(false);
+    }
   }
 
-  function downloadReport() {
-    const payload = {
-      meta: {
-        createdAt: new Date().toISOString(),
-        propertyType,
-        equipmentType,
-        manufacturer,
-        model,
-        refrigerantType,
-      },
-      symptom,
-      observations,
-      nameplate: nameplateResult,
-      diagnosis: parsed ? parsed : rawResult,
-    };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `hvac-report-${Date.now()}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
+  function openPrintableReport() {
+    const diag = parsed;
+    const now = new Date().toLocaleString();
 
-  function printReport() {
-    const payload = {
-      propertyType,
-      equipmentType,
-      manufacturer,
-      model,
-      refrigerantType,
-      symptom,
-      observations,
-      nameplate: nameplateResult,
-      diagnosis: parsed ? parsed : rawResult,
-    };
+    const html = `
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>HVAC Service Report</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; margin: 24px; }
+    h1 { margin: 0 0 6px 0; }
+    .muted { color: #444; font-size: 12px; }
+    .box { border: 1px solid #ddd; border-radius: 10px; padding: 12px; margin-top: 12px; }
+    .row { display:flex; gap: 16px; flex-wrap: wrap; }
+    .kv { min-width: 220px; }
+    ul { margin: 6px 0 0 18px; }
+    ol { margin: 6px 0 0 18px; }
+    .tag { display:inline-block; border:1px solid #ddd; border-radius:999px; padding:2px 8px; font-size: 12px; margin-left: 8px; }
+  </style>
+</head>
+<body>
+  <h1>Skilled Trades AI — HVAC Service Report</h1>
+  <div class="muted">Generated: ${now}</div>
+
+  <div class="box">
+    <div class="row">
+      <div class="kv"><b>Property Type:</b> ${propertyType}</div>
+      <div class="kv"><b>Equipment Type:</b> ${equipmentType}</div>
+      <div class="kv"><b>Manufacturer:</b> ${manufacturer || "-"}</div>
+      <div class="kv"><b>Model:</b> ${model || "-"}</div>
+      <div class="kv"><b>Refrigerant:</b> ${refrigerantType || "-"}</div>
+    </div>
+    <div style="margin-top:10px;"><b>Symptom:</b> ${symptom || "-"}</div>
+  </div>
+
+  <div class="box">
+    <b>Measurements / Observations</b>
+    ${observations.length ? `<ul>${observations
+      .map((o) => `<li><b>${o.label}:</b> ${o.value} ${o.unit}${o.note ? ` <span class="muted">(${o.note})</span>` : ""}</li>`)
+      .join("")}</ul>` : `<div class="muted">None recorded.</div>`}
+  </div>
+
+  <div class="box">
+    <b>Diagnosis Summary</b>
+    <div style="margin-top:6px;">${diag?.summary ? diag.summary : "No summary yet (run Diagnose)."} </div>
+  </div>
+
+  <div class="box">
+    <b>Likely Causes</b>
+    ${
+      diag?.likely_causes?.length
+        ? `<ol>${diag.likely_causes
+            .map((c) => `<li><b>${c.cause}</b> ${typeof c.probability_percent === "number" ? `<span class="tag">${c.probability_percent}%</span>` : ""}<div class="muted">${c.why || ""}</div></li>`)
+            .join("")}</ol>`
+        : `<div class="muted">No causes yet.</div>`
+    }
+  </div>
+
+  <div class="box">
+    <b>Decision Tree</b>
+    ${
+      diag?.decision_tree?.length
+        ? `<ol>${diag.decision_tree
+            .sort((a, b) => (a.step ?? 0) - (b.step ?? 0))
+            .map((s) => `<li><b>${s.check}</b><div class="muted">${s.how || ""}</div></li>`)
+            .join("")}</ol>`
+        : `<div class="muted">No steps yet.</div>`
+    }
+  </div>
+
+  <div class="box">
+    <b>Parts to Check</b>
+    ${
+      diag?.parts_to_check?.length
+        ? `<ul>${diag.parts_to_check
+            .map((p) => `<li><b>${p.part}</b> ${p.priority ? `<span class="tag">${p.priority}</span>` : ""}<div class="muted">${p.why_suspect || ""}</div></li>`)
+            .join("")}</ul>`
+        : `<div class="muted">No parts yet.</div>`
+    }
+  </div>
+
+  <div class="muted" style="margin-top:18px;">Print this page and choose “Save as PDF” to store it.</div>
+
+  <script>window.print();</script>
+</body>
+</html>
+`.trim();
+
     const w = window.open("", "_blank");
     if (!w) return;
-    w.document.write(`<pre style="white-space:pre-wrap;font-family:ui-monospace, SFMono-Regular, Menlo, monospace;">${escapeHtml(JSON.stringify(payload, null, 2))}</pre>`);
+    w.document.open();
+    w.document.write(html);
     w.document.close();
-    w.focus();
-    w.print();
-  }
-
-  function escapeHtml(s: string) {
-    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  }
-
-  // Presets
-  const coolingPresets = [
-    { label: "Suction Pressure", unit: "psi" },
-    { label: "Liquid Pressure", unit: "psi" },
-    { label: "Superheat", unit: "°F" },
-    { label: "Subcool", unit: "°F" },
-    { label: "Return Air Temp", unit: "°F" },
-    { label: "Supply Air Temp", unit: "°F" },
-    { label: "Delta T (Return-Supply)", unit: "°F" },
-    { label: "Compressor Amps", unit: "amps" },
-    { label: "Line Voltage", unit: "volts" },
-    { label: "Control Voltage (R-C)", unit: "volts" },
-    { label: "External Static Pressure", unit: "inWC" },
-  ];
-
-  const heatingPresets = [
-    { label: "Gas Inlet Pressure", unit: "inWC" },
-    { label: "Manifold Pressure", unit: "inWC" },
-    { label: "Heat Rise", unit: "°F" },
-    { label: "Inducer Amps", unit: "amps" },
-    { label: "Flame Sensor", unit: "µA" },
-    { label: "Limit Switch Continuity", unit: "ohms" },
-    { label: "Line Voltage", unit: "volts" },
-    { label: "Control Voltage (R-W)", unit: "volts" },
-  ];
-
-  function openSearch(kind: "manual" | "parts") {
-    const qBase = `${manufacturer} ${model} ${equipmentType}`.trim();
-    const q = kind === "manual" ? `${qBase} service manual pdf` : `${qBase} parts list`;
-    window.open(`https://www.google.com/search?q=${encodeURIComponent(q)}`, "_blank");
   }
 
   return (
     <div style={{ padding: 20, maxWidth: 1180, margin: "0 auto" }}>
       <h1 style={{ fontSize: 26, fontWeight: 900 }}>Skilled Trades AI — HVAC Diagnose</h1>
-
-      {/* Quick symptom chips */}
-      <div style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
-        <ChipButton text="Not Cooling" onClick={() => setSymptom("Not cooling. Compressor runs. Suction pressure low...")} />
-        <ChipButton text="Not Heating" onClick={() => setSymptom("Not heating. Inducer runs. No flame...")} />
-        <ChipButton text="Freezing Up" onClick={() => setSymptom("Evaporator freezing up / icing. Low airflow or low charge suspected.")} />
-        <ChipButton text="Short Cycling" onClick={() => setSymptom("Short cycling. Runs 1–3 minutes then shuts off. Repeats.")} />
-      </div>
 
       {/* Inputs */}
       <div style={{ marginTop: 14, padding: 14, border: "1px solid #e5e5e5", borderRadius: 12, background: "#fafafa" }}>
@@ -650,112 +613,261 @@ export default function HVACUnitsPage() {
           </div>
         </div>
 
-        <div style={{ display: "flex", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
-          <button onClick={handleDiagnose} disabled={loading} style={{ padding: "10px 14px" }}>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
+          <button onClick={handleDiagnose} disabled={loading} style={{ padding: "10px 14px", fontWeight: 900 }}>
             {loading ? "Diagnosing..." : "Diagnose"}
           </button>
 
-          <button onClick={downloadReport} style={{ padding: "10px 14px" }}>
-            Download Report (JSON)
+          <button onClick={updateDiagnosisNow} disabled={loading} style={{ padding: "10px 14px", fontWeight: 900 }}>
+            Update diagnosis (with measurements)
           </button>
 
-          <button onClick={printReport} style={{ padding: "10px 14px" }}>
-            Print Report
-          </button>
-
-          <button onClick={() => openSearch("manual")} style={{ padding: "10px 14px" }}>
-            Search Manual
-          </button>
-
-          <button onClick={() => openSearch("parts")} style={{ padding: "10px 14px" }}>
-            Search Parts
+          <button onClick={openPrintableReport} disabled={!parsed} style={{ padding: "10px 14px", fontWeight: 900 }}>
+            Print / Save Report (PDF)
           </button>
         </div>
-
-        <SmallHint style={{ marginTop: 10 }}>
-          Tip: If Vercel ever “looks older,” it usually means it deployed an older commit. We’ll add an in-app version badge next.
-        </SmallHint>
       </div>
 
-      {/* Nameplate Photo */}
-      <div style={{ marginTop: 14 }}>
-        <Card title="Nameplate Photo (optional — auto-fill fields)">
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <div>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleNameplateSelected(e.target.files?.[0] || null)}
-              />
-              <div style={{ marginTop: 10, display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <button onClick={parseNameplate} disabled={nameplateLoading || !nameplateFile} style={{ padding: "10px 14px" }}>
-                  {nameplateLoading ? "Reading..." : "Read Nameplate"}
-                </button>
-                <button onClick={applyNameplateToForm} disabled={!nameplateResult} style={{ padding: "10px 14px" }}>
-                  Use Parsed Data
-                </button>
+      <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        {/* Nameplate */}
+        <SectionCard
+          title="Nameplate Photo Reader"
+          right={
+            <PillButton
+              text="Choose photo"
+              onClick={() => fileInputRef.current?.click()}
+            />
+          }
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            style={{ display: "none" }}
+            onChange={async (e) => {
+              const f = e.target.files?.[0];
+              if (f) await onPickNameplateFile(f);
+            }}
+          />
+
+          {nameplateImage ? (
+            <div style={{ display: "grid", gap: 10 }}>
+              <img src={nameplateImage} alt="Nameplate" style={{ width: "100%", maxHeight: 260, objectFit: "contain", border: "1px solid #eee", borderRadius: 10 }} />
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <PillButton text={nameplateBusy ? "Reading..." : "Read nameplate"} onClick={parseNameplate} disabled={nameplateBusy} />
+                <PillButton text="Clear" onClick={() => { setNameplateImage(""); setNameplate(null); setNameplateErr(""); }} />
               </div>
-              {nameplateError ? <div style={{ color: "crimson", marginTop: 10 }}>{nameplateError}</div> : null}
-              {nameplateResult ? (
-                <div style={{ marginTop: 10 }}>
-                  <div style={{ fontWeight: 900 }}>
-                    Parsed Nameplate <Badge text={`Confidence: ${nameplateResult.confidence}`} />
+
+              {nameplateErr ? <div style={{ color: "crimson", fontWeight: 800 }}>{nameplateErr}</div> : null}
+
+              {nameplate ? (
+                <div style={{ display: "grid", gap: 8 }}>
+                  <SmallHint>
+                    Confidence: <b>{nameplate.confidence}</b> — {nameplate.notes}
+                  </SmallHint>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                    <div><b>Manufacturer:</b> {nameplate.manufacturer ?? "-"}</div>
+                    <div><b>Model:</b> {nameplate.model ?? "-"}</div>
+                    <div><b>Serial:</b> {nameplate.serial ?? "-"}</div>
+                    <div><b>Refrigerant:</b> {nameplate.refrigerant ?? "-"}</div>
+                    <div><b>Voltage:</b> {nameplate.voltage ?? "-"}</div>
+                    <div><b>Phase/Hz:</b> {(nameplate.phase ?? "-") + " / " + (nameplate.hz ?? "-")}</div>
                   </div>
-                  <pre style={{ whiteSpace: "pre-wrap", marginTop: 8, background: "#fafafa", padding: 10, borderRadius: 10 }}>
-                    {JSON.stringify(nameplateResult, null, 2)}
-                  </pre>
                 </div>
               ) : null}
             </div>
+          ) : (
+            <SmallHint>
+              Upload a clear photo of the equipment nameplate. We’ll extract manufacturer/model/serial/refrigerant and auto-fill the form.
+            </SmallHint>
+          )}
+        </SectionCard>
 
-            <div>
-              {nameplatePreview ? (
-                <div>
-                  <div style={{ fontWeight: 900, marginBottom: 8 }}>Preview</div>
-                  <img
-                    src={nameplatePreview}
-                    alt="Nameplate preview"
-                    style={{ maxWidth: "100%", borderRadius: 10, border: "1px solid #ddd" }}
-                  />
-                  <SmallHint style={{ marginTop: 8 }}>
-                    If the photo is hard to read, take it closer + straight-on + good lighting. If it still fails, we’ll add a “manual text override” box next.
-                  </SmallHint>
+        {/* Manuals & Parts */}
+        <SectionCard
+          title="Manuals + Parts Finder"
+          right={<PillButton text={mpBusy ? "Searching..." : "Find manuals & parts"} onClick={findManualsParts} disabled={mpBusy || !manufacturer.trim()} />}
+        >
+          {mpErr ? <div style={{ color: "crimson", fontWeight: 800 }}>{mpErr}</div> : null}
+
+          {!manualsParts ? (
+            <SmallHint>
+              Uses your manufacturer/model/symptom to generate targeted search links + a “probable parts” shortlist.
+            </SmallHint>
+          ) : (
+            <div style={{ display: "grid", gap: 10 }}>
+              <div style={{ fontWeight: 900 }}>{manualsParts.summary}</div>
+
+              <div>
+                <div style={{ fontWeight: 900 }}>Suggested search terms</div>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 6 }}>
+                  {manualsParts.suggested_search_terms.map((t, i) => (
+                    <a key={i} href={`https://www.google.com/search?q=${encodeURIComponent(t)}`} target="_blank" rel="noreferrer" style={{ textDecoration: "none" }}>
+                      <span style={{ border: "1px solid #ddd", borderRadius: 999, padding: "4px 10px", display: "inline-block", fontSize: 12, fontWeight: 900, color: "#111", background: "#f7f7f7" }}>
+                        {t}
+                      </span>
+                    </a>
+                  ))}
                 </div>
-              ) : (
-                <SmallHint>No image selected yet.</SmallHint>
-              )}
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div>
+                  <div style={{ fontWeight: 900 }}>Manuals</div>
+                  <div style={{ display: "grid", gap: 8, marginTop: 6 }}>
+                    {manualsParts.manuals.map((l, i) => (
+                      <a key={i} href={l.url} target="_blank" rel="noreferrer" style={{ border: "1px solid #eee", borderRadius: 10, padding: 10, textDecoration: "none", color: "#111" }}>
+                        <div style={{ fontWeight: 900 }}>{l.title}</div>
+                        {l.note ? <SmallHint>{l.note}</SmallHint> : null}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <div style={{ fontWeight: 900 }}>Parts</div>
+                  <div style={{ display: "grid", gap: 8, marginTop: 6 }}>
+                    {manualsParts.parts.map((l, i) => (
+                      <a key={i} href={l.url} target="_blank" rel="noreferrer" style={{ border: "1px solid #eee", borderRadius: 10, padding: 10, textDecoration: "none", color: "#111" }}>
+                        <div style={{ fontWeight: 900 }}>{l.title}</div>
+                        {l.note ? <SmallHint>{l.note}</SmallHint> : null}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div style={{ fontWeight: 900 }}>Probable parts to check</div>
+                <div style={{ display: "grid", gap: 8, marginTop: 6 }}>
+                  {manualsParts.probable_parts_to_check.map((p, i) => (
+                    <div key={i} style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
+                      <div style={{ fontWeight: 900 }}>{p.part}</div>
+                      <SmallHint>{p.why}</SmallHint>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
-        </Card>
+          )}
+        </SectionCard>
       </div>
 
-      {/* Measurements + Diagnosis */}
+      {/* Measurements */}
+      <div style={{ marginTop: 16 }}>
+        <SectionCard title="Measurements / Observations">
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            {(symptom.toLowerCase().includes("heat") ? heatingPresets : coolingPresets).map((p) => (
+              <PillButton key={p.label} text={p.label} onClick={() => applyPreset(p.label, p.unit)} />
+            ))}
+            {measurementOptions.map((m) => (
+              <PillButton key={m} text={m} onClick={() => applyPreset(m, guessDefaultUnit(m))} />
+            ))}
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 10, marginTop: 12 }}>
+            <div>
+              <label style={{ fontWeight: 900 }}>Label</label>
+              <input value={obsLabel} onChange={(e) => setObsLabel(e.target.value)} style={{ width: "100%", padding: 8 }} />
+            </div>
+            <div>
+              <label style={{ fontWeight: 900 }}>Value</label>
+              <input value={obsValue} onChange={(e) => setObsValue(e.target.value)} style={{ width: "100%", padding: 8 }} />
+            </div>
+            <div>
+              <label style={{ fontWeight: 900 }}>Unit</label>
+              <select value={obsUnit} onChange={(e) => setObsUnit(e.target.value)} style={{ width: "100%", padding: 8 }}>
+                {unitOptions.map((u) => (
+                  <option key={u} value={u}>
+                    {u}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
+            <div>
+              <label style={{ fontWeight: 900 }}>Note (optional)</label>
+              <input value={obsNote} onChange={(e) => setObsNote(e.target.value)} style={{ width: "100%", padding: 8 }} />
+            </div>
+
+            <label style={{ display: "flex", alignItems: "center", gap: 8, userSelect: "none" }}>
+              <input type="checkbox" checked={autoConvert} onChange={(e) => setAutoConvert(e.target.checked)} />
+              Auto-convert (kPa→psi, °C→°F, Pa→inWC)
+            </label>
+
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <button onClick={addMeasurement} style={{ padding: "10px 14px", fontWeight: 900 }}>
+                Add measurement
+              </button>
+              <button onClick={() => setObservations([])} style={{ padding: "10px 14px", fontWeight: 900 }}>
+                Clear all
+              </button>
+            </div>
+
+            {observations.length ? (
+              <div style={{ display: "grid", gap: 8 }}>
+                {observations.map((o, idx) => (
+                  <div key={idx} style={{ border: "1px solid #eee", borderRadius: 10, padding: 10, display: "flex", justifyContent: "space-between", gap: 10 }}>
+                    <div>
+                      <div style={{ fontWeight: 900 }}>
+                        {o.label} <Badge text={`${o.value} ${o.unit}`} />
+                      </div>
+                      {o.note ? <SmallHint>{o.note}</SmallHint> : null}
+                    </div>
+                    <button onClick={() => removeObservation(idx)} style={{ fontWeight: 900 }}>
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <SmallHint>No measurements added yet.</SmallHint>
+            )}
+          </div>
+        </SectionCard>
+      </div>
+
+      {/* Results */}
       <div style={{ marginTop: 16 }}>
         {parsed ? (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <Card title="Summary + Derived Calculations">
-              <div style={{ fontWeight: 900, marginBottom: 6 }}>Summary</div>
-              <div style={{ color: "#222" }}>{parsed.summary || "No summary returned."}</div>
+            <SectionCard title="Summary">
+              <div style={{ fontWeight: 900 }}>{parsed.summary || "—"}</div>
+            </SectionCard>
 
-              <div style={{ height: 10 }} />
+            <SectionCard title="Safety + Escalate">
+              <div style={{ display: "grid", gap: 10 }}>
+                <div>
+                  <div style={{ fontWeight: 900 }}>Safety notes</div>
+                  {parsed.safety_notes?.length ? (
+                    <ul style={{ margin: 0, paddingLeft: 18 }}>
+                      {parsed.safety_notes.map((s, i) => (
+                        <li key={i}>{s}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <SmallHint>None returned.</SmallHint>
+                  )}
+                </div>
 
-              <div style={{ fontWeight: 900, marginBottom: 6 }}>Derived</div>
-              <div style={{ fontSize: 14, color: "#222" }}>
-                <div>ΔT: {parsed.derived_calculations?.deltaT_f ?? "—"} °F</div>
-                <div>Superheat: {parsed.derived_calculations?.superheat_f ?? "—"} °F</div>
-                <div>Subcool: {parsed.derived_calculations?.subcool_f ?? "—"} °F</div>
+                <div>
+                  <div style={{ fontWeight: 900 }}>When to escalate</div>
+                  {parsed.when_to_escalate?.length ? (
+                    <ul style={{ margin: 0, paddingLeft: 18 }}>
+                      {parsed.when_to_escalate.map((s, i) => (
+                        <li key={i}>{s}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <SmallHint>None returned.</SmallHint>
+                  )}
+                </div>
               </div>
+            </SectionCard>
 
-              {parsed.derived_calculations?.notes?.length ? (
-                <ul style={{ marginTop: 8 }}>
-                  {parsed.derived_calculations.notes.map((n, i) => (
-                    <li key={i}>{n}</li>
-                  ))}
-                </ul>
-              ) : null}
-            </Card>
-
-            <Card title="Likely causes">
+            <SectionCard title="Likely causes">
               {parsed.likely_causes?.length ? (
                 <div style={{ display: "grid", gap: 10 }}>
                   {parsed.likely_causes.map((c, idx) => (
@@ -765,234 +877,87 @@ export default function HVACUnitsPage() {
                         {typeof c.probability_percent === "number" ? <Badge text={`${c.probability_percent}%`} /> : null}
                       </div>
                       {typeof c.probability_percent === "number" ? <ProbBar pct={c.probability_percent} /> : null}
-                      {c.why ? <div style={{ marginTop: 6, color: "#444" }}>{c.why}</div> : null}
+                      {c.why ? <SmallHint style={{ marginTop: 6 }}>{c.why}</SmallHint> : null}
                       {c.what_points_to_it?.length ? (
                         <SmallHint style={{ marginTop: 6 }}>
-                          Points to it: {c.what_points_to_it.join("; ")}
+                          <b>Points to it:</b> {c.what_points_to_it.join(" • ")}
                         </SmallHint>
                       ) : null}
                       {c.what_rules_it_out?.length ? (
                         <SmallHint style={{ marginTop: 4 }}>
-                          Rules it out: {c.what_rules_it_out.join("; ")}
+                          <b>Rules out:</b> {c.what_rules_it_out.join(" • ")}
                         </SmallHint>
                       ) : null}
                     </div>
                   ))}
                 </div>
               ) : (
-                <SmallHint>No likely causes returned yet.</SmallHint>
+                <SmallHint>No likely causes returned.</SmallHint>
               )}
-            </Card>
+            </SectionCard>
 
-            <Card title="Measurements">
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <ChipButton text="Cooling presets" onClick={() => applyPreset("Suction Pressure", "psi")} />
-                <ChipButton text="Heating presets" onClick={() => applyPreset("Manifold Pressure", "inWC")} />
-              </div>
-
-              <div style={{ height: 10 }} />
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 140px 160px", gap: 8 }}>
-                <input placeholder="Label" value={obsLabel} onChange={(e) => setObsLabel(e.target.value)} style={{ padding: 8 }} />
-                <input placeholder="Value" value={obsValue} onChange={(e) => setObsValue(e.target.value)} style={{ padding: 8 }} />
-                <select value={obsUnit} onChange={(e) => setObsUnit(e.target.value)} style={{ padding: 8 }}>
-                  {unitOptions.map((u) => (
-                    <option key={u} value={u}>
-                      {u}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div style={{ marginTop: 8 }}>
-                <input
-                  placeholder="Note (optional)"
-                  value={obsNote}
-                  onChange={(e) => setObsNote(e.target.value)}
-                  style={{ padding: 8, width: "100%" }}
-                />
-              </div>
-
-              <div style={{ display: "flex", gap: 10, alignItems: "center", marginTop: 8, flexWrap: "wrap" }}>
-                <button onClick={addMeasurement} style={{ padding: "10px 14px" }}>
-                  Add Measurement
-                </button>
-
-                <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                  <input type="checkbox" checked={autoConvert} onChange={(e) => setAutoConvert(e.target.checked)} />
-                  Auto-convert to standard units
-                </label>
-
-                <button onClick={updateDiagnosisNow} disabled={loading} style={{ padding: "10px 14px" }}>
-                  Re-diagnose with measurements
-                </button>
-              </div>
-
-              {suggestedForCurrentStep ? (
-                <SmallHint style={{ marginTop: 10 }}>
-                  Suggested for current step: <b>{suggestedForCurrentStep.measurement}</b> — {suggestedForCurrentStep.where}
-                </SmallHint>
-              ) : null}
-
-              <div style={{ marginTop: 12 }}>
-                {observations.length ? (
-                  <div style={{ display: "grid", gap: 8 }}>
-                    {observations.map((o, i) => (
-                      <div key={i} style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
-                          <div>
-                            <b>{o.label}</b>: {o.value} {o.unit}
-                            {o.note ? <SmallHint style={{ marginTop: 4 }}>{o.note}</SmallHint> : null}
-                          </div>
-                          <button onClick={() => removeObservation(i)} style={{ padding: "6px 10px" }}>
-                            Remove
-                          </button>
-                        </div>
-                      </div>
+            <SectionCard title="Decision tree (check this → then that)">
+              {parsed.decision_tree?.length ? (
+                <ol style={{ margin: 0, paddingLeft: 18 }}>
+                  {parsed.decision_tree
+                    .slice()
+                    .sort((a, b) => (a.step ?? 0) - (b.step ?? 0))
+                    .map((t, idx) => (
+                      <li key={idx} style={{ marginBottom: 10 }}>
+                        <div style={{ fontWeight: 900 }}>{t.check || "Step"}</div>
+                        {t.how ? <SmallHint>How: {t.how}</SmallHint> : null}
+                        {t.notes ? <SmallHint>Notes: {t.notes}</SmallHint> : null}
+                      </li>
                     ))}
-                  </div>
-                ) : (
-                  <SmallHint style={{ marginTop: 10 }}>
-                    Add 2–4 key readings (pressures, temps, amps, ΔT). The diagnosis gets dramatically better.
-                  </SmallHint>
-                )}
-              </div>
+                </ol>
+              ) : (
+                <SmallHint>No decision tree returned.</SmallHint>
+              )}
+            </SectionCard>
 
-              <div style={{ marginTop: 10 }}>
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  {(symptom.toLowerCase().includes("heat") ? heatingPresets : coolingPresets).map((p) => (
-                    <ChipButton key={p.label} text={p.label} onClick={() => applyPreset(p.label, p.unit)} />
+            <SectionCard title="Field measurements to collect next">
+              {parsed.field_measurements_to_collect?.length ? (
+                <div style={{ display: "grid", gap: 10 }}>
+                  {parsed.field_measurements_to_collect.map((m, idx) => (
+                    <div key={idx} style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
+                      <div style={{ fontWeight: 900 }}>{m.measurement}</div>
+                      {m.where ? <SmallHint>Where: {m.where}</SmallHint> : null}
+                      {m.how ? <SmallHint>How: {m.how}</SmallHint> : null}
+                      {m.expected_range ? <SmallHint>Expected: {m.expected_range}</SmallHint> : null}
+                      {m.why_it_matters ? <SmallHint>Why: {m.why_it_matters}</SmallHint> : null}
+                    </div>
                   ))}
-                </div>
-              </div>
-            </Card>
-
-            <Card title="Decision flow (guided)">
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <button onClick={() => setViewMode("guided")} style={{ padding: "10px 14px" }}>
-                  Guided
-                </button>
-                <button onClick={() => setViewMode("flow")} style={{ padding: "10px 14px" }}>
-                  Flow List
-                </button>
-                {!guidedStarted ? (
-                  <button onClick={startGuided} style={{ padding: "10px 14px" }}>
-                    Start Guided
-                  </button>
-                ) : (
-                  <button onClick={resetGuided} style={{ padding: "10px 14px" }}>
-                    Reset Guided
-                  </button>
-                )}
-              </div>
-
-              {viewMode === "flow" ? (
-                <div style={{ marginTop: 10 }}>
-                  {decisionSteps.length ? (
-                    <ol style={{ margin: 0, paddingLeft: 18 }}>
-                      {decisionSteps.map((t) => (
-                        <li key={t.step} style={{ marginBottom: 10 }}>
-                          <div style={{ fontWeight: 900 }}>
-                            Step {t.step}: {t.check}
-                          </div>
-                          {t.how ? <SmallHint>How: {t.how}</SmallHint> : null}
-                          {t.notes ? <SmallHint>Note: {t.notes}</SmallHint> : null}
-                        </li>
-                      ))}
-                    </ol>
-                  ) : (
-                    <SmallHint style={{ marginTop: 10 }}>No decision tree returned yet.</SmallHint>
-                  )}
                 </div>
               ) : (
-                <div style={{ marginTop: 10 }}>
-                  {!guidedStarted ? (
-                    <SmallHint>Click “Start Guided” to walk step-by-step with PASS/FAIL.</SmallHint>
-                  ) : currentStep === 0 ? (
-                    <div>
-                      <div style={{ fontWeight: 900 }}>Guided flow complete.</div>
-                      <SmallHint style={{ marginTop: 6 }}>Hit “Re-diagnose with measurements” for a tighter result.</SmallHint>
-                    </div>
-                  ) : current ? (
-                    <div style={{ border: "1px solid #eee", borderRadius: 12, padding: 12 }}>
-                      <div style={{ fontWeight: 900 }}>Step {current.step}</div>
-                      <div style={{ marginTop: 6, fontSize: 16 }}>{current.check}</div>
-                      {current.how ? <SmallHint style={{ marginTop: 6 }}>How: {current.how}</SmallHint> : null}
-                      {current.notes ? <SmallHint style={{ marginTop: 6 }}>Note: {current.notes}</SmallHint> : null}
-
-                      <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
-                        <button onClick={() => advance("PASS")} style={{ padding: "10px 14px" }}>
-                          PASS
-                        </button>
-                        <button onClick={() => advance("FAIL")} style={{ padding: "10px 14px" }}>
-                          FAIL
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <SmallHint>Waiting for a decision tree…</SmallHint>
-                  )}
-                </div>
+                <SmallHint>No measurements returned.</SmallHint>
               )}
-            </Card>
+            </SectionCard>
 
-            <Card title="Parts to check">
+            <SectionCard title="Parts to check">
               {parsed.parts_to_check?.length ? (
                 <div style={{ display: "grid", gap: 10 }}>
-                  {parsed.parts_to_check.map((p, i) => (
-                    <div key={i} style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
+                  {parsed.parts_to_check.map((p, idx) => (
+                    <div key={idx} style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
                       <div style={{ fontWeight: 900 }}>
                         {p.part} {p.priority ? <Badge text={String(p.priority)} /> : null}
                       </div>
-                      {p.why_suspect ? <SmallHint style={{ marginTop: 6 }}>Why: {p.why_suspect}</SmallHint> : null}
-                      {p.quick_test ? <SmallHint style={{ marginTop: 6 }}>Quick test: {p.quick_test}</SmallHint> : null}
-                      {p.common_failure_modes?.length ? (
-                        <SmallHint style={{ marginTop: 6 }}>Common failures: {p.common_failure_modes.join("; ")}</SmallHint>
-                      ) : null}
+                      {p.why_suspect ? <SmallHint>{p.why_suspect}</SmallHint> : null}
+                      {p.quick_test ? <SmallHint>Quick test: {p.quick_test}</SmallHint> : null}
+                      {p.common_failure_modes?.length ? <SmallHint>Common failures: {p.common_failure_modes.join(" • ")}</SmallHint> : null}
                     </div>
                   ))}
                 </div>
               ) : (
-                <SmallHint>
-                  After you Diagnose, the model can populate “Parts to check.” If you don’t see it yet, next upgrade is improving API prompt depth.
+                <SmallHint style={{}}>
+                  After you Diagnose, the model can populate “Parts to check.” If you don’t see it yet, we’ll upgrade the API prompt next so it returns better parts + tests.
                 </SmallHint>
               )}
-            </Card>
-
-            <Card title="Safety + Escalate">
-              <div style={{ display: "grid", gap: 10 }}>
-                <div>
-                  <div style={{ fontWeight: 900 }}>Safety</div>
-                  {parsed.safety_notes?.length ? (
-                    <ul style={{ marginTop: 6 }}>
-                      {parsed.safety_notes.map((s, i) => (
-                        <li key={i}>{s}</li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <SmallHint>No safety notes returned.</SmallHint>
-                  )}
-                </div>
-
-                <div>
-                  <div style={{ fontWeight: 900 }}>When to escalate</div>
-                  {parsed.when_to_escalate?.length ? (
-                    <ul style={{ marginTop: 6 }}>
-                      {parsed.when_to_escalate.map((s, i) => (
-                        <li key={i}>{s}</li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <SmallHint>No escalation notes returned.</SmallHint>
-                  )}
-                </div>
-              </div>
-            </Card>
+            </SectionCard>
           </div>
         ) : (
-          <Card title="Raw output">
+          <SectionCard title="Raw output">
             <pre style={{ whiteSpace: "pre-wrap", margin: 0 }}>{rawResult || "No results yet."}</pre>
-          </Card>
+          </SectionCard>
         )}
       </div>
     </div>
