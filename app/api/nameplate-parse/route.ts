@@ -1,110 +1,91 @@
-mkdir -p app/api/nameplate-parse
-cat > app/api/nameplate-parse/route.ts <<'EOF'
 import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
-type Nameplate = {
-  manufacturer?: string;
-  model?: string;
-  serial?: string;
-  equipmentType?: string;
-  refrigerantType?: string;
-  voltage?: string;
-  phases?: string;
-  hz?: string;
-  mca?: string;
-  mop?: string;
-  gasType?: string;
-  heatInputBtuh?: string;
-  notes?: string[];
-};
-
-function extractJsonBlock(text: string) {
-  const start = text.indexOf("{");
-  const end = text.lastIndexOf("}");
-  if (start >= 0 && end > start) return text.slice(start, end + 1);
-  return text;
-}
-
-function sanitizeJson(jsonLike: string) {
-  let s = jsonLike;
-  s = s.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "");
-  s = s.replace(/,\s*([}\]])/g, "$1");
-  return s;
-}
-
-async function callOpenAIJson<T>(apiKey: string, prompt: string, maxTokens: number): Promise<T> {
-  const r = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.1,
-      max_tokens: maxTokens,
-      response_format: { type: "json_object" },
-    }),
-  });
-
-  const data = await r.json();
-  if (!r.ok) {
-    const code = data?.error?.code;
-    const msg = data?.error?.message || "OpenAI request failed";
-    throw new Error(`OpenAI error (${r.status}) ${code || ""}: ${msg}`);
-  }
-
-  const raw = data?.choices?.[0]?.message?.content ?? "";
-  const block = sanitizeJson(extractJsonBlock(raw));
-  return JSON.parse(block) as T;
-}
-
+/**
+ * POST { text?: string }
+ * Simple nameplate parser stub:
+ * - Returns structured fields from pasted nameplate text
+ * - (Later we'll upgrade to image upload + OCR/vision)
+ */
 export async function POST(req: NextRequest) {
   try {
-    const apiKey = process.env.OPENAI_API_KEY || "";
-    if (!apiKey) return NextResponse.json({ error: "Missing OPENAI_API_KEY" }, { status: 500 });
-
-    const body = await req.json();
+    const body = await req.json().catch(() => ({}));
     const text = String(body?.text || "").trim();
-    if (!text) return NextResponse.json({ error: "Missing text" }, { status: 400 });
 
-    const prompt = `
-You are an HVAC nameplate parser.
-Return ONLY valid JSON.
+    if (!text) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "Missing 'text'. Paste the unit/nameplate text to parse.",
+        },
+        { status: 400 }
+      );
+    }
 
-INPUT_TEXT:
-${text}
+    const t = text.replace(/\r/g, "\n");
 
-Return JSON with EXACT keys:
-{
-  "manufacturer": "",
-  "model": "",
-  "serial": "",
-  "equipmentType": "",
-  "refrigerantType": "",
-  "voltage": "",
-  "phases": "",
-  "hz": "",
-  "mca": "",
-  "mop": "",
-  "gasType": "",
-  "heatInputBtuh": "",
-  "notes": ["",""]
-}
+    // Very lightweight heuristics (safe + no external calls)
+    const pick = (re: RegExp) => {
+      const m = t.match(re);
+      return m?.[1]?.trim() || "";
+    };
 
-Rules:
-- If unknown, use "".
-- notes should be a short list (0-3 items).
-`.trim();
+    const manufacturer =
+      pick(/manufacturer[:\s]+([^\n]+)/i) ||
+      pick(/mfg[:\s]+([^\n]+)/i);
 
-    const nameplate = await callOpenAIJson<Nameplate>(apiKey, prompt, 500);
+    const model =
+      pick(/model(?:\s*no\.?)?[:\s]+([^\n]+)/i) ||
+      pick(/mdl[:\s]+([^\n]+)/i);
 
-    return NextResponse.json({ nameplate });
+    const serial =
+      pick(/serial(?:\s*no\.?)?[:\s]+([^\n]+)/i) ||
+      pick(/s\/n[:\s]+([^\n]+)/i);
+
+    const refrigerant =
+      pick(/refrigerant[:\s]+([^\n]+)/i) ||
+      pick(/\b(r-\d{2,4}[a-z]?)\b/i);
+
+    const voltage =
+      pick(/voltage[:\s]+([^\n]+)/i) ||
+      pick(/\b(\d{3})\s*\/\s*(1|3)\s*ph\b/i) ||
+      pick(/\b(208\/230|460|575)\b/i);
+
+    const phase =
+      pick(/\b(1|3)\s*ph\b/i);
+
+    const tonnage =
+      pick(/ton(?:nage)?[:\s]+([^\n]+)/i);
+
+    const hz =
+      pick(/\b(50|60)\s*hz\b/i);
+
+    const result = {
+      manufacturer: manufacturer || "Unknown",
+      model: model || "",
+      serial: serial || "",
+      refrigerant: refrigerant || "Unknown",
+      electrical: {
+        voltage: voltage || "",
+        phase: phase || "",
+        hz: hz || "",
+      },
+      capacity: {
+        tonnage: tonnage || "",
+      },
+      raw_text: text,
+      notes: [
+        "This is a text-based parser stub.",
+        "Next upgrade: image upload + vision extraction + confidence scores.",
+      ],
+    };
+
+    return NextResponse.json({ ok: true, result });
   } catch (err: any) {
-    return NextResponse.json({ error: "Server error: " + (err?.message || String(err)) }, { status: 500 });
+    return NextResponse.json(
+      { ok: false, error: "Server error: " + (err?.message || String(err)) },
+      { status: 500 }
+    );
   }
 }
-EOF
