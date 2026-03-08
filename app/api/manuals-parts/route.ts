@@ -1,66 +1,83 @@
-
 import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
-// ---- OpenAI Responses API (JSON Schema via text.format) ----
+type LinkItem = { title: string; url: string; note?: string };
+
+type ManualsPartsResponse = {
+  summary: string;
+  suggested_search_terms: string[];
+  manuals: LinkItem[];
+  parts: LinkItem[];
+  probable_parts_to_check: { part: string; why: string }[];
+};
+
+function getOutputText(resp: any): string {
+  const out = resp?.output;
+  if (!Array.isArray(out)) return "";
+  for (const item of out) {
+    const content = item?.content;
+    if (!Array.isArray(content)) continue;
+    for (const c of content) {
+      if (c?.type === "output_text" && typeof c?.text === "string") return c.text;
+    }
+  }
+  return resp?.output_text ?? "";
+}
+
 async function callOpenAIJsonSchema<T>(args: {
   apiKey: string;
+  model: string;
   prompt: string;
   schemaName: string;
   schema: any;
-  model?: string;
+  maxOutputTokens?: number;
+  temperature?: number;
 }): Promise<T> {
-  const { apiKey, prompt, schemaName, schema } = args;
-  const model = args.model || "gpt-4o-mini";
+  const { apiKey, model, prompt, schemaName, schema, maxOutputTokens = 900, temperature = 0.2 } = args;
+
+  const body = {
+    model,
+    input: [{ role: "user", content: [{ type: "input_text", text: prompt }] }],
+    temperature,
+    max_output_tokens: maxOutputTokens,
+    text: {
+      format: {
+        type: "json_schema",
+        name: schemaName,
+        schema,
+        strict: true,
+      },
+    },
+  };
 
   const r = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model,
-      input: prompt,
-      // NEW format for Responses API:
-      text: {
-        format: {
-          type: "json_schema",
-          name: schemaName,
-          strict: true,
-          schema,
-        },
-      },
-    }),
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify(body),
   });
 
-  const data = await r.json().catch(() => ({}));
+  const raw = await r.text();
+  let data: any = null;
+  try {
+    data = JSON.parse(raw);
+  } catch {
+    throw new Error(`OpenAI returned non-JSON (${r.status}): ${raw.slice(0, 200)}`);
+  }
 
   if (!r.ok) {
-    const code = data?.error?.code || "unknown_error";
+    const code = data?.error?.code;
     const msg = data?.error?.message || "OpenAI request failed";
-    throw new Error(`OpenAI error (${r.status}) ${code}: ${msg}`);
+    throw new Error(`OpenAI error (${r.status}) ${code || ""}: ${msg}`);
   }
 
-  // Responses API usually returns the JSON in output_text
-  const outText: string =
-    data?.output_text ??
-    data?.output?.[0]?.content?.[0]?.text ??
-    data?.output?.[0]?.content?.[0]?.text?.value ??
-    "";
+  const txt = getOutputText(data);
+  if (!txt) throw new Error("OpenAI response had no output_text.");
+  return JSON.parse(txt) as T;
+}
 
-  if (!outText || typeof outText !== "string") {
-    throw new Error("OpenAI returned empty output_text");
-  }
-
-  try {
-    return JSON.parse(outText) as T;
-  } catch (e: any) {
-    throw new Error(
-      `Could not parse JSON from model output (length=${outText.length}): ${e?.message || e}`
-    );
-  }
+function google(q: string) {
+  return `https://www.google.com/search?q=${encodeURIComponent(q)}`;
 }
 
 export async function POST(req: NextRequest) {
@@ -68,36 +85,26 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
 
     const manufacturer = String(body?.manufacturer || "").trim();
-    const model = String(body?.model || "").trim();
+    const modelNum = String(body?.model || "").trim();
+    const serial = String(body?.serial || "").trim();
     const equipmentType = String(body?.equipmentType || "").trim();
-    const query = String(body?.query || "").trim();
-    const nameplate = body?.nameplate || null; // optional object
+    const symptom = String(body?.symptom || "").trim();
 
-    if (!manufacturer && !model && !query) {
-      return NextResponse.json(
-        { result: "Please provide at least Manufacturer, Model, or a search query." },
-        { status: 400 }
-      );
+    if (!manufacturer) {
+      return NextResponse.json({ ok: false, error: "manufacturer is required." }, { status: 400 });
     }
 
     const apiKey = process.env.OPENAI_API_KEY || "";
     if (!apiKey) {
-      return NextResponse.json(
-        { result: "Missing OPENAI_API_KEY (set in Vercel/Codespaces env vars)." },
-        { status: 500 }
-      );
+      return NextResponse.json({ ok: false, error: "OPENAI_API_KEY missing." }, { status: 500 });
     }
 
-    // ---------------------------
-    // STRICT JSON schema
-    // IMPORTANT: In strict mode, EVERY object must have required including ALL keys in properties.
-    // That’s why we make "note" required (it can be "" if not needed).
-    // ---------------------------
     const schema = {
       type: "object",
       additionalProperties: false,
       properties: {
         summary: { type: "string" },
+        suggested_search_terms: { type: "array", items: { type: "string" } },
         manuals: {
           type: "array",
           items: {
@@ -106,12 +113,9 @@ export async function POST(req: NextRequest) {
             properties: {
               title: { type: "string" },
               url: { type: "string" },
-              type: { type: "string" }, // e.g., "Service Manual", "IOM", "Wiring Diagram"
-              confidence_percent: { type: "number" },
-              why_relevant: { type: "string" },
-              note: { type: "string" }, // REQUIRED in strict mode (can be "")
+              note: { type: "string" },
             },
-            required: ["title", "url", "type", "confidence_percent", "why_relevant", "note"],
+            required: ["title", "url"],
           },
         },
         parts: {
@@ -120,89 +124,95 @@ export async function POST(req: NextRequest) {
             type: "object",
             additionalProperties: false,
             properties: {
-              part: { type: "string" },
-              description: { type: "string" },
-              why_relevant: { type: "string" },
-              confidence_percent: { type: "number" },
-              possible_part_numbers: { type: "array", items: { type: "string" } },
-              where_to_buy_url: { type: "string" },
-              note: { type: "string" }, // REQUIRED in strict mode (can be "")
+              title: { type: "string" },
+              url: { type: "string" },
+              note: { type: "string" },
             },
-            required: [
-              "part",
-              "description",
-              "why_relevant",
-              "confidence_percent",
-              "possible_part_numbers",
-              "where_to_buy_url",
-              "note",
-            ],
+            required: ["title", "url"],
           },
         },
-        cautions: { type: "array", items: { type: "string" } },
+        probable_parts_to_check: {
+          type: "array",
+          items: {
+            type: "object",
+            additionalProperties: false,
+            properties: {
+              part: { type: "string" },
+              why: { type: "string" },
+            },
+            required: ["part", "why"],
+          },
+        },
       },
-      required: ["summary", "manuals", "parts", "cautions"],
+      required: ["summary", "suggested_search_terms", "manuals", "parts", "probable_parts_to_check"],
     };
 
     const prompt = `
-You are helping an HVAC/R service tech find the BEST manuals and likely replacement parts.
+You are helping an HVAC tech find the RIGHT service manual and common parts sources.
 
-INPUT:
-- Manufacturer: ${manufacturer || "Unknown"}
-- Model: ${model || "Unknown"}
-- Equipment Type: ${equipmentType || "Unknown"}
-- Search Query / Symptom: ${query || "None"}
+Inputs:
+- Manufacturer: ${manufacturer}
+- Model: ${modelNum || "Unknown"}
+- Serial: ${serial || "Unknown"}
+- Equipment type: ${equipmentType || "Unknown"}
+- Symptom: ${symptom || "Unknown"}
 
-OPTIONAL NAMEPLATE (if provided):
-${nameplate ? JSON.stringify(nameplate, null, 2) : "None"}
-
-TASK:
-Return JSON that matches the schema EXACTLY.
-
+Return JSON matching the schema.
 Rules:
-- manuals: return 5 items max. Use real-looking titles and URLs if possible; if unsure, still return a helpful best-guess URL (manufacturer support page, docs page, etc).
-- parts: return 8 items max. Focus on common failure items and anything tied to the query/symptom.
-- confidence_percent: 0-100 (be honest).
-- note: MUST be present but can be "" if you have nothing to add.
-- cautions: include 2-5 safety / verification cautions (confirm model/serial, voltage, refrigerant, revision, etc).
-
-No markdown. JSON only.
+- Include 6 suggested_search_terms (each one a short Google-able query).
+- Include 6 manuals links and 6 parts links.
+- Links can be Google searches OR direct to reputable vendor/support portals if you know them.
+- Keep summary one sentence.
+- probable_parts_to_check should be 6 items, practical field parts (contactors, caps, igniter, flame sensor, etc), tailored to symptom if provided.
 `.trim();
 
-    type Out = {
-      summary: string;
-      manuals: {
-        title: string;
-        url: string;
-        type: string;
-        confidence_percent: number;
-        why_relevant: string;
-        note: string;
-      }[];
-      parts: {
-        part: string;
-        description: string;
-        why_relevant: string;
-        confidence_percent: number;
-        possible_part_numbers: string[];
-        where_to_buy_url: string;
-        note: string;
-      }[];
-      cautions: string[];
-    };
+    const aiModel = "gpt-4o-mini";
 
-    const out = await callOpenAIJsonSchema<Out>({
+    const ai = await callOpenAIJsonSchema<ManualsPartsResponse>({
       apiKey,
+      model: aiModel,
       prompt,
       schemaName: "manuals_parts",
       schema,
-      model: "gpt-4o-mini",
+      maxOutputTokens: 900,
+      temperature: 0.2,
     });
 
-    return NextResponse.json({ result: JSON.stringify(out, null, 2) });
+    // If model returns any empty/unsafe links, backfill with sensible Google searches.
+    const baseQ = `${manufacturer} ${modelNum}`.trim();
+    const fallbackManuals: LinkItem[] = [
+      { title: "Service manual (Google)", url: google(`${baseQ} service manual`) },
+      { title: "Installation manual (Google)", url: google(`${baseQ} installation manual`) },
+      { title: "Wiring diagram (Google)", url: google(`${baseQ} wiring diagram`) },
+      { title: "IOM (Google)", url: google(`${baseQ} IOM pdf`) },
+      { title: "Parts list (Google)", url: google(`${baseQ} parts list`) },
+      { title: "Sequence of operation (Google)", url: google(`${baseQ} sequence of operation`) },
+    ];
+    const fallbackParts: LinkItem[] = [
+      { title: "OEM part lookup (Google)", url: google(`${baseQ} OEM parts`) },
+      { title: "SupplyHouse search", url: google(`${baseQ} site:supplyhouse.com`) },
+      { title: "Johnstone search", url: google(`${baseQ} site:johnstonesupply.com`) },
+      { title: "United Refrigeration search", url: google(`${baseQ} site:uri.com`) },
+      { title: "Carrier/Bryant/ICP parts (Google)", url: google(`${baseQ} ICP parts`) },
+      { title: "HVAC part number search (Google)", url: google(`${baseQ} part number`) },
+    ];
+
+    const cleanLinks = (arr: LinkItem[], fallback: LinkItem[]) => {
+      const good = (arr || []).filter((x) => x?.url && /^https?:\/\//i.test(x.url));
+      return good.length >= 3 ? good.slice(0, 6) : fallback;
+    };
+
+    return NextResponse.json({
+      ok: true,
+      data: {
+        ...ai,
+        manuals: cleanLinks(ai.manuals, fallbackManuals),
+        parts: cleanLinks(ai.parts, fallbackParts),
+      },
+    });
   } catch (err: any) {
     return NextResponse.json(
-      { result: "Server error: " + (err?.message || String(err)) },
+      { ok: false, error: "Server error: " + (err?.message || String(err)) },
       { status: 500 }
     );
   }
