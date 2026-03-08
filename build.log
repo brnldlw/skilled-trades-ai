@@ -1,0 +1,23 @@
+
+> skilled-trades-ai@0.1.0 build
+> next build
+
+▲ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 7.2s
+  Running TypeScript ...
+Failed to compile.
+
+./app/lib/supabase/client.ts:4:32
+Type error: ',' expected.
+
+[0m [90m 2 |[39m
+ [90m 3 |[39m [36mexport[39m [36mfunction[39m createClient() {
+[31m[1m>[22m[39m[90m 4 |[39m   [36mconst[39m url [33m=[39m process[33m.[39menv[33m.[39mhttps[33m:[39m[90m//ikoegjektbhpqcxhpgce.supabase.co;[39m
+ [90m   |[39m                                [31m[1m^[22m[39m
+ [90m 5 |[39m   [36mconst[39m anon [33m=[39m process[33m.[39menv[33m.[39m[33mANON_KEY[39m[33m=[39meyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9[33m.[39meyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlrb2VnamVrdGJocHFjeGhwZ2NlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5MTY4NzMsImV4cCI6MjA4ODQ5Mjg3M30[33m.[39mxH4ICUtM3_zLbJe7k95bGWcJTCzk[33m-[39m[35m3[39mi8PVg5Ov8K5Ds[33m;[39m
+ [90m 6 |[39m
+ [90m 7 |[39m   [36mif[39m ([33m![39murl [33m||[39m [33m![39manon) {[0m
+Next.js build worker exited with code: 1 and signal: null
