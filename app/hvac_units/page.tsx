@@ -84,6 +84,8 @@ type ChargeAnalysis = {
   subcool: number | null;
   evapSat: number | null;
   condSat: number | null;
+  evapSatSource: "entered" | "pt-chart" | "gauge-photo" | "none";
+  condSatSource: "entered" | "pt-chart" | "gauge-photo" | "none";
   summary: string;
   findings: string[];
 };
@@ -97,6 +99,143 @@ type GaugeReadResult = {
   notes: string;
   confidence: "high" | "medium" | "low";
 };
+
+type PTPoint = { psi: number; tempF: number };
+
+const PT_TABLES: Record<string, PTPoint[]> = {
+  "R-410A": [
+    { psi: 40, tempF: 1 },
+    { psi: 50, tempF: 8 },
+    { psi: 60, tempF: 15 },
+    { psi: 70, tempF: 22 },
+    { psi: 80, tempF: 27 },
+    { psi: 90, tempF: 32 },
+    { psi: 100, tempF: 36 },
+    { psi: 110, tempF: 40 },
+    { psi: 118, tempF: 43 },
+    { psi: 125, tempF: 45 },
+    { psi: 135, tempF: 49 },
+    { psi: 145, tempF: 52 },
+    { psi: 155, tempF: 55 },
+    { psi: 170, tempF: 60 },
+    { psi: 190, tempF: 66 },
+    { psi: 220, tempF: 75 },
+    { psi: 250, tempF: 84 },
+    { psi: 280, tempF: 92 },
+    { psi: 300, tempF: 98 },
+    { psi: 320, tempF: 103 },
+    { psi: 340, tempF: 108 },
+    { psi: 360, tempF: 113 },
+    { psi: 380, tempF: 118 },
+    { psi: 418, tempF: 125 },
+    { psi: 450, tempF: 131 },
+  ],
+  "R-22": [
+    { psi: 40, tempF: 17 },
+    { psi: 50, tempF: 26 },
+    { psi: 58, tempF: 32 },
+    { psi: 68, tempF: 38 },
+    { psi: 76, tempF: 43 },
+    { psi: 84, tempF: 47 },
+    { psi: 96, tempF: 53 },
+    { psi: 106, tempF: 58 },
+    { psi: 118, tempF: 64 },
+    { psi: 130, tempF: 69 },
+    { psi: 146, tempF: 76 },
+    { psi: 160, tempF: 81 },
+    { psi: 178, tempF: 88 },
+    { psi: 196, tempF: 94 },
+    { psi: 211, tempF: 99 },
+    { psi: 226, tempF: 104 },
+    { psi: 242, tempF: 109 },
+    { psi: 260, tempF: 114 },
+    { psi: 278, tempF: 119 },
+    { psi: 296, tempF: 124 },
+  ],
+  "R-134a": [
+    { psi: 10, tempF: 1 },
+    { psi: 18, tempF: 18 },
+    { psi: 22, tempF: 24 },
+    { psi: 26, tempF: 30 },
+    { psi: 32, tempF: 38 },
+    { psi: 36, tempF: 43 },
+    { psi: 40, tempF: 47 },
+    { psi: 45, tempF: 52 },
+    { psi: 50, tempF: 57 },
+    { psi: 57, tempF: 64 },
+    { psi: 64, tempF: 70 },
+    { psi: 71, tempF: 76 },
+    { psi: 79, tempF: 82 },
+    { psi: 88, tempF: 88 },
+    { psi: 97, tempF: 94 },
+    { psi: 107, tempF: 100 },
+    { psi: 118, tempF: 106 },
+    { psi: 130, tempF: 112 },
+    { psi: 143, tempF: 118 },
+    { psi: 156, tempF: 123 },
+  ],
+  "R-404A": [
+    { psi: 20, tempF: -14 },
+    { psi: 30, tempF: -5 },
+    { psi: 40, tempF: 3 },
+    { psi: 50, tempF: 10 },
+    { psi: 60, tempF: 17 },
+    { psi: 70, tempF: 23 },
+    { psi: 80, tempF: 28 },
+    { psi: 90, tempF: 33 },
+    { psi: 100, tempF: 38 },
+    { psi: 110, tempF: 42 },
+    { psi: 125, tempF: 49 },
+    { psi: 140, tempF: 55 },
+    { psi: 160, tempF: 62 },
+    { psi: 180, tempF: 68 },
+    { psi: 200, tempF: 74 },
+    { psi: 225, tempF: 81 },
+    { psi: 250, tempF: 87 },
+    { psi: 275, tempF: 93 },
+    { psi: 300, tempF: 99 },
+  ],
+  "R-407C": [
+    { psi: 40, tempF: 11 },
+    { psi: 50, tempF: 19 },
+    { psi: 60, tempF: 26 },
+    { psi: 70, tempF: 32 },
+    { psi: 80, tempF: 38 },
+    { psi: 90, tempF: 43 },
+    { psi: 100, tempF: 48 },
+    { psi: 110, tempF: 52 },
+    { psi: 120, tempF: 56 },
+    { psi: 130, tempF: 60 },
+    { psi: 145, tempF: 66 },
+    { psi: 160, tempF: 72 },
+    { psi: 180, tempF: 79 },
+    { psi: 200, tempF: 86 },
+    { psi: 220, tempF: 92 },
+    { psi: 240, tempF: 98 },
+    { psi: 260, tempF: 104 },
+    { psi: 280, tempF: 109 },
+    { psi: 300, tempF: 114 },
+  ],
+};
+
+function ptEstimateTempF(refrigerant: string, psi: number): number | null {
+  const table = PT_TABLES[refrigerant];
+  if (!table || !table.length || !Number.isFinite(psi)) return null;
+
+  if (psi <= table[0].psi) return table[0].tempF;
+  if (psi >= table[table.length - 1].psi) return table[table.length - 1].tempF;
+
+  for (let i = 0; i < table.length - 1; i++) {
+    const a = table[i];
+    const b = table[i + 1];
+    if (psi >= a.psi && psi <= b.psi) {
+      const ratio = (psi - a.psi) / (b.psi - a.psi);
+      return round1(a.tempF + (b.tempF - a.tempF) * ratio);
+    }
+  }
+
+  return null;
+}
 
 function SectionCard(props: { title: string; children: React.ReactNode; right?: React.ReactNode }) {
   return (
@@ -260,7 +399,11 @@ function getObservationValue(
   return null;
 }
 
-function analyzeCharge(observations: Observation[], equipmentType: string): ChargeAnalysis {
+function analyzeCharge(
+  observations: Observation[],
+  equipmentType: string,
+  refrigerantType: string
+): ChargeAnalysis {
   const returnAir = getObservationValue(
     observations,
     (l) => l.includes("return air temp") || (l.includes("return") && l.includes("temp")),
@@ -273,6 +416,21 @@ function analyzeCharge(observations: Observation[], equipmentType: string): Char
     "°F"
   );
 
+  const suctionPressure = getObservationValue(
+    observations,
+    (l) => l === "suction pressure" || (l.includes("suction") && l.includes("pressure")),
+    "psi"
+  );
+
+  const liquidPressure = getObservationValue(
+    observations,
+    (l) =>
+      l === "liquid pressure" ||
+      l === "head pressure" ||
+      ((l.includes("liquid") || l.includes("head")) && l.includes("pressure")),
+    "psi"
+  );
+
   const suctionLineTemp =
     getObservationValue(observations, (l) => l.includes("suction line temp"), "°F") ??
     getObservationValue(observations, (l) => l.includes("suction temp"), "°F");
@@ -281,26 +439,57 @@ function analyzeCharge(observations: Observation[], equipmentType: string): Char
     getObservationValue(observations, (l) => l.includes("liquid line temp"), "°F") ??
     getObservationValue(observations, (l) => l.includes("liquid temp"), "°F");
 
-  const evapSat =
+  const enteredEvapSat =
     getObservationValue(observations, (l) => l.includes("suction saturation temp"), "°F") ??
     getObservationValue(observations, (l) => l.includes("evap saturation temp"), "°F") ??
     getObservationValue(observations, (l) => l.includes("evaporator saturation temp"), "°F");
 
-  const condSat =
+  const enteredCondSat =
     getObservationValue(observations, (l) => l.includes("condensing saturation temp"), "°F") ??
     getObservationValue(observations, (l) => l.includes("liquid saturation temp"), "°F") ??
     getObservationValue(observations, (l) => l.includes("condenser saturation temp"), "°F");
 
-  const enteredSuperheat = getObservationValue(observations, (l) => l === "superheat" || l.includes(" superheat"), "°F");
-  const enteredSubcool = getObservationValue(observations, (l) => l === "subcool" || l.includes("subcool"), "°F");
+  const enteredSuperheat = getObservationValue(
+    observations,
+    (l) => l === "superheat" || l.includes(" superheat"),
+    "°F"
+  );
 
-  const deltaT = returnAir !== null && supplyAir !== null ? round1(returnAir - supplyAir) : null;
+  const enteredSubcool = getObservationValue(
+    observations,
+    (l) => l === "subcool" || l.includes("subcool"),
+    "°F"
+  );
+
+  const ptEvapSat =
+    enteredEvapSat === null && suctionPressure !== null && refrigerantType !== "Unknown"
+      ? ptEstimateTempF(refrigerantType, suctionPressure)
+      : null;
+
+  const ptCondSat =
+    enteredCondSat === null && liquidPressure !== null && refrigerantType !== "Unknown"
+      ? ptEstimateTempF(refrigerantType, liquidPressure)
+      : null;
+
+  const evapSat = enteredEvapSat ?? ptEvapSat ?? null;
+  const condSat = enteredCondSat ?? ptCondSat ?? null;
+
+  const evapSatSource: ChargeAnalysis["evapSatSource"] =
+    enteredEvapSat !== null ? "entered" : ptEvapSat !== null ? "pt-chart" : "none";
+
+  const condSatSource: ChargeAnalysis["condSatSource"] =
+    enteredCondSat !== null ? "entered" : ptCondSat !== null ? "pt-chart" : "none";
+
+  const deltaT =
+    returnAir !== null && supplyAir !== null ? round1(returnAir - supplyAir) : null;
+
   const superheat =
     enteredSuperheat !== null
       ? round1(enteredSuperheat)
       : suctionLineTemp !== null && evapSat !== null
       ? round1(suctionLineTemp - evapSat)
       : null;
+
   const subcool =
     enteredSubcool !== null
       ? round1(enteredSubcool)
@@ -311,24 +500,45 @@ function analyzeCharge(observations: Observation[], equipmentType: string): Char
   const findings: string[] = [];
   let summary = "Need more readings.";
 
-  const isCoolingType = !equipmentType.toLowerCase().includes("furnace") && !equipmentType.toLowerCase().includes("boiler");
+  const isCoolingType =
+    !equipmentType.toLowerCase().includes("furnace") &&
+    !equipmentType.toLowerCase().includes("boiler");
+
+  if (evapSatSource === "pt-chart") {
+    findings.push(`Evap saturation estimated from ${refrigerantType} PT chart.`);
+  }
+  if (condSatSource === "pt-chart") {
+    findings.push(`Condensing saturation estimated from ${refrigerantType} PT chart.`);
+  }
 
   if (deltaT !== null) {
-    if (deltaT < 12) findings.push("Delta-T is low, which can point to low capacity, high airflow, or charge/load issues.");
-    else if (deltaT > 22) findings.push("Delta-T is high, which can point to low airflow or a heavily loaded coil.");
-    else findings.push("Delta-T is in a typical cooling range.");
+    if (deltaT < 12) {
+      findings.push("Delta-T is low, which can point to low capacity, high airflow, or charge/load issues.");
+    } else if (deltaT > 22) {
+      findings.push("Delta-T is high, which can point to low airflow or a heavily loaded coil.");
+    } else {
+      findings.push("Delta-T is in a typical cooling range.");
+    }
   }
 
   if (superheat !== null) {
-    if (superheat > 20) findings.push("Superheat is high, which points toward undercharge, restriction, or starving evaporator.");
-    else if (superheat < 5) findings.push("Superheat is very low, which points toward overfeeding, floodback risk, or low airflow.");
-    else findings.push("Superheat is in a usable normal range.");
+    if (superheat > 20) {
+      findings.push("Superheat is high, which points toward undercharge, restriction, or starving evaporator.");
+    } else if (superheat < 5) {
+      findings.push("Superheat is very low, which points toward overfeeding, floodback risk, or low airflow.");
+    } else {
+      findings.push("Superheat is in a usable normal range.");
+    }
   }
 
   if (subcool !== null) {
-    if (subcool < 5) findings.push("Subcool is low, which points toward undercharge or flash gas.");
-    else if (subcool > 18) findings.push("Subcool is high, which points toward overcharge, restriction, or backed-up liquid.");
-    else findings.push("Subcool is in a usable normal range.");
+    if (subcool < 5) {
+      findings.push("Subcool is low, which points toward undercharge or flash gas.");
+    } else if (subcool > 18) {
+      findings.push("Subcool is high, which points toward overcharge, restriction, or backed-up liquid.");
+    } else {
+      findings.push("Subcool is in a usable normal range.");
+    }
   }
 
   if (isCoolingType) {
@@ -345,13 +555,27 @@ function analyzeCharge(observations: Observation[], equipmentType: string): Char
         summary = "Charge condition is mixed; verify airflow and saturation temps.";
       }
     } else if (superheat !== null) {
-      if (superheat > 18) summary = "High superheat suggests undercharge or restriction.";
-      else if (superheat < 6) summary = "Low superheat suggests floodback, overfeed, or airflow issue.";
-      else summary = "Superheat looks reasonable, but subcool is still needed.";
+      if (superheat > 18) {
+        summary = "High superheat suggests undercharge or restriction.";
+      } else if (superheat < 6) {
+        summary = "Low superheat suggests floodback, overfeed, or airflow issue.";
+      } else {
+        summary = "Superheat looks reasonable, but subcool is still needed.";
+      }
     } else if (subcool !== null) {
-      if (subcool < 5) summary = "Low subcool suggests undercharge.";
-      else if (subcool > 15) summary = "High subcool suggests overcharge or restriction.";
-      else summary = "Subcool looks reasonable, but superheat is still needed.";
+      if (subcool < 5) {
+        summary = "Low subcool suggests undercharge.";
+      } else if (subcool > 15) {
+        summary = "High subcool suggests overcharge or restriction.";
+      } else {
+        summary = "Subcool looks reasonable, but superheat is still needed.";
+      }
+    } else if (
+      suctionPressure !== null &&
+      liquidPressure !== null &&
+      refrigerantType !== "Unknown"
+    ) {
+      summary = "PT chart estimated saturation temps. Add line temps for full SH/SC diagnosis.";
     }
   } else {
     summary = "Charge calculator is mainly intended for cooling / refrigeration systems.";
@@ -363,6 +587,8 @@ function analyzeCharge(observations: Observation[], equipmentType: string): Char
     subcool,
     evapSat,
     condSat,
+    evapSatSource,
+    condSatSource,
     summary,
     findings,
   };
@@ -509,9 +735,9 @@ export default function HVACUnitsPage() {
   }, [rawResult]);
 
   const chargeAnalysis = useMemo(
-    () => analyzeCharge(observations, equipmentType),
-    [observations, equipmentType]
-  );
+  () => analyzeCharge(observations, equipmentType, refrigerantType),
+  [observations, equipmentType, refrigerantType]
+);
 
   const currentFlowNode = useMemo(
     () => selectedPack.nodes.find((n) => n.id === flowNodeId) || selectedPack.nodes[0],
@@ -1236,14 +1462,20 @@ export default function HVACUnitsPage() {
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 10 }}>
             <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-              <div style={{ fontWeight: 900 }}>Evap Saturation</div>
+              <div style={{ fontWeight: 900 }}>
+  Evap Saturation
+  <Badge text={chargeAnalysis.evapSatSource} />
+</div>
               <div style={{ marginTop: 6 }}>
                 {chargeAnalysis.evapSat !== null ? `${chargeAnalysis.evapSat}°F` : "—"}
               </div>
             </div>
 
             <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-              <div style={{ fontWeight: 900 }}>Condensing Saturation</div>
+              <div style={{ fontWeight: 900 }}>
+  Condensing Saturation
+  <Badge text={chargeAnalysis.condSatSource} />
+</div>
               <div style={{ marginTop: 6 }}>
                 {chargeAnalysis.condSat !== null ? `${chargeAnalysis.condSat}°F` : "—"}
               </div>
