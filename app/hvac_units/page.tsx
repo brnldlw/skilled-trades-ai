@@ -110,6 +110,15 @@ type AirflowAnalysis = {
   findings: string[];
 };
 
+type EquipmentMemoryInsight = {
+  relatedCount: number;
+  summary: string;
+  repeatedSymptoms: string[];
+  repeatedCauses: string[];
+  repeatedMeasurementPatterns: string[];
+  suggestedFirstChecks: string[];
+};
+
 type PTPoint = { psi: number; tempF: number };
 
 const PT_TABLES: Record<string, PTPoint[]> = {
@@ -767,6 +776,220 @@ function analyzeAirflow(observations: Observation[]): AirflowAnalysis {
   };
 }
 
+function parseDiagnosis(rawResult: string): Diagnosis | null {
+  if (!rawResult) return null;
+  try {
+    const start = rawResult.indexOf("{");
+    const end = rawResult.lastIndexOf("}");
+    const slice = start >= 0 && end > start ? rawResult.slice(start, end + 1) : rawResult;
+    return JSON.parse(slice) as Diagnosis;
+  } catch {
+    return null;
+  }
+}
+
+function isRelatedRecord(current: {
+  customerName: string;
+  siteName: string;
+  unitNickname: string;
+  model: string;
+  manufacturer: string;
+  equipmentType: string;
+}, record: SavedUnitRecord) {
+  const customerMatch =
+    current.customerName.trim() &&
+    record.customerName.trim() &&
+    current.customerName.trim().toLowerCase() === record.customerName.trim().toLowerCase();
+
+  const siteMatch =
+    current.siteName.trim() &&
+    record.siteName.trim() &&
+    current.siteName.trim().toLowerCase() === record.siteName.trim().toLowerCase();
+
+  const unitMatch =
+    current.unitNickname.trim() &&
+    record.unitNickname.trim() &&
+    current.unitNickname.trim().toLowerCase() === record.unitNickname.trim().toLowerCase();
+
+  const modelMatch =
+    current.model.trim() &&
+    record.model.trim() &&
+    current.model.trim().toLowerCase() === record.model.trim().toLowerCase();
+
+  const manufacturerMatch =
+    current.manufacturer.trim() &&
+    record.manufacturer.trim() &&
+    current.manufacturer.trim().toLowerCase() === record.manufacturer.trim().toLowerCase();
+
+  const equipmentMatch =
+    current.equipmentType.trim() &&
+    record.equipmentType.trim() &&
+    current.equipmentType.trim().toLowerCase() === record.equipmentType.trim().toLowerCase();
+
+  if (customerMatch && siteMatch && unitMatch) return true;
+  if (customerMatch && siteMatch && modelMatch && manufacturerMatch) return true;
+  if (siteMatch && unitMatch) return true;
+  if (modelMatch && manufacturerMatch && equipmentMatch && siteMatch) return true;
+
+  return false;
+}
+
+function topCounts(items: string[], minCount = 2, maxItems = 3) {
+  const counts = new Map<string, number>();
+  for (const item of items) {
+    const key = item.trim();
+    if (!key) continue;
+    counts.set(key, (counts.get(key) || 0) + 1);
+  }
+  return [...counts.entries()]
+    .filter(([, count]) => count >= minCount)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, maxItems)
+    .map(([label, count]) => `${label} (${count}x)`);
+}
+
+function deriveMeasurementPatterns(records: SavedUnitRecord[]) {
+  const patterns: string[] = [];
+
+  for (const r of records) {
+    const charge = analyzeCharge(r.observations || [], r.equipmentType || "", r.refrigerantType || "Unknown");
+    const airflow = analyzeAirflow(r.observations || []);
+
+    if (charge.summary.toLowerCase().includes("undercharged")) patterns.push("Undercharge pattern");
+    if (charge.summary.toLowerCase().includes("overcharged")) patterns.push("Overcharge pattern");
+    if (charge.summary.toLowerCase().includes("restriction")) patterns.push("Restriction / metering pattern");
+    if (charge.superheat !== null && charge.superheat > 20) patterns.push("High superheat");
+    if (charge.subcool !== null && charge.subcool < 5) patterns.push("Low subcool");
+    if (charge.deltaT !== null && charge.deltaT < 12) patterns.push("Low delta-T");
+    if (charge.deltaT !== null && charge.deltaT > 22) patterns.push("High delta-T");
+
+    if (airflow.totalExternalStatic !== null && airflow.totalExternalStatic > 0.8) {
+      patterns.push("High total external static");
+    }
+    if (airflow.filterDrop !== null && airflow.filterDrop > 0.18) {
+      patterns.push("High filter pressure drop");
+    }
+    if (airflow.coilDrop !== null && airflow.coilDrop > 0.35) {
+      patterns.push("High coil pressure drop");
+    }
+    if (airflow.summary.toLowerCase().includes("return-side")) {
+      patterns.push("Return-side restriction");
+    }
+    if (airflow.summary.toLowerCase().includes("supply-side")) {
+      patterns.push("Supply-side restriction");
+    }
+  }
+
+  return topCounts(patterns, 2, 4);
+}
+
+function buildEquipmentMemoryInsight(
+  savedUnits: SavedUnitRecord[],
+  current: {
+    id?: string;
+    customerName: string;
+    siteName: string;
+    unitNickname: string;
+    model: string;
+    manufacturer: string;
+    equipmentType: string;
+  }
+): EquipmentMemoryInsight {
+  const related = savedUnits.filter(
+    (r) => r.id !== current.id && isRelatedRecord(current, r)
+  );
+
+  if (!related.length) {
+    return {
+      relatedCount: 0,
+      summary: "No prior matching history found yet for this unit.",
+      repeatedSymptoms: [],
+      repeatedCauses: [],
+      repeatedMeasurementPatterns: [],
+      suggestedFirstChecks: [],
+    };
+  }
+
+  const symptomItems = related
+    .map((r) => (r.symptom || "").trim())
+    .filter(Boolean);
+
+  const causeItems = related.flatMap((r) => {
+    const parsed = parseDiagnosis(r.rawResult || "");
+    return (parsed?.likely_causes || [])
+      .map((c) => (c.cause || "").trim())
+      .filter(Boolean);
+  });
+
+  const repeatedSymptoms = topCounts(symptomItems, 1, 4);
+  const repeatedCauses = topCounts(causeItems, 1, 4);
+  const repeatedMeasurementPatterns = deriveMeasurementPatterns(related);
+
+  const suggestionPool: string[] = [];
+
+  for (const p of repeatedMeasurementPatterns) {
+    const low = p.toLowerCase();
+    if (low.includes("high total external static")) {
+      suggestionPool.push("Inspect filter, coil, and blower speed first");
+    }
+    if (low.includes("high coil pressure drop")) {
+      suggestionPool.push("Inspect evaporator coil and blower setup");
+    }
+    if (low.includes("high filter pressure drop")) {
+      suggestionPool.push("Check filter size, condition, and rack sealing");
+    }
+    if (low.includes("return-side restriction")) {
+      suggestionPool.push("Check return duct, filter section, and return grilles");
+    }
+    if (low.includes("supply-side restriction")) {
+      suggestionPool.push("Check supply duct restrictions and coil discharge path");
+    }
+    if (low.includes("undercharge pattern")) {
+      suggestionPool.push("Leak check refrigerant circuit before adding charge");
+    }
+    if (low.includes("restriction / metering pattern")) {
+      suggestionPool.push("Check TXV / metering device and liquid line restrictions");
+    }
+    if (low.includes("high superheat")) {
+      suggestionPool.push("Verify evaporator feed and refrigerant charge");
+    }
+    if (low.includes("low subcool")) {
+      suggestionPool.push("Verify charge level and liquid line integrity");
+    }
+  }
+
+  for (const c of repeatedCauses) {
+    const low = c.toLowerCase();
+    if (low.includes("fan")) suggestionPool.push("Inspect fan motor, blade, capacitor, and rotation");
+    if (low.includes("airflow")) suggestionPool.push("Check airflow before condemning refrigeration parts");
+    if (low.includes("capacitor")) suggestionPool.push("Test run capacitor and amp draw");
+    if (low.includes("contactor")) suggestionPool.push("Inspect contactor points and coil voltage");
+    if (low.includes("compressor")) suggestionPool.push("Verify compressor amps, voltage, and overload condition");
+    if (low.includes("thermostat") || low.includes("control")) suggestionPool.push("Verify thermostat signal and control sequence");
+  }
+
+  const dedupedSuggestions = [...new Set(suggestionPool)].slice(0, 4);
+
+  let summary = `Found ${related.length} related prior service entr${related.length === 1 ? "y" : "ies"} for this unit or matching equipment.`;
+
+  if (repeatedMeasurementPatterns.length) {
+    summary = `This unit shows repeated pattern history. Most common pattern: ${repeatedMeasurementPatterns[0]}.`;
+  } else if (repeatedCauses.length) {
+    summary = `This unit has repeat issue history. Most common likely cause: ${repeatedCauses[0]}.`;
+  } else if (repeatedSymptoms.length) {
+    summary = `This unit has repeated complaint history. Most common symptom: ${repeatedSymptoms[0]}.`;
+  }
+
+  return {
+    relatedCount: related.length,
+    summary,
+    repeatedSymptoms,
+    repeatedCauses,
+    repeatedMeasurementPatterns,
+    suggestedFirstChecks: dedupedSuggestions,
+  };
+}
+
 const SYMPTOM_PACKS: SymptomPack[] = [
   {
     id: "no_cooling",
@@ -1095,18 +1318,7 @@ export default function HVACUnitsPage() {
     listUnits().then(setSavedUnits).catch(() => setSavedUnits([]));
   }, []);
 
-  const parsed = useMemo(() => {
-    if (!rawResult) return null;
-    try {
-      const start = rawResult.indexOf("{");
-      const end = rawResult.lastIndexOf("}");
-      const slice =
-        start >= 0 && end > start ? rawResult.slice(start, end + 1) : rawResult;
-      return JSON.parse(slice) as Diagnosis;
-    } catch {
-      return null;
-    }
-  }, [rawResult]);
+  const parsed = useMemo(() => parseDiagnosis(rawResult), [rawResult]);
 
   const chargeAnalysis = useMemo(
     () => analyzeCharge(observations, equipmentType, refrigerantType),
@@ -1116,6 +1328,19 @@ export default function HVACUnitsPage() {
   const airflowAnalysis = useMemo(
     () => analyzeAirflow(observations),
     [observations]
+  );
+
+  const equipmentMemory = useMemo(
+    () =>
+      buildEquipmentMemoryInsight(savedUnits, {
+        customerName,
+        siteName,
+        unitNickname,
+        model,
+        manufacturer,
+        equipmentType,
+      }),
+    [savedUnits, customerName, siteName, unitNickname, model, manufacturer, equipmentType]
   );
 
   const currentFlowNode = useMemo(
@@ -1448,6 +1673,7 @@ export default function HVACUnitsPage() {
         flowHistory,
         chargeAnalysis,
         airflowAnalysis,
+        equipmentMemory,
       });
     } finally {
       setLoading(false);
@@ -1476,6 +1702,7 @@ export default function HVACUnitsPage() {
         flowHistory,
         chargeAnalysis,
         airflowAnalysis,
+        equipmentMemory,
       });
     } finally {
       setLoading(false);
@@ -1609,8 +1836,8 @@ export default function HVACUnitsPage() {
   return (
     <div style={{ padding: 20, maxWidth: 1220, margin: "0 auto" }}>
       <h1 style={{ fontSize: 26, fontWeight: 900 }}>
-  Skilled Trades AI — HVAC Diagnose
-</h1>
+        Skilled Trades AI — HVAC Diagnose
+      </h1>
 
       <div
         style={{
@@ -1827,6 +2054,88 @@ export default function HVACUnitsPage() {
             {mpBusy ? "Finding..." : "Parts & Manuals"}
           </button>
         </div>
+      </div>
+
+      <div style={{ marginTop: 16 }}>
+        <SectionCard
+          title="Equipment Memory AI"
+          right={<Badge text={`${equipmentMemory.relatedCount} prior matches`} />}
+        >
+          <SmallHint>
+            This looks at saved history for matching customer/site/unit/model equipment and suggests what to check first today.
+          </SmallHint>
+
+          <div
+            style={{
+              marginTop: 12,
+              border: "1px solid #eee",
+              borderRadius: 10,
+              padding: 10,
+              background: "#fafafa",
+            }}
+          >
+            <div style={{ fontWeight: 900 }}>AI Memory Summary</div>
+            <div style={{ fontSize: 16, fontWeight: 900, marginTop: 6 }}>
+              {equipmentMemory.summary}
+            </div>
+
+            {equipmentMemory.repeatedSymptoms.length ? (
+              <div style={{ marginTop: 12 }}>
+                <div style={{ fontWeight: 900 }}>Repeated symptoms</div>
+                <ul style={{ marginTop: 8, paddingLeft: 18 }}>
+                  {equipmentMemory.repeatedSymptoms.map((item, i) => (
+                    <li key={i}>
+                      <SmallHint>{item}</SmallHint>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+
+            {equipmentMemory.repeatedCauses.length ? (
+              <div style={{ marginTop: 12 }}>
+                <div style={{ fontWeight: 900 }}>Repeated likely causes</div>
+                <ul style={{ marginTop: 8, paddingLeft: 18 }}>
+                  {equipmentMemory.repeatedCauses.map((item, i) => (
+                    <li key={i}>
+                      <SmallHint>{item}</SmallHint>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+
+            {equipmentMemory.repeatedMeasurementPatterns.length ? (
+              <div style={{ marginTop: 12 }}>
+                <div style={{ fontWeight: 900 }}>Repeated measurement patterns</div>
+                <ul style={{ marginTop: 8, paddingLeft: 18 }}>
+                  {equipmentMemory.repeatedMeasurementPatterns.map((item, i) => (
+                    <li key={i}>
+                      <SmallHint>{item}</SmallHint>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+
+            {equipmentMemory.suggestedFirstChecks.length ? (
+              <div style={{ marginTop: 12 }}>
+                <div style={{ fontWeight: 900 }}>Suggested first checks today</div>
+                <ul style={{ marginTop: 8, paddingLeft: 18 }}>
+                  {equipmentMemory.suggestedFirstChecks.map((item, i) => (
+                    <li key={i}>
+                      <SmallHint>{item}</SmallHint>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <SmallHint style={{ marginTop: 12 }}>
+                Save more service history on this unit and this section will get smarter.
+              </SmallHint>
+            )}
+          </div>
+        </SectionCard>
       </div>
 
       <div
