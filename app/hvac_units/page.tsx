@@ -1609,8 +1609,8 @@ export default function HVACUnitsPage() {
   return (
     <div style={{ padding: 20, maxWidth: 1220, margin: "0 auto" }}>
       <h1 style={{ fontSize: 26, fontWeight: 900 }}>
-        Skilled Trades AI — HVAC Diagnose
-      </h1>
+  Skilled Trades AI — HVAC Diagnose
+</h1>
 
       <div
         style={{
