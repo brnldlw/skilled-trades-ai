@@ -100,6 +100,16 @@ type GaugeReadResult = {
   confidence: "high" | "medium" | "low";
 };
 
+type AirflowAnalysis = {
+  totalExternalStatic: number | null;
+  returnStatic: number | null;
+  supplyStatic: number | null;
+  filterDrop: number | null;
+  coilDrop: number | null;
+  summary: string;
+  findings: string[];
+};
+
 type PTPoint = { psi: number; tempF: number };
 
 const PT_TABLES: Record<string, PTPoint[]> = {
@@ -218,29 +228,28 @@ const PT_TABLES: Record<string, PTPoint[]> = {
   ],
 };
 
-function ptEstimateTempF(refrigerant: string, psi: number): number | null {
-  const table = PT_TABLES[refrigerant];
-  if (!table || !table.length || !Number.isFinite(psi)) return null;
-
-  if (psi <= table[0].psi) return table[0].tempF;
-  if (psi >= table[table.length - 1].psi) return table[table.length - 1].tempF;
-
-  for (let i = 0; i < table.length - 1; i++) {
-    const a = table[i];
-    const b = table[i + 1];
-    if (psi >= a.psi && psi <= b.psi) {
-      const ratio = (psi - a.psi) / (b.psi - a.psi);
-      return round1(a.tempF + (b.tempF - a.tempF) * ratio);
-    }
-  }
-
-  return null;
-}
-
-function SectionCard(props: { title: string; children: React.ReactNode; right?: React.ReactNode }) {
+function SectionCard(props: {
+  title: string;
+  children: React.ReactNode;
+  right?: React.ReactNode;
+}) {
   return (
-    <div style={{ border: "1px solid #ddd", borderRadius: 12, padding: 14, background: "white" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+    <div
+      style={{
+        border: "1px solid #ddd",
+        borderRadius: 12,
+        padding: 14,
+        background: "white",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 12,
+        }}
+      >
         <div style={{ fontWeight: 900 }}>{props.title}</div>
         {props.right ? <div>{props.right}</div> : null}
       </div>
@@ -268,11 +277,23 @@ function Badge({ text }: { text: string }) {
   );
 }
 
-function SmallHint(props: { children: React.ReactNode; style?: React.CSSProperties }) {
-  return <div style={{ fontSize: 12, color: "#555", lineHeight: 1.35, ...props.style }}>{props.children}</div>;
+function SmallHint(props: {
+  children: React.ReactNode;
+  style?: React.CSSProperties;
+}) {
+  return (
+    <div style={{ fontSize: 12, color: "#555", lineHeight: 1.35, ...props.style }}>
+      {props.children}
+    </div>
+  );
 }
 
-function PillButton(props: { text: string; onClick: () => void; disabled?: boolean; active?: boolean }) {
+function PillButton(props: {
+  text: string;
+  onClick: () => void;
+  disabled?: boolean;
+  active?: boolean;
+}) {
   return (
     <button
       onClick={props.onClick}
@@ -297,9 +318,18 @@ function ProbBar({ pct }: { pct: number }) {
   return (
     <div style={{ marginTop: 6 }}>
       <div style={{ height: 8, background: "#eee", borderRadius: 999 }}>
-        <div style={{ width: `${safe}%`, height: 8, background: "#111", borderRadius: 999 }} />
+        <div
+          style={{
+            width: `${safe}%`,
+            height: 8,
+            background: "#111",
+            borderRadius: 999,
+          }}
+        />
       </div>
-      <div style={{ fontSize: 12, color: "#444", marginTop: 4 }}>{safe}% confidence</div>
+      <div style={{ fontSize: 12, color: "#444", marginTop: 4 }}>
+        {safe}% confidence
+      </div>
     </div>
   );
 }
@@ -323,7 +353,10 @@ function round1(n: number) {
   return Math.round(n * 10) / 10;
 }
 
-function convertToStandard(value: number, unit: string): { value: number; unit: string } | null {
+function convertToStandard(
+  value: number,
+  unit: string
+): { value: number; unit: string } | null {
   const u = unit.trim();
   if (u === "kPa") return { value: value * 0.1450377377, unit: "psi" };
   if (u === "bar") return { value: value * 14.50377377, unit: "psi" };
@@ -340,8 +373,12 @@ function guessDefaultUnit(label: string) {
     s.includes("discharge") ||
     s.includes("head") ||
     s.includes("pressure")
-  ) return "psi";
-  if (s.includes("static") || s.includes("esp") || s.includes("inwc")) return "inWC";
+  ) {
+    return "psi";
+  }
+  if (s.includes("static") || s.includes("esp") || s.includes("inwc")) {
+    return "inWC";
+  }
   if (
     s.includes("temp") ||
     s.includes("temperature") ||
@@ -350,7 +387,9 @@ function guessDefaultUnit(label: string) {
     s.includes("delta") ||
     s.includes("heat rise") ||
     s.includes("saturation")
-  ) return "°F";
+  ) {
+    return "°F";
+  }
   if (s.includes("amps")) return "amps";
   if (s.includes("voltage")) return "volts";
   if (s.includes("flame")) return "µA";
@@ -364,10 +403,6 @@ function readFileAsDataUrl(file: File): Promise<string> {
     r.onerror = () => reject(new Error("Could not read file"));
     r.readAsDataURL(file);
   });
-}
-
-function google(q: string) {
-  return `https://www.google.com/search?q=${encodeURIComponent(q)}`;
 }
 
 function makeId() {
@@ -396,6 +431,25 @@ function getObservationValue(
     const converted = convertToStandard(n, o.unit);
     if (converted && converted.unit === preferredUnit) return converted.value;
   }
+  return null;
+}
+
+function ptEstimateTempF(refrigerant: string, psi: number): number | null {
+  const table = PT_TABLES[refrigerant];
+  if (!table || !table.length || !Number.isFinite(psi)) return null;
+
+  if (psi <= table[0].psi) return table[0].tempF;
+  if (psi >= table[table.length - 1].psi) return table[table.length - 1].tempF;
+
+  for (let i = 0; i < table.length - 1; i++) {
+    const a = table[i];
+    const b = table[i + 1];
+    if (psi >= a.psi && psi <= b.psi) {
+      const ratio = (psi - a.psi) / (b.psi - a.psi);
+      return round1(a.tempF + (b.tempF - a.tempF) * ratio);
+    }
+  }
+
   return null;
 }
 
@@ -594,23 +648,225 @@ function analyzeCharge(
   };
 }
 
+function analyzeAirflow(observations: Observation[]): AirflowAnalysis {
+  const returnStatic =
+    getObservationValue(
+      observations,
+      (l) => l === "return static" || l.includes("return static"),
+      "inWC"
+    ) ??
+    getObservationValue(observations, (l) => l.includes("return pressure"), "inWC");
+
+  const supplyStatic =
+    getObservationValue(
+      observations,
+      (l) => l === "supply static" || l.includes("supply static"),
+      "inWC"
+    ) ??
+    getObservationValue(observations, (l) => l.includes("supply pressure"), "inWC");
+
+  const filterDrop = getObservationValue(
+    observations,
+    (l) => l === "filter pressure drop" || l.includes("filter pressure drop"),
+    "inWC"
+  );
+
+  const coilDrop = getObservationValue(
+    observations,
+    (l) => l === "coil pressure drop" || l.includes("coil pressure drop"),
+    "inWC"
+  );
+
+  const totalExternalStatic =
+    returnStatic !== null && supplyStatic !== null
+      ? round1(Math.abs(returnStatic) + Math.abs(supplyStatic))
+      : null;
+
+  const findings: string[] = [];
+  let summary = "Need more static readings.";
+
+  if (totalExternalStatic !== null) {
+    if (totalExternalStatic <= 0.5) {
+      findings.push("Total external static is in a typical range for many systems.");
+    } else if (totalExternalStatic <= 0.8) {
+      findings.push("Total external static is elevated. Airflow may be reduced.");
+    } else {
+      findings.push("Total external static is high. Strong airflow restriction is likely.");
+    }
+  }
+
+  if (returnStatic !== null && supplyStatic !== null) {
+    const returnAbs = Math.abs(returnStatic);
+    const supplyAbs = Math.abs(supplyStatic);
+
+    if (returnAbs > supplyAbs * 1.35) {
+      findings.push("Return side is carrying more restriction than supply side.");
+    } else if (supplyAbs > returnAbs * 1.35) {
+      findings.push("Supply side is carrying more restriction than return side.");
+    } else {
+      findings.push("Return and supply static are fairly balanced.");
+    }
+  }
+
+  if (filterDrop !== null) {
+    if (filterDrop < 0.08) {
+      findings.push("Filter pressure drop is low.");
+    } else if (filterDrop <= 0.18) {
+      findings.push("Filter pressure drop is moderate.");
+    } else {
+      findings.push("Filter pressure drop is high. Dirty filter or undersized filter section is likely.");
+    }
+  }
+
+  if (coilDrop !== null) {
+    if (coilDrop < 0.2) {
+      findings.push("Coil pressure drop is low to moderate.");
+    } else if (coilDrop <= 0.35) {
+      findings.push("Coil pressure drop is elevated.");
+    } else {
+      findings.push("Coil pressure drop is high. Dirty evaporator coil, wet coil loading, or airflow bottleneck is likely.");
+    }
+  }
+
+  if (totalExternalStatic !== null) {
+    if (totalExternalStatic > 0.8) {
+      if ((filterDrop ?? 0) > 0.18) {
+        summary = "High static with high filter drop. Check filter, rack, and return air path first.";
+      } else if ((coilDrop ?? 0) > 0.35) {
+        summary = "High static with high coil drop. Check evaporator coil and blower setup.";
+      } else if (
+        returnStatic !== null &&
+        supplyStatic !== null &&
+        Math.abs(returnStatic) > Math.abs(supplyStatic) * 1.35
+      ) {
+        summary = "High static with return-side burden. Look for return restriction.";
+      } else if (
+        returnStatic !== null &&
+        supplyStatic !== null &&
+        Math.abs(supplyStatic) > Math.abs(returnStatic) * 1.35
+      ) {
+        summary = "High static with supply-side burden. Look for supply duct or coil restriction.";
+      } else {
+        summary = "Static is high. Airflow restriction is likely somewhere in the system.";
+      }
+    } else if (totalExternalStatic > 0.5) {
+      summary = "Static is somewhat elevated. Verify blower speed and inspect filter/coil/duct path.";
+    } else {
+      summary = "Static looks reasonably normal.";
+    }
+  }
+
+  return {
+    totalExternalStatic,
+    returnStatic,
+    supplyStatic,
+    filterDrop,
+    coilDrop,
+    summary,
+    findings,
+  };
+}
+
 const SYMPTOM_PACKS: SymptomPack[] = [
   {
     id: "no_cooling",
     label: "No Cooling",
     defaultSymptom: "Unit not cooling. Space temperature stays high.",
     nodes: [
-      { id: "a", title: "No Cooling", question: "Is there an active call for cooling?", how: "Verify thermostat / control board / Y signal.", passLabel: "Yes", failLabel: "No", passNext: "b", failNext: "a_end", suggestedMeasurement: "Control Voltage (R-C)" },
-      { id: "b", title: "Cooling Call", question: "Is the indoor blower moving adequate air?", how: "Check filter, blower, wheel, belt, speed, and airflow.", passLabel: "Yes", failLabel: "No", passNext: "c", failNext: "b_end", suggestedMeasurement: "External Static Pressure" },
-      { id: "c", title: "Airflow", question: "Is the compressor and outdoor section running normally?", how: "Check contactor, capacitor, fan motor, amps, overload, and voltage.", passLabel: "Yes", failLabel: "No", passNext: "d", failNext: "c_end", suggestedMeasurement: "Compressor Amps" },
-      { id: "d", title: "Refrigeration", question: "Do pressures and line temps suggest charge / metering issues?", how: "Check suction, liquid, superheat, subcool, delta-T.", passLabel: "Yes", failLabel: "No", passNext: "d_end", failNext: "e", suggestedMeasurement: "Suction Pressure" },
-      { id: "e", title: "Controls / Load", question: "Is economizer / damper / control logic affecting capacity?", how: "Verify damper position, outside air, and staging logic.", passLabel: "Yes", failLabel: "No", passNext: "e_end", failNext: "f_end", suggestedMeasurement: "Return Air Temp" },
-      { id: "a_end", title: "Likely Direction", question: "No cooling call found. Focus on thermostat, wiring, low voltage, or board logic.", terminal: true },
-      { id: "b_end", title: "Likely Direction", question: "Airflow issue likely. Fix filter, coil, blower, belt, or static restriction first.", terminal: true },
-      { id: "c_end", title: "Likely Direction", question: "Electrical / compressor / condenser section issue likely.", terminal: true },
-      { id: "d_end", title: "Likely Direction", question: "Charge, metering, or restriction issue likely. Confirm with superheat/subcool.", terminal: true },
-      { id: "e_end", title: "Likely Direction", question: "Control / economizer / ventilation issue likely.", terminal: true },
-      { id: "f_end", title: "Done", question: "Collect more readings and run Diagnose again for tighter guidance.", terminal: true },
+      {
+        id: "a",
+        title: "No Cooling",
+        question: "Is there an active call for cooling?",
+        how: "Verify thermostat / control board / Y signal.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "b",
+        failNext: "a_end",
+        suggestedMeasurement: "Control Voltage (R-C)",
+      },
+      {
+        id: "b",
+        title: "Cooling Call",
+        question: "Is the indoor blower moving adequate air?",
+        how: "Check filter, blower, wheel, belt, speed, and airflow.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "c",
+        failNext: "b_end",
+        suggestedMeasurement: "External Static Pressure",
+      },
+      {
+        id: "c",
+        title: "Airflow",
+        question: "Is the compressor and outdoor section running normally?",
+        how: "Check contactor, capacitor, fan motor, amps, overload, and voltage.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "d",
+        failNext: "c_end",
+        suggestedMeasurement: "Compressor Amps",
+      },
+      {
+        id: "d",
+        title: "Refrigeration",
+        question: "Do pressures and line temps suggest charge / metering issues?",
+        how: "Check suction, liquid, superheat, subcool, delta-T.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "d_end",
+        failNext: "e",
+        suggestedMeasurement: "Suction Pressure",
+      },
+      {
+        id: "e",
+        title: "Controls / Load",
+        question: "Is economizer / damper / control logic affecting capacity?",
+        how: "Verify damper position, outside air, and staging logic.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "e_end",
+        failNext: "f_end",
+        suggestedMeasurement: "Return Air Temp",
+      },
+      {
+        id: "a_end",
+        title: "Likely Direction",
+        question:
+          "No cooling call found. Focus on thermostat, wiring, low voltage, or board logic.",
+        terminal: true,
+      },
+      {
+        id: "b_end",
+        title: "Likely Direction",
+        question:
+          "Airflow issue likely. Fix filter, coil, blower, belt, or static restriction first.",
+        terminal: true,
+      },
+      {
+        id: "c_end",
+        title: "Likely Direction",
+        question: "Electrical / compressor / condenser section issue likely.",
+        terminal: true,
+      },
+      {
+        id: "d_end",
+        title: "Likely Direction",
+        question:
+          "Charge, metering, or restriction issue likely. Confirm with superheat/subcool.",
+        terminal: true,
+      },
+      {
+        id: "e_end",
+        title: "Likely Direction",
+        question: "Control / economizer / ventilation issue likely.",
+        terminal: true,
+      },
+      {
+        id: "f_end",
+        title: "Done",
+        question: "Collect more readings and run Diagnose again for tighter guidance.",
+        terminal: true,
+      },
     ],
   },
   {
@@ -618,13 +874,63 @@ const SYMPTOM_PACKS: SymptomPack[] = [
     label: "Freezing Up",
     defaultSymptom: "Evaporator / suction line freezing up.",
     nodes: [
-      { id: "a", title: "Freezing Up", question: "Is airflow restricted?", how: "Check filter, blower, coil, registers, and static.", passLabel: "No", failLabel: "Yes", passNext: "b", failNext: "a_end", suggestedMeasurement: "External Static Pressure" },
-      { id: "b", title: "Airflow OK", question: "Is suction pressure low and superheat high?", how: "Check suction, line temp, saturation temp.", passLabel: "Yes", failLabel: "No", passNext: "b_end", failNext: "c", suggestedMeasurement: "Superheat" },
-      { id: "c", title: "Refrigeration", question: "Is TXV / metering device feeding poorly or hunting?", how: "Compare SH/SC and bulb / equalizer condition.", passLabel: "Yes", failLabel: "No", passNext: "c_end", failNext: "d_end", suggestedMeasurement: "Subcool" },
-      { id: "a_end", title: "Likely Direction", question: "Airflow restriction likely caused the freeze-up.", terminal: true },
-      { id: "b_end", title: "Likely Direction", question: "Low charge or restriction likely.", terminal: true },
-      { id: "c_end", title: "Likely Direction", question: "Metering device issue likely.", terminal: true },
-      { id: "d_end", title: "Done", question: "Use more readings and Diagnose again for tighter guidance.", terminal: true },
+      {
+        id: "a",
+        title: "Freezing Up",
+        question: "Is airflow restricted?",
+        how: "Check filter, blower, coil, registers, and static.",
+        passLabel: "No",
+        failLabel: "Yes",
+        passNext: "b",
+        failNext: "a_end",
+        suggestedMeasurement: "External Static Pressure",
+      },
+      {
+        id: "b",
+        title: "Airflow OK",
+        question: "Is suction pressure low and superheat high?",
+        how: "Check suction, line temp, saturation temp.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "b_end",
+        failNext: "c",
+        suggestedMeasurement: "Superheat",
+      },
+      {
+        id: "c",
+        title: "Refrigeration",
+        question: "Is TXV / metering device feeding poorly or hunting?",
+        how: "Compare SH/SC and bulb / equalizer condition.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "c_end",
+        failNext: "d_end",
+        suggestedMeasurement: "Subcool",
+      },
+      {
+        id: "a_end",
+        title: "Likely Direction",
+        question: "Airflow restriction likely caused the freeze-up.",
+        terminal: true,
+      },
+      {
+        id: "b_end",
+        title: "Likely Direction",
+        question: "Low charge or restriction likely.",
+        terminal: true,
+      },
+      {
+        id: "c_end",
+        title: "Likely Direction",
+        question: "Metering device issue likely.",
+        terminal: true,
+      },
+      {
+        id: "d_end",
+        title: "Done",
+        question: "Use more readings and Diagnose again for tighter guidance.",
+        terminal: true,
+      },
     ],
   },
   {
@@ -632,15 +938,81 @@ const SYMPTOM_PACKS: SymptomPack[] = [
     label: "No Heat (Gas)",
     defaultSymptom: "Gas heat not working.",
     nodes: [
-      { id: "a", title: "No Heat", question: "Is there a call for heat?", how: "Verify W call and thermostat state.", passLabel: "Yes", failLabel: "No", passNext: "b", failNext: "a_end", suggestedMeasurement: "Control Voltage (R-W)" },
-      { id: "b", title: "Heat Call", question: "Does inducer start and pressure switch prove?", how: "Check venting, tubing, switch, draft.", passLabel: "Yes", failLabel: "No", passNext: "c", failNext: "b_end", suggestedMeasurement: "Pressure Switch Status" },
-      { id: "c", title: "Ignition", question: "Does the igniter light burners and does flame prove?", how: "Check igniter, gas valve, flame sensor µA.", passLabel: "Yes", failLabel: "No", passNext: "d", failNext: "c_end", suggestedMeasurement: "Flame Sensor" },
-      { id: "d", title: "Heat Delivery", question: "Is airflow / heat rise normal without tripping limit?", how: "Check heat rise, blower, filter, static.", passLabel: "Yes", failLabel: "No", passNext: "d_end", failNext: "e_end", suggestedMeasurement: "Heat Rise" },
-      { id: "a_end", title: "Likely Direction", question: "No heat call found. Focus on thermostat, wiring, or board.", terminal: true },
-      { id: "b_end", title: "Likely Direction", question: "Inducer / pressure switch / venting issue likely.", terminal: true },
-      { id: "c_end", title: "Likely Direction", question: "Ignition, gas valve, or flame proving issue likely.", terminal: true },
-      { id: "d_end", title: "Done", question: "Sequence is normal. Re-check complaint details and staging.", terminal: true },
-      { id: "e_end", title: "Likely Direction", question: "Airflow / limit trip issue likely.", terminal: true },
+      {
+        id: "a",
+        title: "No Heat",
+        question: "Is there a call for heat?",
+        how: "Verify W call and thermostat state.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "b",
+        failNext: "a_end",
+        suggestedMeasurement: "Control Voltage (R-W)",
+      },
+      {
+        id: "b",
+        title: "Heat Call",
+        question: "Does inducer start and pressure switch prove?",
+        how: "Check venting, tubing, switch, draft.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "c",
+        failNext: "b_end",
+        suggestedMeasurement: "Pressure Switch Status",
+      },
+      {
+        id: "c",
+        title: "Ignition",
+        question: "Does the igniter light burners and does flame prove?",
+        how: "Check igniter, gas valve, flame sensor µA.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "d",
+        failNext: "c_end",
+        suggestedMeasurement: "Flame Sensor",
+      },
+      {
+        id: "d",
+        title: "Heat Delivery",
+        question:
+          "Is airflow / heat rise normal without tripping limit?",
+        how: "Check heat rise, blower, filter, static.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "d_end",
+        failNext: "e_end",
+        suggestedMeasurement: "Heat Rise",
+      },
+      {
+        id: "a_end",
+        title: "Likely Direction",
+        question: "No heat call found. Focus on thermostat, wiring, or board.",
+        terminal: true,
+      },
+      {
+        id: "b_end",
+        title: "Likely Direction",
+        question: "Inducer / pressure switch / venting issue likely.",
+        terminal: true,
+      },
+      {
+        id: "c_end",
+        title: "Likely Direction",
+        question: "Ignition, gas valve, or flame proving issue likely.",
+        terminal: true,
+      },
+      {
+        id: "d_end",
+        title: "Done",
+        question: "Sequence is normal. Re-check complaint details and staging.",
+        terminal: true,
+      },
+      {
+        id: "e_end",
+        title: "Likely Direction",
+        question: "Airflow / limit trip issue likely.",
+        terminal: true,
+      },
     ],
   },
 ];
@@ -711,9 +1083,10 @@ export default function HVACUnitsPage() {
     () => SYMPTOM_PACKS.find((p) => p.id === selectedPackId) || SYMPTOM_PACKS[0],
     [selectedPackId]
   );
-
   const [flowNodeId, setFlowNodeId] = useState<string>(selectedPack.nodes[0]?.id || "");
-  const [flowHistory, setFlowHistory] = useState<{ nodeId: string; choice: "PASS" | "FAIL"; nextId: string | null }[]>([]);
+  const [flowHistory, setFlowHistory] = useState<
+    { nodeId: string; choice: "PASS" | "FAIL"; nextId: string | null }[]
+  >([]);
 
   const [savedUnits, setSavedUnits] = useState<SavedUnitRecord[]>([]);
   const [historyFilter, setHistoryFilter] = useState("");
@@ -727,7 +1100,8 @@ export default function HVACUnitsPage() {
     try {
       const start = rawResult.indexOf("{");
       const end = rawResult.lastIndexOf("}");
-      const slice = start >= 0 && end > start ? rawResult.slice(start, end + 1) : rawResult;
+      const slice =
+        start >= 0 && end > start ? rawResult.slice(start, end + 1) : rawResult;
       return JSON.parse(slice) as Diagnosis;
     } catch {
       return null;
@@ -735,9 +1109,14 @@ export default function HVACUnitsPage() {
   }, [rawResult]);
 
   const chargeAnalysis = useMemo(
-  () => analyzeCharge(observations, equipmentType, refrigerantType),
-  [observations, equipmentType, refrigerantType]
-);
+    () => analyzeCharge(observations, equipmentType, refrigerantType),
+    [observations, equipmentType, refrigerantType]
+  );
+
+  const airflowAnalysis = useMemo(
+    () => analyzeAirflow(observations),
+    [observations]
+  );
 
   const currentFlowNode = useMemo(
     () => selectedPack.nodes.find((n) => n.id === flowNodeId) || selectedPack.nodes[0],
@@ -764,8 +1143,24 @@ export default function HVACUnitsPage() {
     );
   }, [savedUnits, historyFilter]);
 
-  const measurementOptions = parsed?.field_measurements_to_collect?.map((m) => m.measurement) || [];
-  const unitOptions = ["psi", "kPa", "bar", "°F", "°C", "amps", "volts", "inWC", "Pa", "ohms", "µA", "%", "other"];
+  const measurementOptions =
+    parsed?.field_measurements_to_collect?.map((m) => m.measurement) || [];
+
+  const unitOptions = [
+    "psi",
+    "kPa",
+    "bar",
+    "°F",
+    "°C",
+    "amps",
+    "volts",
+    "inWC",
+    "Pa",
+    "ohms",
+    "µA",
+    "%",
+    "other",
+  ];
 
   const coolingPresets = [
     { label: "Suction Pressure", unit: "psi" },
@@ -779,16 +1174,24 @@ export default function HVACUnitsPage() {
     { label: "Superheat", unit: "°F" },
     { label: "Subcool", unit: "°F" },
     { label: "Delta T (Return-Supply)", unit: "°F" },
+    { label: "Return Static", unit: "inWC" },
+    { label: "Supply Static", unit: "inWC" },
+    { label: "Filter Pressure Drop", unit: "inWC" },
+    { label: "Coil Pressure Drop", unit: "inWC" },
+    { label: "External Static Pressure", unit: "inWC" },
     { label: "Compressor Amps", unit: "amps" },
     { label: "Line Voltage", unit: "volts" },
     { label: "Control Voltage (R-C)", unit: "volts" },
-    { label: "External Static Pressure", unit: "inWC" },
   ];
 
   const heatingPresets = [
     { label: "Gas Inlet Pressure", unit: "inWC" },
     { label: "Manifold Pressure", unit: "inWC" },
     { label: "Heat Rise", unit: "°F" },
+    { label: "Return Static", unit: "inWC" },
+    { label: "Supply Static", unit: "inWC" },
+    { label: "Filter Pressure Drop", unit: "inWC" },
+    { label: "Coil Pressure Drop", unit: "inWC" },
     { label: "Inducer Amps", unit: "amps" },
     { label: "Flame Sensor", unit: "µA" },
     { label: "Limit Switch Continuity", unit: "ohms" },
@@ -815,8 +1218,14 @@ export default function HVACUnitsPage() {
 
   function advanceFlow(choice: "PASS" | "FAIL") {
     if (!currentFlowNode) return;
-    const nextId = choice === "PASS" ? currentFlowNode.passNext ?? null : currentFlowNode.failNext ?? null;
-    setFlowHistory((prev) => [...prev, { nodeId: currentFlowNode.id, choice, nextId }]);
+    const nextId =
+      choice === "PASS"
+        ? currentFlowNode.passNext ?? null
+        : currentFlowNode.failNext ?? null;
+    setFlowHistory((prev) => [
+      ...prev,
+      { nodeId: currentFlowNode.id, choice, nextId },
+    ]);
     if (nextId) {
       setFlowNodeId(nextId);
       const nextNode = selectedPack.nodes.find((n) => n.id === nextId);
@@ -865,7 +1274,10 @@ export default function HVACUnitsPage() {
       }
     }
 
-    setObservations((prev) => [...prev, { label, value: finalValue, unit: finalUnit, note: finalNote || undefined }]);
+    setObservations((prev) => [
+      ...prev,
+      { label, value: finalValue, unit: finalUnit, note: finalNote || undefined },
+    ]);
     setObsValue("");
     setObsNote("");
   }
@@ -875,16 +1287,36 @@ export default function HVACUnitsPage() {
 
     const next: Observation[] = [];
     if (gaugeRead.suction_psi !== null) {
-      next.push({ label: "Suction Pressure", value: String(gaugeRead.suction_psi), unit: "psi", note: "Imported from gauge photo" });
+      next.push({
+        label: "Suction Pressure",
+        value: String(gaugeRead.suction_psi),
+        unit: "psi",
+        note: "Imported from gauge photo",
+      });
     }
     if (gaugeRead.head_psi !== null) {
-      next.push({ label: "Liquid Pressure", value: String(gaugeRead.head_psi), unit: "psi", note: "Imported from gauge photo" });
+      next.push({
+        label: "Liquid Pressure",
+        value: String(gaugeRead.head_psi),
+        unit: "psi",
+        note: "Imported from gauge photo",
+      });
     }
     if (gaugeRead.low_sat_f !== null) {
-      next.push({ label: "Suction Saturation Temp", value: String(gaugeRead.low_sat_f), unit: "°F", note: "Imported from gauge photo" });
+      next.push({
+        label: "Suction Saturation Temp",
+        value: String(gaugeRead.low_sat_f),
+        unit: "°F",
+        note: "Imported from gauge photo",
+      });
     }
     if (gaugeRead.high_sat_f !== null) {
-      next.push({ label: "Condensing Saturation Temp", value: String(gaugeRead.high_sat_f), unit: "°F", note: "Imported from gauge photo" });
+      next.push({
+        label: "Condensing Saturation Temp",
+        value: String(gaugeRead.high_sat_f),
+        unit: "°F",
+        note: "Imported from gauge photo",
+      });
     }
 
     if (next.length) {
@@ -1015,6 +1447,7 @@ export default function HVACUnitsPage() {
         flowPack: selectedPack.label,
         flowHistory,
         chargeAnalysis,
+        airflowAnalysis,
       });
     } finally {
       setLoading(false);
@@ -1042,6 +1475,7 @@ export default function HVACUnitsPage() {
         flowPack: selectedPack.label,
         flowHistory,
         chargeAnalysis,
+        airflowAnalysis,
       });
     } finally {
       setLoading(false);
@@ -1174,26 +1608,52 @@ export default function HVACUnitsPage() {
 
   return (
     <div style={{ padding: 20, maxWidth: 1220, margin: "0 auto" }}>
-      <h1 style={{ fontSize: 26, fontWeight: 900 }}>Skilled Trades AI — HVAC Diagnose</h1>
+      <h1 style={{ fontSize: 26, fontWeight: 900 }}>
+        Skilled Trades AI — HVAC Diagnose
+      </h1>
 
-      <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+      <div
+        style={{
+          marginTop: 14,
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 12,
+        }}
+      >
         <SectionCard title="Customer / Site / Unit">
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             <div>
               <label style={{ fontWeight: 900 }}>Customer Name</label>
-              <input value={customerName} onChange={(e) => setCustomerName(e.target.value)} style={{ width: "100%", padding: 8 }} />
+              <input
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                style={{ width: "100%", padding: 8 }}
+              />
             </div>
             <div>
               <label style={{ fontWeight: 900 }}>Site Name</label>
-              <input value={siteName} onChange={(e) => setSiteName(e.target.value)} style={{ width: "100%", padding: 8 }} />
+              <input
+                value={siteName}
+                onChange={(e) => setSiteName(e.target.value)}
+                style={{ width: "100%", padding: 8 }}
+              />
             </div>
             <div style={{ gridColumn: "1 / -1" }}>
               <label style={{ fontWeight: 900 }}>Site Address</label>
-              <input value={siteAddress} onChange={(e) => setSiteAddress(e.target.value)} style={{ width: "100%", padding: 8 }} />
+              <input
+                value={siteAddress}
+                onChange={(e) => setSiteAddress(e.target.value)}
+                style={{ width: "100%", padding: 8 }}
+              />
             </div>
             <div>
               <label style={{ fontWeight: 900 }}>Unit Nickname / Tag</label>
-              <input value={unitNickname} onChange={(e) => setUnitNickname(e.target.value)} placeholder="RTU-1, Office Furnace, Walk-in Cooler" style={{ width: "100%", padding: 8 }} />
+              <input
+                value={unitNickname}
+                onChange={(e) => setUnitNickname(e.target.value)}
+                placeholder="RTU-1, Office Furnace, Walk-in Cooler"
+                style={{ width: "100%", padding: 8 }}
+              />
             </div>
           </div>
 
@@ -1203,25 +1663,39 @@ export default function HVACUnitsPage() {
           </div>
         </SectionCard>
 
-        <SectionCard title="Saved Unit History" right={<Badge text={`${savedUnits.length} saved`} />}>
-          <div>
-            <input
-              value={historyFilter}
-              onChange={(e) => setHistoryFilter(e.target.value)}
-              placeholder="Search customer, site, model, symptom..."
-              style={{ width: "100%", padding: 8 }}
-            />
-          </div>
+        <SectionCard
+          title="Saved Unit History"
+          right={<Badge text={`${savedUnits.length} saved`} />}
+        >
+          <input
+            value={historyFilter}
+            onChange={(e) => setHistoryFilter(e.target.value)}
+            placeholder="Search customer, site, model, symptom..."
+            style={{ width: "100%", padding: 8 }}
+          />
 
-          <div style={{ marginTop: 10, display: "grid", gap: 8, maxHeight: 320, overflow: "auto" }}>
+          <div
+            style={{
+              marginTop: 10,
+              display: "grid",
+              gap: 8,
+              maxHeight: 320,
+              overflow: "auto",
+            }}
+          >
             {filteredSavedUnits.length ? (
               filteredSavedUnits.map((u) => (
-                <div key={u.id} style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
+                <div
+                  key={u.id}
+                  style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}
+                >
                   <div style={{ fontWeight: 900 }}>
-                    {u.customerName || "No Customer"} {u.unitNickname ? <Badge text={u.unitNickname} /> : null}
+                    {u.customerName || "No Customer"}
+                    {u.unitNickname ? <Badge text={u.unitNickname} /> : null}
                   </div>
                   <SmallHint style={{ marginTop: 4 }}>
-                    {u.siteName || "-"} • {u.manufacturer || "-"} {u.model || "-"} • {u.equipmentType || "-"}
+                    {u.siteName || "-"} • {u.manufacturer || "-"} {u.model || "-"} •{" "}
+                    {u.equipmentType || "-"}
                   </SmallHint>
                   <SmallHint style={{ marginTop: 4 }}>
                     Saved: {new Date(u.savedAt).toLocaleString()}
@@ -1239,12 +1713,24 @@ export default function HVACUnitsPage() {
         </SectionCard>
       </div>
 
-      <div style={{ marginTop: 14, padding: 14, border: "1px solid #e5e5e5", borderRadius: 12, background: "#fafafa" }}>
+      <div
+        style={{
+          marginTop: 14,
+          padding: 14,
+          border: "1px solid #e5e5e5",
+          borderRadius: 12,
+          background: "#fafafa",
+        }}
+      >
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <div>
             <label style={{ fontWeight: 900 }}>Property Type</label>
             <br />
-            <select value={propertyType} onChange={(e) => setPropertyType(e.target.value)} style={{ width: "100%", padding: 8 }}>
+            <select
+              value={propertyType}
+              onChange={(e) => setPropertyType(e.target.value)}
+              style={{ width: "100%", padding: 8 }}
+            >
               <option>Residential</option>
               <option>Commercial</option>
             </select>
@@ -1253,7 +1739,11 @@ export default function HVACUnitsPage() {
           <div>
             <label style={{ fontWeight: 900 }}>Equipment Type</label>
             <br />
-            <select value={equipmentType} onChange={(e) => setEquipmentType(e.target.value)} style={{ width: "100%", padding: 8 }}>
+            <select
+              value={equipmentType}
+              onChange={(e) => setEquipmentType(e.target.value)}
+              style={{ width: "100%", padding: 8 }}
+            >
               <option>RTU</option>
               <option>Split System</option>
               <option>Heat Pump</option>
@@ -1268,19 +1758,31 @@ export default function HVACUnitsPage() {
           <div>
             <label style={{ fontWeight: 900 }}>Manufacturer</label>
             <br />
-            <input value={manufacturer} onChange={(e) => setManufacturer(e.target.value)} style={{ width: "100%", padding: 8 }} />
+            <input
+              value={manufacturer}
+              onChange={(e) => setManufacturer(e.target.value)}
+              style={{ width: "100%", padding: 8 }}
+            />
           </div>
 
           <div>
             <label style={{ fontWeight: 900 }}>Model (optional)</label>
             <br />
-            <input value={model} onChange={(e) => setModel(e.target.value)} style={{ width: "100%", padding: 8 }} />
+            <input
+              value={model}
+              onChange={(e) => setModel(e.target.value)}
+              style={{ width: "100%", padding: 8 }}
+            />
           </div>
 
           <div>
             <label style={{ fontWeight: 900 }}>Refrigerant Type</label>
             <br />
-            <select value={refrigerantType} onChange={(e) => setRefrigerantType(e.target.value)} style={{ width: "100%", padding: 8 }}>
+            <select
+              value={refrigerantType}
+              onChange={(e) => setRefrigerantType(e.target.value)}
+              style={{ width: "100%", padding: 8 }}
+            >
               {refrigerantOptions.map((r) => (
                 <option key={r} value={r}>
                   {r}
@@ -1292,36 +1794,67 @@ export default function HVACUnitsPage() {
           <div style={{ gridColumn: "1 / -1" }}>
             <label style={{ fontWeight: 900 }}>Symptom</label>
             <br />
-            <textarea value={symptom} onChange={(e) => setSymptom(e.target.value)} style={{ width: "100%", padding: 8, minHeight: 90 }} />
+            <textarea
+              value={symptom}
+              onChange={(e) => setSymptom(e.target.value)}
+              style={{ width: "100%", padding: 8, minHeight: 90 }}
+            />
           </div>
         </div>
 
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
-          <button onClick={handleDiagnose} disabled={loading} style={{ padding: "10px 14px", fontWeight: 900 }}>
+          <button
+            onClick={handleDiagnose}
+            disabled={loading}
+            style={{ padding: "10px 14px", fontWeight: 900 }}
+          >
             {loading ? "Diagnosing..." : "Diagnose"}
           </button>
 
-          <button onClick={updateDiagnosisNow} disabled={loading} style={{ padding: "10px 14px", fontWeight: 900 }}>
+          <button
+            onClick={updateDiagnosisNow}
+            disabled={loading}
+            style={{ padding: "10px 14px", fontWeight: 900 }}
+          >
             Update diagnosis (with measurements)
           </button>
 
-          <button onClick={findManualsParts} disabled={mpBusy || !manufacturer.trim()} style={{ padding: "10px 14px", fontWeight: 900 }}>
+          <button
+            onClick={findManualsParts}
+            disabled={mpBusy || !manufacturer.trim()}
+            style={{ padding: "10px 14px", fontWeight: 900 }}
+          >
             {mpBusy ? "Finding..." : "Parts & Manuals"}
           </button>
         </div>
       </div>
 
-      <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+      <div
+        style={{
+          marginTop: 16,
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 12,
+        }}
+      >
         <SectionCard title="Symptom Packs" right={<Badge text={selectedPack.label} />}>
           <SmallHint>Choose a symptom pack to load a tech-style flowchart.</SmallHint>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10 }}>
             {SYMPTOM_PACKS.map((pack) => (
-              <PillButton key={pack.id} text={pack.label} active={pack.id === selectedPackId} onClick={() => selectPack(pack.id)} />
+              <PillButton
+                key={pack.id}
+                text={pack.label}
+                active={pack.id === selectedPackId}
+                onClick={() => selectPack(pack.id)}
+              />
             ))}
           </div>
         </SectionCard>
 
-        <SectionCard title="Nameplate Photo Reader" right={<PillButton text="Choose photo" onClick={() => fileInputRef.current?.click()} />}>
+        <SectionCard
+          title="Nameplate Photo Reader"
+          right={<PillButton text="Choose photo" onClick={() => fileInputRef.current?.click()} />}
+        >
           <input
             ref={fileInputRef}
             type="file"
@@ -1335,34 +1868,77 @@ export default function HVACUnitsPage() {
 
           {nameplateImage ? (
             <div style={{ display: "grid", gap: 10 }}>
-              <img src={nameplateImage} alt="Nameplate" style={{ width: "100%", maxHeight: 260, objectFit: "contain", border: "1px solid #eee", borderRadius: 10 }} />
+              <img
+                src={nameplateImage}
+                alt="Nameplate"
+                style={{
+                  width: "100%",
+                  maxHeight: 260,
+                  objectFit: "contain",
+                  border: "1px solid #eee",
+                  borderRadius: 10,
+                }}
+              />
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <PillButton text={nameplateBusy ? "Reading..." : "Read nameplate"} onClick={parseNameplate} disabled={nameplateBusy} />
-                <PillButton text="Clear" onClick={() => { setNameplateImage(""); setNameplate(null); setNameplateErr(""); }} />
+                <PillButton
+                  text={nameplateBusy ? "Reading..." : "Read nameplate"}
+                  onClick={parseNameplate}
+                  disabled={nameplateBusy}
+                />
+                <PillButton
+                  text="Clear"
+                  onClick={() => {
+                    setNameplateImage("");
+                    setNameplate(null);
+                    setNameplateErr("");
+                  }}
+                />
               </div>
-              {nameplateErr ? <div style={{ color: "crimson", fontWeight: 800 }}>{nameplateErr}</div> : null}
+              {nameplateErr ? (
+                <div style={{ color: "crimson", fontWeight: 800 }}>{nameplateErr}</div>
+              ) : null}
               {nameplate ? (
                 <div style={{ display: "grid", gap: 8 }}>
                   <SmallHint>
                     Confidence: <b>{nameplate.confidence}</b> — {nameplate.notes}
                   </SmallHint>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                    <div><b>Manufacturer:</b> {nameplate.manufacturer ?? "-"}</div>
-                    <div><b>Model:</b> {nameplate.model ?? "-"}</div>
-                    <div><b>Serial:</b> {nameplate.serial ?? "-"}</div>
-                    <div><b>Refrigerant:</b> {nameplate.refrigerant ?? "-"}</div>
+                    <div>
+                      <b>Manufacturer:</b> {nameplate.manufacturer ?? "-"}
+                    </div>
+                    <div>
+                      <b>Model:</b> {nameplate.model ?? "-"}
+                    </div>
+                    <div>
+                      <b>Serial:</b> {nameplate.serial ?? "-"}
+                    </div>
+                    <div>
+                      <b>Refrigerant:</b> {nameplate.refrigerant ?? "-"}
+                    </div>
                   </div>
                 </div>
               ) : null}
             </div>
           ) : (
-            <SmallHint>Upload a clear nameplate photo to extract manufacturer/model/serial/refrigerant.</SmallHint>
+            <SmallHint>
+              Upload a clear nameplate photo to extract manufacturer/model/serial/refrigerant.
+            </SmallHint>
           )}
         </SectionCard>
       </div>
 
-      <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-        <SectionCard title="Gauge Photo Reader" right={<PillButton text="Choose gauge photo" onClick={() => gaugeInputRef.current?.click()} />}>
+      <div
+        style={{
+          marginTop: 16,
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 12,
+        }}
+      >
+        <SectionCard
+          title="Gauge Photo Reader"
+          right={<PillButton text="Choose gauge photo" onClick={() => gaugeInputRef.current?.click()} />}
+        >
           <input
             ref={gaugeInputRef}
             type="file"
@@ -1383,61 +1959,109 @@ export default function HVACUnitsPage() {
               <img
                 src={gaugeImage}
                 alt="Gauge photo"
-                style={{ width: "100%", maxHeight: 280, objectFit: "contain", border: "1px solid #eee", borderRadius: 10 }}
+                style={{
+                  width: "100%",
+                  maxHeight: 280,
+                  objectFit: "contain",
+                  border: "1px solid #eee",
+                  borderRadius: 10,
+                }}
               />
 
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <PillButton text={gaugeBusy ? "Reading..." : "Read Gauges"} onClick={analyzeGaugePhoto} disabled={gaugeBusy} />
-                <PillButton text="Clear" onClick={() => { setGaugeImage(""); setGaugeErr(""); setGaugeRead(null); }} />
+                <PillButton
+                  text={gaugeBusy ? "Reading..." : "Read Gauges"}
+                  onClick={analyzeGaugePhoto}
+                  disabled={gaugeBusy}
+                />
+                <PillButton
+                  text="Clear"
+                  onClick={() => {
+                    setGaugeImage("");
+                    setGaugeErr("");
+                    setGaugeRead(null);
+                  }}
+                />
               </div>
 
-              {gaugeErr ? <div style={{ color: "crimson", fontWeight: 800 }}>{gaugeErr}</div> : null}
+              {gaugeErr ? (
+                <div style={{ color: "crimson", fontWeight: 800 }}>{gaugeErr}</div>
+              ) : null}
 
               {gaugeRead ? (
-                <div style={{ display: "grid", gap: 10 }}>
-                  <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-                    <div style={{ fontWeight: 900 }}>
-                      Gauge Read <Badge text={gaugeRead.confidence} />
-                    </div>
+                <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
+                  <div style={{ fontWeight: 900 }}>
+                    Gauge Read
+                    <Badge text={gaugeRead.confidence} />
+                  </div>
 
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 10 }}>
-                      <div><b>Suction:</b> {gaugeRead.suction_psi !== null ? `${gaugeRead.suction_psi} psi` : "—"}</div>
-                      <div><b>Head:</b> {gaugeRead.head_psi !== null ? `${gaugeRead.head_psi} psi` : "—"}</div>
-                      <div><b>Low Sat:</b> {gaugeRead.low_sat_f !== null ? `${gaugeRead.low_sat_f} °F` : "—"}</div>
-                      <div><b>High Sat:</b> {gaugeRead.high_sat_f !== null ? `${gaugeRead.high_sat_f} °F` : "—"}</div>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: 10,
+                      marginTop: 10,
+                    }}
+                  >
+                    <div>
+                      <b>Suction:</b>{" "}
+                      {gaugeRead.suction_psi !== null ? `${gaugeRead.suction_psi} psi` : "—"}
                     </div>
+                    <div>
+                      <b>Head:</b>{" "}
+                      {gaugeRead.head_psi !== null ? `${gaugeRead.head_psi} psi` : "—"}
+                    </div>
+                    <div>
+                      <b>Low Sat:</b>{" "}
+                      {gaugeRead.low_sat_f !== null ? `${gaugeRead.low_sat_f} °F` : "—"}
+                    </div>
+                    <div>
+                      <b>High Sat:</b>{" "}
+                      {gaugeRead.high_sat_f !== null ? `${gaugeRead.high_sat_f} °F` : "—"}
+                    </div>
+                  </div>
 
-                    <div style={{ marginTop: 10 }}>
-                      <div style={{ fontWeight: 900 }}>Quick diagnosis</div>
-                      <SmallHint style={{ marginTop: 4 }}>{gaugeRead.quick_diagnosis}</SmallHint>
-                    </div>
+                  <div style={{ marginTop: 10 }}>
+                    <div style={{ fontWeight: 900 }}>Quick diagnosis</div>
+                    <SmallHint style={{ marginTop: 4 }}>{gaugeRead.quick_diagnosis}</SmallHint>
+                  </div>
 
-                    <div style={{ marginTop: 10 }}>
-                      <div style={{ fontWeight: 900 }}>Notes</div>
-                      <SmallHint style={{ marginTop: 4 }}>{gaugeRead.notes}</SmallHint>
-                    </div>
+                  <div style={{ marginTop: 10 }}>
+                    <div style={{ fontWeight: 900 }}>Notes</div>
+                    <SmallHint style={{ marginTop: 4 }}>{gaugeRead.notes}</SmallHint>
+                  </div>
 
-                    <div style={{ marginTop: 10 }}>
-                      <PillButton text="Add these readings to measurements" onClick={addGaugeReadingsToMeasurements} />
-                    </div>
+                  <div style={{ marginTop: 10 }}>
+                    <PillButton
+                      text="Add these readings to measurements"
+                      onClick={addGaugeReadingsToMeasurements}
+                    />
                   </div>
                 </div>
               ) : null}
             </div>
           ) : (
             <SmallHint>
-              Upload a clear photo of the gauge set. The app will try to read low side, high side, and saturation temps.
+              Upload a clear photo of the gauge set. The app will try to read low side,
+              high side, and saturation temps.
             </SmallHint>
           )}
         </SectionCard>
 
-        <SectionCard title="Automatic Superheat / Subcool + Charge Diagnosis">
+        <SectionCard title="PT Chart Intelligence + Charge Diagnosis">
           <SmallHint>
-            Best results when you enter: suction line temp, liquid line temp, suction saturation temp, condensing saturation temp,
-            return air temp, and supply air temp.
+            If saturation temps are not entered, the app will estimate them from pressure
+            and refrigerant type using a PT chart approximation.
           </SmallHint>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginTop: 12 }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr 1fr",
+              gap: 10,
+              marginTop: 12,
+            }}
+          >
             <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
               <div style={{ fontWeight: 900 }}>Delta-T</div>
               <div style={{ fontSize: 22, fontWeight: 900, marginTop: 6 }}>
@@ -1460,12 +2084,19 @@ export default function HVACUnitsPage() {
             </div>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 10 }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: 10,
+              marginTop: 10,
+            }}
+          >
             <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
               <div style={{ fontWeight: 900 }}>
-  Evap Saturation
-  <Badge text={chargeAnalysis.evapSatSource} />
-</div>
+                Evap Saturation
+                <Badge text={chargeAnalysis.evapSatSource} />
+              </div>
               <div style={{ marginTop: 6 }}>
                 {chargeAnalysis.evapSat !== null ? `${chargeAnalysis.evapSat}°F` : "—"}
               </div>
@@ -1473,18 +2104,28 @@ export default function HVACUnitsPage() {
 
             <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
               <div style={{ fontWeight: 900 }}>
-  Condensing Saturation
-  <Badge text={chargeAnalysis.condSatSource} />
-</div>
+                Condensing Saturation
+                <Badge text={chargeAnalysis.condSatSource} />
+              </div>
               <div style={{ marginTop: 6 }}>
                 {chargeAnalysis.condSat !== null ? `${chargeAnalysis.condSat}°F` : "—"}
               </div>
             </div>
           </div>
 
-          <div style={{ marginTop: 12, border: "1px solid #eee", borderRadius: 10, padding: 10, background: "#fafafa" }}>
+          <div
+            style={{
+              marginTop: 12,
+              border: "1px solid #eee",
+              borderRadius: 10,
+              padding: 10,
+              background: "#fafafa",
+            }}
+          >
             <div style={{ fontWeight: 900 }}>Charge Condition</div>
-            <div style={{ fontSize: 16, fontWeight: 900, marginTop: 6 }}>{chargeAnalysis.summary}</div>
+            <div style={{ fontSize: 16, fontWeight: 900, marginTop: 6 }}>
+              {chargeAnalysis.summary}
+            </div>
             {chargeAnalysis.findings.length ? (
               <ul style={{ marginTop: 8, paddingLeft: 18 }}>
                 {chargeAnalysis.findings.map((f, i) => (
@@ -1494,14 +2135,126 @@ export default function HVACUnitsPage() {
                 ))}
               </ul>
             ) : (
-              <SmallHint style={{ marginTop: 8 }}>Add more refrigeration readings to tighten the diagnosis.</SmallHint>
+              <SmallHint style={{ marginTop: 8 }}>
+                Add more refrigeration readings to tighten the diagnosis.
+              </SmallHint>
             )}
           </div>
         </SectionCard>
       </div>
 
-      <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-        <SectionCard title="Photo Diagnosis" right={<PillButton text="Choose photo" onClick={() => photoInputRef.current?.click()} />}>
+      <div style={{ marginTop: 16 }}>
+        <SectionCard title="Airflow Intelligence">
+          <SmallHint>
+            Add return static, supply static, filter pressure drop, and coil pressure drop
+            to diagnose airflow restrictions.
+          </SmallHint>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr 1fr",
+              gap: 10,
+              marginTop: 12,
+            }}
+          >
+            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
+              <div style={{ fontWeight: 900 }}>Total External Static</div>
+              <div style={{ fontSize: 22, fontWeight: 900, marginTop: 6 }}>
+                {airflowAnalysis.totalExternalStatic !== null
+                  ? `${airflowAnalysis.totalExternalStatic} inWC`
+                  : "—"}
+              </div>
+            </div>
+
+            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
+              <div style={{ fontWeight: 900 }}>Return Static</div>
+              <div style={{ fontSize: 22, fontWeight: 900, marginTop: 6 }}>
+                {airflowAnalysis.returnStatic !== null
+                  ? `${airflowAnalysis.returnStatic} inWC`
+                  : "—"}
+              </div>
+            </div>
+
+            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
+              <div style={{ fontWeight: 900 }}>Supply Static</div>
+              <div style={{ fontSize: 22, fontWeight: 900, marginTop: 6 }}>
+                {airflowAnalysis.supplyStatic !== null
+                  ? `${airflowAnalysis.supplyStatic} inWC`
+                  : "—"}
+              </div>
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: 10,
+              marginTop: 10,
+            }}
+          >
+            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
+              <div style={{ fontWeight: 900 }}>Filter Drop</div>
+              <div style={{ marginTop: 6 }}>
+                {airflowAnalysis.filterDrop !== null
+                  ? `${airflowAnalysis.filterDrop} inWC`
+                  : "—"}
+              </div>
+            </div>
+
+            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
+              <div style={{ fontWeight: 900 }}>Coil Drop</div>
+              <div style={{ marginTop: 6 }}>
+                {airflowAnalysis.coilDrop !== null
+                  ? `${airflowAnalysis.coilDrop} inWC`
+                  : "—"}
+              </div>
+            </div>
+          </div>
+
+          <div
+            style={{
+              marginTop: 12,
+              border: "1px solid #eee",
+              borderRadius: 10,
+              padding: 10,
+              background: "#fafafa",
+            }}
+          >
+            <div style={{ fontWeight: 900 }}>Airflow Summary</div>
+            <div style={{ fontSize: 16, fontWeight: 900, marginTop: 6 }}>
+              {airflowAnalysis.summary}
+            </div>
+            {airflowAnalysis.findings.length ? (
+              <ul style={{ marginTop: 8, paddingLeft: 18 }}>
+                {airflowAnalysis.findings.map((f, i) => (
+                  <li key={i}>
+                    <SmallHint>{f}</SmallHint>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <SmallHint style={{ marginTop: 8 }}>
+                Add static readings to identify filter, coil, blower, or duct restrictions.
+              </SmallHint>
+            )}
+          </div>
+        </SectionCard>
+      </div>
+
+      <div
+        style={{
+          marginTop: 16,
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 12,
+        }}
+      >
+        <SectionCard
+          title="Photo Diagnosis"
+          right={<PillButton text="Choose photo" onClick={() => photoInputRef.current?.click()} />}
+        >
           <input
             ref={photoInputRef}
             type="file"
@@ -1522,22 +2275,51 @@ export default function HVACUnitsPage() {
               <img
                 src={photoImage}
                 alt="Diagnostic photo"
-                style={{ width: "100%", maxHeight: 280, objectFit: "contain", border: "1px solid #eee", borderRadius: 10 }}
+                style={{
+                  width: "100%",
+                  maxHeight: 280,
+                  objectFit: "contain",
+                  border: "1px solid #eee",
+                  borderRadius: 10,
+                }}
               />
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <PillButton text={photoLoading ? "Analyzing..." : "Analyze Photo"} onClick={analyzePhoto} disabled={photoLoading} />
-                <PillButton text="Clear" onClick={() => { setPhotoImage(""); setPhotoResult(""); setPhotoError(""); }} />
+                <PillButton
+                  text={photoLoading ? "Analyzing..." : "Analyze Photo"}
+                  onClick={analyzePhoto}
+                  disabled={photoLoading}
+                />
+                <PillButton
+                  text="Clear"
+                  onClick={() => {
+                    setPhotoImage("");
+                    setPhotoResult("");
+                    setPhotoError("");
+                  }}
+                />
               </div>
-              {photoError ? <div style={{ color: "crimson", fontWeight: 800 }}>{photoError}</div> : null}
+              {photoError ? (
+                <div style={{ color: "crimson", fontWeight: 800 }}>{photoError}</div>
+              ) : null}
               {photoResult ? (
-                <pre style={{ margin: 0, whiteSpace: "pre-wrap", border: "1px solid #eee", borderRadius: 10, padding: 10, background: "#fafafa" }}>
+                <pre
+                  style={{
+                    margin: 0,
+                    whiteSpace: "pre-wrap",
+                    border: "1px solid #eee",
+                    borderRadius: 10,
+                    padding: 10,
+                    background: "#fafafa",
+                  }}
+                >
                   {photoResult}
                 </pre>
               ) : null}
             </div>
           ) : (
             <SmallHint>
-              Upload a photo of a control board, capacitor, contactor, iced coil, wiring, gauges, or error code and let the app analyze it.
+              Upload a photo of a control board, capacitor, contactor, iced coil, wiring,
+              gauges, or error code and let the app analyze it.
             </SmallHint>
           )}
         </SectionCard>
@@ -1546,7 +2328,9 @@ export default function HVACUnitsPage() {
           <div style={{ border: "1px solid #eee", borderRadius: 12, padding: 12 }}>
             <div style={{ fontWeight: 900 }}>{currentFlowNode.title}</div>
             <div style={{ marginTop: 6, fontSize: 16 }}>{currentFlowNode.question}</div>
-            {currentFlowNode.how ? <SmallHint style={{ marginTop: 8 }}>How: {currentFlowNode.how}</SmallHint> : null}
+            {currentFlowNode.how ? (
+              <SmallHint style={{ marginTop: 8 }}>How: {currentFlowNode.how}</SmallHint>
+            ) : null}
             {currentFlowNode.suggestedMeasurement ? (
               <SmallHint style={{ marginTop: 8 }}>
                 Suggested next reading: <b>{currentFlowNode.suggestedMeasurement}</b>
@@ -1555,14 +2339,30 @@ export default function HVACUnitsPage() {
 
             {!currentFlowNode.terminal ? (
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
-                <PillButton text={currentFlowNode.passLabel || "PASS"} onClick={() => advanceFlow("PASS")} />
-                <PillButton text={currentFlowNode.failLabel || "FAIL"} onClick={() => advanceFlow("FAIL")} />
-                <PillButton text="Use suggested reading" onClick={addSuggestedMeasurementFromFlow} disabled={!currentFlowNode.suggestedMeasurement} />
-                <PillButton text="Reset flow" onClick={() => resetFlowForPack(selectedPackId)} />
+                <PillButton
+                  text={currentFlowNode.passLabel || "PASS"}
+                  onClick={() => advanceFlow("PASS")}
+                />
+                <PillButton
+                  text={currentFlowNode.failLabel || "FAIL"}
+                  onClick={() => advanceFlow("FAIL")}
+                />
+                <PillButton
+                  text="Use suggested reading"
+                  onClick={addSuggestedMeasurementFromFlow}
+                  disabled={!currentFlowNode.suggestedMeasurement}
+                />
+                <PillButton
+                  text="Reset flow"
+                  onClick={() => resetFlowForPack(selectedPackId)}
+                />
               </div>
             ) : (
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
-                <PillButton text="Reset flow" onClick={() => resetFlowForPack(selectedPackId)} />
+                <PillButton
+                  text="Reset flow"
+                  onClick={() => resetFlowForPack(selectedPackId)}
+                />
                 <PillButton text="Diagnose now" onClick={handleDiagnose} />
               </div>
             )}
@@ -1570,11 +2370,22 @@ export default function HVACUnitsPage() {
         </SectionCard>
       </div>
 
-      <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+      <div
+        style={{
+          marginTop: 16,
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 12,
+        }}
+      >
         <SectionCard title="Manuals + Parts Results">
-          {mpErr ? <div style={{ color: "crimson", fontWeight: 800 }}>{mpErr}</div> : null}
+          {mpErr ? (
+            <div style={{ color: "crimson", fontWeight: 800 }}>{mpErr}</div>
+          ) : null}
           {!manualsParts ? (
-            <SmallHint>Press “Parts & Manuals” after filling Manufacturer / Model / Symptom.</SmallHint>
+            <SmallHint>
+              Press “Parts & Manuals” after filling Manufacturer / Model / Symptom.
+            </SmallHint>
           ) : (
             <div style={{ display: "grid", gap: 10 }}>
               <div style={{ fontWeight: 900 }}>{manualsParts.summary}</div>
@@ -1583,7 +2394,19 @@ export default function HVACUnitsPage() {
                   <div style={{ fontWeight: 900 }}>Manuals</div>
                   <div style={{ display: "grid", gap: 8, marginTop: 6 }}>
                     {manualsParts.manuals.map((l, i) => (
-                      <a key={i} href={l.url} target="_blank" rel="noreferrer" style={{ border: "1px solid #eee", borderRadius: 10, padding: 10, textDecoration: "none", color: "#111" }}>
+                      <a
+                        key={i}
+                        href={l.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{
+                          border: "1px solid #eee",
+                          borderRadius: 10,
+                          padding: 10,
+                          textDecoration: "none",
+                          color: "#111",
+                        }}
+                      >
                         <div style={{ fontWeight: 900 }}>{l.title}</div>
                         {l.note ? <SmallHint>{l.note}</SmallHint> : null}
                       </a>
@@ -1594,7 +2417,19 @@ export default function HVACUnitsPage() {
                   <div style={{ fontWeight: 900 }}>Parts</div>
                   <div style={{ display: "grid", gap: 8, marginTop: 6 }}>
                     {manualsParts.parts.map((l, i) => (
-                      <a key={i} href={l.url} target="_blank" rel="noreferrer" style={{ border: "1px solid #eee", borderRadius: 10, padding: 10, textDecoration: "none", color: "#111" }}>
+                      <a
+                        key={i}
+                        href={l.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{
+                          border: "1px solid #eee",
+                          borderRadius: 10,
+                          padding: 10,
+                          textDecoration: "none",
+                          color: "#111",
+                        }}
+                      >
                         <div style={{ fontWeight: 900 }}>{l.title}</div>
                         {l.note ? <SmallHint>{l.note}</SmallHint> : null}
                       </a>
@@ -1608,26 +2443,55 @@ export default function HVACUnitsPage() {
 
         <SectionCard title="Measurements / Observations">
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            {(symptom.toLowerCase().includes("heat") ? heatingPresets : coolingPresets).map((p) => (
-              <PillButton key={p.label} text={p.label} onClick={() => applyPreset(p.label, p.unit)} />
-            ))}
+            {(symptom.toLowerCase().includes("heat") ? heatingPresets : coolingPresets).map(
+              (p) => (
+                <PillButton
+                  key={p.label}
+                  text={p.label}
+                  onClick={() => applyPreset(p.label, p.unit)}
+                />
+              )
+            )}
             {measurementOptions.map((m) => (
-              <PillButton key={m} text={m} onClick={() => applyPreset(m, guessDefaultUnit(m))} />
+              <PillButton
+                key={m}
+                text={m}
+                onClick={() => applyPreset(m, guessDefaultUnit(m))}
+              />
             ))}
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 10, marginTop: 12 }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "2fr 1fr 1fr",
+              gap: 10,
+              marginTop: 12,
+            }}
+          >
             <div>
               <label style={{ fontWeight: 900 }}>Label</label>
-              <input value={obsLabel} onChange={(e) => setObsLabel(e.target.value)} style={{ width: "100%", padding: 8 }} />
+              <input
+                value={obsLabel}
+                onChange={(e) => setObsLabel(e.target.value)}
+                style={{ width: "100%", padding: 8 }}
+              />
             </div>
             <div>
               <label style={{ fontWeight: 900 }}>Value</label>
-              <input value={obsValue} onChange={(e) => setObsValue(e.target.value)} style={{ width: "100%", padding: 8 }} />
+              <input
+                value={obsValue}
+                onChange={(e) => setObsValue(e.target.value)}
+                style={{ width: "100%", padding: 8 }}
+              />
             </div>
             <div>
               <label style={{ fontWeight: 900 }}>Unit</label>
-              <select value={obsUnit} onChange={(e) => setObsUnit(e.target.value)} style={{ width: "100%", padding: 8 }}>
+              <select
+                value={obsUnit}
+                onChange={(e) => setObsUnit(e.target.value)}
+                style={{ width: "100%", padding: 8 }}
+              >
                 {unitOptions.map((u) => (
                   <option key={u} value={u}>
                     {u}
@@ -1640,11 +2504,26 @@ export default function HVACUnitsPage() {
           <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
             <div>
               <label style={{ fontWeight: 900 }}>Note (optional)</label>
-              <input value={obsNote} onChange={(e) => setObsNote(e.target.value)} style={{ width: "100%", padding: 8 }} />
+              <input
+                value={obsNote}
+                onChange={(e) => setObsNote(e.target.value)}
+                style={{ width: "100%", padding: 8 }}
+              />
             </div>
 
-            <label style={{ display: "flex", alignItems: "center", gap: 8, userSelect: "none" }}>
-              <input type="checkbox" checked={autoConvert} onChange={(e) => setAutoConvert(e.target.checked)} />
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                userSelect: "none",
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={autoConvert}
+                onChange={(e) => setAutoConvert(e.target.checked)}
+              />
               Auto-convert (kPa→psi, °C→°F, Pa→inWC)
             </label>
 
@@ -1652,7 +2531,10 @@ export default function HVACUnitsPage() {
               <button onClick={addMeasurement} style={{ padding: "10px 14px", fontWeight: 900 }}>
                 Add measurement
               </button>
-              <button onClick={() => setObservations([])} style={{ padding: "10px 14px", fontWeight: 900 }}>
+              <button
+                onClick={() => setObservations([])}
+                style={{ padding: "10px 14px", fontWeight: 900 }}
+              >
                 Clear all
               </button>
             </div>
@@ -1660,10 +2542,21 @@ export default function HVACUnitsPage() {
             {observations.length ? (
               <div style={{ display: "grid", gap: 8 }}>
                 {observations.map((o, idx) => (
-                  <div key={idx} style={{ border: "1px solid #eee", borderRadius: 10, padding: 10, display: "flex", justifyContent: "space-between", gap: 10 }}>
+                  <div
+                    key={idx}
+                    style={{
+                      border: "1px solid #eee",
+                      borderRadius: 10,
+                      padding: 10,
+                      display: "flex",
+                      justifyContent: "space-between",
+                      gap: 10,
+                    }}
+                  >
                     <div>
                       <div style={{ fontWeight: 900 }}>
-                        {o.label} <Badge text={`${o.value} ${o.unit}`} />
+                        {o.label}
+                        <Badge text={`${o.value} ${o.unit}`} />
                       </div>
                       {o.note ? <SmallHint>{o.note}</SmallHint> : null}
                     </div>
@@ -1691,12 +2584,22 @@ export default function HVACUnitsPage() {
               {parsed.likely_causes?.length ? (
                 <div style={{ display: "grid", gap: 10 }}>
                   {parsed.likely_causes.map((c, idx) => (
-                    <div key={idx} style={{ borderTop: idx ? "1px solid #eee" : "none", paddingTop: idx ? 10 : 0 }}>
+                    <div
+                      key={idx}
+                      style={{
+                        borderTop: idx ? "1px solid #eee" : "none",
+                        paddingTop: idx ? 10 : 0,
+                      }}
+                    >
                       <div style={{ fontWeight: 900 }}>
                         {c.cause || "Cause"}
-                        {typeof c.probability_percent === "number" ? <Badge text={`${c.probability_percent}%`} /> : null}
+                        {typeof c.probability_percent === "number" ? (
+                          <Badge text={`${c.probability_percent}%`} />
+                        ) : null}
                       </div>
-                      {typeof c.probability_percent === "number" ? <ProbBar pct={c.probability_percent} /> : null}
+                      {typeof c.probability_percent === "number" ? (
+                        <ProbBar pct={c.probability_percent} />
+                      ) : null}
                       {c.why ? <SmallHint style={{ marginTop: 6 }}>{c.why}</SmallHint> : null}
                     </div>
                   ))}
@@ -1707,12 +2610,16 @@ export default function HVACUnitsPage() {
             </SectionCard>
 
             <SectionCard title="Raw output">
-              <pre style={{ whiteSpace: "pre-wrap", margin: 0 }}>{rawResult || "No results yet."}</pre>
+              <pre style={{ whiteSpace: "pre-wrap", margin: 0 }}>
+                {rawResult || "No results yet."}
+              </pre>
             </SectionCard>
           </div>
         ) : (
           <SectionCard title="Raw output">
-            <pre style={{ whiteSpace: "pre-wrap", margin: 0 }}>{rawResult || "No results yet."}</pre>
+            <pre style={{ whiteSpace: "pre-wrap", margin: 0 }}>
+              {rawResult || "No results yet."}
+            </pre>
           </SectionCard>
         )}
       </div>
