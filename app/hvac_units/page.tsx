@@ -88,6 +88,16 @@ type ChargeAnalysis = {
   findings: string[];
 };
 
+type GaugeReadResult = {
+  suction_psi: number | null;
+  head_psi: number | null;
+  low_sat_f: number | null;
+  high_sat_f: number | null;
+  quick_diagnosis: string;
+  notes: string;
+  confidence: "high" | "medium" | "low";
+};
+
 function SectionCard(props: { title: string; children: React.ReactNode; right?: React.ReactNode }) {
   return (
     <div style={{ border: "1px solid #ddd", borderRadius: 12, padding: 14, background: "white" }}>
@@ -461,8 +471,14 @@ export default function HVACUnitsPage() {
   const [photoLoading, setPhotoLoading] = useState(false);
   const [photoError, setPhotoError] = useState("");
 
+  const [gaugeImage, setGaugeImage] = useState("");
+  const [gaugeBusy, setGaugeBusy] = useState(false);
+  const [gaugeErr, setGaugeErr] = useState("");
+  const [gaugeRead, setGaugeRead] = useState<GaugeReadResult | null>(null);
+
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const photoInputRef = useRef<HTMLInputElement | null>(null);
+  const gaugeInputRef = useRef<HTMLInputElement | null>(null);
 
   const [selectedPackId, setSelectedPackId] = useState("no_cooling");
   const selectedPack = useMemo(
@@ -628,6 +644,28 @@ export default function HVACUnitsPage() {
     setObsNote("");
   }
 
+  function addGaugeReadingsToMeasurements() {
+    if (!gaugeRead) return;
+
+    const next: Observation[] = [];
+    if (gaugeRead.suction_psi !== null) {
+      next.push({ label: "Suction Pressure", value: String(gaugeRead.suction_psi), unit: "psi", note: "Imported from gauge photo" });
+    }
+    if (gaugeRead.head_psi !== null) {
+      next.push({ label: "Liquid Pressure", value: String(gaugeRead.head_psi), unit: "psi", note: "Imported from gauge photo" });
+    }
+    if (gaugeRead.low_sat_f !== null) {
+      next.push({ label: "Suction Saturation Temp", value: String(gaugeRead.low_sat_f), unit: "°F", note: "Imported from gauge photo" });
+    }
+    if (gaugeRead.high_sat_f !== null) {
+      next.push({ label: "Condensing Saturation Temp", value: String(gaugeRead.high_sat_f), unit: "°F", note: "Imported from gauge photo" });
+    }
+
+    if (next.length) {
+      setObservations((prev) => [...prev, ...next]);
+    }
+  }
+
   function removeObservation(idx: number) {
     setObservations((prev) => prev.filter((_, i) => i !== idx));
   }
@@ -653,6 +691,9 @@ export default function HVACUnitsPage() {
     setPhotoImage("");
     setPhotoResult("");
     setPhotoError("");
+    setGaugeImage("");
+    setGaugeErr("");
+    setGaugeRead(null);
     setSelectedPackId("no_cooling");
     const pack = SYMPTOM_PACKS.find((p) => p.id === "no_cooling") || SYMPTOM_PACKS[0];
     setFlowNodeId(pack.nodes[0]?.id || "");
@@ -880,6 +921,31 @@ export default function HVACUnitsPage() {
     }
   }
 
+  async function analyzeGaugePhoto() {
+    if (!gaugeImage) return;
+    setGaugeBusy(true);
+    setGaugeErr("");
+    setGaugeRead(null);
+
+    try {
+      const res = await fetch("/api/gauge-photo-read", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: gaugeImage }),
+      });
+      const data = await safeJson(res);
+
+      if (!res.ok || !data?.ok) {
+        setGaugeErr(data?.error || data?.result || `Server error (${res.status})`);
+        return;
+      }
+
+      setGaugeRead(data.data as GaugeReadResult);
+    } finally {
+      setGaugeBusy(false);
+    }
+  }
+
   return (
     <div style={{ padding: 20, maxWidth: 1220, margin: "0 auto" }}>
       <h1 style={{ fontSize: 26, fontWeight: 900 }}>Skilled Trades AI — HVAC Diagnose</h1>
@@ -1070,6 +1136,75 @@ export default function HVACUnitsPage() {
       </div>
 
       <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <SectionCard title="Gauge Photo Reader" right={<PillButton text="Choose gauge photo" onClick={() => gaugeInputRef.current?.click()} />}>
+          <input
+            ref={gaugeInputRef}
+            type="file"
+            accept="image/*"
+            style={{ display: "none" }}
+            onChange={async (e) => {
+              const f = e.target.files?.[0];
+              if (!f) return;
+              const dataUrl = await readFileAsDataUrl(f);
+              setGaugeImage(dataUrl);
+              setGaugeErr("");
+              setGaugeRead(null);
+            }}
+          />
+
+          {gaugeImage ? (
+            <div style={{ display: "grid", gap: 10 }}>
+              <img
+                src={gaugeImage}
+                alt="Gauge photo"
+                style={{ width: "100%", maxHeight: 280, objectFit: "contain", border: "1px solid #eee", borderRadius: 10 }}
+              />
+
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <PillButton text={gaugeBusy ? "Reading..." : "Read Gauges"} onClick={analyzeGaugePhoto} disabled={gaugeBusy} />
+                <PillButton text="Clear" onClick={() => { setGaugeImage(""); setGaugeErr(""); setGaugeRead(null); }} />
+              </div>
+
+              {gaugeErr ? <div style={{ color: "crimson", fontWeight: 800 }}>{gaugeErr}</div> : null}
+
+              {gaugeRead ? (
+                <div style={{ display: "grid", gap: 10 }}>
+                  <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
+                    <div style={{ fontWeight: 900 }}>
+                      Gauge Read <Badge text={gaugeRead.confidence} />
+                    </div>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 10 }}>
+                      <div><b>Suction:</b> {gaugeRead.suction_psi !== null ? `${gaugeRead.suction_psi} psi` : "—"}</div>
+                      <div><b>Head:</b> {gaugeRead.head_psi !== null ? `${gaugeRead.head_psi} psi` : "—"}</div>
+                      <div><b>Low Sat:</b> {gaugeRead.low_sat_f !== null ? `${gaugeRead.low_sat_f} °F` : "—"}</div>
+                      <div><b>High Sat:</b> {gaugeRead.high_sat_f !== null ? `${gaugeRead.high_sat_f} °F` : "—"}</div>
+                    </div>
+
+                    <div style={{ marginTop: 10 }}>
+                      <div style={{ fontWeight: 900 }}>Quick diagnosis</div>
+                      <SmallHint style={{ marginTop: 4 }}>{gaugeRead.quick_diagnosis}</SmallHint>
+                    </div>
+
+                    <div style={{ marginTop: 10 }}>
+                      <div style={{ fontWeight: 900 }}>Notes</div>
+                      <SmallHint style={{ marginTop: 4 }}>{gaugeRead.notes}</SmallHint>
+                    </div>
+
+                    <div style={{ marginTop: 10 }}>
+                      <PillButton text="Add these readings to measurements" onClick={addGaugeReadingsToMeasurements} />
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          ) : (
+            <SmallHint>
+              Upload a clear photo of the gauge set. The app will try to read low side, high side, and saturation temps.
+            </SmallHint>
+          )}
+        </SectionCard>
+
         <SectionCard title="Automatic Superheat / Subcool + Charge Diagnosis">
           <SmallHint>
             Best results when you enter: suction line temp, liquid line temp, suction saturation temp, condensing saturation temp,
@@ -1131,7 +1266,9 @@ export default function HVACUnitsPage() {
             )}
           </div>
         </SectionCard>
+      </div>
 
+      <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <SectionCard title="Photo Diagnosis" right={<PillButton text="Choose photo" onClick={() => photoInputRef.current?.click()} />}>
           <input
             ref={photoInputRef}
@@ -1172,9 +1309,7 @@ export default function HVACUnitsPage() {
             </SmallHint>
           )}
         </SectionCard>
-      </div>
 
-      <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <SectionCard title="Real Flowchart Engine">
           <div style={{ border: "1px solid #eee", borderRadius: 12, padding: 12 }}>
             <div style={{ fontWeight: 900 }}>{currentFlowNode.title}</div>
@@ -1201,7 +1336,9 @@ export default function HVACUnitsPage() {
             )}
           </div>
         </SectionCard>
+      </div>
 
+      <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <SectionCard title="Manuals + Parts Results">
           {mpErr ? <div style={{ color: "crimson", fontWeight: 800 }}>{mpErr}</div> : null}
           {!manualsParts ? (
@@ -1236,9 +1373,7 @@ export default function HVACUnitsPage() {
             </div>
           )}
         </SectionCard>
-      </div>
 
-      <div style={{ marginTop: 16 }}>
         <SectionCard title="Measurements / Observations">
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             {(symptom.toLowerCase().includes("heat") ? heatingPresets : coolingPresets).map((p) => (
