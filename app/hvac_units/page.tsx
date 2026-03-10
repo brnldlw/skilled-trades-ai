@@ -2058,32 +2058,39 @@ export default function HVACUnitsPage() {
   }
 
   function openPrintableReport() {
-    const html = buildServiceReportHtml({
-      customerName,
-      siteName,
-      siteAddress,
-      unitNickname,
-      propertyType,
-      equipmentType,
-      manufacturer,
-      model,
-      refrigerantType,
-      symptom,
-      observations,
-      parsed,
-      nameplate,
-      chargeAnalysis,
-      airflowAnalysis,
-      equipmentMemory,
-    });
+  const html = buildServiceReportHtml({
+    customerName,
+    siteName,
+    siteAddress,
+    unitNickname,
+    propertyType,
+    equipmentType,
+    manufacturer,
+    model,
+    refrigerantType,
+    symptom,
+    observations,
+    parsed,
+    nameplate,
+    chargeAnalysis,
+    airflowAnalysis,
+    equipmentMemory,
+  });
 
-    const win = window.open("", "_blank", "noopener,noreferrer,width=1000,height=900");
-    if (!win) return;
-    win.document.open();
-    win.document.write(html);
-    win.document.close();
-    win.focus();
+  const blob = new Blob([html], { type: "text/html" });
+  const url = URL.createObjectURL(blob);
+
+  const win = window.open(url, "_blank", "noopener,noreferrer,width=1000,height=900");
+  if (!win) {
+    alert("Popup blocked. Please allow popups for this site.");
+    URL.revokeObjectURL(url);
+    return;
   }
+
+  setTimeout(() => {
+    URL.revokeObjectURL(url);
+  }, 60000);
+}
 
   return (
     <div style={{ padding: 20, maxWidth: 1220, margin: "0 auto" }}>
