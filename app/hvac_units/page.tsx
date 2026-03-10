@@ -336,14 +336,12 @@ function ProbBar({ pct }: { pct: number }) {
           }}
         />
       </div>
-      <div style={{ fontSize: 12, color: "#444", marginTop: 4 }}>
-        {safe}% confidence
-      </div>
+      <div style={{ fontSize: 12, color: "#444", marginTop: 4 }}>{safe}% confidence</div>
     </div>
   );
 }
 
-async function safeJson(res: Response) {
+async function safeTextJson(res: Response) {
   const txt = await res.text();
   if (!txt) return null;
   try {
@@ -353,19 +351,16 @@ async function safeJson(res: Response) {
   }
 }
 
-function toNumber(s: string): number | null {
+function num(s: string): number | null {
   const n = Number(String(s).replace(/[^\d.\-]/g, ""));
   return Number.isFinite(n) ? n : null;
 }
 
-function round1(n: number) {
+function r1(n: number) {
   return Math.round(n * 10) / 10;
 }
 
-function convertToStandard(
-  value: number,
-  unit: string
-): { value: number; unit: string } | null {
+function convertToStandardUnit(value: number, unit: string): { value: number; unit: string } | null {
   const u = unit.trim();
   if (u === "kPa") return { value: value * 0.1450377377, unit: "psi" };
   if (u === "bar") return { value: value * 14.50377377, unit: "psi" };
@@ -374,31 +369,11 @@ function convertToStandard(
   return null;
 }
 
-function guessDefaultUnit(label: string) {
+function guessUnit(label: string) {
   const s = label.toLowerCase();
-  if (
-    s.includes("suction") ||
-    s.includes("liquid") ||
-    s.includes("discharge") ||
-    s.includes("head") ||
-    s.includes("pressure")
-  ) {
-    return "psi";
-  }
-  if (s.includes("static") || s.includes("esp") || s.includes("inwc")) {
-    return "inWC";
-  }
-  if (
-    s.includes("temp") ||
-    s.includes("temperature") ||
-    s.includes("superheat") ||
-    s.includes("subcool") ||
-    s.includes("delta") ||
-    s.includes("heat rise") ||
-    s.includes("saturation")
-  ) {
-    return "°F";
-  }
+  if (s.includes("pressure") || s.includes("suction") || s.includes("liquid") || s.includes("head")) return "psi";
+  if (s.includes("static") || s.includes("drop") || s.includes("inwc")) return "inWC";
+  if (s.includes("temp") || s.includes("heat rise") || s.includes("superheat") || s.includes("subcool") || s.includes("delta") || s.includes("saturation")) return "°F";
   if (s.includes("amps")) return "amps";
   if (s.includes("voltage")) return "volts";
   if (s.includes("flame")) return "µA";
@@ -427,17 +402,14 @@ function getObservationValue(
   matcher: (label: string) => boolean,
   preferredUnit?: string
 ): number | null {
-  for (let i = observations.length - 1; i >= 0; i--) {
+  for (let i = observations.length - 1; i >= 0; i -= 1) {
     const o = observations[i];
     const label = normalizeLabel(o.label);
     if (!matcher(label)) continue;
-
-    const n = toNumber(o.value);
+    const n = num(o.value);
     if (n === null) continue;
-
     if (!preferredUnit || o.unit === preferredUnit) return n;
-
-    const converted = convertToStandard(n, o.unit);
+    const converted = convertToStandardUnit(n, o.unit);
     if (converted && converted.unit === preferredUnit) return converted.value;
   }
   return null;
@@ -446,19 +418,16 @@ function getObservationValue(
 function ptEstimateTempF(refrigerant: string, psi: number): number | null {
   const table = PT_TABLES[refrigerant];
   if (!table || !table.length || !Number.isFinite(psi)) return null;
-
   if (psi <= table[0].psi) return table[0].tempF;
   if (psi >= table[table.length - 1].psi) return table[table.length - 1].tempF;
-
-  for (let i = 0; i < table.length - 1; i++) {
+  for (let i = 0; i < table.length - 1; i += 1) {
     const a = table[i];
     const b = table[i + 1];
     if (psi >= a.psi && psi <= b.psi) {
       const ratio = (psi - a.psi) / (b.psi - a.psi);
-      return round1(a.tempF + (b.tempF - a.tempF) * ratio);
+      return r1(a.tempF + (b.tempF - a.tempF) * ratio);
     }
   }
-
   return null;
 }
 
@@ -467,374 +436,116 @@ function analyzeCharge(
   equipmentType: string,
   refrigerantType: string
 ): ChargeAnalysis {
-  const returnAir = getObservationValue(
-    observations,
-    (l) => l.includes("return air temp") || (l.includes("return") && l.includes("temp")),
-    "°F"
-  );
-
-  const supplyAir = getObservationValue(
-    observations,
-    (l) => l.includes("supply air temp") || (l.includes("supply") && l.includes("temp")),
-    "°F"
-  );
-
-  const suctionPressure = getObservationValue(
-    observations,
-    (l) => l === "suction pressure" || (l.includes("suction") && l.includes("pressure")),
-    "psi"
-  );
-
-  const liquidPressure = getObservationValue(
-    observations,
-    (l) =>
-      l === "liquid pressure" ||
-      l === "head pressure" ||
-      ((l.includes("liquid") || l.includes("head")) && l.includes("pressure")),
-    "psi"
-  );
-
-  const suctionLineTemp =
-    getObservationValue(observations, (l) => l.includes("suction line temp"), "°F") ??
-    getObservationValue(observations, (l) => l.includes("suction temp"), "°F");
-
-  const liquidLineTemp =
-    getObservationValue(observations, (l) => l.includes("liquid line temp"), "°F") ??
-    getObservationValue(observations, (l) => l.includes("liquid temp"), "°F");
-
-  const enteredEvapSat =
-    getObservationValue(observations, (l) => l.includes("suction saturation temp"), "°F") ??
-    getObservationValue(observations, (l) => l.includes("evap saturation temp"), "°F") ??
-    getObservationValue(observations, (l) => l.includes("evaporator saturation temp"), "°F");
-
-  const enteredCondSat =
-    getObservationValue(observations, (l) => l.includes("condensing saturation temp"), "°F") ??
-    getObservationValue(observations, (l) => l.includes("liquid saturation temp"), "°F") ??
-    getObservationValue(observations, (l) => l.includes("condenser saturation temp"), "°F");
-
-  const enteredSuperheat = getObservationValue(
-    observations,
-    (l) => l === "superheat" || l.includes(" superheat"),
-    "°F"
-  );
-
-  const enteredSubcool = getObservationValue(
-    observations,
-    (l) => l === "subcool" || l.includes("subcool"),
-    "°F"
-  );
-
-  const ptEvapSat =
-    enteredEvapSat === null && suctionPressure !== null && refrigerantType !== "Unknown"
-      ? ptEstimateTempF(refrigerantType, suctionPressure)
-      : null;
-
-  const ptCondSat =
-    enteredCondSat === null && liquidPressure !== null && refrigerantType !== "Unknown"
-      ? ptEstimateTempF(refrigerantType, liquidPressure)
-      : null;
-
+  const returnAir = getObservationValue(observations, (l) => l.includes("return air temp") || (l.includes("return") && l.includes("temp")), "°F");
+  const supplyAir = getObservationValue(observations, (l) => l.includes("supply air temp") || (l.includes("supply") && l.includes("temp")), "°F");
+  const suctionPressure = getObservationValue(observations, (l) => l === "suction pressure" || (l.includes("suction") && l.includes("pressure")), "psi");
+  const liquidPressure = getObservationValue(observations, (l) => l === "liquid pressure" || l === "head pressure" || ((l.includes("liquid") || l.includes("head")) && l.includes("pressure")), "psi");
+  const suctionLineTemp = getObservationValue(observations, (l) => l.includes("suction line temp"), "°F") ?? getObservationValue(observations, (l) => l.includes("suction temp"), "°F");
+  const liquidLineTemp = getObservationValue(observations, (l) => l.includes("liquid line temp"), "°F") ?? getObservationValue(observations, (l) => l.includes("liquid temp"), "°F");
+  const enteredEvapSat = getObservationValue(observations, (l) => l.includes("suction saturation temp"), "°F") ?? getObservationValue(observations, (l) => l.includes("evap saturation temp"), "°F") ?? getObservationValue(observations, (l) => l.includes("evaporator saturation temp"), "°F");
+  const enteredCondSat = getObservationValue(observations, (l) => l.includes("condensing saturation temp"), "°F") ?? getObservationValue(observations, (l) => l.includes("liquid saturation temp"), "°F") ?? getObservationValue(observations, (l) => l.includes("condenser saturation temp"), "°F");
+  const enteredSuperheat = getObservationValue(observations, (l) => l === "superheat" || l.includes(" superheat"), "°F");
+  const enteredSubcool = getObservationValue(observations, (l) => l === "subcool" || l.includes("subcool"), "°F");
+  const ptEvapSat = enteredEvapSat === null && suctionPressure !== null && refrigerantType !== "Unknown" ? ptEstimateTempF(refrigerantType, suctionPressure) : null;
+  const ptCondSat = enteredCondSat === null && liquidPressure !== null && refrigerantType !== "Unknown" ? ptEstimateTempF(refrigerantType, liquidPressure) : null;
   const evapSat = enteredEvapSat ?? ptEvapSat ?? null;
   const condSat = enteredCondSat ?? ptCondSat ?? null;
-
-  const evapSatSource: ChargeAnalysis["evapSatSource"] =
-    enteredEvapSat !== null ? "entered" : ptEvapSat !== null ? "pt-chart" : "none";
-
-  const condSatSource: ChargeAnalysis["condSatSource"] =
-    enteredCondSat !== null ? "entered" : ptCondSat !== null ? "pt-chart" : "none";
-
-  const deltaT =
-    returnAir !== null && supplyAir !== null ? round1(returnAir - supplyAir) : null;
-
-  const superheat =
-    enteredSuperheat !== null
-      ? round1(enteredSuperheat)
-      : suctionLineTemp !== null && evapSat !== null
-      ? round1(suctionLineTemp - evapSat)
-      : null;
-
-  const subcool =
-    enteredSubcool !== null
-      ? round1(enteredSubcool)
-      : condSat !== null && liquidLineTemp !== null
-      ? round1(condSat - liquidLineTemp)
-      : null;
-
+  const evapSatSource: ChargeAnalysis["evapSatSource"] = enteredEvapSat !== null ? "entered" : ptEvapSat !== null ? "pt-chart" : "none";
+  const condSatSource: ChargeAnalysis["condSatSource"] = enteredCondSat !== null ? "entered" : ptCondSat !== null ? "pt-chart" : "none";
+  const deltaT = returnAir !== null && supplyAir !== null ? r1(returnAir - supplyAir) : null;
+  const superheat = enteredSuperheat !== null ? r1(enteredSuperheat) : suctionLineTemp !== null && evapSat !== null ? r1(suctionLineTemp - evapSat) : null;
+  const subcool = enteredSubcool !== null ? r1(enteredSubcool) : condSat !== null && liquidLineTemp !== null ? r1(condSat - liquidLineTemp) : null;
   const findings: string[] = [];
   let summary = "Need more readings.";
-
-  const isCoolingType =
-    !equipmentType.toLowerCase().includes("furnace") &&
-    !equipmentType.toLowerCase().includes("boiler");
-
-  if (evapSatSource === "pt-chart") {
-    findings.push(`Evap saturation estimated from ${refrigerantType} PT chart.`);
-  }
-  if (condSatSource === "pt-chart") {
-    findings.push(`Condensing saturation estimated from ${refrigerantType} PT chart.`);
-  }
-
+  const isCoolingType = !equipmentType.toLowerCase().includes("furnace") && !equipmentType.toLowerCase().includes("boiler");
+  if (evapSatSource === "pt-chart") findings.push(`Evap saturation estimated from ${refrigerantType} PT chart.`);
+  if (condSatSource === "pt-chart") findings.push(`Condensing saturation estimated from ${refrigerantType} PT chart.`);
   if (deltaT !== null) {
-    if (deltaT < 12) {
-      findings.push("Delta-T is low, which can point to low capacity, high airflow, or charge/load issues.");
-    } else if (deltaT > 22) {
-      findings.push("Delta-T is high, which can point to low airflow or a heavily loaded coil.");
-    } else {
-      findings.push("Delta-T is in a typical cooling range.");
-    }
+    if (deltaT < 12) findings.push("Delta-T is low, which can point to low capacity, high airflow, or charge/load issues.");
+    else if (deltaT > 22) findings.push("Delta-T is high, which can point to low airflow or a heavily loaded coil.");
+    else findings.push("Delta-T is in a typical cooling range.");
   }
-
   if (superheat !== null) {
-    if (superheat > 20) {
-      findings.push("Superheat is high, which points toward undercharge, restriction, or starving evaporator.");
-    } else if (superheat < 5) {
-      findings.push("Superheat is very low, which points toward overfeeding, floodback risk, or low airflow.");
-    } else {
-      findings.push("Superheat is in a usable normal range.");
-    }
+    if (superheat > 20) findings.push("Superheat is high, which points toward undercharge, restriction, or starving evaporator.");
+    else if (superheat < 5) findings.push("Superheat is very low, which points toward overfeeding, floodback risk, or low airflow.");
+    else findings.push("Superheat is in a usable normal range.");
   }
-
   if (subcool !== null) {
-    if (subcool < 5) {
-      findings.push("Subcool is low, which points toward undercharge or flash gas.");
-    } else if (subcool > 18) {
-      findings.push("Subcool is high, which points toward overcharge, restriction, or backed-up liquid.");
-    } else {
-      findings.push("Subcool is in a usable normal range.");
-    }
+    if (subcool < 5) findings.push("Subcool is low, which points toward undercharge or flash gas.");
+    else if (subcool > 18) findings.push("Subcool is high, which points toward overcharge, restriction, or backed-up liquid.");
+    else findings.push("Subcool is in a usable normal range.");
   }
-
   if (isCoolingType) {
     if (superheat !== null && subcool !== null) {
-      if (superheat > 18 && subcool < 5) {
-        summary = "Likely undercharged system.";
-      } else if (superheat < 6 && subcool > 15) {
-        summary = "Likely overcharged system or overfeeding condition.";
-      } else if (superheat > 18 && subcool > 15) {
-        summary = "Possible restriction or metering issue.";
-      } else if (superheat >= 6 && superheat <= 18 && subcool >= 5 && subcool <= 15) {
-        summary = "Charge looks reasonably close based on entered readings.";
-      } else {
-        summary = "Charge condition is mixed; verify airflow and saturation temps.";
-      }
+      if (superheat > 18 && subcool < 5) summary = "Likely undercharged system.";
+      else if (superheat < 6 && subcool > 15) summary = "Likely overcharged system or overfeeding condition.";
+      else if (superheat > 18 && subcool > 15) summary = "Possible restriction or metering issue.";
+      else if (superheat >= 6 && superheat <= 18 && subcool >= 5 && subcool <= 15) summary = "Charge looks reasonably close based on entered readings.";
+      else summary = "Charge condition is mixed; verify airflow and saturation temps.";
     } else if (superheat !== null) {
-      if (superheat > 18) {
-        summary = "High superheat suggests undercharge or restriction.";
-      } else if (superheat < 6) {
-        summary = "Low superheat suggests floodback, overfeed, or airflow issue.";
-      } else {
-        summary = "Superheat looks reasonable, but subcool is still needed.";
-      }
+      if (superheat > 18) summary = "High superheat suggests undercharge or restriction.";
+      else if (superheat < 6) summary = "Low superheat suggests floodback, overfeed, or airflow issue.";
+      else summary = "Superheat looks reasonable, but subcool is still needed.";
     } else if (subcool !== null) {
-      if (subcool < 5) {
-        summary = "Low subcool suggests undercharge.";
-      } else if (subcool > 15) {
-        summary = "High subcool suggests overcharge or restriction.";
-      } else {
-        summary = "Subcool looks reasonable, but superheat is still needed.";
-      }
-    } else if (
-      suctionPressure !== null &&
-      liquidPressure !== null &&
-      refrigerantType !== "Unknown"
-    ) {
+      if (subcool < 5) summary = "Low subcool suggests undercharge.";
+      else if (subcool > 15) summary = "High subcool suggests overcharge or restriction.";
+      else summary = "Subcool looks reasonable, but superheat is still needed.";
+    } else if (suctionPressure !== null && liquidPressure !== null && refrigerantType !== "Unknown") {
       summary = "PT chart estimated saturation temps. Add line temps for full SH/SC diagnosis.";
     }
   } else {
     summary = "Charge calculator is mainly intended for cooling / refrigeration systems.";
   }
-
-  return {
-    deltaT,
-    superheat,
-    subcool,
-    evapSat,
-    condSat,
-    evapSatSource,
-    condSatSource,
-    summary,
-    findings,
-  };
+  return { deltaT, superheat, subcool, evapSat, condSat, evapSatSource, condSatSource, summary, findings };
 }
 
 function analyzeAirflow(observations: Observation[]): AirflowAnalysis {
-  const returnStatic =
-    getObservationValue(
-      observations,
-      (l) => l === "return static" || l.includes("return static"),
-      "inWC"
-    ) ??
-    getObservationValue(observations, (l) => l.includes("return pressure"), "inWC");
-
-  const supplyStatic =
-    getObservationValue(
-      observations,
-      (l) => l === "supply static" || l.includes("supply static"),
-      "inWC"
-    ) ??
-    getObservationValue(observations, (l) => l.includes("supply pressure"), "inWC");
-
-  const filterDrop = getObservationValue(
-    observations,
-    (l) => l === "filter pressure drop" || l.includes("filter pressure drop"),
-    "inWC"
-  );
-
-  const coilDrop = getObservationValue(
-    observations,
-    (l) => l === "coil pressure drop" || l.includes("coil pressure drop"),
-    "inWC"
-  );
-
-  const totalExternalStatic =
-    returnStatic !== null && supplyStatic !== null
-      ? round1(Math.abs(returnStatic) + Math.abs(supplyStatic))
-      : null;
-
+  const returnStatic = getObservationValue(observations, (l) => l === "return static" || l.includes("return static"), "inWC") ?? getObservationValue(observations, (l) => l.includes("return pressure"), "inWC");
+  const supplyStatic = getObservationValue(observations, (l) => l === "supply static" || l.includes("supply static"), "inWC") ?? getObservationValue(observations, (l) => l.includes("supply pressure"), "inWC");
+  const filterDrop = getObservationValue(observations, (l) => l === "filter pressure drop" || l.includes("filter pressure drop"), "inWC");
+  const coilDrop = getObservationValue(observations, (l) => l === "coil pressure drop" || l.includes("coil pressure drop"), "inWC");
+  const totalExternalStatic = returnStatic !== null && supplyStatic !== null ? r1(Math.abs(returnStatic) + Math.abs(supplyStatic)) : null;
   const findings: string[] = [];
   let summary = "Need more static readings.";
-
   if (totalExternalStatic !== null) {
-    if (totalExternalStatic <= 0.5) {
-      findings.push("Total external static is in a typical range for many systems.");
-    } else if (totalExternalStatic <= 0.8) {
-      findings.push("Total external static is elevated. Airflow may be reduced.");
-    } else {
-      findings.push("Total external static is high. Strong airflow restriction is likely.");
-    }
+    if (totalExternalStatic <= 0.5) findings.push("Total external static is in a typical range for many systems.");
+    else if (totalExternalStatic <= 0.8) findings.push("Total external static is elevated. Airflow may be reduced.");
+    else findings.push("Total external static is high. Strong airflow restriction is likely.");
   }
-
   if (returnStatic !== null && supplyStatic !== null) {
     const returnAbs = Math.abs(returnStatic);
     const supplyAbs = Math.abs(supplyStatic);
-
-    if (returnAbs > supplyAbs * 1.35) {
-      findings.push("Return side is carrying more restriction than supply side.");
-    } else if (supplyAbs > returnAbs * 1.35) {
-      findings.push("Supply side is carrying more restriction than return side.");
-    } else {
-      findings.push("Return and supply static are fairly balanced.");
-    }
+    if (returnAbs > supplyAbs * 1.35) findings.push("Return side is carrying more restriction than supply side.");
+    else if (supplyAbs > returnAbs * 1.35) findings.push("Supply side is carrying more restriction than return side.");
+    else findings.push("Return and supply static are fairly balanced.");
   }
-
   if (filterDrop !== null) {
-    if (filterDrop < 0.08) {
-      findings.push("Filter pressure drop is low.");
-    } else if (filterDrop <= 0.18) {
-      findings.push("Filter pressure drop is moderate.");
-    } else {
-      findings.push("Filter pressure drop is high. Dirty filter or undersized filter section is likely.");
-    }
+    if (filterDrop < 0.08) findings.push("Filter pressure drop is low.");
+    else if (filterDrop <= 0.18) findings.push("Filter pressure drop is moderate.");
+    else findings.push("Filter pressure drop is high. Dirty filter or undersized filter section is likely.");
   }
-
   if (coilDrop !== null) {
-    if (coilDrop < 0.2) {
-      findings.push("Coil pressure drop is low to moderate.");
-    } else if (coilDrop <= 0.35) {
-      findings.push("Coil pressure drop is elevated.");
-    } else {
-      findings.push("Coil pressure drop is high. Dirty evaporator coil, wet coil loading, or airflow bottleneck is likely.");
-    }
+    if (coilDrop < 0.2) findings.push("Coil pressure drop is low to moderate.");
+    else if (coilDrop <= 0.35) findings.push("Coil pressure drop is elevated.");
+    else findings.push("Coil pressure drop is high. Dirty evaporator coil, wet coil loading, or airflow bottleneck is likely.");
   }
-
   if (totalExternalStatic !== null) {
     if (totalExternalStatic > 0.8) {
-      if ((filterDrop ?? 0) > 0.18) {
-        summary = "High static with high filter drop. Check filter, rack, and return air path first.";
-      } else if ((coilDrop ?? 0) > 0.35) {
-        summary = "High static with high coil drop. Check evaporator coil and blower setup.";
-      } else if (
-        returnStatic !== null &&
-        supplyStatic !== null &&
-        Math.abs(returnStatic) > Math.abs(supplyStatic) * 1.35
-      ) {
-        summary = "High static with return-side burden. Look for return restriction.";
-      } else if (
-        returnStatic !== null &&
-        supplyStatic !== null &&
-        Math.abs(supplyStatic) > Math.abs(returnStatic) * 1.35
-      ) {
-        summary = "High static with supply-side burden. Look for supply duct or coil restriction.";
-      } else {
-        summary = "Static is high. Airflow restriction is likely somewhere in the system.";
-      }
+      if ((filterDrop ?? 0) > 0.18) summary = "High static with high filter drop. Check filter, rack, and return air path first.";
+      else if ((coilDrop ?? 0) > 0.35) summary = "High static with high coil drop. Check evaporator coil and blower setup.";
+      else if (returnStatic !== null && supplyStatic !== null && Math.abs(returnStatic) > Math.abs(supplyStatic) * 1.35) summary = "High static with return-side burden. Look for return restriction.";
+      else if (returnStatic !== null && supplyStatic !== null && Math.abs(supplyStatic) > Math.abs(returnStatic) * 1.35) summary = "High static with supply-side burden. Look for supply duct or coil restriction.";
+      else summary = "Static is high. Airflow restriction is likely somewhere in the system.";
     } else if (totalExternalStatic > 0.5) {
       summary = "Static is somewhat elevated. Verify blower speed and inspect filter/coil/duct path.";
     } else {
       summary = "Static looks reasonably normal.";
     }
   }
-
-  return {
-    totalExternalStatic,
-    returnStatic,
-    supplyStatic,
-    filterDrop,
-    coilDrop,
-    summary,
-    findings,
-  };
+  return { totalExternalStatic, returnStatic, supplyStatic, filterDrop, coilDrop, summary, findings };
 }
 
-function parseDiagnosis(rawResult: string): Diagnosis | null {
-  if (!rawResult) return null;
-  try {
-    const start = rawResult.indexOf("{");
-    const end = rawResult.lastIndexOf("}");
-    const slice = start >= 0 && end > start ? rawResult.slice(start, end + 1) : rawResult;
-    return JSON.parse(slice) as Diagnosis;
-  } catch {
-    return null;
-  }
-}
-
-function isRelatedRecord(current: {
-  customerName: string;
-  siteName: string;
-  unitNickname: string;
-  model: string;
-  manufacturer: string;
-  equipmentType: string;
-}, record: SavedUnitRecord) {
-  const customerMatch =
-    current.customerName.trim() &&
-    record.customerName.trim() &&
-    current.customerName.trim().toLowerCase() === record.customerName.trim().toLowerCase();
-
-  const siteMatch =
-    current.siteName.trim() &&
-    record.siteName.trim() &&
-    current.siteName.trim().toLowerCase() === record.siteName.trim().toLowerCase();
-
-  const unitMatch =
-    current.unitNickname.trim() &&
-    record.unitNickname.trim() &&
-    current.unitNickname.trim().toLowerCase() === record.unitNickname.trim().toLowerCase();
-
-  const modelMatch =
-    current.model.trim() &&
-    record.model.trim() &&
-    current.model.trim().toLowerCase() === record.model.trim().toLowerCase();
-
-  const manufacturerMatch =
-    current.manufacturer.trim() &&
-    record.manufacturer.trim() &&
-    current.manufacturer.trim().toLowerCase() === record.manufacturer.trim().toLowerCase();
-
-  const equipmentMatch =
-    current.equipmentType.trim() &&
-    record.equipmentType.trim() &&
-    current.equipmentType.trim().toLowerCase() === record.equipmentType.trim().toLowerCase();
-
-  if (customerMatch && siteMatch && unitMatch) return true;
-  if (customerMatch && siteMatch && modelMatch && manufacturerMatch) return true;
-  if (siteMatch && unitMatch) return true;
-  if (modelMatch && manufacturerMatch && equipmentMatch && siteMatch) return true;
-
-  return false;
-}
-
-function topCounts(items: string[], minCount = 2, maxItems = 3) {
+function topCounts(items: string[], minCount = 2, maxItems = 4) {
   const counts = new Map<string, number>();
   for (const item of items) {
     const key = item.trim();
@@ -850,11 +561,9 @@ function topCounts(items: string[], minCount = 2, maxItems = 3) {
 
 function deriveMeasurementPatterns(records: SavedUnitRecord[]) {
   const patterns: string[] = [];
-
   for (const r of records) {
     const charge = analyzeCharge(r.observations || [], r.equipmentType || "", r.refrigerantType || "Unknown");
     const airflow = analyzeAirflow(r.observations || []);
-
     if (charge.summary.toLowerCase().includes("undercharged")) patterns.push("Undercharge pattern");
     if (charge.summary.toLowerCase().includes("overcharged")) patterns.push("Overcharge pattern");
     if (charge.summary.toLowerCase().includes("restriction")) patterns.push("Restriction / metering pattern");
@@ -862,24 +571,12 @@ function deriveMeasurementPatterns(records: SavedUnitRecord[]) {
     if (charge.subcool !== null && charge.subcool < 5) patterns.push("Low subcool");
     if (charge.deltaT !== null && charge.deltaT < 12) patterns.push("Low delta-T");
     if (charge.deltaT !== null && charge.deltaT > 22) patterns.push("High delta-T");
-
-    if (airflow.totalExternalStatic !== null && airflow.totalExternalStatic > 0.8) {
-      patterns.push("High total external static");
-    }
-    if (airflow.filterDrop !== null && airflow.filterDrop > 0.18) {
-      patterns.push("High filter pressure drop");
-    }
-    if (airflow.coilDrop !== null && airflow.coilDrop > 0.35) {
-      patterns.push("High coil pressure drop");
-    }
-    if (airflow.summary.toLowerCase().includes("return-side")) {
-      patterns.push("Return-side restriction");
-    }
-    if (airflow.summary.toLowerCase().includes("supply-side")) {
-      patterns.push("Supply-side restriction");
-    }
+    if (airflow.totalExternalStatic !== null && airflow.totalExternalStatic > 0.8) patterns.push("High total external static");
+    if (airflow.filterDrop !== null && airflow.filterDrop > 0.18) patterns.push("High filter pressure drop");
+    if (airflow.coilDrop !== null && airflow.coilDrop > 0.35) patterns.push("High coil pressure drop");
+    if (airflow.summary.toLowerCase().includes("return-side")) patterns.push("Return-side restriction");
+    if (airflow.summary.toLowerCase().includes("supply-side")) patterns.push("Supply-side restriction");
   }
-
   return topCounts(patterns, 2, 4);
 }
 
@@ -895,10 +592,7 @@ function buildEquipmentMemoryInsight(
     equipmentType: string;
   }
 ): EquipmentMemoryInsight {
-  const related = savedUnits.filter(
-    (r) => r.id !== current.id && isRelatedRecord(current, r)
-  );
-
+  const related = savedUnits.filter((r) => r.id !== current.id && isRelatedRecord(current, r));
   if (!related.length) {
     return {
       relatedCount: 0,
@@ -909,55 +603,27 @@ function buildEquipmentMemoryInsight(
       suggestedFirstChecks: [],
     };
   }
-
-  const symptomItems = related
-    .map((r) => (r.symptom || "").trim())
-    .filter(Boolean);
-
+  const symptomItems = related.map((r) => (r.symptom || "").trim()).filter(Boolean);
   const causeItems = related.flatMap((r) => {
     const parsed = parseDiagnosis(r.rawResult || "");
-    return (parsed?.likely_causes || [])
-      .map((c) => (c.cause || "").trim())
-      .filter(Boolean);
+    return (parsed?.likely_causes || []).map((c) => (c.cause || "").trim()).filter(Boolean);
   });
-
   const repeatedSymptoms = topCounts(symptomItems, 1, 4);
   const repeatedCauses = topCounts(causeItems, 1, 4);
   const repeatedMeasurementPatterns = deriveMeasurementPatterns(related);
-
   const suggestionPool: string[] = [];
-
   for (const p of repeatedMeasurementPatterns) {
     const low = p.toLowerCase();
-    if (low.includes("high total external static")) {
-      suggestionPool.push("Inspect filter, coil, and blower speed first");
-    }
-    if (low.includes("high coil pressure drop")) {
-      suggestionPool.push("Inspect evaporator coil and blower setup");
-    }
-    if (low.includes("high filter pressure drop")) {
-      suggestionPool.push("Check filter size, condition, and rack sealing");
-    }
-    if (low.includes("return-side restriction")) {
-      suggestionPool.push("Check return duct, filter section, and return grilles");
-    }
-    if (low.includes("supply-side restriction")) {
-      suggestionPool.push("Check supply duct restrictions and coil discharge path");
-    }
-    if (low.includes("undercharge pattern")) {
-      suggestionPool.push("Leak check refrigerant circuit before adding charge");
-    }
-    if (low.includes("restriction / metering pattern")) {
-      suggestionPool.push("Check TXV / metering device and liquid line restrictions");
-    }
-    if (low.includes("high superheat")) {
-      suggestionPool.push("Verify evaporator feed and refrigerant charge");
-    }
-    if (low.includes("low subcool")) {
-      suggestionPool.push("Verify charge level and liquid line integrity");
-    }
+    if (low.includes("high total external static")) suggestionPool.push("Inspect filter, coil, and blower speed first");
+    if (low.includes("high coil pressure drop")) suggestionPool.push("Inspect evaporator coil and blower setup");
+    if (low.includes("high filter pressure drop")) suggestionPool.push("Check filter size, condition, and rack sealing");
+    if (low.includes("return-side restriction")) suggestionPool.push("Check return duct, filter section, and return grilles");
+    if (low.includes("supply-side restriction")) suggestionPool.push("Check supply duct restrictions and coil discharge path");
+    if (low.includes("undercharge pattern")) suggestionPool.push("Leak check refrigerant circuit before adding charge");
+    if (low.includes("restriction / metering pattern")) suggestionPool.push("Check TXV / metering device and liquid line restrictions");
+    if (low.includes("high superheat")) suggestionPool.push("Verify evaporator feed and refrigerant charge");
+    if (low.includes("low subcool")) suggestionPool.push("Verify charge level and liquid line integrity");
   }
-
   for (const c of repeatedCauses) {
     const low = c.toLowerCase();
     if (low.includes("fan")) suggestionPool.push("Inspect fan motor, blade, capacitor, and rotation");
@@ -967,350 +633,132 @@ function buildEquipmentMemoryInsight(
     if (low.includes("compressor")) suggestionPool.push("Verify compressor amps, voltage, and overload condition");
     if (low.includes("thermostat") || low.includes("control")) suggestionPool.push("Verify thermostat signal and control sequence");
   }
-
-  const dedupedSuggestions = [...new Set(suggestionPool)].slice(0, 4);
-
+  const suggestedFirstChecks = [...new Set(suggestionPool)].slice(0, 4);
   let summary = `Found ${related.length} related prior service entr${related.length === 1 ? "y" : "ies"} for this unit or matching equipment.`;
-
-  if (repeatedMeasurementPatterns.length) {
-    summary = `This unit shows repeated pattern history. Most common pattern: ${repeatedMeasurementPatterns[0]}.`;
-  } else if (repeatedCauses.length) {
-    summary = `This unit has repeat issue history. Most common likely cause: ${repeatedCauses[0]}.`;
-  } else if (repeatedSymptoms.length) {
-    summary = `This unit has repeated complaint history. Most common symptom: ${repeatedSymptoms[0]}.`;
-  }
-
-  return {
-    relatedCount: related.length,
-    summary,
-    repeatedSymptoms,
-    repeatedCauses,
-    repeatedMeasurementPatterns,
-    suggestedFirstChecks: dedupedSuggestions,
-  };
+  if (repeatedMeasurementPatterns.length) summary = `This unit shows repeated pattern history. Most common pattern: ${repeatedMeasurementPatterns[0]}.`;
+  else if (repeatedCauses.length) summary = `This unit has repeat issue history. Most common likely cause: ${repeatedCauses[0]}.`;
+  else if (repeatedSymptoms.length) summary = `This unit has repeated complaint history. Most common symptom: ${repeatedSymptoms[0]}.`;
+  return { relatedCount: related.length, summary, repeatedSymptoms, repeatedCauses, repeatedMeasurementPatterns, suggestedFirstChecks };
 }
 
-const SYMPTOM_PACKS: SymptomPack[] = [
-  {
-    id: "no_cooling",
-    label: "No Cooling",
-    defaultSymptom: "Unit not cooling. Space temperature stays high.",
-    nodes: [
-      {
-        id: "a",
-        title: "No Cooling",
-        question: "Is there an active call for cooling?",
-        how: "Verify thermostat / control board / Y signal.",
-        passLabel: "Yes",
-        failLabel: "No",
-        passNext: "b",
-        failNext: "a_end",
-        suggestedMeasurement: "Control Voltage (R-C)",
-      },
-      {
-        id: "b",
-        title: "Cooling Call",
-        question: "Is the indoor blower moving adequate air?",
-        how: "Check filter, blower, wheel, belt, speed, and airflow.",
-        passLabel: "Yes",
-        failLabel: "No",
-        passNext: "c",
-        failNext: "b_end",
-        suggestedMeasurement: "External Static Pressure",
-      },
-      {
-        id: "c",
-        title: "Airflow",
-        question: "Is the compressor and outdoor section running normally?",
-        how: "Check contactor, capacitor, fan motor, amps, overload, and voltage.",
-        passLabel: "Yes",
-        failLabel: "No",
-        passNext: "d",
-        failNext: "c_end",
-        suggestedMeasurement: "Compressor Amps",
-      },
-      {
-        id: "d",
-        title: "Refrigeration",
-        question: "Do pressures and line temps suggest charge / metering issues?",
-        how: "Check suction, liquid, superheat, subcool, delta-T.",
-        passLabel: "Yes",
-        failLabel: "No",
-        passNext: "d_end",
-        failNext: "e",
-        suggestedMeasurement: "Suction Pressure",
-      },
-      {
-        id: "e",
-        title: "Controls / Load",
-        question: "Is economizer / damper / control logic affecting capacity?",
-        how: "Verify damper position, outside air, and staging logic.",
-        passLabel: "Yes",
-        failLabel: "No",
-        passNext: "e_end",
-        failNext: "f_end",
-        suggestedMeasurement: "Return Air Temp",
-      },
-      {
-        id: "a_end",
-        title: "Likely Direction",
-        question:
-          "No cooling call found. Focus on thermostat, wiring, low voltage, or board logic.",
-        terminal: true,
-      },
-      {
-        id: "b_end",
-        title: "Likely Direction",
-        question:
-          "Airflow issue likely. Fix filter, coil, blower, belt, or static restriction first.",
-        terminal: true,
-      },
-      {
-        id: "c_end",
-        title: "Likely Direction",
-        question: "Electrical / compressor / condenser section issue likely.",
-        terminal: true,
-      },
-      {
-        id: "d_end",
-        title: "Likely Direction",
-        question:
-          "Charge, metering, or restriction issue likely. Confirm with superheat/subcool.",
-        terminal: true,
-      },
-      {
-        id: "e_end",
-        title: "Likely Direction",
-        question: "Control / economizer / ventilation issue likely.",
-        terminal: true,
-      },
-      {
-        id: "f_end",
-        title: "Done",
-        question: "Collect more readings and run Diagnose again for tighter guidance.",
-        terminal: true,
-      },
-    ],
-  },
-  {
-    id: "freezing_up",
-    label: "Freezing Up",
-    defaultSymptom: "Evaporator / suction line freezing up.",
-    nodes: [
-      {
-        id: "a",
-        title: "Freezing Up",
-        question: "Is airflow restricted?",
-        how: "Check filter, blower, coil, registers, and static.",
-        passLabel: "No",
-        failLabel: "Yes",
-        passNext: "b",
-        failNext: "a_end",
-        suggestedMeasurement: "External Static Pressure",
-      },
-      {
-        id: "b",
-        title: "Airflow OK",
-        question: "Is suction pressure low and superheat high?",
-        how: "Check suction, line temp, saturation temp.",
-        passLabel: "Yes",
-        failLabel: "No",
-        passNext: "b_end",
-        failNext: "c",
-        suggestedMeasurement: "Superheat",
-      },
-      {
-        id: "c",
-        title: "Refrigeration",
-        question: "Is TXV / metering device feeding poorly or hunting?",
-        how: "Compare SH/SC and bulb / equalizer condition.",
-        passLabel: "Yes",
-        failLabel: "No",
-        passNext: "c_end",
-        failNext: "d_end",
-        suggestedMeasurement: "Subcool",
-      },
-      {
-        id: "a_end",
-        title: "Likely Direction",
-        question: "Airflow restriction likely caused the freeze-up.",
-        terminal: true,
-      },
-      {
-        id: "b_end",
-        title: "Likely Direction",
-        question: "Low charge or restriction likely.",
-        terminal: true,
-      },
-      {
-        id: "c_end",
-        title: "Likely Direction",
-        question: "Metering device issue likely.",
-        terminal: true,
-      },
-      {
-        id: "d_end",
-        title: "Done",
-        question: "Use more readings and Diagnose again for tighter guidance.",
-        terminal: true,
-      },
-    ],
-  },
-  {
-    id: "no_heat_gas",
-    label: "No Heat (Gas)",
-    defaultSymptom: "Gas heat not working.",
-    nodes: [
-      {
-        id: "a",
-        title: "No Heat",
-        question: "Is there a call for heat?",
-        how: "Verify W call and thermostat state.",
-        passLabel: "Yes",
-        failLabel: "No",
-        passNext: "b",
-        failNext: "a_end",
-        suggestedMeasurement: "Control Voltage (R-W)",
-      },
-      {
-        id: "b",
-        title: "Heat Call",
-        question: "Does inducer start and pressure switch prove?",
-        how: "Check venting, tubing, switch, draft.",
-        passLabel: "Yes",
-        failLabel: "No",
-        passNext: "c",
-        failNext: "b_end",
-        suggestedMeasurement: "Pressure Switch Status",
-      },
-      {
-        id: "c",
-        title: "Ignition",
-        question: "Does the igniter light burners and does flame prove?",
-        how: "Check igniter, gas valve, flame sensor µA.",
-        passLabel: "Yes",
-        failLabel: "No",
-        passNext: "d",
-        failNext: "c_end",
-        suggestedMeasurement: "Flame Sensor",
-      },
-      {
-        id: "d",
-        title: "Heat Delivery",
-        question:
-          "Is airflow / heat rise normal without tripping limit?",
-        how: "Check heat rise, blower, filter, static.",
-        passLabel: "Yes",
-        failLabel: "No",
-        passNext: "d_end",
-        failNext: "e_end",
-        suggestedMeasurement: "Heat Rise",
-      },
-      {
-        id: "a_end",
-        title: "Likely Direction",
-        question: "No heat call found. Focus on thermostat, wiring, or board.",
-        terminal: true,
-      },
-      {
-        id: "b_end",
-        title: "Likely Direction",
-        question: "Inducer / pressure switch / venting issue likely.",
-        terminal: true,
-      },
-      {
-        id: "c_end",
-        title: "Likely Direction",
-        question: "Ignition, gas valve, or flame proving issue likely.",
-        terminal: true,
-      },
-      {
-        id: "d_end",
-        title: "Done",
-        question: "Sequence is normal. Re-check complaint details and staging.",
-        terminal: true,
-      },
-      {
-        id: "e_end",
-        title: "Likely Direction",
-        question: "Airflow / limit trip issue likely.",
-        terminal: true,
-      },
-    ],
-  },
-];
+function buildServiceReportHtml(args: {
+  customerName: string;
+  siteName: string;
+  siteAddress: string;
+  unitNickname: string;
+  propertyType: string;
+  equipmentType: string;
+  manufacturer: string;
+  model: string;
+  refrigerantType: string;
+  symptom: string;
+  observations: Observation[];
+  parsed: Diagnosis | null;
+  nameplate: NameplateResult | null;
+  chargeAnalysis: ChargeAnalysis;
+  airflowAnalysis: AirflowAnalysis;
+  equipmentMemory: EquipmentMemoryInsight;
+}) {
+  const {
+    customerName,
+    siteName,
+    siteAddress,
+    unitNickname,
+    propertyType,
+    equipmentType,
+    manufacturer,
+    model,
+    refrigerantType,
+    symptom,
+    observations,
+    parsed,
+    nameplate,
+    chargeAnalysis,
+    airflowAnalysis,
+    equipmentMemory,
+  } = args;
+  const now = new Date().toLocaleString();
+  const obsRows = observations.length
+    ? observations.map((o) => `<tr><td>${escapeHtml(o.label)}</td><td>${escapeHtml(`${o.value} ${o.unit}`)}</td><td>${escapeHtml(o.note || "")}</td></tr>`).join("")
+    : `<tr><td colspan="3">No measurements entered.</td></tr>`;
+  const likelyCauseRows = parsed?.likely_causes?.length
+    ? parsed.likely_causes.map((c) => `<li><strong>${escapeHtml(c.cause || "Cause")}</strong>${typeof c.probability_percent === "number" ? ` — ${c.probability_percent}%` : ""}${c.why ? `<div class="muted">${escapeHtml(c.why)}</div>` : ""}</li>`).join("")
+    : `<li>No likely causes available yet.</li>`;
+  const memoryRows = equipmentMemory.suggestedFirstChecks.length
+    ? equipmentMemory.suggestedFirstChecks.map((s) => `<li>${escapeHtml(s)}</li>`).join("")
+    : `<li>No prior unit history suggestions yet.</li>`;
+  const airflowRows = airflowAnalysis.findings.length
+    ? airflowAnalysis.findings.map((f) => `<li>${escapeHtml(f)}</li>`).join("")
+    : `<li>No airflow findings yet.</li>`;
+  const chargeRows = chargeAnalysis.findings.length
+    ? chargeAnalysis.findings.map((f) => `<li>${escapeHtml(f)}</li>`).join("")
+    : `<li>No charge findings yet.</li>`;
+  return `<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>HVAC Service Report</title>
+<style>
+body{font-family:Arial,Helvetica,sans-serif;color:#111;margin:24px;line-height:1.35}
+h1,h2,h3{margin:0 0 8px 0}.header{display:flex;justify-content:space-between;align-items:start;border-bottom:2px solid #111;padding-bottom:12px;margin-bottom:18px}.section{margin-top:18px;border:1px solid #ddd;border-radius:10px;padding:12px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px}.label{font-weight:700}.muted{color:#555;font-size:12px;margin-top:4px}table{width:100%;border-collapse:collapse;margin-top:8px}th,td{border:1px solid #ddd;padding:8px;text-align:left;vertical-align:top;font-size:13px}ul{margin:8px 0 0 18px;padding:0}.pill{display:inline-block;border:1px solid #bbb;border-radius:999px;padding:2px 8px;font-size:12px;margin-left:6px}@media print{body{margin:10mm}}
+</style>
+</head>
+<body>
+<div class="header"><div><h1>HVAC Service Report</h1><div class="muted">Generated ${escapeHtml(now)}</div></div><div style="text-align:right"><div><span class="label">Property Type:</span> ${escapeHtml(propertyType || "-")}</div><div><span class="label">Equipment Type:</span> ${escapeHtml(equipmentType || "-")}</div></div></div>
+<div class="section"><h2>Customer / Site / Unit</h2><div class="grid"><div><span class="label">Customer:</span> ${escapeHtml(customerName || "-")}</div><div><span class="label">Site:</span> ${escapeHtml(siteName || "-")}</div><div><span class="label">Address:</span> ${escapeHtml(siteAddress || "-")}</div><div><span class="label">Unit Tag:</span> ${escapeHtml(unitNickname || "-")}</div><div><span class="label">Manufacturer:</span> ${escapeHtml(manufacturer || "-")}</div><div><span class="label">Model:</span> ${escapeHtml(model || "-")}</div><div><span class="label">Refrigerant:</span> ${escapeHtml(refrigerantType || "-")}</div><div><span class="label">Nameplate Serial:</span> ${escapeHtml(nameplate?.serial || "-")}</div></div></div>
+<div class="section"><h2>Customer Complaint / Symptom</h2><div>${escapeHtml(symptom || "-")}</div></div>
+<div class="section"><h2>Diagnosis Summary</h2><div>${escapeHtml(parsed?.summary || "No AI diagnosis summary available yet.")}</div></div>
+<div class="section"><h2>Likely Causes</h2><ul>${likelyCauseRows}</ul></div>
+<div class="section"><h2>Charge Analysis</h2><div><span class="label">Delta-T:</span> ${chargeAnalysis.deltaT !== null ? `${chargeAnalysis.deltaT}°F` : "—"}<span class="pill">Evap Sat: ${chargeAnalysis.evapSat !== null ? `${chargeAnalysis.evapSat}°F` : "—"} / ${escapeHtml(chargeAnalysis.evapSatSource)}</span><span class="pill">Cond Sat: ${chargeAnalysis.condSat !== null ? `${chargeAnalysis.condSat}°F` : "—"} / ${escapeHtml(chargeAnalysis.condSatSource)}</span><span class="pill">SH: ${chargeAnalysis.superheat !== null ? `${chargeAnalysis.superheat}°F` : "—"}</span><span class="pill">SC: ${chargeAnalysis.subcool !== null ? `${chargeAnalysis.subcool}°F` : "—"}</span></div><div style="margin-top:8px"><span class="label">Summary:</span> ${escapeHtml(chargeAnalysis.summary)}</div><ul>${chargeRows}</ul></div>
+<div class="section"><h2>Airflow Analysis</h2><div><span class="pill">TESP: ${airflowAnalysis.totalExternalStatic !== null ? `${airflowAnalysis.totalExternalStatic} inWC` : "—"}</span><span class="pill">Return: ${airflowAnalysis.returnStatic !== null ? `${airflowAnalysis.returnStatic} inWC` : "—"}</span><span class="pill">Supply: ${airflowAnalysis.supplyStatic !== null ? `${airflowAnalysis.supplyStatic} inWC` : "—"}</span><span class="pill">Filter Drop: ${airflowAnalysis.filterDrop !== null ? `${airflowAnalysis.filterDrop} inWC` : "—"}</span><span class="pill">Coil Drop: ${airflowAnalysis.coilDrop !== null ? `${airflowAnalysis.coilDrop} inWC` : "—"}</span></div><div style="margin-top:8px"><span class="label">Summary:</span> ${escapeHtml(airflowAnalysis.summary)}</div><ul>${airflowRows}</ul></div>
+<div class="section"><h2>Equipment Memory AI</h2><div><span class="label">Summary:</span> ${escapeHtml(equipmentMemory.summary)}</div><div class="muted">Related prior entries: ${equipmentMemory.relatedCount}</div><ul>${memoryRows}</ul></div>
+<div class="section"><h2>Measurements / Observations</h2><table><thead><tr><th>Measurement</th><th>Value</th><th>Note</th></tr></thead><tbody>${obsRows}</tbody></table></div>
+<div class="section"><h2>Recommended Next Actions</h2><ul>${equipmentMemory.suggestedFirstChecks.length ? equipmentMemory.suggestedFirstChecks.map((s)=>`<li>${escapeHtml(s)}</li>`).join("") : "<li>Continue collecting measurements and verify the sequence of operation.</li>"}</ul></div>
+</body></html>`;
+}
 
 export default function HVACUnitsPage() {
   const [customerName, setCustomerName] = useState("");
   const [siteName, setSiteName] = useState("");
   const [siteAddress, setSiteAddress] = useState("");
   const [unitNickname, setUnitNickname] = useState("");
-
   const [propertyType, setPropertyType] = useState("Commercial");
   const [equipmentType, setEquipmentType] = useState("RTU");
   const [manufacturer, setManufacturer] = useState("");
   const [model, setModel] = useState("");
   const [symptom, setSymptom] = useState("");
-
-  const refrigerantOptions = [
-    "Unknown",
-    "R-410A",
-    "R-22",
-    "R-32",
-    "R-454B",
-    "R-134a",
-    "R-407C",
-    "R-404A",
-    "R-448A",
-    "R-449A",
-    "R-290 (Propane)",
-    "R-600a (Isobutane)",
-  ];
+  const refrigerantOptions = ["Unknown", "R-410A", "R-22", "R-32", "R-454B", "R-134a", "R-407C", "R-404A", "R-448A", "R-449A", "R-290 (Propane)", "R-600a (Isobutane)"];
   const [refrigerantType, setRefrigerantType] = useState<string>("Unknown");
-
   const [rawResult, setRawResult] = useState("");
   const [loading, setLoading] = useState(false);
-
   const [observations, setObservations] = useState<Observation[]>([]);
   const [obsLabel, setObsLabel] = useState("");
   const [obsValue, setObsValue] = useState("");
   const [obsUnit, setObsUnit] = useState("psi");
   const [obsNote, setObsNote] = useState("");
   const [autoConvert, setAutoConvert] = useState(true);
-
   const [nameplateImage, setNameplateImage] = useState("");
   const [nameplate, setNameplate] = useState<NameplateResult | null>(null);
   const [nameplateBusy, setNameplateBusy] = useState(false);
   const [nameplateErr, setNameplateErr] = useState("");
-
   const [mpBusy, setMpBusy] = useState(false);
   const [mpErr, setMpErr] = useState("");
   const [manualsParts, setManualsParts] = useState<ManualsParts | null>(null);
-
   const [photoImage, setPhotoImage] = useState("");
   const [photoResult, setPhotoResult] = useState("");
   const [photoLoading, setPhotoLoading] = useState(false);
   const [photoError, setPhotoError] = useState("");
-
   const [gaugeImage, setGaugeImage] = useState("");
   const [gaugeBusy, setGaugeBusy] = useState(false);
   const [gaugeErr, setGaugeErr] = useState("");
   const [gaugeRead, setGaugeRead] = useState<GaugeReadResult | null>(null);
-
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const photoInputRef = useRef<HTMLInputElement | null>(null);
   const gaugeInputRef = useRef<HTMLInputElement | null>(null);
-
   const [selectedPackId, setSelectedPackId] = useState("no_cooling");
-  const selectedPack = useMemo(
-    () => SYMPTOM_PACKS.find((p) => p.id === selectedPackId) || SYMPTOM_PACKS[0],
-    [selectedPackId]
-  );
+  const selectedPack = useMemo(() => SYMPTOM_PACKS.find((p) => p.id === selectedPackId) || SYMPTOM_PACKS[0], [selectedPackId]);
   const [flowNodeId, setFlowNodeId] = useState<string>(selectedPack.nodes[0]?.id || "");
-  const [flowHistory, setFlowHistory] = useState<
-    { nodeId: string; choice: "PASS" | "FAIL"; nextId: string | null }[]
-  >([]);
-
+  const [flowHistory, setFlowHistory] = useState<{ nodeId: string; choice: "PASS" | "FAIL"; nextId: string | null }[]>([]);
   const [savedUnits, setSavedUnits] = useState<SavedUnitRecord[]>([]);
   const [historyFilter, setHistoryFilter] = useState("");
 
@@ -1319,74 +767,20 @@ export default function HVACUnitsPage() {
   }, []);
 
   const parsed = useMemo(() => parseDiagnosis(rawResult), [rawResult]);
-
-  const chargeAnalysis = useMemo(
-    () => analyzeCharge(observations, equipmentType, refrigerantType),
-    [observations, equipmentType, refrigerantType]
-  );
-
-  const airflowAnalysis = useMemo(
-    () => analyzeAirflow(observations),
-    [observations]
-  );
-
+  const chargeAnalysis = useMemo(() => analyzeCharge(observations, equipmentType, refrigerantType), [observations, equipmentType, refrigerantType]);
+  const airflowAnalysis = useMemo(() => analyzeAirflow(observations), [observations]);
   const equipmentMemory = useMemo(
-    () =>
-      buildEquipmentMemoryInsight(savedUnits, {
-        customerName,
-        siteName,
-        unitNickname,
-        model,
-        manufacturer,
-        equipmentType,
-      }),
+    () => buildEquipmentMemoryInsight(savedUnits, { customerName, siteName, unitNickname, model, manufacturer, equipmentType }),
     [savedUnits, customerName, siteName, unitNickname, model, manufacturer, equipmentType]
   );
-
-  const currentFlowNode = useMemo(
-    () => selectedPack.nodes.find((n) => n.id === flowNodeId) || selectedPack.nodes[0],
-    [selectedPack, flowNodeId]
-  );
-
+  const currentFlowNode = useMemo(() => selectedPack.nodes.find((n) => n.id === flowNodeId) || selectedPack.nodes[0], [selectedPack, flowNodeId]);
   const filteredSavedUnits = useMemo(() => {
     const q = historyFilter.trim().toLowerCase();
     if (!q) return savedUnits;
-    return savedUnits.filter((u) =>
-      [
-        u.customerName,
-        u.siteName,
-        u.siteAddress,
-        u.unitNickname,
-        u.manufacturer,
-        u.model,
-        u.symptom,
-        u.equipmentType,
-      ]
-        .join(" ")
-        .toLowerCase()
-        .includes(q)
-    );
+    return savedUnits.filter((u) => [u.customerName, u.siteName, u.siteAddress, u.unitNickname, u.manufacturer, u.model, u.symptom, u.equipmentType].join(" ").toLowerCase().includes(q));
   }, [savedUnits, historyFilter]);
-
-  const measurementOptions =
-    parsed?.field_measurements_to_collect?.map((m) => m.measurement) || [];
-
-  const unitOptions = [
-    "psi",
-    "kPa",
-    "bar",
-    "°F",
-    "°C",
-    "amps",
-    "volts",
-    "inWC",
-    "Pa",
-    "ohms",
-    "µA",
-    "%",
-    "other",
-  ];
-
+  const measurementOptions = parsed?.field_measurements_to_collect?.map((m) => m.measurement) || [];
+  const unitOptions = ["psi", "kPa", "bar", "°F", "°C", "amps", "volts", "inWC", "Pa", "ohms", "µA", "%", "other"];
   const coolingPresets = [
     { label: "Suction Pressure", unit: "psi" },
     { label: "Liquid Pressure", unit: "psi" },
@@ -1408,7 +802,6 @@ export default function HVACUnitsPage() {
     { label: "Line Voltage", unit: "volts" },
     { label: "Control Voltage (R-C)", unit: "volts" },
   ];
-
   const heatingPresets = [
     { label: "Gas Inlet Pressure", unit: "inWC" },
     { label: "Manifold Pressure", unit: "inWC" },
@@ -1437,26 +830,20 @@ export default function HVACUnitsPage() {
     resetFlowForPack(pack.id);
     if (pack.nodes[0]?.suggestedMeasurement) {
       setObsLabel(pack.nodes[0].suggestedMeasurement);
-      setObsUnit(guessDefaultUnit(pack.nodes[0].suggestedMeasurement));
+      setObsUnit(guessUnit(pack.nodes[0].suggestedMeasurement));
     }
   }
 
   function advanceFlow(choice: "PASS" | "FAIL") {
     if (!currentFlowNode) return;
-    const nextId =
-      choice === "PASS"
-        ? currentFlowNode.passNext ?? null
-        : currentFlowNode.failNext ?? null;
-    setFlowHistory((prev) => [
-      ...prev,
-      { nodeId: currentFlowNode.id, choice, nextId },
-    ]);
+    const nextId = choice === "PASS" ? currentFlowNode.passNext ?? null : currentFlowNode.failNext ?? null;
+    setFlowHistory((prev) => [...prev, { nodeId: currentFlowNode.id, choice, nextId }]);
     if (nextId) {
       setFlowNodeId(nextId);
       const nextNode = selectedPack.nodes.find((n) => n.id === nextId);
       if (nextNode?.suggestedMeasurement) {
         setObsLabel(nextNode.suggestedMeasurement);
-        setObsUnit(guessDefaultUnit(nextNode.suggestedMeasurement));
+        setObsUnit(guessUnit(nextNode.suggestedMeasurement));
       }
     }
   }
@@ -1471,7 +858,7 @@ export default function HVACUnitsPage() {
   function addSuggestedMeasurementFromFlow() {
     if (!currentFlowNode?.suggestedMeasurement) return;
     setObsLabel(currentFlowNode.suggestedMeasurement);
-    setObsUnit(guessDefaultUnit(currentFlowNode.suggestedMeasurement));
+    setObsUnit(guessUnit(currentFlowNode.suggestedMeasurement));
   }
 
   function addMeasurement() {
@@ -1479,16 +866,13 @@ export default function HVACUnitsPage() {
     const rawValue = obsValue.trim();
     const unit = obsUnit.trim();
     if (!label || !rawValue) return;
-
-    const n = toNumber(rawValue);
-
-    let chosenUnit = unit === "other" ? guessDefaultUnit(label) : unit;
+    const n = num(rawValue);
+    let chosenUnit = unit === "other" ? guessUnit(label) : unit;
     let finalValue = rawValue;
     let finalUnit = chosenUnit;
-    let finalNote = (obsNote.trim() || "").trim();
-
+    let finalNote = obsNote.trim();
     if (autoConvert && n !== null) {
-      const converted = convertToStandard(n, chosenUnit);
+      const converted = convertToStandardUnit(n, chosenUnit);
       if (converted) {
         const rounded = Math.round(converted.value * 10) / 10;
         finalValue = String(rounded);
@@ -1498,55 +882,19 @@ export default function HVACUnitsPage() {
         finalNote = finalNote ? `${finalNote}; ${convNote}` : convNote;
       }
     }
-
-    setObservations((prev) => [
-      ...prev,
-      { label, value: finalValue, unit: finalUnit, note: finalNote || undefined },
-    ]);
+    setObservations((prev) => [...prev, { label, value: finalValue, unit: finalUnit, note: finalNote || undefined }]);
     setObsValue("");
     setObsNote("");
   }
 
   function addGaugeReadingsToMeasurements() {
     if (!gaugeRead) return;
-
     const next: Observation[] = [];
-    if (gaugeRead.suction_psi !== null) {
-      next.push({
-        label: "Suction Pressure",
-        value: String(gaugeRead.suction_psi),
-        unit: "psi",
-        note: "Imported from gauge photo",
-      });
-    }
-    if (gaugeRead.head_psi !== null) {
-      next.push({
-        label: "Liquid Pressure",
-        value: String(gaugeRead.head_psi),
-        unit: "psi",
-        note: "Imported from gauge photo",
-      });
-    }
-    if (gaugeRead.low_sat_f !== null) {
-      next.push({
-        label: "Suction Saturation Temp",
-        value: String(gaugeRead.low_sat_f),
-        unit: "°F",
-        note: "Imported from gauge photo",
-      });
-    }
-    if (gaugeRead.high_sat_f !== null) {
-      next.push({
-        label: "Condensing Saturation Temp",
-        value: String(gaugeRead.high_sat_f),
-        unit: "°F",
-        note: "Imported from gauge photo",
-      });
-    }
-
-    if (next.length) {
-      setObservations((prev) => [...prev, ...next]);
-    }
+    if (gaugeRead.suction_psi !== null) next.push({ label: "Suction Pressure", value: String(gaugeRead.suction_psi), unit: "psi", note: "Imported from gauge photo" });
+    if (gaugeRead.head_psi !== null) next.push({ label: "Liquid Pressure", value: String(gaugeRead.head_psi), unit: "psi", note: "Imported from gauge photo" });
+    if (gaugeRead.low_sat_f !== null) next.push({ label: "Suction Saturation Temp", value: String(gaugeRead.low_sat_f), unit: "°F", note: "Imported from gauge photo" });
+    if (gaugeRead.high_sat_f !== null) next.push({ label: "Condensing Saturation Temp", value: String(gaugeRead.high_sat_f), unit: "°F", note: "Imported from gauge photo" });
+    if (next.length) setObservations((prev) => [...prev, ...next]);
   }
 
   function removeObservation(idx: number) {
@@ -1604,7 +952,6 @@ export default function HVACUnitsPage() {
       rawResult,
       nameplate,
     };
-
     await saveUnit(record);
     const refreshed = await listUnits();
     setSavedUnits(refreshed);
@@ -1641,8 +988,7 @@ export default function HVACUnitsPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    const data = await safeJson(res);
-
+    const data = await safeTextJson(res);
     if (!res.ok) {
       setRawResult(data?.result || data?.error || `Server error (${res.status})`);
       return;
@@ -1657,24 +1003,10 @@ export default function HVACUnitsPage() {
       setRawResult("Please fill in at least Manufacturer and Symptom.");
       return;
     }
-
     setLoading(true);
     setRawResult("");
     try {
-      await postDiagnose({
-        propertyType,
-        equipmentType,
-        manufacturer: m,
-        model: model.trim(),
-        symptom: s,
-        refrigerantType,
-        observations,
-        flowPack: selectedPack.label,
-        flowHistory,
-        chargeAnalysis,
-        airflowAnalysis,
-        equipmentMemory,
-      });
+      await postDiagnose({ propertyType, equipmentType, manufacturer: m, model: model.trim(), symptom: s, refrigerantType, observations, flowPack: selectedPack.label, flowHistory, chargeAnalysis, airflowAnalysis, equipmentMemory });
     } finally {
       setLoading(false);
     }
@@ -1687,23 +1019,9 @@ export default function HVACUnitsPage() {
       setRawResult("Please fill in at least Manufacturer and Symptom.");
       return;
     }
-
     setLoading(true);
     try {
-      await postDiagnose({
-        propertyType,
-        equipmentType,
-        manufacturer: m,
-        model: model.trim(),
-        symptom: s,
-        refrigerantType,
-        observations,
-        flowPack: selectedPack.label,
-        flowHistory,
-        chargeAnalysis,
-        airflowAnalysis,
-        equipmentMemory,
-      });
+      await postDiagnose({ propertyType, equipmentType, manufacturer: m, model: model.trim(), symptom: s, refrigerantType, observations, flowPack: selectedPack.label, flowHistory, chargeAnalysis, airflowAnalysis, equipmentMemory });
     } finally {
       setLoading(false);
     }
@@ -1726,14 +1044,13 @@ export default function HVACUnitsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ imageDataUrl: nameplateImage, equipmentType }),
       });
-      const data = await safeJson(res);
+      const data = await safeTextJson(res);
       if (!res.ok || !data?.ok) {
         setNameplateErr(data?.error || `Server error (${res.status})`);
         return;
       }
       const np = data.data as NameplateResult;
       setNameplate(np);
-
       if (np.manufacturer && !manufacturer.trim()) setManufacturer(np.manufacturer);
       if (np.model && !model.trim()) setModel(np.model);
       if (np.equipment_type && !equipmentType.trim()) setEquipmentType(np.equipment_type);
@@ -1751,28 +1068,15 @@ export default function HVACUnitsPage() {
       const res = await fetch("/api/manuals-parts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          manufacturer: manufacturer.trim(),
-          model: model.trim(),
-          equipmentType,
-          symptom: symptom.trim(),
-          serial: nameplate?.serial || "",
-          nameplate,
-          query: symptom.trim(),
-        }),
+        body: JSON.stringify({ manufacturer: manufacturer.trim(), model: model.trim(), equipmentType, symptom: symptom.trim(), serial: nameplate?.serial || "", nameplate, query: symptom.trim() }),
       });
-      const data = await safeJson(res);
+      const data = await safeTextJson(res);
       if (!res.ok) {
         setMpErr(data?.result || data?.error || `Server error (${res.status})`);
         return;
       }
-
       if (typeof data?.result === "string") {
-        try {
-          setManualsParts(JSON.parse(data.result));
-        } catch {
-          setMpErr(data.result);
-        }
+        try { setManualsParts(JSON.parse(data.result)); } catch { setMpErr(data.result); }
       } else if (data?.data) {
         setManualsParts(data.data as ManualsParts);
       } else {
@@ -1788,20 +1092,17 @@ export default function HVACUnitsPage() {
     setPhotoLoading(true);
     setPhotoError("");
     setPhotoResult("");
-
     try {
       const res = await fetch("/api/photo-diagnose", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ image: photoImage }),
       });
-      const data = await safeJson(res);
-
+      const data = await safeTextJson(res);
       if (!res.ok) {
         setPhotoError(data?.error || data?.result || `Server error (${res.status})`);
         return;
       }
-
       setPhotoResult(data?.result || "No result returned.");
     } finally {
       setPhotoLoading(false);
@@ -1813,865 +1114,231 @@ export default function HVACUnitsPage() {
     setGaugeBusy(true);
     setGaugeErr("");
     setGaugeRead(null);
-
     try {
       const res = await fetch("/api/gauge-photo-read", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ image: gaugeImage }),
       });
-      const data = await safeJson(res);
-
+      const data = await safeTextJson(res);
       if (!res.ok || !data?.ok) {
         setGaugeErr(data?.error || data?.result || `Server error (${res.status})`);
         return;
       }
-
       setGaugeRead(data.data as GaugeReadResult);
     } finally {
       setGaugeBusy(false);
     }
   }
 
+  function openPrintableReport() {
+    const html = buildServiceReportHtml({ customerName, siteName, siteAddress, unitNickname, propertyType, equipmentType, manufacturer, model, refrigerantType, symptom, observations, parsed, nameplate, chargeAnalysis, airflowAnalysis, equipmentMemory });
+    const win = window.open("", "_blank", "noopener,noreferrer,width=1000,height=900");
+    if (!win) return;
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
+    win.focus();
+  }
+
+  const reportPreviewSummary = parsed?.summary || "No AI diagnosis summary available yet.";
+
   return (
     <div style={{ padding: 20, maxWidth: 1220, margin: "0 auto" }}>
-      <h1 style={{ fontSize: 26, fontWeight: 900 }}>
-        Skilled Trades AI — HVAC Diagnose
-      </h1>
+      <h1 style={{ fontSize: 26, fontWeight: 900 }}>Skilled Trades AI — HVAC Diagnose</h1>
 
-      <div
-        style={{
-          marginTop: 14,
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: 12,
-        }}
-      >
+      <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <SectionCard title="Customer / Site / Unit">
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            <div>
-              <label style={{ fontWeight: 900 }}>Customer Name</label>
-              <input
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                style={{ width: "100%", padding: 8 }}
-              />
-            </div>
-            <div>
-              <label style={{ fontWeight: 900 }}>Site Name</label>
-              <input
-                value={siteName}
-                onChange={(e) => setSiteName(e.target.value)}
-                style={{ width: "100%", padding: 8 }}
-              />
-            </div>
-            <div style={{ gridColumn: "1 / -1" }}>
-              <label style={{ fontWeight: 900 }}>Site Address</label>
-              <input
-                value={siteAddress}
-                onChange={(e) => setSiteAddress(e.target.value)}
-                style={{ width: "100%", padding: 8 }}
-              />
-            </div>
-            <div>
-              <label style={{ fontWeight: 900 }}>Unit Nickname / Tag</label>
-              <input
-                value={unitNickname}
-                onChange={(e) => setUnitNickname(e.target.value)}
-                placeholder="RTU-1, Office Furnace, Walk-in Cooler"
-                style={{ width: "100%", padding: 8 }}
-              />
-            </div>
+            <div><label style={{ fontWeight: 900 }}>Customer Name</label><input value={customerName} onChange={(e) => setCustomerName(e.target.value)} style={{ width: "100%", padding: 8 }} /></div>
+            <div><label style={{ fontWeight: 900 }}>Site Name</label><input value={siteName} onChange={(e) => setSiteName(e.target.value)} style={{ width: "100%", padding: 8 }} /></div>
+            <div style={{ gridColumn: "1 / -1" }}><label style={{ fontWeight: 900 }}>Site Address</label><input value={siteAddress} onChange={(e) => setSiteAddress(e.target.value)} style={{ width: "100%", padding: 8 }} /></div>
+            <div><label style={{ fontWeight: 900 }}>Unit Nickname / Tag</label><input value={unitNickname} onChange={(e) => setUnitNickname(e.target.value)} placeholder="RTU-1, Office Furnace, Walk-in Cooler" style={{ width: "100%", padding: 8 }} /></div>
           </div>
-
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
             <PillButton text="Save Current Unit" onClick={saveCurrentUnit} />
             <PillButton text="Clear Current Form" onClick={clearCurrentForm} />
           </div>
         </SectionCard>
 
-        <SectionCard
-          title="Saved Unit History"
-          right={<Badge text={`${savedUnits.length} saved`} />}
-        >
-          <input
-            value={historyFilter}
-            onChange={(e) => setHistoryFilter(e.target.value)}
-            placeholder="Search customer, site, model, symptom..."
-            style={{ width: "100%", padding: 8 }}
-          />
-
-          <div
-            style={{
-              marginTop: 10,
-              display: "grid",
-              gap: 8,
-              maxHeight: 320,
-              overflow: "auto",
-            }}
-          >
-            {filteredSavedUnits.length ? (
-              filteredSavedUnits.map((u) => (
-                <div
-                  key={u.id}
-                  style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}
-                >
-                  <div style={{ fontWeight: 900 }}>
-                    {u.customerName || "No Customer"}
-                    {u.unitNickname ? <Badge text={u.unitNickname} /> : null}
-                  </div>
-                  <SmallHint style={{ marginTop: 4 }}>
-                    {u.siteName || "-"} • {u.manufacturer || "-"} {u.model || "-"} •{" "}
-                    {u.equipmentType || "-"}
-                  </SmallHint>
-                  <SmallHint style={{ marginTop: 4 }}>
-                    Saved: {new Date(u.savedAt).toLocaleString()}
-                  </SmallHint>
-                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 8 }}>
-                    <PillButton text="Load" onClick={() => loadUnit(u)} />
-                    <PillButton text="Delete" onClick={() => removeSavedUnit(u.id)} />
-                  </div>
+        <SectionCard title="Saved Unit History" right={<Badge text={`${savedUnits.length} saved`} />}>
+          <input value={historyFilter} onChange={(e) => setHistoryFilter(e.target.value)} placeholder="Search customer, site, model, symptom..." style={{ width: "100%", padding: 8 }} />
+          <div style={{ marginTop: 10, display: "grid", gap: 8, maxHeight: 320, overflow: "auto" }}>
+            {filteredSavedUnits.length ? filteredSavedUnits.map((u) => (
+              <div key={u.id} style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
+                <div style={{ fontWeight: 900 }}>{u.customerName || "No Customer"}{u.unitNickname ? <Badge text={u.unitNickname} /> : null}</div>
+                <SmallHint style={{ marginTop: 4 }}>{u.siteName || "-"} • {u.manufacturer || "-"} {u.model || "-"} • {u.equipmentType || "-"}</SmallHint>
+                <SmallHint style={{ marginTop: 4 }}>Saved: {new Date(u.savedAt).toLocaleString()}</SmallHint>
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 8 }}>
+                  <PillButton text="Load" onClick={() => loadUnit(u)} />
+                  <PillButton text="Delete" onClick={() => removeSavedUnit(u.id)} />
                 </div>
-              ))
-            ) : (
-              <SmallHint>No saved units yet.</SmallHint>
-            )}
+              </div>
+            )) : <SmallHint>No saved units yet.</SmallHint>}
           </div>
         </SectionCard>
       </div>
 
-      <div
-        style={{
-          marginTop: 14,
-          padding: 14,
-          border: "1px solid #e5e5e5",
-          borderRadius: 12,
-          background: "#fafafa",
-        }}
-      >
+      <div style={{ marginTop: 14, padding: 14, border: "1px solid #e5e5e5", borderRadius: 12, background: "#fafafa" }}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <div>
-            <label style={{ fontWeight: 900 }}>Property Type</label>
-            <br />
-            <select
-              value={propertyType}
-              onChange={(e) => setPropertyType(e.target.value)}
-              style={{ width: "100%", padding: 8 }}
-            >
-              <option>Residential</option>
-              <option>Commercial</option>
-            </select>
-          </div>
-
-          <div>
-            <label style={{ fontWeight: 900 }}>Equipment Type</label>
-            <br />
-            <select
-              value={equipmentType}
-              onChange={(e) => setEquipmentType(e.target.value)}
-              style={{ width: "100%", padding: 8 }}
-            >
-              <option>RTU</option>
-              <option>Split System</option>
-              <option>Heat Pump</option>
-              <option>Furnace</option>
-              <option>Mini-Split</option>
-              <option>Boiler</option>
-              <option>Chiller</option>
-              <option>Make-Up Air Unit</option>
-            </select>
-          </div>
-
-          <div>
-            <label style={{ fontWeight: 900 }}>Manufacturer</label>
-            <br />
-            <input
-              value={manufacturer}
-              onChange={(e) => setManufacturer(e.target.value)}
-              style={{ width: "100%", padding: 8 }}
-            />
-          </div>
-
-          <div>
-            <label style={{ fontWeight: 900 }}>Model (optional)</label>
-            <br />
-            <input
-              value={model}
-              onChange={(e) => setModel(e.target.value)}
-              style={{ width: "100%", padding: 8 }}
-            />
-          </div>
-
-          <div>
-            <label style={{ fontWeight: 900 }}>Refrigerant Type</label>
-            <br />
-            <select
-              value={refrigerantType}
-              onChange={(e) => setRefrigerantType(e.target.value)}
-              style={{ width: "100%", padding: 8 }}
-            >
-              {refrigerantOptions.map((r) => (
-                <option key={r} value={r}>
-                  {r}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div style={{ gridColumn: "1 / -1" }}>
-            <label style={{ fontWeight: 900 }}>Symptom</label>
-            <br />
-            <textarea
-              value={symptom}
-              onChange={(e) => setSymptom(e.target.value)}
-              style={{ width: "100%", padding: 8, minHeight: 90 }}
-            />
-          </div>
+          <div><label style={{ fontWeight: 900 }}>Property Type</label><br /><select value={propertyType} onChange={(e) => setPropertyType(e.target.value)} style={{ width: "100%", padding: 8 }}><option>Residential</option><option>Commercial</option></select></div>
+          <div><label style={{ fontWeight: 900 }}>Equipment Type</label><br /><select value={equipmentType} onChange={(e) => setEquipmentType(e.target.value)} style={{ width: "100%", padding: 8 }}><option>RTU</option><option>Split System</option><option>Heat Pump</option><option>Furnace</option><option>Mini-Split</option><option>Boiler</option><option>Chiller</option><option>Make-Up Air Unit</option></select></div>
+          <div><label style={{ fontWeight: 900 }}>Manufacturer</label><br /><input value={manufacturer} onChange={(e) => setManufacturer(e.target.value)} style={{ width: "100%", padding: 8 }} /></div>
+          <div><label style={{ fontWeight: 900 }}>Model (optional)</label><br /><input value={model} onChange={(e) => setModel(e.target.value)} style={{ width: "100%", padding: 8 }} /></div>
+          <div><label style={{ fontWeight: 900 }}>Refrigerant Type</label><br /><select value={refrigerantType} onChange={(e) => setRefrigerantType(e.target.value)} style={{ width: "100%", padding: 8 }}>{refrigerantOptions.map((r) => <option key={r} value={r}>{r}</option>)}</select></div>
+          <div style={{ gridColumn: "1 / -1" }}><label style={{ fontWeight: 900 }}>Symptom</label><br /><textarea value={symptom} onChange={(e) => setSymptom(e.target.value)} style={{ width: "100%", padding: 8, minHeight: 90 }} /></div>
         </div>
-
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
-          <button
-            onClick={handleDiagnose}
-            disabled={loading}
-            style={{ padding: "10px 14px", fontWeight: 900 }}
-          >
-            {loading ? "Diagnosing..." : "Diagnose"}
-          </button>
-
-          <button
-            onClick={updateDiagnosisNow}
-            disabled={loading}
-            style={{ padding: "10px 14px", fontWeight: 900 }}
-          >
-            Update diagnosis (with measurements)
-          </button>
-
-          <button
-            onClick={findManualsParts}
-            disabled={mpBusy || !manufacturer.trim()}
-            style={{ padding: "10px 14px", fontWeight: 900 }}
-          >
-            {mpBusy ? "Finding..." : "Parts & Manuals"}
-          </button>
+          <button onClick={handleDiagnose} disabled={loading} style={{ padding: "10px 14px", fontWeight: 900 }}>{loading ? "Diagnosing..." : "Diagnose"}</button>
+          <button onClick={updateDiagnosisNow} disabled={loading} style={{ padding: "10px 14px", fontWeight: 900 }}>Update diagnosis (with measurements)</button>
+          <button onClick={findManualsParts} disabled={mpBusy || !manufacturer.trim()} style={{ padding: "10px 14px", fontWeight: 900 }}>{mpBusy ? "Finding..." : "Parts & Manuals"}</button>
         </div>
       </div>
 
       <div style={{ marginTop: 16 }}>
-        <SectionCard
-          title="Equipment Memory AI"
-          right={<Badge text={`${equipmentMemory.relatedCount} prior matches`} />}
-        >
-          <SmallHint>
-            This looks at saved history for matching customer/site/unit/model equipment and suggests what to check first today.
-          </SmallHint>
-
-          <div
-            style={{
-              marginTop: 12,
-              border: "1px solid #eee",
-              borderRadius: 10,
-              padding: 10,
-              background: "#fafafa",
-            }}
-          >
-            <div style={{ fontWeight: 900 }}>AI Memory Summary</div>
-            <div style={{ fontSize: 16, fontWeight: 900, marginTop: 6 }}>
-              {equipmentMemory.summary}
+        <SectionCard title="Service Report Generator" right={<PillButton text="Open printable report" onClick={openPrintableReport} />}>
+          <SmallHint>Opens a clean service report in a new tab. From there you can print it or save it as PDF.</SmallHint>
+          <div style={{ marginTop: 12, border: "1px solid #eee", borderRadius: 10, padding: 12, background: "#fafafa" }}>
+            <div style={{ fontWeight: 900 }}>Report Preview</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 10 }}>
+              <div><b>Customer:</b> {customerName || "-"}</div>
+              <div><b>Site:</b> {siteName || "-"}</div>
+              <div><b>Address:</b> {siteAddress || "-"}</div>
+              <div><b>Unit Tag:</b> {unitNickname || "-"}</div>
+              <div><b>Manufacturer:</b> {manufacturer || "-"}</div>
+              <div><b>Model:</b> {model || "-"}</div>
+              <div><b>Equipment Type:</b> {equipmentType || "-"}</div>
+              <div><b>Refrigerant:</b> {refrigerantType || "-"}</div>
             </div>
-
-            {equipmentMemory.repeatedSymptoms.length ? (
-              <div style={{ marginTop: 12 }}>
-                <div style={{ fontWeight: 900 }}>Repeated symptoms</div>
-                <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                  {equipmentMemory.repeatedSymptoms.map((item, i) => (
-                    <li key={i}>
-                      <SmallHint>{item}</SmallHint>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-
-            {equipmentMemory.repeatedCauses.length ? (
-              <div style={{ marginTop: 12 }}>
-                <div style={{ fontWeight: 900 }}>Repeated likely causes</div>
-                <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                  {equipmentMemory.repeatedCauses.map((item, i) => (
-                    <li key={i}>
-                      <SmallHint>{item}</SmallHint>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-
-            {equipmentMemory.repeatedMeasurementPatterns.length ? (
-              <div style={{ marginTop: 12 }}>
-                <div style={{ fontWeight: 900 }}>Repeated measurement patterns</div>
-                <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                  {equipmentMemory.repeatedMeasurementPatterns.map((item, i) => (
-                    <li key={i}>
-                      <SmallHint>{item}</SmallHint>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-
-            {equipmentMemory.suggestedFirstChecks.length ? (
-              <div style={{ marginTop: 12 }}>
-                <div style={{ fontWeight: 900 }}>Suggested first checks today</div>
-                <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                  {equipmentMemory.suggestedFirstChecks.map((item, i) => (
-                    <li key={i}>
-                      <SmallHint>{item}</SmallHint>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : (
-              <SmallHint style={{ marginTop: 12 }}>
-                Save more service history on this unit and this section will get smarter.
-              </SmallHint>
-            )}
+            <div style={{ marginTop: 12 }}><div style={{ fontWeight: 900 }}>Complaint</div><SmallHint style={{ marginTop: 4 }}>{symptom || "No complaint entered yet."}</SmallHint></div>
+            <div style={{ marginTop: 12 }}><div style={{ fontWeight: 900 }}>Diagnosis Summary</div><SmallHint style={{ marginTop: 4 }}>{reportPreviewSummary}</SmallHint></div>
+            <div style={{ marginTop: 12 }}><div style={{ fontWeight: 900 }}>Measurements Included</div><SmallHint style={{ marginTop: 4 }}>{observations.length ? `${observations.length} measurement(s) will be included in the report.` : "No measurements added yet."}</SmallHint></div>
           </div>
         </SectionCard>
       </div>
 
-      <div
-        style={{
-          marginTop: 16,
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: 12,
-        }}
-      >
+      <div style={{ marginTop: 16 }}>
+        <SectionCard title="Equipment Memory AI" right={<Badge text={`${equipmentMemory.relatedCount} prior matches`} />}>
+          <SmallHint>This looks at saved history for matching customer/site/unit/model equipment and suggests what to check first today.</SmallHint>
+          <div style={{ marginTop: 12, border: "1px solid #eee", borderRadius: 10, padding: 10, background: "#fafafa" }}>
+            <div style={{ fontWeight: 900 }}>AI Memory Summary</div>
+            <div style={{ fontSize: 16, fontWeight: 900, marginTop: 6 }}>{equipmentMemory.summary}</div>
+            {equipmentMemory.repeatedSymptoms.length ? <div style={{ marginTop: 12 }}><div style={{ fontWeight: 900 }}>Repeated symptoms</div><ul style={{ marginTop: 8, paddingLeft: 18 }}>{equipmentMemory.repeatedSymptoms.map((item, i) => <li key={i}><SmallHint>{item}</SmallHint></li>)}</ul></div> : null}
+            {equipmentMemory.repeatedCauses.length ? <div style={{ marginTop: 12 }}><div style={{ fontWeight: 900 }}>Repeated likely causes</div><ul style={{ marginTop: 8, paddingLeft: 18 }}>{equipmentMemory.repeatedCauses.map((item, i) => <li key={i}><SmallHint>{item}</SmallHint></li>)}</ul></div> : null}
+            {equipmentMemory.repeatedMeasurementPatterns.length ? <div style={{ marginTop: 12 }}><div style={{ fontWeight: 900 }}>Repeated measurement patterns</div><ul style={{ marginTop: 8, paddingLeft: 18 }}>{equipmentMemory.repeatedMeasurementPatterns.map((item, i) => <li key={i}><SmallHint>{item}</SmallHint></li>)}</ul></div> : null}
+            {equipmentMemory.suggestedFirstChecks.length ? <div style={{ marginTop: 12 }}><div style={{ fontWeight: 900 }}>Suggested first checks today</div><ul style={{ marginTop: 8, paddingLeft: 18 }}>{equipmentMemory.suggestedFirstChecks.map((item, i) => <li key={i}><SmallHint>{item}</SmallHint></li>)}</ul></div> : <SmallHint style={{ marginTop: 12 }}>Save more service history on this unit and this section will get smarter.</SmallHint>}
+          </div>
+        </SectionCard>
+      </div>
+
+      <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <SectionCard title="Symptom Packs" right={<Badge text={selectedPack.label} />}>
           <SmallHint>Choose a symptom pack to load a tech-style flowchart.</SmallHint>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10 }}>
-            {SYMPTOM_PACKS.map((pack) => (
-              <PillButton
-                key={pack.id}
-                text={pack.label}
-                active={pack.id === selectedPackId}
-                onClick={() => selectPack(pack.id)}
-              />
-            ))}
-          </div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10 }}>{SYMPTOM_PACKS.map((pack) => <PillButton key={pack.id} text={pack.label} active={pack.id === selectedPackId} onClick={() => selectPack(pack.id)} />)}</div>
         </SectionCard>
-
-        <SectionCard
-          title="Nameplate Photo Reader"
-          right={<PillButton text="Choose photo" onClick={() => fileInputRef.current?.click()} />}
-        >
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            style={{ display: "none" }}
-            onChange={async (e) => {
-              const f = e.target.files?.[0];
-              if (f) await onPickNameplateFile(f);
-            }}
-          />
-
+        <SectionCard title="Nameplate Photo Reader" right={<PillButton text="Choose photo" onClick={() => fileInputRef.current?.click()} />}>
+          <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={async (e) => { const f = e.target.files?.[0]; if (f) await onPickNameplateFile(f); }} />
           {nameplateImage ? (
             <div style={{ display: "grid", gap: 10 }}>
-              <img
-                src={nameplateImage}
-                alt="Nameplate"
-                style={{
-                  width: "100%",
-                  maxHeight: 260,
-                  objectFit: "contain",
-                  border: "1px solid #eee",
-                  borderRadius: 10,
-                }}
-              />
+              <img src={nameplateImage} alt="Nameplate" style={{ width: "100%", maxHeight: 260, objectFit: "contain", border: "1px solid #eee", borderRadius: 10 }} />
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <PillButton
-                  text={nameplateBusy ? "Reading..." : "Read nameplate"}
-                  onClick={parseNameplate}
-                  disabled={nameplateBusy}
-                />
-                <PillButton
-                  text="Clear"
-                  onClick={() => {
-                    setNameplateImage("");
-                    setNameplate(null);
-                    setNameplateErr("");
-                  }}
-                />
+                <PillButton text={nameplateBusy ? "Reading..." : "Read nameplate"} onClick={parseNameplate} disabled={nameplateBusy} />
+                <PillButton text="Clear" onClick={() => { setNameplateImage(""); setNameplate(null); setNameplateErr(""); }} />
               </div>
-              {nameplateErr ? (
-                <div style={{ color: "crimson", fontWeight: 800 }}>{nameplateErr}</div>
-              ) : null}
-              {nameplate ? (
-                <div style={{ display: "grid", gap: 8 }}>
-                  <SmallHint>
-                    Confidence: <b>{nameplate.confidence}</b> — {nameplate.notes}
-                  </SmallHint>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                    <div>
-                      <b>Manufacturer:</b> {nameplate.manufacturer ?? "-"}
-                    </div>
-                    <div>
-                      <b>Model:</b> {nameplate.model ?? "-"}
-                    </div>
-                    <div>
-                      <b>Serial:</b> {nameplate.serial ?? "-"}
-                    </div>
-                    <div>
-                      <b>Refrigerant:</b> {nameplate.refrigerant ?? "-"}
-                    </div>
-                  </div>
-                </div>
-              ) : null}
+              {nameplateErr ? <div style={{ color: "crimson", fontWeight: 800 }}>{nameplateErr}</div> : null}
+              {nameplate ? <div style={{ display: "grid", gap: 8 }}><SmallHint>Confidence: <b>{nameplate.confidence}</b> — {nameplate.notes}</SmallHint><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}><div><b>Manufacturer:</b> {nameplate.manufacturer ?? "-"}</div><div><b>Model:</b> {nameplate.model ?? "-"}</div><div><b>Serial:</b> {nameplate.serial ?? "-"}</div><div><b>Refrigerant:</b> {nameplate.refrigerant ?? "-"}</div></div></div> : null}
             </div>
-          ) : (
-            <SmallHint>
-              Upload a clear nameplate photo to extract manufacturer/model/serial/refrigerant.
-            </SmallHint>
-          )}
+          ) : <SmallHint>Upload a clear nameplate photo to extract manufacturer/model/serial/refrigerant.</SmallHint>}
         </SectionCard>
       </div>
 
-      <div
-        style={{
-          marginTop: 16,
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: 12,
-        }}
-      >
-        <SectionCard
-          title="Gauge Photo Reader"
-          right={<PillButton text="Choose gauge photo" onClick={() => gaugeInputRef.current?.click()} />}
-        >
-          <input
-            ref={gaugeInputRef}
-            type="file"
-            accept="image/*"
-            style={{ display: "none" }}
-            onChange={async (e) => {
-              const f = e.target.files?.[0];
-              if (!f) return;
-              const dataUrl = await readFileAsDataUrl(f);
-              setGaugeImage(dataUrl);
-              setGaugeErr("");
-              setGaugeRead(null);
-            }}
-          />
-
+      <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <SectionCard title="Gauge Photo Reader" right={<PillButton text="Choose gauge photo" onClick={() => gaugeInputRef.current?.click()} />}>
+          <input ref={gaugeInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={async (e) => { const f = e.target.files?.[0]; if (!f) return; const dataUrl = await readFileAsDataUrl(f); setGaugeImage(dataUrl); setGaugeErr(""); setGaugeRead(null); }} />
           {gaugeImage ? (
             <div style={{ display: "grid", gap: 10 }}>
-              <img
-                src={gaugeImage}
-                alt="Gauge photo"
-                style={{
-                  width: "100%",
-                  maxHeight: 280,
-                  objectFit: "contain",
-                  border: "1px solid #eee",
-                  borderRadius: 10,
-                }}
-              />
-
+              <img src={gaugeImage} alt="Gauge photo" style={{ width: "100%", maxHeight: 280, objectFit: "contain", border: "1px solid #eee", borderRadius: 10 }} />
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <PillButton
-                  text={gaugeBusy ? "Reading..." : "Read Gauges"}
-                  onClick={analyzeGaugePhoto}
-                  disabled={gaugeBusy}
-                />
-                <PillButton
-                  text="Clear"
-                  onClick={() => {
-                    setGaugeImage("");
-                    setGaugeErr("");
-                    setGaugeRead(null);
-                  }}
-                />
+                <PillButton text={gaugeBusy ? "Reading..." : "Read Gauges"} onClick={analyzeGaugePhoto} disabled={gaugeBusy} />
+                <PillButton text="Clear" onClick={() => { setGaugeImage(""); setGaugeErr(""); setGaugeRead(null); }} />
               </div>
-
-              {gaugeErr ? (
-                <div style={{ color: "crimson", fontWeight: 800 }}>{gaugeErr}</div>
-              ) : null}
-
-              {gaugeRead ? (
-                <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-                  <div style={{ fontWeight: 900 }}>
-                    Gauge Read
-                    <Badge text={gaugeRead.confidence} />
-                  </div>
-
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "1fr 1fr",
-                      gap: 10,
-                      marginTop: 10,
-                    }}
-                  >
-                    <div>
-                      <b>Suction:</b>{" "}
-                      {gaugeRead.suction_psi !== null ? `${gaugeRead.suction_psi} psi` : "—"}
-                    </div>
-                    <div>
-                      <b>Head:</b>{" "}
-                      {gaugeRead.head_psi !== null ? `${gaugeRead.head_psi} psi` : "—"}
-                    </div>
-                    <div>
-                      <b>Low Sat:</b>{" "}
-                      {gaugeRead.low_sat_f !== null ? `${gaugeRead.low_sat_f} °F` : "—"}
-                    </div>
-                    <div>
-                      <b>High Sat:</b>{" "}
-                      {gaugeRead.high_sat_f !== null ? `${gaugeRead.high_sat_f} °F` : "—"}
-                    </div>
-                  </div>
-
-                  <div style={{ marginTop: 10 }}>
-                    <div style={{ fontWeight: 900 }}>Quick diagnosis</div>
-                    <SmallHint style={{ marginTop: 4 }}>{gaugeRead.quick_diagnosis}</SmallHint>
-                  </div>
-
-                  <div style={{ marginTop: 10 }}>
-                    <div style={{ fontWeight: 900 }}>Notes</div>
-                    <SmallHint style={{ marginTop: 4 }}>{gaugeRead.notes}</SmallHint>
-                  </div>
-
-                  <div style={{ marginTop: 10 }}>
-                    <PillButton
-                      text="Add these readings to measurements"
-                      onClick={addGaugeReadingsToMeasurements}
-                    />
-                  </div>
-                </div>
-              ) : null}
+              {gaugeErr ? <div style={{ color: "crimson", fontWeight: 800 }}>{gaugeErr}</div> : null}
+              {gaugeRead ? <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}><div style={{ fontWeight: 900 }}>Gauge Read<Badge text={gaugeRead.confidence} /></div><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 10 }}><div><b>Suction:</b> {gaugeRead.suction_psi !== null ? `${gaugeRead.suction_psi} psi` : "—"}</div><div><b>Head:</b> {gaugeRead.head_psi !== null ? `${gaugeRead.head_psi} psi` : "—"}</div><div><b>Low Sat:</b> {gaugeRead.low_sat_f !== null ? `${gaugeRead.low_sat_f} °F` : "—"}</div><div><b>High Sat:</b> {gaugeRead.high_sat_f !== null ? `${gaugeRead.high_sat_f} °F` : "—"}</div></div><div style={{ marginTop: 10 }}><div style={{ fontWeight: 900 }}>Quick diagnosis</div><SmallHint style={{ marginTop: 4 }}>{gaugeRead.quick_diagnosis}</SmallHint></div><div style={{ marginTop: 10 }}><div style={{ fontWeight: 900 }}>Notes</div><SmallHint style={{ marginTop: 4 }}>{gaugeRead.notes}</SmallHint></div><div style={{ marginTop: 10 }}><PillButton text="Add these readings to measurements" onClick={addGaugeReadingsToMeasurements} /></div></div> : null}
             </div>
-          ) : (
-            <SmallHint>
-              Upload a clear photo of the gauge set. The app will try to read low side,
-              high side, and saturation temps.
-            </SmallHint>
-          )}
+          ) : <SmallHint>Upload a clear photo of the gauge set. The app will try to read low side, high side, and saturation temps.</SmallHint>}
         </SectionCard>
 
         <SectionCard title="PT Chart Intelligence + Charge Diagnosis">
-          <SmallHint>
-            If saturation temps are not entered, the app will estimate them from pressure
-            and refrigerant type using a PT chart approximation.
-          </SmallHint>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr 1fr",
-              gap: 10,
-              marginTop: 12,
-            }}
-          >
-            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-              <div style={{ fontWeight: 900 }}>Delta-T</div>
-              <div style={{ fontSize: 22, fontWeight: 900, marginTop: 6 }}>
-                {chargeAnalysis.deltaT !== null ? `${chargeAnalysis.deltaT}°F` : "—"}
-              </div>
-            </div>
-
-            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-              <div style={{ fontWeight: 900 }}>Superheat</div>
-              <div style={{ fontSize: 22, fontWeight: 900, marginTop: 6 }}>
-                {chargeAnalysis.superheat !== null ? `${chargeAnalysis.superheat}°F` : "—"}
-              </div>
-            </div>
-
-            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-              <div style={{ fontWeight: 900 }}>Subcool</div>
-              <div style={{ fontSize: 22, fontWeight: 900, marginTop: 6 }}>
-                {chargeAnalysis.subcool !== null ? `${chargeAnalysis.subcool}°F` : "—"}
-              </div>
-            </div>
+          <SmallHint>If saturation temps are not entered, the app will estimate them from pressure and refrigerant type using a PT chart approximation.</SmallHint>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginTop: 12 }}>
+            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}><div style={{ fontWeight: 900 }}>Delta-T</div><div style={{ fontSize: 22, fontWeight: 900, marginTop: 6 }}>{chargeAnalysis.deltaT !== null ? `${chargeAnalysis.deltaT}°F` : "—"}</div></div>
+            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}><div style={{ fontWeight: 900 }}>Superheat</div><div style={{ fontSize: 22, fontWeight: 900, marginTop: 6 }}>{chargeAnalysis.superheat !== null ? `${chargeAnalysis.superheat}°F` : "—"}</div></div>
+            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}><div style={{ fontWeight: 900 }}>Subcool</div><div style={{ fontSize: 22, fontWeight: 900, marginTop: 6 }}>{chargeAnalysis.subcool !== null ? `${chargeAnalysis.subcool}°F` : "—"}</div></div>
           </div>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: 10,
-              marginTop: 10,
-            }}
-          >
-            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-              <div style={{ fontWeight: 900 }}>
-                Evap Saturation
-                <Badge text={chargeAnalysis.evapSatSource} />
-              </div>
-              <div style={{ marginTop: 6 }}>
-                {chargeAnalysis.evapSat !== null ? `${chargeAnalysis.evapSat}°F` : "—"}
-              </div>
-            </div>
-
-            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-              <div style={{ fontWeight: 900 }}>
-                Condensing Saturation
-                <Badge text={chargeAnalysis.condSatSource} />
-              </div>
-              <div style={{ marginTop: 6 }}>
-                {chargeAnalysis.condSat !== null ? `${chargeAnalysis.condSat}°F` : "—"}
-              </div>
-            </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 10 }}>
+            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}><div style={{ fontWeight: 900 }}>Evap Saturation<Badge text={chargeAnalysis.evapSatSource} /></div><div style={{ marginTop: 6 }}>{chargeAnalysis.evapSat !== null ? `${chargeAnalysis.evapSat}°F` : "—"}</div></div>
+            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}><div style={{ fontWeight: 900 }}>Condensing Saturation<Badge text={chargeAnalysis.condSatSource} /></div><div style={{ marginTop: 6 }}>{chargeAnalysis.condSat !== null ? `${chargeAnalysis.condSat}°F` : "—"}</div></div>
           </div>
-
-          <div
-            style={{
-              marginTop: 12,
-              border: "1px solid #eee",
-              borderRadius: 10,
-              padding: 10,
-              background: "#fafafa",
-            }}
-          >
+          <div style={{ marginTop: 12, border: "1px solid #eee", borderRadius: 10, padding: 10, background: "#fafafa" }}>
             <div style={{ fontWeight: 900 }}>Charge Condition</div>
-            <div style={{ fontSize: 16, fontWeight: 900, marginTop: 6 }}>
-              {chargeAnalysis.summary}
-            </div>
-            {chargeAnalysis.findings.length ? (
-              <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                {chargeAnalysis.findings.map((f, i) => (
-                  <li key={i}>
-                    <SmallHint>{f}</SmallHint>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <SmallHint style={{ marginTop: 8 }}>
-                Add more refrigeration readings to tighten the diagnosis.
-              </SmallHint>
-            )}
+            <div style={{ fontSize: 16, fontWeight: 900, marginTop: 6 }}>{chargeAnalysis.summary}</div>
+            {chargeAnalysis.findings.length ? <ul style={{ marginTop: 8, paddingLeft: 18 }}>{chargeAnalysis.findings.map((f, i) => <li key={i}><SmallHint>{f}</SmallHint></li>)}</ul> : <SmallHint style={{ marginTop: 8 }}>Add more refrigeration readings to tighten the diagnosis.</SmallHint>}
           </div>
         </SectionCard>
       </div>
 
       <div style={{ marginTop: 16 }}>
         <SectionCard title="Airflow Intelligence">
-          <SmallHint>
-            Add return static, supply static, filter pressure drop, and coil pressure drop
-            to diagnose airflow restrictions.
-          </SmallHint>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr 1fr",
-              gap: 10,
-              marginTop: 12,
-            }}
-          >
-            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-              <div style={{ fontWeight: 900 }}>Total External Static</div>
-              <div style={{ fontSize: 22, fontWeight: 900, marginTop: 6 }}>
-                {airflowAnalysis.totalExternalStatic !== null
-                  ? `${airflowAnalysis.totalExternalStatic} inWC`
-                  : "—"}
-              </div>
-            </div>
-
-            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-              <div style={{ fontWeight: 900 }}>Return Static</div>
-              <div style={{ fontSize: 22, fontWeight: 900, marginTop: 6 }}>
-                {airflowAnalysis.returnStatic !== null
-                  ? `${airflowAnalysis.returnStatic} inWC`
-                  : "—"}
-              </div>
-            </div>
-
-            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-              <div style={{ fontWeight: 900 }}>Supply Static</div>
-              <div style={{ fontSize: 22, fontWeight: 900, marginTop: 6 }}>
-                {airflowAnalysis.supplyStatic !== null
-                  ? `${airflowAnalysis.supplyStatic} inWC`
-                  : "—"}
-              </div>
-            </div>
+          <SmallHint>Add return static, supply static, filter pressure drop, and coil pressure drop to diagnose airflow restrictions.</SmallHint>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginTop: 12 }}>
+            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}><div style={{ fontWeight: 900 }}>Total External Static</div><div style={{ fontSize: 22, fontWeight: 900, marginTop: 6 }}>{airflowAnalysis.totalExternalStatic !== null ? `${airflowAnalysis.totalExternalStatic} inWC` : "—"}</div></div>
+            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}><div style={{ fontWeight: 900 }}>Return Static</div><div style={{ fontSize: 22, fontWeight: 900, marginTop: 6 }}>{airflowAnalysis.returnStatic !== null ? `${airflowAnalysis.returnStatic} inWC` : "—"}</div></div>
+            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}><div style={{ fontWeight: 900 }}>Supply Static</div><div style={{ fontSize: 22, fontWeight: 900, marginTop: 6 }}>{airflowAnalysis.supplyStatic !== null ? `${airflowAnalysis.supplyStatic} inWC` : "—"}</div></div>
           </div>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: 10,
-              marginTop: 10,
-            }}
-          >
-            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-              <div style={{ fontWeight: 900 }}>Filter Drop</div>
-              <div style={{ marginTop: 6 }}>
-                {airflowAnalysis.filterDrop !== null
-                  ? `${airflowAnalysis.filterDrop} inWC`
-                  : "—"}
-              </div>
-            </div>
-
-            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-              <div style={{ fontWeight: 900 }}>Coil Drop</div>
-              <div style={{ marginTop: 6 }}>
-                {airflowAnalysis.coilDrop !== null
-                  ? `${airflowAnalysis.coilDrop} inWC`
-                  : "—"}
-              </div>
-            </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 10 }}>
+            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}><div style={{ fontWeight: 900 }}>Filter Drop</div><div style={{ marginTop: 6 }}>{airflowAnalysis.filterDrop !== null ? `${airflowAnalysis.filterDrop} inWC` : "—"}</div></div>
+            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}><div style={{ fontWeight: 900 }}>Coil Drop</div><div style={{ marginTop: 6 }}>{airflowAnalysis.coilDrop !== null ? `${airflowAnalysis.coilDrop} inWC` : "—"}</div></div>
           </div>
-
-          <div
-            style={{
-              marginTop: 12,
-              border: "1px solid #eee",
-              borderRadius: 10,
-              padding: 10,
-              background: "#fafafa",
-            }}
-          >
+          <div style={{ marginTop: 12, border: "1px solid #eee", borderRadius: 10, padding: 10, background: "#fafafa" }}>
             <div style={{ fontWeight: 900 }}>Airflow Summary</div>
-            <div style={{ fontSize: 16, fontWeight: 900, marginTop: 6 }}>
-              {airflowAnalysis.summary}
-            </div>
-            {airflowAnalysis.findings.length ? (
-              <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                {airflowAnalysis.findings.map((f, i) => (
-                  <li key={i}>
-                    <SmallHint>{f}</SmallHint>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <SmallHint style={{ marginTop: 8 }}>
-                Add static readings to identify filter, coil, blower, or duct restrictions.
-              </SmallHint>
-            )}
+            <div style={{ fontSize: 16, fontWeight: 900, marginTop: 6 }}>{airflowAnalysis.summary}</div>
+            {airflowAnalysis.findings.length ? <ul style={{ marginTop: 8, paddingLeft: 18 }}>{airflowAnalysis.findings.map((f, i) => <li key={i}><SmallHint>{f}</SmallHint></li>)}</ul> : <SmallHint style={{ marginTop: 8 }}>Add static readings to identify filter, coil, blower, or duct restrictions.</SmallHint>}
           </div>
         </SectionCard>
       </div>
 
-      <div
-        style={{
-          marginTop: 16,
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: 12,
-        }}
-      >
-        <SectionCard
-          title="Photo Diagnosis"
-          right={<PillButton text="Choose photo" onClick={() => photoInputRef.current?.click()} />}
-        >
-          <input
-            ref={photoInputRef}
-            type="file"
-            accept="image/*"
-            style={{ display: "none" }}
-            onChange={async (e) => {
-              const f = e.target.files?.[0];
-              if (!f) return;
-              const dataUrl = await readFileAsDataUrl(f);
-              setPhotoImage(dataUrl);
-              setPhotoResult("");
-              setPhotoError("");
-            }}
-          />
-
+      <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <SectionCard title="Photo Diagnosis" right={<PillButton text="Choose photo" onClick={() => photoInputRef.current?.click()} />}>
+          <input ref={photoInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={async (e) => { const f = e.target.files?.[0]; if (!f) return; const dataUrl = await readFileAsDataUrl(f); setPhotoImage(dataUrl); setPhotoResult(""); setPhotoError(""); }} />
           {photoImage ? (
             <div style={{ display: "grid", gap: 10 }}>
-              <img
-                src={photoImage}
-                alt="Diagnostic photo"
-                style={{
-                  width: "100%",
-                  maxHeight: 280,
-                  objectFit: "contain",
-                  border: "1px solid #eee",
-                  borderRadius: 10,
-                }}
-              />
+              <img src={photoImage} alt="Diagnostic photo" style={{ width: "100%", maxHeight: 280, objectFit: "contain", border: "1px solid #eee", borderRadius: 10 }} />
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <PillButton
-                  text={photoLoading ? "Analyzing..." : "Analyze Photo"}
-                  onClick={analyzePhoto}
-                  disabled={photoLoading}
-                />
-                <PillButton
-                  text="Clear"
-                  onClick={() => {
-                    setPhotoImage("");
-                    setPhotoResult("");
-                    setPhotoError("");
-                  }}
-                />
+                <PillButton text={photoLoading ? "Analyzing..." : "Analyze Photo"} onClick={analyzePhoto} disabled={photoLoading} />
+                <PillButton text="Clear" onClick={() => { setPhotoImage(""); setPhotoResult(""); setPhotoError(""); }} />
               </div>
-              {photoError ? (
-                <div style={{ color: "crimson", fontWeight: 800 }}>{photoError}</div>
-              ) : null}
-              {photoResult ? (
-                <pre
-                  style={{
-                    margin: 0,
-                    whiteSpace: "pre-wrap",
-                    border: "1px solid #eee",
-                    borderRadius: 10,
-                    padding: 10,
-                    background: "#fafafa",
-                  }}
-                >
-                  {photoResult}
-                </pre>
-              ) : null}
+              {photoError ? <div style={{ color: "crimson", fontWeight: 800 }}>{photoError}</div> : null}
+              {photoResult ? <pre style={{ margin: 0, whiteSpace: "pre-wrap", border: "1px solid #eee", borderRadius: 10, padding: 10, background: "#fafafa" }}>{photoResult}</pre> : null}
             </div>
-          ) : (
-            <SmallHint>
-              Upload a photo of a control board, capacitor, contactor, iced coil, wiring,
-              gauges, or error code and let the app analyze it.
-            </SmallHint>
-          )}
+          ) : <SmallHint>Upload a photo of a control board, capacitor, contactor, iced coil, wiring, gauges, or error code and let the app analyze it.</SmallHint>}
         </SectionCard>
 
         <SectionCard title="Real Flowchart Engine">
           <div style={{ border: "1px solid #eee", borderRadius: 12, padding: 12 }}>
             <div style={{ fontWeight: 900 }}>{currentFlowNode.title}</div>
             <div style={{ marginTop: 6, fontSize: 16 }}>{currentFlowNode.question}</div>
-            {currentFlowNode.how ? (
-              <SmallHint style={{ marginTop: 8 }}>How: {currentFlowNode.how}</SmallHint>
-            ) : null}
-            {currentFlowNode.suggestedMeasurement ? (
-              <SmallHint style={{ marginTop: 8 }}>
-                Suggested next reading: <b>{currentFlowNode.suggestedMeasurement}</b>
-              </SmallHint>
-            ) : null}
-
+            {currentFlowNode.how ? <SmallHint style={{ marginTop: 8 }}>How: {currentFlowNode.how}</SmallHint> : null}
+            {currentFlowNode.suggestedMeasurement ? <SmallHint style={{ marginTop: 8 }}>Suggested next reading: <b>{currentFlowNode.suggestedMeasurement}</b></SmallHint> : null}
             {!currentFlowNode.terminal ? (
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
-                <PillButton
-                  text={currentFlowNode.passLabel || "PASS"}
-                  onClick={() => advanceFlow("PASS")}
-                />
-                <PillButton
-                  text={currentFlowNode.failLabel || "FAIL"}
-                  onClick={() => advanceFlow("FAIL")}
-                />
-                <PillButton
-                  text="Use suggested reading"
-                  onClick={addSuggestedMeasurementFromFlow}
-                  disabled={!currentFlowNode.suggestedMeasurement}
-                />
-                <PillButton
-                  text="Reset flow"
-                  onClick={() => resetFlowForPack(selectedPackId)}
-                />
+                <PillButton text={currentFlowNode.passLabel || "PASS"} onClick={() => advanceFlow("PASS")} />
+                <PillButton text={currentFlowNode.failLabel || "FAIL"} onClick={() => advanceFlow("FAIL")} />
+                <PillButton text="Use suggested reading" onClick={addSuggestedMeasurementFromFlow} disabled={!currentFlowNode.suggestedMeasurement} />
+                <PillButton text="Reset flow" onClick={() => resetFlowForPack(selectedPackId)} />
               </div>
             ) : (
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
-                <PillButton
-                  text="Reset flow"
-                  onClick={() => resetFlowForPack(selectedPackId)}
-                />
+                <PillButton text="Reset flow" onClick={() => resetFlowForPack(selectedPackId)} />
                 <PillButton text="Diagnose now" onClick={handleDiagnose} />
               </div>
             )}
@@ -2679,72 +1346,15 @@ export default function HVACUnitsPage() {
         </SectionCard>
       </div>
 
-      <div
-        style={{
-          marginTop: 16,
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: 12,
-        }}
-      >
+      <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <SectionCard title="Manuals + Parts Results">
-          {mpErr ? (
-            <div style={{ color: "crimson", fontWeight: 800 }}>{mpErr}</div>
-          ) : null}
-          {!manualsParts ? (
-            <SmallHint>
-              Press “Parts & Manuals” after filling Manufacturer / Model / Symptom.
-            </SmallHint>
-          ) : (
+          {mpErr ? <div style={{ color: "crimson", fontWeight: 800 }}>{mpErr}</div> : null}
+          {!manualsParts ? <SmallHint>Press “Parts & Manuals” after filling Manufacturer / Model / Symptom.</SmallHint> : (
             <div style={{ display: "grid", gap: 10 }}>
               <div style={{ fontWeight: 900 }}>{manualsParts.summary}</div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                <div>
-                  <div style={{ fontWeight: 900 }}>Manuals</div>
-                  <div style={{ display: "grid", gap: 8, marginTop: 6 }}>
-                    {manualsParts.manuals.map((l, i) => (
-                      <a
-                        key={i}
-                        href={l.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        style={{
-                          border: "1px solid #eee",
-                          borderRadius: 10,
-                          padding: 10,
-                          textDecoration: "none",
-                          color: "#111",
-                        }}
-                      >
-                        <div style={{ fontWeight: 900 }}>{l.title}</div>
-                        {l.note ? <SmallHint>{l.note}</SmallHint> : null}
-                      </a>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <div style={{ fontWeight: 900 }}>Parts</div>
-                  <div style={{ display: "grid", gap: 8, marginTop: 6 }}>
-                    {manualsParts.parts.map((l, i) => (
-                      <a
-                        key={i}
-                        href={l.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        style={{
-                          border: "1px solid #eee",
-                          borderRadius: 10,
-                          padding: 10,
-                          textDecoration: "none",
-                          color: "#111",
-                        }}
-                      >
-                        <div style={{ fontWeight: 900 }}>{l.title}</div>
-                        {l.note ? <SmallHint>{l.note}</SmallHint> : null}
-                      </a>
-                    ))}
-                  </div>
-                </div>
+                <div><div style={{ fontWeight: 900 }}>Manuals</div><div style={{ display: "grid", gap: 8, marginTop: 6 }}>{manualsParts.manuals.map((l, i) => <a key={i} href={l.url} target="_blank" rel="noreferrer" style={{ border: "1px solid #eee", borderRadius: 10, padding: 10, textDecoration: "none", color: "#111" }}><div style={{ fontWeight: 900 }}>{l.title}</div>{l.note ? <SmallHint>{l.note}</SmallHint> : null}</a>)}</div></div>
+                <div><div style={{ fontWeight: 900 }}>Parts</div><div style={{ display: "grid", gap: 8, marginTop: 6 }}>{manualsParts.parts.map((l, i) => <a key={i} href={l.url} target="_blank" rel="noreferrer" style={{ border: "1px solid #eee", borderRadius: 10, padding: 10, textDecoration: "none", color: "#111" }}><div style={{ fontWeight: 900 }}>{l.title}</div>{l.note ? <SmallHint>{l.note}</SmallHint> : null}</a>)}</div></div>
               </div>
             </div>
           )}
@@ -2752,132 +1362,22 @@ export default function HVACUnitsPage() {
 
         <SectionCard title="Measurements / Observations">
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            {(symptom.toLowerCase().includes("heat") ? heatingPresets : coolingPresets).map(
-              (p) => (
-                <PillButton
-                  key={p.label}
-                  text={p.label}
-                  onClick={() => applyPreset(p.label, p.unit)}
-                />
-              )
-            )}
-            {measurementOptions.map((m) => (
-              <PillButton
-                key={m}
-                text={m}
-                onClick={() => applyPreset(m, guessDefaultUnit(m))}
-              />
-            ))}
+            {(symptom.toLowerCase().includes("heat") ? heatingPresets : coolingPresets).map((p) => <PillButton key={p.label} text={p.label} onClick={() => applyPreset(p.label, p.unit)} />)}
+            {measurementOptions.map((m) => <PillButton key={m} text={m} onClick={() => applyPreset(m, guessUnit(m))} />)}
           </div>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "2fr 1fr 1fr",
-              gap: 10,
-              marginTop: 12,
-            }}
-          >
-            <div>
-              <label style={{ fontWeight: 900 }}>Label</label>
-              <input
-                value={obsLabel}
-                onChange={(e) => setObsLabel(e.target.value)}
-                style={{ width: "100%", padding: 8 }}
-              />
-            </div>
-            <div>
-              <label style={{ fontWeight: 900 }}>Value</label>
-              <input
-                value={obsValue}
-                onChange={(e) => setObsValue(e.target.value)}
-                style={{ width: "100%", padding: 8 }}
-              />
-            </div>
-            <div>
-              <label style={{ fontWeight: 900 }}>Unit</label>
-              <select
-                value={obsUnit}
-                onChange={(e) => setObsUnit(e.target.value)}
-                style={{ width: "100%", padding: 8 }}
-              >
-                {unitOptions.map((u) => (
-                  <option key={u} value={u}>
-                    {u}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 10, marginTop: 12 }}>
+            <div><label style={{ fontWeight: 900 }}>Label</label><input value={obsLabel} onChange={(e) => setObsLabel(e.target.value)} style={{ width: "100%", padding: 8 }} /></div>
+            <div><label style={{ fontWeight: 900 }}>Value</label><input value={obsValue} onChange={(e) => setObsValue(e.target.value)} style={{ width: "100%", padding: 8 }} /></div>
+            <div><label style={{ fontWeight: 900 }}>Unit</label><select value={obsUnit} onChange={(e) => setObsUnit(e.target.value)} style={{ width: "100%", padding: 8 }}>{unitOptions.map((u) => <option key={u} value={u}>{u}</option>)}</select></div>
           </div>
-
           <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
-            <div>
-              <label style={{ fontWeight: 900 }}>Note (optional)</label>
-              <input
-                value={obsNote}
-                onChange={(e) => setObsNote(e.target.value)}
-                style={{ width: "100%", padding: 8 }}
-              />
-            </div>
-
-            <label
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                userSelect: "none",
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={autoConvert}
-                onChange={(e) => setAutoConvert(e.target.checked)}
-              />
-              Auto-convert (kPa→psi, °C→°F, Pa→inWC)
-            </label>
-
+            <div><label style={{ fontWeight: 900 }}>Note (optional)</label><input value={obsNote} onChange={(e) => setObsNote(e.target.value)} style={{ width: "100%", padding: 8 }} /></div>
+            <label style={{ display: "flex", alignItems: "center", gap: 8, userSelect: "none" }}><input type="checkbox" checked={autoConvert} onChange={(e) => setAutoConvert(e.target.checked)} />Auto-convert (kPa→psi, °C→°F, Pa→inWC)</label>
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <button onClick={addMeasurement} style={{ padding: "10px 14px", fontWeight: 900 }}>
-                Add measurement
-              </button>
-              <button
-                onClick={() => setObservations([])}
-                style={{ padding: "10px 14px", fontWeight: 900 }}
-              >
-                Clear all
-              </button>
+              <button onClick={addMeasurement} style={{ padding: "10px 14px", fontWeight: 900 }}>Add measurement</button>
+              <button onClick={() => setObservations([])} style={{ padding: "10px 14px", fontWeight: 900 }}>Clear all</button>
             </div>
-
-            {observations.length ? (
-              <div style={{ display: "grid", gap: 8 }}>
-                {observations.map((o, idx) => (
-                  <div
-                    key={idx}
-                    style={{
-                      border: "1px solid #eee",
-                      borderRadius: 10,
-                      padding: 10,
-                      display: "flex",
-                      justifyContent: "space-between",
-                      gap: 10,
-                    }}
-                  >
-                    <div>
-                      <div style={{ fontWeight: 900 }}>
-                        {o.label}
-                        <Badge text={`${o.value} ${o.unit}`} />
-                      </div>
-                      {o.note ? <SmallHint>{o.note}</SmallHint> : null}
-                    </div>
-                    <button onClick={() => removeObservation(idx)} style={{ fontWeight: 900 }}>
-                      Remove
-                    </button>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <SmallHint>No measurements added yet.</SmallHint>
-            )}
+            {observations.length ? <div style={{ display: "grid", gap: 8 }}>{observations.map((o, idx) => <div key={idx} style={{ border: "1px solid #eee", borderRadius: 10, padding: 10, display: "flex", justifyContent: "space-between", gap: 10 }}><div><div style={{ fontWeight: 900 }}>{o.label}<Badge text={`${o.value} ${o.unit}`} /></div>{o.note ? <SmallHint>{o.note}</SmallHint> : null}</div><button onClick={() => removeObservation(idx)} style={{ fontWeight: 900 }}>Remove</button></div>)}</div> : <SmallHint>No measurements added yet.</SmallHint>}
           </div>
         </SectionCard>
       </div>
@@ -2885,52 +1385,13 @@ export default function HVACUnitsPage() {
       <div style={{ marginTop: 16 }}>
         {parsed ? (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <SectionCard title="Summary">
-              <div style={{ fontWeight: 900 }}>{parsed.summary || "—"}</div>
-            </SectionCard>
-
+            <SectionCard title="Summary"><div style={{ fontWeight: 900 }}>{parsed.summary || "—"}</div></SectionCard>
             <SectionCard title="Likely causes">
-              {parsed.likely_causes?.length ? (
-                <div style={{ display: "grid", gap: 10 }}>
-                  {parsed.likely_causes.map((c, idx) => (
-                    <div
-                      key={idx}
-                      style={{
-                        borderTop: idx ? "1px solid #eee" : "none",
-                        paddingTop: idx ? 10 : 0,
-                      }}
-                    >
-                      <div style={{ fontWeight: 900 }}>
-                        {c.cause || "Cause"}
-                        {typeof c.probability_percent === "number" ? (
-                          <Badge text={`${c.probability_percent}%`} />
-                        ) : null}
-                      </div>
-                      {typeof c.probability_percent === "number" ? (
-                        <ProbBar pct={c.probability_percent} />
-                      ) : null}
-                      {c.why ? <SmallHint style={{ marginTop: 6 }}>{c.why}</SmallHint> : null}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <SmallHint>No likely causes returned.</SmallHint>
-              )}
+              {parsed.likely_causes?.length ? <div style={{ display: "grid", gap: 10 }}>{parsed.likely_causes.map((c, idx) => <div key={idx} style={{ borderTop: idx ? "1px solid #eee" : "none", paddingTop: idx ? 10 : 0 }}><div style={{ fontWeight: 900 }}>{c.cause || "Cause"}{typeof c.probability_percent === "number" ? <Badge text={`${c.probability_percent}%`} /> : null}</div>{typeof c.probability_percent === "number" ? <ProbBar pct={c.probability_percent} /> : null}{c.why ? <SmallHint style={{ marginTop: 6 }}>{c.why}</SmallHint> : null}</div>)}</div> : <SmallHint>No likely causes returned.</SmallHint>}
             </SectionCard>
-
-            <SectionCard title="Raw output">
-              <pre style={{ whiteSpace: "pre-wrap", margin: 0 }}>
-                {rawResult || "No results yet."}
-              </pre>
-            </SectionCard>
+            <SectionCard title="Raw output"><pre style={{ whiteSpace: "pre-wrap", margin: 0 }}>{rawResult || "No results yet."}</pre></SectionCard>
           </div>
-        ) : (
-          <SectionCard title="Raw output">
-            <pre style={{ whiteSpace: "pre-wrap", margin: 0 }}>
-              {rawResult || "No results yet."}
-            </pre>
-          </SectionCard>
-        )}
+        ) : <SectionCard title="Raw output"><pre style={{ whiteSpace: "pre-wrap", margin: 0 }}>{rawResult || "No results yet."}</pre></SectionCard>}
       </div>
     </div>
   );
