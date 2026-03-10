@@ -237,255 +237,6 @@ const PT_TABLES: Record<string, PTPoint[]> = {
   ],
 };
 
-const SYMPTOM_PACKS: SymptomPack[] = [
-  {
-    id: "no_cooling",
-    label: "No Cooling",
-    defaultSymptom: "Unit not cooling. Space temperature stays high.",
-    nodes: [
-      {
-        id: "a",
-        title: "No Cooling",
-        question: "Is there an active call for cooling?",
-        how: "Verify thermostat / control board / Y signal.",
-        passLabel: "Yes",
-        failLabel: "No",
-        passNext: "b",
-        failNext: "a_end",
-        suggestedMeasurement: "Control Voltage (R-C)",
-      },
-      {
-        id: "b",
-        title: "Cooling Call",
-        question: "Is the indoor blower moving adequate air?",
-        how: "Check filter, blower, wheel, belt, speed, and airflow.",
-        passLabel: "Yes",
-        failLabel: "No",
-        passNext: "c",
-        failNext: "b_end",
-        suggestedMeasurement: "External Static Pressure",
-      },
-      {
-        id: "c",
-        title: "Airflow",
-        question: "Is the compressor and outdoor section running normally?",
-        how: "Check contactor, capacitor, fan motor, amps, overload, and voltage.",
-        passLabel: "Yes",
-        failLabel: "No",
-        passNext: "d",
-        failNext: "c_end",
-        suggestedMeasurement: "Compressor Amps",
-      },
-      {
-        id: "d",
-        title: "Refrigeration",
-        question: "Do pressures and line temps suggest charge / metering issues?",
-        how: "Check suction, liquid, superheat, subcool, delta-T.",
-        passLabel: "Yes",
-        failLabel: "No",
-        passNext: "d_end",
-        failNext: "e",
-        suggestedMeasurement: "Suction Pressure",
-      },
-      {
-        id: "e",
-        title: "Controls / Load",
-        question: "Is economizer / damper / control logic affecting capacity?",
-        how: "Verify damper position, outside air, and staging logic.",
-        passLabel: "Yes",
-        failLabel: "No",
-        passNext: "e_end",
-        failNext: "f_end",
-        suggestedMeasurement: "Return Air Temp",
-      },
-      {
-        id: "a_end",
-        title: "Likely Direction",
-        question:
-          "No cooling call found. Focus on thermostat, wiring, low voltage, or board logic.",
-        terminal: true,
-      },
-      {
-        id: "b_end",
-        title: "Likely Direction",
-        question:
-          "Airflow issue likely. Fix filter, coil, blower, belt, or static restriction first.",
-        terminal: true,
-      },
-      {
-        id: "c_end",
-        title: "Likely Direction",
-        question: "Electrical / compressor / condenser section issue likely.",
-        terminal: true,
-      },
-      {
-        id: "d_end",
-        title: "Likely Direction",
-        question:
-          "Charge, metering, or restriction issue likely. Confirm with superheat/subcool.",
-        terminal: true,
-      },
-      {
-        id: "e_end",
-        title: "Likely Direction",
-        question: "Control / economizer / ventilation issue likely.",
-        terminal: true,
-      },
-      {
-        id: "f_end",
-        title: "Done",
-        question: "Collect more readings and run Diagnose again for tighter guidance.",
-        terminal: true,
-      },
-    ],
-  },
-  {
-    id: "freezing_up",
-    label: "Freezing Up",
-    defaultSymptom: "Evaporator / suction line freezing up.",
-    nodes: [
-      {
-        id: "a",
-        title: "Freezing Up",
-        question: "Is airflow restricted?",
-        how: "Check filter, blower, coil, registers, and static.",
-        passLabel: "No",
-        failLabel: "Yes",
-        passNext: "b",
-        failNext: "a_end",
-        suggestedMeasurement: "External Static Pressure",
-      },
-      {
-        id: "b",
-        title: "Airflow OK",
-        question: "Is suction pressure low and superheat high?",
-        how: "Check suction, line temp, saturation temp.",
-        passLabel: "Yes",
-        failLabel: "No",
-        passNext: "b_end",
-        failNext: "c",
-        suggestedMeasurement: "Superheat",
-      },
-      {
-        id: "c",
-        title: "Refrigeration",
-        question: "Is TXV / metering device feeding poorly or hunting?",
-        how: "Compare SH/SC and bulb / equalizer condition.",
-        passLabel: "Yes",
-        failLabel: "No",
-        passNext: "c_end",
-        failNext: "d_end",
-        suggestedMeasurement: "Subcool",
-      },
-      {
-        id: "a_end",
-        title: "Likely Direction",
-        question: "Airflow restriction likely caused the freeze-up.",
-        terminal: true,
-      },
-      {
-        id: "b_end",
-        title: "Likely Direction",
-        question: "Low charge or restriction likely.",
-        terminal: true,
-      },
-      {
-        id: "c_end",
-        title: "Likely Direction",
-        question: "Metering device issue likely.",
-        terminal: true,
-      },
-      {
-        id: "d_end",
-        title: "Done",
-        question: "Use more readings and Diagnose again for tighter guidance.",
-        terminal: true,
-      },
-    ],
-  },
-  {
-    id: "no_heat_gas",
-    label: "No Heat (Gas)",
-    defaultSymptom: "Gas heat not working.",
-    nodes: [
-      {
-        id: "a",
-        title: "No Heat",
-        question: "Is there a call for heat?",
-        how: "Verify W call and thermostat state.",
-        passLabel: "Yes",
-        failLabel: "No",
-        passNext: "b",
-        failNext: "a_end",
-        suggestedMeasurement: "Control Voltage (R-W)",
-      },
-      {
-        id: "b",
-        title: "Heat Call",
-        question: "Does inducer start and pressure switch prove?",
-        how: "Check venting, tubing, switch, draft.",
-        passLabel: "Yes",
-        failLabel: "No",
-        passNext: "c",
-        failNext: "b_end",
-        suggestedMeasurement: "Pressure Switch Status",
-      },
-      {
-        id: "c",
-        title: "Ignition",
-        question: "Does the igniter light burners and does flame prove?",
-        how: "Check igniter, gas valve, flame sensor µA.",
-        passLabel: "Yes",
-        failLabel: "No",
-        passNext: "d",
-        failNext: "c_end",
-        suggestedMeasurement: "Flame Sensor",
-      },
-      {
-        id: "d",
-        title: "Heat Delivery",
-        question: "Is airflow / heat rise normal without tripping limit?",
-        how: "Check heat rise, blower, filter, static.",
-        passLabel: "Yes",
-        failLabel: "No",
-        passNext: "d_end",
-        failNext: "e_end",
-        suggestedMeasurement: "Heat Rise",
-      },
-      {
-        id: "a_end",
-        title: "Likely Direction",
-        question: "No heat call found. Focus on thermostat, wiring, or board.",
-        terminal: true,
-      },
-      {
-        id: "b_end",
-        title: "Likely Direction",
-        question: "Inducer / pressure switch / venting issue likely.",
-        terminal: true,
-      },
-      {
-        id: "c_end",
-        title: "Likely Direction",
-        question: "Ignition, gas valve, or flame proving issue likely.",
-        terminal: true,
-      },
-      {
-        id: "d_end",
-        title: "Done",
-        question: "Sequence is normal. Re-check complaint details and staging.",
-        terminal: true,
-      },
-      {
-        id: "e_end",
-        title: "Likely Direction",
-        question: "Airflow / limit trip issue likely.",
-        terminal: true,
-      },
-    ],
-  },
-];
-
 function SectionCard(props: {
   title: string;
   children: React.ReactNode;
@@ -653,7 +404,9 @@ function guessDefaultUnit(label: string) {
     s.includes("subcool") ||
     s.includes("delta") ||
     s.includes("heat rise") ||
-    s.includes("saturation")
+    s.includes("saturation") ||
+    s.includes("box temp") ||
+    s.includes("coil temp")
   ) {
     return "°F";
   }
@@ -689,9 +442,12 @@ function getObservationValue(
     const o = observations[i];
     const label = normalizeLabel(o.label);
     if (!matcher(label)) continue;
+
     const n = toNumber(o.value);
     if (n === null) continue;
+
     if (!preferredUnit || o.unit === preferredUnit) return n;
+
     const converted = convertToStandard(n, o.unit);
     if (converted && converted.unit === preferredUnit) return converted.value;
   }
@@ -701,8 +457,10 @@ function getObservationValue(
 function ptEstimateTempF(refrigerant: string, psi: number): number | null {
   const table = PT_TABLES[refrigerant];
   if (!table || !table.length || !Number.isFinite(psi)) return null;
+
   if (psi <= table[0].psi) return table[0].tempF;
   if (psi >= table[table.length - 1].psi) return table[table.length - 1].tempF;
+
   for (let i = 0; i < table.length - 1; i++) {
     const a = table[i];
     const b = table[i + 1];
@@ -711,6 +469,7 @@ function ptEstimateTempF(refrigerant: string, psi: number): number | null {
       return round1(a.tempF + (b.tempF - a.tempF) * ratio);
     }
   }
+
   return null;
 }
 
@@ -719,21 +478,28 @@ function analyzeCharge(
   equipmentType: string,
   refrigerantType: string
 ): ChargeAnalysis {
-  const returnAir = getObservationValue(
-    observations,
-    (l) => l.includes("return air temp") || (l.includes("return") && l.includes("temp")),
-    "°F"
-  );
-  const supplyAir = getObservationValue(
-    observations,
-    (l) => l.includes("supply air temp") || (l.includes("supply") && l.includes("temp")),
-    "°F"
-  );
+  const returnAir =
+    getObservationValue(
+      observations,
+      (l) => l.includes("return air temp") || (l.includes("return") && l.includes("temp")),
+      "°F"
+    ) ??
+    getObservationValue(observations, (l) => l.includes("box temp"), "°F");
+
+  const supplyAir =
+    getObservationValue(
+      observations,
+      (l) => l.includes("supply air temp") || (l.includes("supply") && l.includes("temp")),
+      "°F"
+    ) ??
+    getObservationValue(observations, (l) => l.includes("evap coil temp"), "°F");
+
   const suctionPressure = getObservationValue(
     observations,
     (l) => l === "suction pressure" || (l.includes("suction") && l.includes("pressure")),
     "psi"
   );
+
   const liquidPressure = getObservationValue(
     observations,
     (l) =>
@@ -742,25 +508,31 @@ function analyzeCharge(
       ((l.includes("liquid") || l.includes("head")) && l.includes("pressure")),
     "psi"
   );
+
   const suctionLineTemp =
     getObservationValue(observations, (l) => l.includes("suction line temp"), "°F") ??
     getObservationValue(observations, (l) => l.includes("suction temp"), "°F");
+
   const liquidLineTemp =
     getObservationValue(observations, (l) => l.includes("liquid line temp"), "°F") ??
     getObservationValue(observations, (l) => l.includes("liquid temp"), "°F");
+
   const enteredEvapSat =
     getObservationValue(observations, (l) => l.includes("suction saturation temp"), "°F") ??
     getObservationValue(observations, (l) => l.includes("evap saturation temp"), "°F") ??
     getObservationValue(observations, (l) => l.includes("evaporator saturation temp"), "°F");
+
   const enteredCondSat =
     getObservationValue(observations, (l) => l.includes("condensing saturation temp"), "°F") ??
     getObservationValue(observations, (l) => l.includes("liquid saturation temp"), "°F") ??
     getObservationValue(observations, (l) => l.includes("condenser saturation temp"), "°F");
+
   const enteredSuperheat = getObservationValue(
     observations,
     (l) => l === "superheat" || l.includes(" superheat"),
     "°F"
   );
+
   const enteredSubcool = getObservationValue(
     observations,
     (l) => l === "subcool" || l.includes("subcool"),
@@ -960,6 +732,7 @@ function analyzeAirflow(observations: Observation[]): AirflowAnalysis {
   if (returnStatic !== null && supplyStatic !== null) {
     const returnAbs = Math.abs(returnStatic);
     const supplyAbs = Math.abs(supplyStatic);
+
     if (returnAbs > supplyAbs * 1.35) {
       findings.push("Return side is carrying more restriction than supply side.");
     } else if (supplyAbs > returnAbs * 1.35) {
@@ -1469,6 +1242,593 @@ function buildServiceReportHtml(args: {
 </html>`;
 }
 
+const SYMPTOM_PACKS: SymptomPack[] = [
+  {
+    id: "no_cooling",
+    label: "No Cooling",
+    defaultSymptom: "Unit not cooling. Space temperature stays high.",
+    nodes: [
+      {
+        id: "a",
+        title: "No Cooling",
+        question: "Is there an active call for cooling?",
+        how: "Verify thermostat / control board / Y signal.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "b",
+        failNext: "a_end",
+        suggestedMeasurement: "Control Voltage (R-C)",
+      },
+      {
+        id: "b",
+        title: "Cooling Call",
+        question: "Is the indoor blower moving adequate air?",
+        how: "Check filter, blower, wheel, belt, speed, and airflow.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "c",
+        failNext: "b_end",
+        suggestedMeasurement: "External Static Pressure",
+      },
+      {
+        id: "c",
+        title: "Airflow",
+        question: "Is the compressor and outdoor section running normally?",
+        how: "Check contactor, capacitor, fan motor, amps, overload, and voltage.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "d",
+        failNext: "c_end",
+        suggestedMeasurement: "Compressor Amps",
+      },
+      {
+        id: "d",
+        title: "Refrigeration",
+        question: "Do pressures and line temps suggest charge / metering issues?",
+        how: "Check suction, liquid, superheat, subcool, delta-T.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "d_end",
+        failNext: "e",
+        suggestedMeasurement: "Suction Pressure",
+      },
+      {
+        id: "e",
+        title: "Controls / Load",
+        question: "Is economizer / damper / control logic affecting capacity?",
+        how: "Verify damper position, outside air, and staging logic.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "e_end",
+        failNext: "f_end",
+        suggestedMeasurement: "Return Air Temp",
+      },
+      {
+        id: "a_end",
+        title: "Likely Direction",
+        question:
+          "No cooling call found. Focus on thermostat, wiring, low voltage, or board logic.",
+        terminal: true,
+      },
+      {
+        id: "b_end",
+        title: "Likely Direction",
+        question:
+          "Airflow issue likely. Fix filter, coil, blower, belt, or static restriction first.",
+        terminal: true,
+      },
+      {
+        id: "c_end",
+        title: "Likely Direction",
+        question: "Electrical / compressor / condenser section issue likely.",
+        terminal: true,
+      },
+      {
+        id: "d_end",
+        title: "Likely Direction",
+        question:
+          "Charge, metering, or restriction issue likely. Confirm with superheat/subcool.",
+        terminal: true,
+      },
+      {
+        id: "e_end",
+        title: "Likely Direction",
+        question: "Control / economizer / ventilation issue likely.",
+        terminal: true,
+      },
+      {
+        id: "f_end",
+        title: "Done",
+        question: "Collect more readings and run Diagnose again for tighter guidance.",
+        terminal: true,
+      },
+    ],
+  },
+  {
+    id: "freezing_up",
+    label: "Freezing Up",
+    defaultSymptom: "Evaporator / suction line freezing up.",
+    nodes: [
+      {
+        id: "a",
+        title: "Freezing Up",
+        question: "Is airflow restricted?",
+        how: "Check filter, blower, coil, registers, and static.",
+        passLabel: "No",
+        failLabel: "Yes",
+        passNext: "b",
+        failNext: "a_end",
+        suggestedMeasurement: "External Static Pressure",
+      },
+      {
+        id: "b",
+        title: "Airflow OK",
+        question: "Is suction pressure low and superheat high?",
+        how: "Check suction, line temp, saturation temp.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "b_end",
+        failNext: "c",
+        suggestedMeasurement: "Superheat",
+      },
+      {
+        id: "c",
+        title: "Refrigeration",
+        question: "Is TXV / metering device feeding poorly or hunting?",
+        how: "Compare SH/SC and bulb / equalizer condition.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "c_end",
+        failNext: "d_end",
+        suggestedMeasurement: "Subcool",
+      },
+      {
+        id: "a_end",
+        title: "Likely Direction",
+        question: "Airflow restriction likely caused the freeze-up.",
+        terminal: true,
+      },
+      {
+        id: "b_end",
+        title: "Likely Direction",
+        question: "Low charge or restriction likely.",
+        terminal: true,
+      },
+      {
+        id: "c_end",
+        title: "Likely Direction",
+        question: "Metering device issue likely.",
+        terminal: true,
+      },
+      {
+        id: "d_end",
+        title: "Done",
+        question: "Use more readings and Diagnose again for tighter guidance.",
+        terminal: true,
+      },
+    ],
+  },
+  {
+    id: "no_heat_gas",
+    label: "No Heat (Gas)",
+    defaultSymptom: "Gas heat not working.",
+    nodes: [
+      {
+        id: "a",
+        title: "No Heat",
+        question: "Is there a call for heat?",
+        how: "Verify W call and thermostat state.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "b",
+        failNext: "a_end",
+        suggestedMeasurement: "Control Voltage (R-W)",
+      },
+      {
+        id: "b",
+        title: "Heat Call",
+        question: "Does inducer start and pressure switch prove?",
+        how: "Check venting, tubing, switch, draft.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "c",
+        failNext: "b_end",
+        suggestedMeasurement: "Pressure Switch Status",
+      },
+      {
+        id: "c",
+        title: "Ignition",
+        question: "Does the igniter light burners and does flame prove?",
+        how: "Check igniter, gas valve, flame sensor µA.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "d",
+        failNext: "c_end",
+        suggestedMeasurement: "Flame Sensor",
+      },
+      {
+        id: "d",
+        title: "Heat Delivery",
+        question: "Is airflow / heat rise normal without tripping limit?",
+        how: "Check heat rise, blower, filter, static.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "d_end",
+        failNext: "e_end",
+        suggestedMeasurement: "Heat Rise",
+      },
+      {
+        id: "a_end",
+        title: "Likely Direction",
+        question: "No heat call found. Focus on thermostat, wiring, or board.",
+        terminal: true,
+      },
+      {
+        id: "b_end",
+        title: "Likely Direction",
+        question: "Inducer / pressure switch / venting issue likely.",
+        terminal: true,
+      },
+      {
+        id: "c_end",
+        title: "Likely Direction",
+        question: "Ignition, gas valve, or flame proving issue likely.",
+        terminal: true,
+      },
+      {
+        id: "d_end",
+        title: "Done",
+        question: "Sequence is normal. Re-check complaint details and staging.",
+        terminal: true,
+      },
+      {
+        id: "e_end",
+        title: "Likely Direction",
+        question: "Airflow / limit trip issue likely.",
+        terminal: true,
+      },
+    ],
+  },
+  {
+    id: "box_warm_refrigeration",
+    label: "Box Warm",
+    defaultSymptom: "Refrigeration box temperature is too warm.",
+    nodes: [
+      {
+        id: "a",
+        title: "Box Warm",
+        question: "Is the box temp above setpoint and calling for cooling?",
+        how: "Verify thermostat/controller call and actual box temp.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "b",
+        failNext: "a_end",
+        suggestedMeasurement: "Box Temp",
+      },
+      {
+        id: "b",
+        title: "Cooling Call",
+        question: "Is the evaporator fan running and moving air?",
+        how: "Check evaporator fan motors, blade rotation, door switch, and ice blockage.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "c",
+        failNext: "b_end",
+        suggestedMeasurement: "Evap Coil Temp",
+      },
+      {
+        id: "c",
+        title: "Refrigeration Circuit",
+        question: "Are suction/head readings consistent with normal refrigeration?",
+        how: "Check suction pressure, head pressure, superheat, subcool, and line temps.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "d",
+        failNext: "c_end",
+        suggestedMeasurement: "Suction Pressure",
+      },
+      {
+        id: "d",
+        title: "Box Load / Defrost",
+        question: "Is defrost, door infiltration, or high product load causing the warm box?",
+        how: "Check defrost operation, door gaskets, door openings, and product loading.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "d_end",
+        failNext: "e_end",
+        suggestedMeasurement: "Defrost Timer State",
+      },
+      {
+        id: "a_end",
+        title: "Likely Direction",
+        question: "No active cooling demand. Check control, sensor, or setpoint issue.",
+        terminal: true,
+      },
+      {
+        id: "b_end",
+        title: "Likely Direction",
+        question: "Evaporator airflow issue likely.",
+        terminal: true,
+      },
+      {
+        id: "c_end",
+        title: "Likely Direction",
+        question: "Charge, metering, compressor, or restriction issue likely.",
+        terminal: true,
+      },
+      {
+        id: "d_end",
+        title: "Likely Direction",
+        question: "Defrost, infiltration, or load issue likely.",
+        terminal: true,
+      },
+      {
+        id: "e_end",
+        title: "Done",
+        question: "Collect more readings and run Diagnose again for tighter guidance.",
+        terminal: true,
+      },
+    ],
+  },
+  {
+    id: "iced_evap",
+    label: "Iced Evaporator",
+    defaultSymptom: "Evaporator coil is iced up / frosted over.",
+    nodes: [
+      {
+        id: "a",
+        title: "Iced Coil",
+        question: "Is evaporator airflow restricted?",
+        how: "Check fan motors, fan blades, dirty coil, blocked discharge, and ice coverage.",
+        passLabel: "No",
+        failLabel: "Yes",
+        passNext: "b",
+        failNext: "a_end",
+        suggestedMeasurement: "Evap Coil Temp",
+      },
+      {
+        id: "b",
+        title: "Airflow OK",
+        question: "Is the system failing to defrost?",
+        how: "Check timer/board, heaters, termination stat, and drain condition.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "b_end",
+        failNext: "c",
+        suggestedMeasurement: "Defrost Heater Amps",
+      },
+      {
+        id: "c",
+        title: "Refrigeration Feed",
+        question: "Do readings suggest low charge or underfeeding evaporator?",
+        how: "Check suction pressure, superheat, and liquid feed condition.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "c_end",
+        failNext: "d_end",
+        suggestedMeasurement: "Superheat",
+      },
+      {
+        id: "a_end",
+        title: "Likely Direction",
+        question: "Airflow problem likely caused the icing.",
+        terminal: true,
+      },
+      {
+        id: "b_end",
+        title: "Likely Direction",
+        question: "Defrost failure likely caused the icing.",
+        terminal: true,
+      },
+      {
+        id: "c_end",
+        title: "Likely Direction",
+        question: "Low charge, restriction, or metering issue likely.",
+        terminal: true,
+      },
+      {
+        id: "d_end",
+        title: "Done",
+        question: "Use more readings and Diagnose again for tighter guidance.",
+        terminal: true,
+      },
+    ],
+  },
+  {
+    id: "defrost_failure",
+    label: "Defrost Failure",
+    defaultSymptom: "Unit is not defrosting correctly.",
+    nodes: [
+      {
+        id: "a",
+        title: "Defrost Failure",
+        question: "Is the unit entering defrost?",
+        how: "Check timer, board, controller, and programmed schedule.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "b",
+        failNext: "a_end",
+        suggestedMeasurement: "Defrost Timer State",
+      },
+      {
+        id: "b",
+        title: "In Defrost",
+        question: "Are defrost heaters energized?",
+        how: "Check heater amps, voltage, and continuity.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "c",
+        failNext: "b_end",
+        suggestedMeasurement: "Defrost Heater Amps",
+      },
+      {
+        id: "c",
+        title: "Termination",
+        question: "Is the termination control ending defrost correctly?",
+        how: "Check termination stat / sensor and coil temp response.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "c_end",
+        failNext: "d_end",
+        suggestedMeasurement: "Termination Stat State",
+      },
+      {
+        id: "a_end",
+        title: "Likely Direction",
+        question: "Defrost initiation control issue likely.",
+        terminal: true,
+      },
+      {
+        id: "b_end",
+        title: "Likely Direction",
+        question: "Defrost heater circuit issue likely.",
+        terminal: true,
+      },
+      {
+        id: "c_end",
+        title: "Done",
+        question:
+          "Defrost sequence appears functional. Check load, infiltration, and drain issues.",
+        terminal: true,
+      },
+      {
+        id: "d_end",
+        title: "Likely Direction",
+        question: "Termination sensor / thermostat issue likely.",
+        terminal: true,
+      },
+    ],
+  },
+  {
+    id: "short_cycling_refrigeration",
+    label: "Short Cycling",
+    defaultSymptom: "Refrigeration system is short cycling.",
+    nodes: [
+      {
+        id: "a",
+        title: "Short Cycling",
+        question: "Is control demand rapidly opening and closing?",
+        how: "Check thermostat/controller differential and sensor placement.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "a_end",
+        failNext: "b",
+        suggestedMeasurement: "Box Temp",
+      },
+      {
+        id: "b",
+        title: "Compressor Cycling",
+        question: "Is the compressor tripping on overload or protection?",
+        how: "Check amps, voltage, capacitor, condenser airflow, and discharge conditions.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "b_end",
+        failNext: "c",
+        suggestedMeasurement: "Compressor Amps",
+      },
+      {
+        id: "c",
+        title: "Pressure Related",
+        question: "Are pressure controls or refrigeration conditions causing cycling?",
+        how: "Check head pressure, suction pressure, low ambient control, and charge condition.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "c_end",
+        failNext: "d_end",
+        suggestedMeasurement: "Head Pressure",
+      },
+      {
+        id: "a_end",
+        title: "Likely Direction",
+        question: "Controller / sensor / differential issue likely.",
+        terminal: true,
+      },
+      {
+        id: "b_end",
+        title: "Likely Direction",
+        question: "Compressor protection / electrical issue likely.",
+        terminal: true,
+      },
+      {
+        id: "c_end",
+        title: "Likely Direction",
+        question: "Pressure control, charge, airflow, or ambient issue likely.",
+        terminal: true,
+      },
+      {
+        id: "d_end",
+        title: "Done",
+        question: "Collect more readings and run Diagnose again for tighter guidance.",
+        terminal: true,
+      },
+    ],
+  },
+  {
+    id: "compressor_not_starting_ref",
+    label: "Compressor Not Starting",
+    defaultSymptom: "Refrigeration compressor will not start.",
+    nodes: [
+      {
+        id: "a",
+        title: "Compressor Not Starting",
+        question: "Is there a call for cooling from the control?",
+        how: "Check controller output, thermostat, contactor coil, and safeties.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "b",
+        failNext: "a_end",
+        suggestedMeasurement: "Control Voltage (R-C)",
+      },
+      {
+        id: "b",
+        title: "Call Present",
+        question: "Is line voltage present at the compressor circuit?",
+        how: "Check disconnect, contactor, breaker, wiring, and overload path.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "c",
+        failNext: "b_end",
+        suggestedMeasurement: "Line Voltage",
+      },
+      {
+        id: "c",
+        title: "Electrical Start",
+        question: "Are capacitor, relay, or compressor windings preventing start?",
+        how: "Check capacitor, start components, winding resistance, and locked rotor condition.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "c_end",
+        failNext: "d_end",
+        suggestedMeasurement: "Compressor Amps",
+      },
+      {
+        id: "a_end",
+        title: "Likely Direction",
+        question: "No cooling call or control path issue likely.",
+        terminal: true,
+      },
+      {
+        id: "b_end",
+        title: "Likely Direction",
+        question: "Power supply / contactor / safety circuit issue likely.",
+        terminal: true,
+      },
+      {
+        id: "c_end",
+        title: "Likely Direction",
+        question: "Capacitor, relay, overload, or compressor failure likely.",
+        terminal: true,
+      },
+      {
+        id: "d_end",
+        title: "Done",
+        question: "Collect more electrical readings and run Diagnose again.",
+        terminal: true,
+      },
+    ],
+  },
+];
+
 export default function HVACUnitsPage() {
   const [customerName, setCustomerName] = useState("");
   const [siteName, setSiteName] = useState("");
@@ -1650,6 +2010,26 @@ export default function HVACUnitsPage() {
     { label: "Control Voltage (R-W)", unit: "volts" },
   ];
 
+  const refrigerationPresets = [
+    { label: "Box Temp", unit: "°F" },
+    { label: "Evap Coil Temp", unit: "°F" },
+    { label: "Suction Pressure", unit: "psi" },
+    { label: "Head Pressure", unit: "psi" },
+    { label: "Liquid Pressure", unit: "psi" },
+    { label: "Suction Line Temp", unit: "°F" },
+    { label: "Liquid Line Temp", unit: "°F" },
+    { label: "Suction Saturation Temp", unit: "°F" },
+    { label: "Condensing Saturation Temp", unit: "°F" },
+    { label: "Superheat", unit: "°F" },
+    { label: "Subcool", unit: "°F" },
+    { label: "Defrost Heater Amps", unit: "amps" },
+    { label: "Termination Stat State", unit: "other" },
+    { label: "Defrost Timer State", unit: "other" },
+    { label: "Compressor Amps", unit: "amps" },
+    { label: "Line Voltage", unit: "volts" },
+    { label: "Control Voltage (R-C)", unit: "volts" },
+  ];
+
   function resetFlowForPack(packId: string) {
     const pack = SYMPTOM_PACKS.find((p) => p.id === packId) || SYMPTOM_PACKS[0];
     setFlowNodeId(pack.nodes[0]?.id || "");
@@ -1704,7 +2084,6 @@ export default function HVACUnitsPage() {
     if (!label || !rawValue) return;
 
     const n = toNumber(rawValue);
-
     let chosenUnit = unit === "other" ? guessDefaultUnit(label) : unit;
     let finalValue = rawValue;
     let finalUnit = chosenUnit;
@@ -2058,39 +2437,39 @@ export default function HVACUnitsPage() {
   }
 
   function openPrintableReport() {
-  const html = buildServiceReportHtml({
-    customerName,
-    siteName,
-    siteAddress,
-    unitNickname,
-    propertyType,
-    equipmentType,
-    manufacturer,
-    model,
-    refrigerantType,
-    symptom,
-    observations,
-    parsed,
-    nameplate,
-    chargeAnalysis,
-    airflowAnalysis,
-    equipmentMemory,
-  });
+    const html = buildServiceReportHtml({
+      customerName,
+      siteName,
+      siteAddress,
+      unitNickname,
+      propertyType,
+      equipmentType,
+      manufacturer,
+      model,
+      refrigerantType,
+      symptom,
+      observations,
+      parsed,
+      nameplate,
+      chargeAnalysis,
+      airflowAnalysis,
+      equipmentMemory,
+    });
 
-  const blob = new Blob([html], { type: "text/html" });
-  const url = URL.createObjectURL(blob);
+    const blob = new Blob([html], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const win = window.open(url, "_blank", "noopener,noreferrer,width=1000,height=900");
 
-  const win = window.open(url, "_blank", "noopener,noreferrer,width=1000,height=900");
-  if (!win) {
-    alert("Popup blocked. Please allow popups for this site.");
-    URL.revokeObjectURL(url);
-    return;
+    if (!win) {
+      alert("Popup blocked. Please allow popups for this site.");
+      URL.revokeObjectURL(url);
+      return;
+    }
+
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 60000);
   }
-
-  setTimeout(() => {
-    URL.revokeObjectURL(url);
-  }, 60000);
-}
 
   return (
     <div style={{ padding: 20, maxWidth: 1220, margin: "0 auto" }}>
@@ -2235,6 +2614,11 @@ export default function HVACUnitsPage() {
               <option>Boiler</option>
               <option>Chiller</option>
               <option>Make-Up Air Unit</option>
+              <option>Walk-In Cooler</option>
+              <option>Walk-In Freezer</option>
+              <option>Reach-In Cooler</option>
+              <option>Reach-In Freezer</option>
+              <option>Merchandiser</option>
             </select>
           </div>
 
@@ -3064,15 +3448,21 @@ export default function HVACUnitsPage() {
 
         <SectionCard title="Measurements / Observations">
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            {(symptom.toLowerCase().includes("heat") ? heatingPresets : coolingPresets).map(
-              (p) => (
-                <PillButton
-                  key={p.label}
-                  text={p.label}
-                  onClick={() => applyPreset(p.label, p.unit)}
-                />
-              )
-            )}
+            {(
+              equipmentType.toLowerCase().includes("cooler") ||
+              equipmentType.toLowerCase().includes("freezer") ||
+              equipmentType.toLowerCase().includes("merchandiser")
+                ? refrigerationPresets
+                : symptom.toLowerCase().includes("heat")
+                ? heatingPresets
+                : coolingPresets
+            ).map((p) => (
+              <PillButton
+                key={p.label}
+                text={p.label}
+                onClick={() => applyPreset(p.label, p.unit)}
+              />
+            ))}
             {measurementOptions.map((m) => (
               <PillButton
                 key={m}
