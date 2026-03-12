@@ -1,5 +1,7 @@
 "use client";
 
+import { toNumber, round1 } from "./lib/basicHelpers";
+
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   deleteUnit,
@@ -360,15 +362,6 @@ async function safeJson(res: Response) {
   } catch {
     return { result: txt };
   }
-}
-
-function toNumber(s: string): number | null {
-  const n = Number(String(s).replace(/[^\d.\-]/g, ""));
-  return Number.isFinite(n) ? n : null;
-}
-
-function round1(n: number) {
-  return Math.round(n * 10) / 10;
 }
 
 function escapeHtml(input: string) {
