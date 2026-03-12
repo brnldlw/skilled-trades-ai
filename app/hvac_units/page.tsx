@@ -10,6 +10,15 @@ import {
   type SavedUnitRecord,
 } from "../lib/unit-store";
 
+import {
+  refrigerantOptions,
+  unitOptions,
+  coolingPresets,
+  heatingPresets,
+  refrigerationPresets,
+  miniSplitPresets,
+} from "./data/presets";
+
 type Diagnosis = {
   summary?: string;
   likely_causes?: {
@@ -2438,21 +2447,7 @@ export default function HVACUnitsPage() {
   const [model, setModel] = useState("");
   const [symptom, setSymptom] = useState("");
 
-  const refrigerantOptions = [
-    "Unknown",
-    "R-410A",
-    "R-22",
-    "R-32",
-    "R-454B",
-    "R-134a",
-    "R-407C",
-    "R-404A",
-    "R-448A",
-    "R-449A",
-    "R-290 (Propane)",
-    "R-600a (Isobutane)",
-  ];
-  const [refrigerantType, setRefrigerantType] = useState<string>("Unknown");
+   const [refrigerantType, setRefrigerantType] = useState<string>("Unknown");
 
   const [rawResult, setRawResult] = useState("");
   const [loading, setLoading] = useState(false);
@@ -2563,95 +2558,6 @@ const defrostRepairGuidance = useMemo(
 
   const measurementOptions =
     parsed?.field_measurements_to_collect?.map((m) => m.measurement) || [];
-
-  const unitOptions = [
-    "psi",
-    "kPa",
-    "bar",
-    "°F",
-    "°C",
-    "amps",
-    "volts",
-    "inWC",
-    "Pa",
-    "ohms",
-    "µA",
-    "%",
-    "other",
-  ];
-
-  const coolingPresets = [
-    { label: "Suction Pressure", unit: "psi" },
-    { label: "Liquid Pressure", unit: "psi" },
-    { label: "Return Air Temp", unit: "°F" },
-    { label: "Supply Air Temp", unit: "°F" },
-    { label: "Suction Line Temp", unit: "°F" },
-    { label: "Liquid Line Temp", unit: "°F" },
-    { label: "Suction Saturation Temp", unit: "°F" },
-    { label: "Condensing Saturation Temp", unit: "°F" },
-    { label: "Superheat", unit: "°F" },
-    { label: "Subcool", unit: "°F" },
-    { label: "Delta T (Return-Supply)", unit: "°F" },
-    { label: "Return Static", unit: "inWC" },
-    { label: "Supply Static", unit: "inWC" },
-    { label: "Filter Pressure Drop", unit: "inWC" },
-    { label: "Coil Pressure Drop", unit: "inWC" },
-    { label: "External Static Pressure", unit: "inWC" },
-    { label: "Compressor Amps", unit: "amps" },
-    { label: "Line Voltage", unit: "volts" },
-    { label: "Control Voltage (R-C)", unit: "volts" },
-  ];
-
-  const heatingPresets = [
-    { label: "Gas Inlet Pressure", unit: "inWC" },
-    { label: "Manifold Pressure", unit: "inWC" },
-    { label: "Heat Rise", unit: "°F" },
-    { label: "Return Static", unit: "inWC" },
-    { label: "Supply Static", unit: "inWC" },
-    { label: "Filter Pressure Drop", unit: "inWC" },
-    { label: "Coil Pressure Drop", unit: "inWC" },
-    { label: "Inducer Amps", unit: "amps" },
-    { label: "Flame Sensor", unit: "µA" },
-    { label: "Limit Switch Continuity", unit: "ohms" },
-    { label: "Line Voltage", unit: "volts" },
-    { label: "Control Voltage (R-W)", unit: "volts" },
-  ];
-
-  const miniSplitPresets = [
-  { label: "Return Air Temp", unit: "°F" },
-  { label: "Supply Air Temp", unit: "°F" },
-  { label: "Suction Pressure", unit: "psi" },
-  { label: "Liquid Pressure", unit: "psi" },
-  { label: "Suction Line Temp", unit: "°F" },
-  { label: "Liquid Line Temp", unit: "°F" },
-  { label: "Suction Saturation Temp", unit: "°F" },
-  { label: "Condensing Saturation Temp", unit: "°F" },
-  { label: "Superheat", unit: "°F" },
-  { label: "Subcool", unit: "°F" },
-  { label: "Compressor Amps", unit: "amps" },
-  { label: "Line Voltage", unit: "volts" },
-  { label: "Control Voltage (R-C)", unit: "volts" },
-];
-
-  const refrigerationPresets = [
-    { label: "Box Temp", unit: "°F" },
-    { label: "Evap Coil Temp", unit: "°F" },
-    { label: "Suction Pressure", unit: "psi" },
-    { label: "Head Pressure", unit: "psi" },
-    { label: "Liquid Pressure", unit: "psi" },
-    { label: "Suction Line Temp", unit: "°F" },
-    { label: "Liquid Line Temp", unit: "°F" },
-    { label: "Suction Saturation Temp", unit: "°F" },
-    { label: "Condensing Saturation Temp", unit: "°F" },
-    { label: "Superheat", unit: "°F" },
-    { label: "Subcool", unit: "°F" },
-    { label: "Defrost Heater Amps", unit: "amps" },
-    { label: "Termination Stat State", unit: "other" },
-    { label: "Defrost Timer State", unit: "other" },
-    { label: "Compressor Amps", unit: "amps" },
-    { label: "Line Voltage", unit: "volts" },
-    { label: "Control Voltage (R-C)", unit: "volts" },
-  ];
 
   function resetFlowForPack(packId: string) {
     const pack = SYMPTOM_PACKS.find((p) => p.id === packId) || SYMPTOM_PACKS[0];
