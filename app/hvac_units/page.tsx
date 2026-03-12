@@ -364,12 +364,26 @@ function round1(n: number) {
 
 function escapeHtml(input: string) {
   return input
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+    .split("&").join("&amp;")
+    .split("<").join("&lt;")
+    .split(">").join("&gt;")
+    .split('"').join("&quot;")
+    .split("'").join("&#039;");
 }
+
+function formatRawOutput(raw: string) {
+  if (!raw) return "No results yet.";
+
+  const trimmed = raw.trim();
+
+  try {
+    const parsed = JSON.parse(trimmed);
+    return JSON.stringify(parsed, null, 2);
+  } catch {
+    return trimmed;
+  }
+}
+
 
 function convertToStandard(
   value: number,
@@ -805,6 +819,350 @@ function analyzeAirflow(observations: Observation[]): AirflowAnalysis {
     summary,
     findings,
   };
+}
+
+function analyzeDefrost(
+  observations: Observation[],
+  equipmentType: string,
+  symptom: string
+) {
+  const timerStateRaw = observations
+    .slice()
+    .reverse()
+    .find((o) => normalizeLabel(o.label).includes("defrost timer state"))?.value;
+
+  const terminationStateRaw = observations
+    .slice()
+    .reverse()
+    .find((o) => normalizeLabel(o.label).includes("termination stat state"))?.value;
+
+  const heaterAmps = getObservationValue(
+    observations,
+    (l) => l.includes("defrost heater amps"),
+    "amps"
+  );
+
+  const boxTemp = getObservationValue(
+    observations,
+    (l) => l.includes("box temp"),
+    "°F"
+  );
+
+  const evapCoilTemp = getObservationValue(
+    observations,
+    (l) => l.includes("evap coil temp"),
+    "°F"
+  );
+
+  const timerState = (timerStateRaw || "").toString().trim().toLowerCase();
+  const terminationState = (terminationStateRaw || "").toString().trim().toLowerCase();
+  const symptomLow = symptom.toLowerCase();
+  const equipmentLow = equipmentType.toLowerCase();
+
+  const findings: string[] = [];
+  let summary = "Need more defrost readings.";
+
+  const isRefrigeration =
+    equipmentLow.includes("cooler") ||
+    equipmentLow.includes("freezer") ||
+    equipmentLow.includes("merchandiser");
+
+  if (!isRefrigeration) {
+    return {
+      summary: "Defrost intelligence is mainly intended for refrigeration equipment.",
+      findings: [] as string[],
+    };
+  }
+
+  const likelyDefrostComplaint =
+    symptomLow.includes("defrost") ||
+    symptomLow.includes("iced") ||
+    symptomLow.includes("ice") ||
+    symptomLow.includes("frost") ||
+    symptomLow.includes("coil freezing") ||
+    symptomLow.includes("iced evaporator");
+
+  if (likelyDefrostComplaint) {
+    findings.push("Symptom points toward a possible defrost-related issue.");
+  }
+
+  if (timerState) {
+    if (
+      timerState.includes("defrost") ||
+      timerState.includes("in defrost") ||
+      timerState.includes("active")
+    ) {
+      findings.push("Control appears to be calling for defrost.");
+    } else if (
+      timerState.includes("cool") ||
+      timerState.includes("refrigeration") ||
+      timerState.includes("run")
+    ) {
+      findings.push("Control appears to be in refrigeration mode, not defrost.");
+    } else {
+      findings.push(`Defrost timer/control state entered as: ${timerStateRaw}`);
+    }
+  }
+
+  if (heaterAmps !== null) {
+    if (heaterAmps > 0.2) {
+      findings.push("Defrost heater amperage is present.");
+    } else {
+      findings.push("Defrost heater amperage is essentially zero.");
+    }
+  }
+
+  if (terminationState) {
+    if (
+      terminationState.includes("closed") ||
+      terminationState.includes("made") ||
+      terminationState.includes("continuity")
+    ) {
+      findings.push("Termination control appears closed / made.");
+    } else if (
+      terminationState.includes("open") ||
+      terminationState.includes("tripped")
+    ) {
+      findings.push("Termination control appears open.");
+    } else {
+      findings.push(`Termination state entered as: ${terminationStateRaw}`);
+    }
+  }
+
+  if (evapCoilTemp !== null) {
+    if (evapCoilTemp < 20) {
+      findings.push("Evaporator coil temperature is very low / frozen-range.");
+    } else if (evapCoilTemp > 40) {
+      findings.push("Evaporator coil temperature is warm enough that termination may be expected.");
+    }
+  }
+
+  if (boxTemp !== null) {
+    if (equipmentLow.includes("freezer") && boxTemp > 10) {
+      findings.push("Freezer box temperature is high.");
+    } else if (equipmentLow.includes("cooler") && boxTemp > 40) {
+      findings.push("Cooler box temperature is high.");
+    }
+  }
+
+  if (
+    (timerState.includes("defrost") || timerState.includes("active")) &&
+    heaterAmps !== null &&
+    heaterAmps < 0.2
+  ) {
+    summary =
+      "Unit appears to be in defrost, but heater amps are not present. Likely heater circuit, heater, limit, relay, contactor, or wiring issue.";
+  } else if (
+    likelyDefrostComplaint &&
+    timerState &&
+    (timerState.includes("cool") || timerState.includes("run"))
+  ) {
+    summary =
+      "Defrost complaint is present, but the unit appears to remain in refrigeration mode. Likely defrost initiation / timer / board / controller issue.";
+  } else if (
+    heaterAmps !== null &&
+    heaterAmps > 0.2 &&
+    terminationState &&
+    (terminationState.includes("open") || terminationState.includes("tripped")) &&
+    evapCoilTemp !== null &&
+    evapCoilTemp < 25
+  ) {
+    summary =
+      "Defrost heat is present, but termination appears open too early for a still-cold coil. Likely bad termination stat / sensor or placement issue.";
+  } else if (
+    likelyDefrostComplaint &&
+    heaterAmps !== null &&
+    heaterAmps > 0.2 &&
+    evapCoilTemp !== null &&
+    evapCoilTemp > 40
+  ) {
+    summary =
+      "Defrost appears to be functioning. Check drain restriction, airflow, door infiltration, or fan delay issues.";
+  } else if (
+    likelyDefrostComplaint &&
+    !timerState &&
+    heaterAmps === null &&
+    !terminationState
+  ) {
+    summary =
+      "Need timer/board state, heater amps, and termination state to diagnose defrost properly.";
+  } else {
+    summary =
+      "Defrost condition is mixed. Verify timer/board initiation, heater amps, termination control, drain condition, and door infiltration.";
+  }
+
+  return { summary, findings };
+}
+
+function buildDefrostRepairGuidance(
+  observations: Observation[],
+  equipmentType: string,
+  symptom: string
+) {
+  const timerStateRaw = observations
+    .slice()
+    .reverse()
+    .find((o) => normalizeLabel(o.label).includes("defrost timer state"))?.value;
+
+  const terminationStateRaw = observations
+    .slice()
+    .reverse()
+    .find((o) => normalizeLabel(o.label).includes("termination stat state"))?.value;
+
+  const heaterAmps = getObservationValue(
+    observations,
+    (l) => l.includes("defrost heater amps"),
+    "amps"
+  );
+
+  const evapCoilTemp = getObservationValue(
+    observations,
+    (l) => l.includes("evap coil temp"),
+    "°F"
+  );
+
+  const boxTemp = getObservationValue(
+    observations,
+    (l) => l.includes("box temp"),
+    "°F"
+  );
+
+  const timerState = (timerStateRaw || "").toString().trim().toLowerCase();
+  const terminationState = (terminationStateRaw || "").toString().trim().toLowerCase();
+  const symptomLow = symptom.toLowerCase();
+  const equipmentLow = equipmentType.toLowerCase();
+
+  const isRefrigeration =
+    equipmentLow.includes("cooler") ||
+    equipmentLow.includes("freezer") ||
+    equipmentLow.includes("merchandiser");
+
+  const repairItems: {
+    part: string;
+    why: string;
+    nextTest: string;
+    quickCheck: string;
+    priority: "High" | "Medium" | "Low";
+  }[] = [];
+
+  if (!isRefrigeration) {
+    return repairItems;
+  }
+
+  const likelyDefrostComplaint =
+    symptomLow.includes("defrost") ||
+    symptomLow.includes("iced") ||
+    symptomLow.includes("ice") ||
+    symptomLow.includes("frost");
+
+  if (
+    (timerState.includes("defrost") || timerState.includes("active")) &&
+    heaterAmps !== null &&
+    heaterAmps < 0.2
+  ) {
+    repairItems.push({
+      part: "Defrost heater circuit",
+      why: "Unit appears to be in defrost but heater amps are not present.",
+      nextTest: "Check heater voltage and continuity through the heater circuit.",
+      quickCheck: "Ohm heater, limits, and wiring. Verify voltage reaches heater during defrost.",
+      priority: "High",
+    });
+
+    repairItems.push({
+      part: "Defrost relay / contactor / board output",
+      why: "Defrost may be commanded, but power may not be getting to the heaters.",
+      nextTest: "Check output voltage from timer/board/relay to heater circuit.",
+      quickCheck: "Measure line voltage at relay output while in defrost.",
+      priority: "High",
+    });
+  }
+
+  if (
+    likelyDefrostComplaint &&
+    timerState &&
+    (timerState.includes("cool") || timerState.includes("run"))
+  ) {
+    repairItems.push({
+      part: "Defrost timer / control board / controller",
+      why: "Complaint suggests defrost issue, but unit appears to remain in refrigeration mode.",
+      nextTest: "Force a defrost cycle and verify initiation output.",
+      quickCheck: "Advance timer manually or command board into defrost.",
+      priority: "High",
+    });
+  }
+
+  if (
+    heaterAmps !== null &&
+    heaterAmps > 0.2 &&
+    terminationState &&
+    (terminationState.includes("open") || terminationState.includes("tripped")) &&
+    evapCoilTemp !== null &&
+    evapCoilTemp < 25
+  ) {
+    repairItems.push({
+      part: "Termination stat / sensor",
+      why: "Termination appears open too early while coil is still very cold.",
+      nextTest: "Check termination control state against actual coil temperature.",
+      quickCheck: "Measure continuity / resistance and compare to expected cut-out temperature.",
+      priority: "High",
+    });
+  }
+
+  if (
+    likelyDefrostComplaint &&
+    heaterAmps !== null &&
+    heaterAmps > 0.2 &&
+    evapCoilTemp !== null &&
+    evapCoilTemp > 40
+  ) {
+    repairItems.push({
+      part: "Drain line / drain pan / drain heater",
+      why: "Defrost heat appears present, so remaining icing may be from drainage problems.",
+      nextTest: "Check drain flow and drain heater operation if equipped.",
+      quickCheck: "Pour warm water through drain and inspect for freeze-back.",
+      priority: "Medium",
+    });
+
+    repairItems.push({
+      part: "Door gaskets / infiltration / fan delay",
+      why: "If defrost works, re-icing may be caused by moisture infiltration or fan timing.",
+      nextTest: "Inspect door seal, traffic pattern, strip curtain, and fan restart timing.",
+      quickCheck: "Look for frost concentrated near door opening or fan blow pattern.",
+      priority: "Medium",
+    });
+  }
+
+  if (
+    likelyDefrostComplaint &&
+    !timerState &&
+    heaterAmps === null &&
+    !terminationState
+  ) {
+    repairItems.push({
+      part: "Defrost controls not yet verified",
+      why: "Key defrost measurements are missing.",
+      nextTest: "Collect timer state, heater amps, and termination stat state.",
+      quickCheck: "Add those three measurements and rerun diagnosis.",
+      priority: "High",
+    });
+  }
+
+  if (boxTemp !== null && equipmentLow.includes("freezer") && boxTemp > 15) {
+    repairItems.push({
+      part: "Door infiltration / heavy load / evaporator airflow",
+      why: "Box temperature is high, which may be adding excessive frost load.",
+      nextTest: "Inspect door opening frequency, gasket sealing, and evap fan airflow.",
+      quickCheck: "Check for snow/ice near entry and weak airflow across coil.",
+      priority: "Medium",
+    });
+  }
+
+  const deduped = new Map<string, (typeof repairItems)[number]>();
+  for (const item of repairItems) {
+    if (!deduped.has(item.part)) deduped.set(item.part, item);
+  }
+
+  return [...deduped.values()];
 }
 
 function parseDiagnosis(rawResult: string): Diagnosis | null {
@@ -1813,16 +2171,255 @@ const SYMPTOM_PACKS: SymptomPack[] = [
         question: "Power supply / contactor / safety circuit issue likely.",
         terminal: true,
       },
+       {
+          id: "c_end",
+          title: "Likely Direction",
+          question: "Capacitor, relay, overload, or compressor failure likely.",
+          terminal: true,
+        },
+        {
+          id: "d_end",
+          title: "Done",
+          question: "Collect more electrical readings and run Diagnose again.",
+          terminal: true,
+        },
+      ],
+    },
+    {
+      id: "mini_split_no_cool",
+    label: "Mini-Split No Cool",
+    defaultSymptom: "Mini-split runs but does not cool properly.",
+    nodes: [
+      {
+        id: "a",
+        title: "Mini-Split No Cool",
+        question: "Is the indoor unit blowing air and responding to the remote/controller?",
+        how: "Check power, controller, mode setting, fan operation, and louvers.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "b",
+        failNext: "a_end",
+        suggestedMeasurement: "Return Air Temp",
+      },
+      {
+        id: "b",
+        title: "Indoor Operation",
+        question: "Is the outdoor unit running normally?",
+        how: "Check disconnect, board, inverter startup, fan, compressor, and error lights.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "c",
+        failNext: "b_end",
+        suggestedMeasurement: "Line Voltage",
+      },
+      {
+        id: "c",
+        title: "Refrigeration",
+        question: "Do temperatures and pressures suggest charge or flow problems?",
+        how: "Check suction pressure, line temps, superheat, subcool, and coil condition.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "c_end",
+        failNext: "d",
+        suggestedMeasurement: "Suction Pressure",
+      },
+      {
+        id: "d",
+        title: "Airflow / Coil",
+        question: "Is airflow or coil fouling reducing capacity?",
+        how: "Check blower wheel, filter screens, coil cleanliness, and discharge temp split.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "d_end",
+        failNext: "e_end",
+        suggestedMeasurement: "Supply Air Temp",
+      },
+      {
+        id: "a_end",
+        title: "Likely Direction",
+        question: "Indoor control / power / fan issue likely.",
+        terminal: true,
+      },
+      {
+        id: "b_end",
+        title: "Likely Direction",
+        question: "Outdoor electrical / board / inverter / compressor issue likely.",
+        terminal: true,
+      },
       {
         id: "c_end",
         title: "Likely Direction",
-        question: "Capacitor, relay, overload, or compressor failure likely.",
+        question: "Charge, restriction, or refrigerant flow issue likely.",
+        terminal: true,
+      },
+      {
+        id: "d_end",
+        title: "Likely Direction",
+        question: "Indoor airflow or dirty coil issue likely.",
+        terminal: true,
+      },
+      {
+        id: "e_end",
+        title: "Done",
+        question: "Collect more readings and run Diagnose again for tighter guidance.",
+        terminal: true,
+      },
+    ],
+  },
+  {
+    id: "mini_split_no_heat",
+    label: "Mini-Split No Heat",
+    defaultSymptom: "Mini-split does not heat properly.",
+    nodes: [
+      {
+        id: "a",
+        title: "Mini-Split No Heat",
+        question: "Is the unit definitely in heat mode and calling?",
+        how: "Check controller mode, setpoint, standby delay, and ambient conditions.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "b",
+        failNext: "a_end",
+        suggestedMeasurement: "Return Air Temp",
+      },
+      {
+        id: "b",
+        title: "Heating Call",
+        question: "Is the outdoor unit entering normal heat operation?",
+        how: "Check fan behavior, compressor operation, board lights, and line temps.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "c",
+        failNext: "b_end",
+        suggestedMeasurement: "Line Voltage",
+      },
+      {
+        id: "c",
+        title: "Capacity",
+        question: "Do refrigerant readings and line temps suggest charge or flow issues?",
+        how: "Check pressures, line temps, reversing valve behavior, and coil condition.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "c_end",
+        failNext: "d_end",
+        suggestedMeasurement: "Suction Pressure",
+      },
+      {
+        id: "a_end",
+        title: "Likely Direction",
+        question: "Mode, control, or user setting issue likely.",
+        terminal: true,
+      },
+      {
+        id: "b_end",
+        title: "Likely Direction",
+        question: "Outdoor board / inverter / compressor / power issue likely.",
+        terminal: true,
+      },
+      {
+        id: "c_end",
+        title: "Likely Direction",
+        question: "Charge, reversing valve, or refrigeration issue likely.",
         terminal: true,
       },
       {
         id: "d_end",
         title: "Done",
-        question: "Collect more electrical readings and run Diagnose again.",
+        question: "Collect more readings and run Diagnose again for tighter guidance.",
+        terminal: true,
+      },
+    ],
+  },
+  {
+    id: "mini_split_water_leak",
+    label: "Mini-Split Water Leak",
+    defaultSymptom: "Mini-split indoor unit is leaking water.",
+    nodes: [
+      {
+        id: "a",
+        title: "Water Leak",
+        question: "Is the drain line restricted or backing up?",
+        how: "Check drain pan, drain hose, pump, pitch, and slime buildup.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "a_end",
+        failNext: "b",
+        suggestedMeasurement: "Evap Coil Temp",
+      },
+      {
+        id: "b",
+        title: "Drain Appears OK",
+        question: "Is the evaporator icing and then melting off?",
+        how: "Check airflow, coil cleanliness, fan speed, and refrigerant conditions.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "b_end",
+        failNext: "c_end",
+        suggestedMeasurement: "Evap Coil Temp",
+      },
+      {
+        id: "a_end",
+        title: "Likely Direction",
+        question: "Drain blockage / slope / pump issue likely.",
+        terminal: true,
+      },
+      {
+        id: "b_end",
+        title: "Likely Direction",
+        question: "Freeze-up causing water overflow likely.",
+        terminal: true,
+      },
+      {
+        id: "c_end",
+        title: "Done",
+        question: "Inspect pan fit, cabinet seal, blower throw, and installation level.",
+        terminal: true,
+      },
+    ],
+  },
+    {
+    id: "mini_split_error_code",
+    label: "Mini-Split Error Code",
+    defaultSymptom: "Mini-split is showing an error code or fault light.",
+    nodes: [
+      {
+        id: "a",
+        title: "Error Code",
+        question: "Do you have the exact code from the indoor or outdoor unit?",
+        how: "Check display, blinking lights, board LEDs, and service manual lookup.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "a_end",
+        failNext: "b",
+        suggestedMeasurement: "Line Voltage",
+      },
+      {
+        id: "b",
+        title: "No Exact Code",
+        question: "Is there communication, board, or power instability?",
+        how: "Check supply voltage, comm wiring, polarity, grounds, and board indicators.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "b_end",
+        failNext: "c_end",
+        suggestedMeasurement: "Control Voltage (R-C)",
+      },
+      {
+        id: "a_end",
+        title: "Likely Direction",
+        question: "Use exact code plus model lookup for the fastest diagnosis path.",
+        terminal: true,
+      },
+      {
+        id: "b_end",
+        title: "Likely Direction",
+        question: "Communication / board / power issue likely.",
+        terminal: true,
+      },
+      {
+        id: "c_end",
+        title: "Done",
+        question: "Collect exact code, board lights, and model info, then rerun diagnosis.",
         terminal: true,
       },
     ],
@@ -1915,6 +2512,16 @@ export default function HVACUnitsPage() {
   );
 
   const airflowAnalysis = useMemo(() => analyzeAirflow(observations), [observations]);
+
+const defrostAnalysis = useMemo(
+  () => analyzeDefrost(observations, equipmentType, symptom),
+  [observations, equipmentType, symptom]
+);
+
+const defrostRepairGuidance = useMemo(
+  () => buildDefrostRepairGuidance(observations, equipmentType, symptom),
+  [observations, equipmentType, symptom]
+);
 
   const equipmentMemory = useMemo(
     () =>
@@ -2009,6 +2616,22 @@ export default function HVACUnitsPage() {
     { label: "Line Voltage", unit: "volts" },
     { label: "Control Voltage (R-W)", unit: "volts" },
   ];
+
+  const miniSplitPresets = [
+  { label: "Return Air Temp", unit: "°F" },
+  { label: "Supply Air Temp", unit: "°F" },
+  { label: "Suction Pressure", unit: "psi" },
+  { label: "Liquid Pressure", unit: "psi" },
+  { label: "Suction Line Temp", unit: "°F" },
+  { label: "Liquid Line Temp", unit: "°F" },
+  { label: "Suction Saturation Temp", unit: "°F" },
+  { label: "Condensing Saturation Temp", unit: "°F" },
+  { label: "Superheat", unit: "°F" },
+  { label: "Subcool", unit: "°F" },
+  { label: "Compressor Amps", unit: "amps" },
+  { label: "Line Voltage", unit: "volts" },
+  { label: "Control Voltage (R-C)", unit: "volts" },
+];
 
   const refrigerationPresets = [
     { label: "Box Temp", unit: "°F" },
@@ -3256,6 +3879,105 @@ export default function HVACUnitsPage() {
           gap: 12,
         }}
       >
+
+        <div style={{ marginTop: 16 }}>
+  <SectionCard title="Defrost Intelligence">
+    <SmallHint>
+      Uses defrost timer state, heater amps, termination state, box temp, and coil temp
+      to spot refrigeration defrost problems.
+    </SmallHint>
+
+    <div
+      style={{
+        marginTop: 12,
+        border: "1px solid #eee",
+        borderRadius: 10,
+        padding: 10,
+        background: "#fafafa",
+      }}
+    >
+      <div style={{ fontWeight: 900 }}>Defrost Summary</div>
+      <div style={{ fontSize: 16, fontWeight: 900, marginTop: 6 }}>
+        {defrostAnalysis.summary}
+      </div>
+
+      {defrostAnalysis.findings.length ? (
+        <ul style={{ marginTop: 8, paddingLeft: 18 }}>
+          {defrostAnalysis.findings.map((f, i) => (
+            <li key={i}>
+              <SmallHint>{f}</SmallHint>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <SmallHint style={{ marginTop: 8 }}>
+          Add defrost timer state, heater amps, termination stat state, box temp,
+          and evap coil temp for tighter refrigeration diagnosis.
+        </SmallHint>
+      )}
+    </div>
+  </SectionCard>
+</div>
+
+<div style={{ marginTop: 16 }}>
+  <SectionCard title="Defrost Repair Guidance">
+    <SmallHint>
+      Shows likely failed parts, why they are suspect, and the next field check to perform.
+    </SmallHint>
+
+    {defrostRepairGuidance.length ? (
+      <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
+        {defrostRepairGuidance.map((item, idx) => (
+          <div
+            key={`${item.part}-${idx}`}
+            style={{
+              border: "1px solid #eee",
+              borderRadius: 10,
+              padding: 10,
+              background: "#fafafa",
+            }}
+          >
+            <div style={{ fontWeight: 900 }}>
+              {item.part}
+              <Badge text={item.priority} />
+            </div>
+
+            <div style={{ marginTop: 8 }}>
+              <div style={{ fontWeight: 900 }}>Why it is suspect</div>
+              <SmallHint style={{ marginTop: 4 }}>{item.why}</SmallHint>
+            </div>
+
+            <div style={{ marginTop: 8 }}>
+              <div style={{ fontWeight: 900 }}>Next test</div>
+              <SmallHint style={{ marginTop: 4 }}>{item.nextTest}</SmallHint>
+            </div>
+
+            <div style={{ marginTop: 8 }}>
+              <div style={{ fontWeight: 900 }}>Quick field check</div>
+              <SmallHint style={{ marginTop: 4 }}>{item.quickCheck}</SmallHint>
+            </div>
+          </div>
+        ))}
+      </div>
+    ) : (
+      <div
+        style={{
+          marginTop: 12,
+          border: "1px solid #eee",
+          borderRadius: 10,
+          padding: 10,
+          background: "#fafafa",
+        }}
+      >
+        <SmallHint>
+          Add defrost-related measurements or enter a refrigeration icing / defrost complaint
+          to generate repair guidance.
+        </SmallHint>
+      </div>
+    )}
+  </SectionCard>
+</div>
+
         <SectionCard
           title="Photo Diagnosis"
           right={<PillButton text="Choose photo" onClick={() => photoInputRef.current?.click()} />}
@@ -3449,14 +4171,16 @@ export default function HVACUnitsPage() {
         <SectionCard title="Measurements / Observations">
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             {(
-              equipmentType.toLowerCase().includes("cooler") ||
-              equipmentType.toLowerCase().includes("freezer") ||
-              equipmentType.toLowerCase().includes("merchandiser")
-                ? refrigerationPresets
-                : symptom.toLowerCase().includes("heat")
-                ? heatingPresets
-                : coolingPresets
-            ).map((p) => (
+  equipmentType.toLowerCase().includes("cooler") ||
+  equipmentType.toLowerCase().includes("freezer") ||
+  equipmentType.toLowerCase().includes("merchandiser")
+    ? refrigerationPresets
+    : equipmentType.toLowerCase().includes("mini-split")
+    ? miniSplitPresets
+    : symptom.toLowerCase().includes("heat")
+    ? heatingPresets
+    : coolingPresets
+).map((p) => (
               <PillButton
                 key={p.label}
                 text={p.label}
@@ -3621,10 +4345,22 @@ export default function HVACUnitsPage() {
             </SectionCard>
 
             <SectionCard title="Raw output">
-              <pre style={{ whiteSpace: "pre-wrap", margin: 0 }}>
-                {rawResult || "No results yet."}
-              </pre>
-            </SectionCard>
+  <div
+    style={{
+      whiteSpace: "pre-wrap",
+      margin: 0,
+      border: "1px solid #eee",
+      borderRadius: 10,
+      padding: 10,
+      background: "#fafafa",
+      fontFamily: "inherit",
+      fontSize: 14,
+      lineHeight: 1.5,
+    }}
+  >
+    {formatRawOutput(rawResult)}
+  </div>
+</SectionCard>
           </div>
         ) : (
           <SectionCard title="Raw output">
