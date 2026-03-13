@@ -1,5 +1,7 @@
 "use client";
 
+import { buildRepairGuidance } from "./lib/repairGuidance";
+
 import { safeJson } from "./lib/networkHelpers";
 
 import { ProbBar } from "./components/ProbBar";
@@ -2370,6 +2372,11 @@ const defrostRepairGuidance = useMemo(
     );
   }, [savedUnits, historyFilter]);
 
+  const repairGuidance = useMemo(
+  () => buildRepairGuidance(parsed, equipmentType),
+  [parsed, equipmentType]
+);
+
   const measurementOptions =
     parsed?.field_measurements_to_collect?.map((m) => m.measurement) || [];
 
@@ -4063,6 +4070,70 @@ const defrostRepairGuidance = useMemo(
                 <SmallHint>No likely causes returned.</SmallHint>
               )}
             </SectionCard>
+
+<SectionCard title="Repair Guidance">
+  {repairGuidance.length ? (
+    <div style={{ display: "grid", gap: 10 }}>
+      {repairGuidance.map((item, idx) => (
+        <div
+          key={idx}
+          style={{
+            border: "1px solid #eee",
+            borderRadius: 10,
+            padding: 10,
+            background: "#fafafa",
+          }}
+        >
+          <div style={{ fontWeight: 900 }}>
+            {item.title}
+            {typeof item.confidence === "number" ? (
+              <Badge text={`${item.confidence}%`} />
+            ) : null}
+          </div>
+
+          <div style={{ marginTop: 8 }}>
+            <div style={{ fontWeight: 900 }}>Suspected part / system</div>
+            <SmallHint style={{ marginTop: 4 }}>{item.suspectedPart}</SmallHint>
+          </div>
+
+          <div style={{ marginTop: 8 }}>
+            <div style={{ fontWeight: 900 }}>Why it is suspect</div>
+            <SmallHint style={{ marginTop: 4 }}>{item.why}</SmallHint>
+          </div>
+
+          <div style={{ marginTop: 8 }}>
+            <div style={{ fontWeight: 900 }}>Confirm with this test</div>
+            <SmallHint style={{ marginTop: 4 }}>{item.confirmTest}</SmallHint>
+          </div>
+
+          <div style={{ marginTop: 8 }}>
+            <div style={{ fontWeight: 900 }}>Quick field check</div>
+            <SmallHint style={{ marginTop: 4 }}>{item.fieldCheck}</SmallHint>
+          </div>
+
+          <div style={{ marginTop: 8 }}>
+            <div style={{ fontWeight: 900 }}>Likely fix</div>
+            <SmallHint style={{ marginTop: 4 }}>{item.likelyFix}</SmallHint>
+          </div>
+
+          <div style={{ marginTop: 8 }}>
+            <div style={{ fontWeight: 900 }}>Common mistake</div>
+            <SmallHint style={{ marginTop: 4 }}>{item.commonMistake}</SmallHint>
+          </div>
+
+          <div style={{ marginTop: 8 }}>
+            <div style={{ fontWeight: 900 }}>Safety note</div>
+            <SmallHint style={{ marginTop: 4 }}>{item.safetyNote}</SmallHint>
+          </div>
+        </div>
+      ))}
+    </div>
+  ) : (
+    <SmallHint>
+      Run a diagnosis to generate repair guidance and step-by-step field checks.
+    </SmallHint>
+  )}
+</SectionCard>
 
             <SectionCard title="Raw output">
   <div
