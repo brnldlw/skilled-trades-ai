@@ -1,5 +1,7 @@
 "use client";
 
+import { readFileAsDataUrl, makeId } from "./lib/fileHelpers";
+
 import { convertToStandard, guessDefaultUnit } from "./lib/unitHelpers";
 
 import { escapeHtml, formatRawOutput } from "./lib/textHelpers";
@@ -366,19 +368,6 @@ async function safeJson(res: Response) {
   } catch {
     return { result: txt };
   }
-}
-
-function readFileAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const r = new FileReader();
-    r.onload = () => resolve(String(r.result || ""));
-    r.onerror = () => reject(new Error("Could not read file"));
-    r.readAsDataURL(file);
-  });
-}
-
-function makeId() {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
 function normalizeLabel(label: string) {
