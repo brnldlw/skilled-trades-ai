@@ -1,5 +1,7 @@
 "use client";
 
+import { PillButton } from "./components/PillButton";
+
 import { SmallHint } from "./components/SmallHint";
 
 import { Badge } from "./components/Badge";
@@ -285,31 +287,6 @@ function SectionCard(props: {
       </div>
       <div style={{ marginTop: 10 }}>{props.children}</div>
     </div>
-  );
-}
-
-function PillButton(props: {
-  text: string;
-  onClick: () => void;
-  disabled?: boolean;
-  active?: boolean;
-}) {
-  return (
-    <button
-      onClick={props.onClick}
-      disabled={props.disabled}
-      style={{
-        padding: "8px 12px",
-        borderRadius: 999,
-        border: "1px solid #ddd",
-        background: props.active ? "#111" : props.disabled ? "#f5f5f5" : "#fff",
-        color: props.active ? "#fff" : "#111",
-        fontWeight: 900,
-        cursor: props.disabled ? "not-allowed" : "pointer",
-      }}
-    >
-      {props.text}
-    </button>
   );
 }
 
