@@ -2311,6 +2311,9 @@ export default function HVACUnitsPage() {
   const [savedUnits, setSavedUnits] = useState<SavedUnitRecord[]>([]);
   const [historyFilter, setHistoryFilter] = useState("");
 
+  const [repairGuidanceMode, setRepairGuidanceMode] =
+  useState<"apprentice" | "experienced">("apprentice");
+
   useEffect(() => {
     listUnits().then(setSavedUnits).catch(() => setSavedUnits([]));
   }, []);
@@ -4071,7 +4074,23 @@ const defrostRepairGuidance = useMemo(
               )}
             </SectionCard>
 
-<SectionCard title="Repair Guidance">
+<SectionCard
+  title="Repair Guidance"
+  right={
+    <div style={{ display: "flex", gap: 8 }}>
+      <PillButton
+        text="Apprentice"
+        active={repairGuidanceMode === "apprentice"}
+        onClick={() => setRepairGuidanceMode("apprentice")}
+      />
+      <PillButton
+        text="Experienced"
+        active={repairGuidanceMode === "experienced"}
+        onClick={() => setRepairGuidanceMode("experienced")}
+      />
+    </div>
+  }
+>
   {repairGuidance.length ? (
     <div style={{ display: "grid", gap: 10 }}>
       {repairGuidance.map((item, idx) => (
@@ -4120,6 +4139,62 @@ const defrostRepairGuidance = useMemo(
             <div style={{ fontWeight: 900 }}>Common mistake</div>
             <SmallHint style={{ marginTop: 4 }}>{item.commonMistake}</SmallHint>
           </div>
+
+{repairGuidanceMode === "apprentice" ? (
+  <>
+    <div style={{ marginTop: 8 }}>
+      <div style={{ fontWeight: 900 }}>Tool to use</div>
+      <SmallHint style={{ marginTop: 4 }}>{item.toolToUse}</SmallHint>
+    </div>
+
+    <div style={{ marginTop: 8 }}>
+      <div style={{ fontWeight: 900 }}>Expected reading / condition</div>
+      <SmallHint style={{ marginTop: 4 }}>{item.expectedReading}</SmallHint>
+    </div>
+
+    <div style={{ marginTop: 8 }}>
+      <div style={{ fontWeight: 900 }}>If test passes</div>
+      <SmallHint style={{ marginTop: 4 }}>{item.passInterpretation}</SmallHint>
+    </div>
+
+    <div style={{ marginTop: 8 }}>
+      <div style={{ fontWeight: 900 }}>If test fails</div>
+      <SmallHint style={{ marginTop: 4 }}>{item.failInterpretation}</SmallHint>
+    </div>
+
+    <div style={{ marginTop: 8 }}>
+      <div style={{ fontWeight: 900 }}>What to do next if it fails</div>
+      <SmallHint style={{ marginTop: 4 }}>{item.nextIfFail}</SmallHint>
+    </div>
+
+    <div style={{ marginTop: 8 }}>
+      <div style={{ fontWeight: 900 }}>Quick field check</div>
+      <SmallHint style={{ marginTop: 4 }}>{item.fieldCheck}</SmallHint>
+    </div>
+
+    <div style={{ marginTop: 8 }}>
+      <div style={{ fontWeight: 900 }}>Common mistake</div>
+      <SmallHint style={{ marginTop: 4 }}>{item.commonMistake}</SmallHint>
+    </div>
+
+    <div style={{ marginTop: 8 }}>
+      <div style={{ fontWeight: 900 }}>Safety note</div>
+      <SmallHint style={{ marginTop: 4 }}>{item.safetyNote}</SmallHint>
+    </div>
+  </>
+) : (
+  <>
+    <div style={{ marginTop: 8 }}>
+      <div style={{ fontWeight: 900 }}>Tool to use</div>
+      <SmallHint style={{ marginTop: 4 }}>{item.toolToUse}</SmallHint>
+    </div>
+
+    <div style={{ marginTop: 8 }}>
+      <div style={{ fontWeight: 900 }}>What to do next if it fails</div>
+      <SmallHint style={{ marginTop: 4 }}>{item.nextIfFail}</SmallHint>
+    </div>
+  </>
+)}
 
           <div style={{ marginTop: 8 }}>
             <div style={{ fontWeight: 900 }}>Safety note</div>
