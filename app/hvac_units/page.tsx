@@ -1,5 +1,7 @@
 "use client";
 
+import { SmallHint } from "./components/SmallHint";
+
 import { Badge } from "./components/Badge";
 
 import { readFileAsDataUrl, makeId } from "./lib/fileHelpers";
@@ -282,17 +284,6 @@ function SectionCard(props: {
         {props.right ? <div>{props.right}</div> : null}
       </div>
       <div style={{ marginTop: 10 }}>{props.children}</div>
-    </div>
-  );
-}
-
-function SmallHint(props: {
-  children: React.ReactNode;
-  style?: React.CSSProperties;
-}) {
-  return (
-    <div style={{ fontSize: 12, color: "#555", lineHeight: 1.35, ...props.style }}>
-      {props.children}
     </div>
   );
 }
