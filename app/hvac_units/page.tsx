@@ -1,5 +1,7 @@
 "use client";
 
+import { buildMeasurementCoaching } from "./lib/measurementCoaching";
+
 import { buildRepairGuidance } from "./lib/repairGuidance";
 
 import { safeJson } from "./lib/networkHelpers";
@@ -2383,6 +2385,11 @@ const defrostRepairGuidance = useMemo(
   const measurementOptions =
     parsed?.field_measurements_to_collect?.map((m) => m.measurement) || [];
 
+    const measurementCoaching = useMemo(
+  () => buildMeasurementCoaching(measurementOptions),
+  [measurementOptions]
+);
+
   function resetFlowForPack(packId: string) {
     const pack = SYMPTOM_PACKS.find((p) => p.id === packId) || SYMPTOM_PACKS[0];
     setFlowNodeId(pack.nodes[0]?.id || "");
@@ -4206,6 +4213,60 @@ const defrostRepairGuidance = useMemo(
   ) : (
     <SmallHint>
       Run a diagnosis to generate repair guidance and step-by-step field checks.
+    </SmallHint>
+  )}
+</SectionCard>
+
+<SectionCard title="Recommended Measurements">
+  {measurementCoaching.length ? (
+    <div style={{ display: "grid", gap: 10 }}>
+      {measurementCoaching.map((item, idx) => (
+        <div
+          key={idx}
+          style={{
+            border: "1px solid #eee",
+            borderRadius: 10,
+            padding: 10,
+            background: "#fafafa",
+          }}
+        >
+          <div style={{ fontWeight: 900 }}>{item.measurement}</div>
+
+          <div style={{ marginTop: 8 }}>
+            <div style={{ fontWeight: 900 }}>Tool to use</div>
+            <SmallHint style={{ marginTop: 4 }}>{item.tool}</SmallHint>
+          </div>
+
+          <div style={{ marginTop: 8 }}>
+            <div style={{ fontWeight: 900 }}>Where to measure</div>
+            <SmallHint style={{ marginTop: 4 }}>{item.whereToMeasure}</SmallHint>
+          </div>
+
+          <div style={{ marginTop: 8 }}>
+            <div style={{ fontWeight: 900 }}>Expected reading / condition</div>
+            <SmallHint style={{ marginTop: 4 }}>{item.expectedResult}</SmallHint>
+          </div>
+
+          <div style={{ marginTop: 8 }}>
+            <div style={{ fontWeight: 900 }}>If high</div>
+            <SmallHint style={{ marginTop: 4 }}>{item.ifHigh}</SmallHint>
+          </div>
+
+          <div style={{ marginTop: 8 }}>
+            <div style={{ fontWeight: 900 }}>If low</div>
+            <SmallHint style={{ marginTop: 4 }}>{item.ifLow}</SmallHint>
+          </div>
+
+          <div style={{ marginTop: 8 }}>
+            <div style={{ fontWeight: 900 }}>What to do next</div>
+            <SmallHint style={{ marginTop: 4 }}>{item.nextStep}</SmallHint>
+          </div>
+        </div>
+      ))}
+    </div>
+  ) : (
+    <SmallHint>
+      Run a diagnosis to get recommended field measurements and coaching.
     </SmallHint>
   )}
 </SectionCard>
