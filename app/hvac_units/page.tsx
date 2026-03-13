@@ -1,5 +1,7 @@
 "use client";
 
+import { safeJson } from "./lib/networkHelpers";
+
 import { ProbBar } from "./components/ProbBar";
 
 import { SectionCard } from "./components/SectionCard";
@@ -263,16 +265,6 @@ const PT_TABLES: Record<string, PTPoint[]> = {
     { psi: 300, tempF: 114 },
   ],
 };
-
-async function safeJson(res: Response) {
-  const txt = await res.text();
-  if (!txt) return null;
-  try {
-    return JSON.parse(txt);
-  } catch {
-    return { result: txt };
-  }
-}
 
 function normalizeLabel(label: string) {
   return label.trim().toLowerCase().replace(/\s+/g, " ");
