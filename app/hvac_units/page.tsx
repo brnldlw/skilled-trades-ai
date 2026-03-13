@@ -1,5 +1,7 @@
 "use client";
 
+import { Badge } from "./components/Badge";
+
 import { readFileAsDataUrl, makeId } from "./lib/fileHelpers";
 
 import { convertToStandard, guessDefaultUnit } from "./lib/unitHelpers";
@@ -281,25 +283,6 @@ function SectionCard(props: {
       </div>
       <div style={{ marginTop: 10 }}>{props.children}</div>
     </div>
-  );
-}
-
-function Badge({ text }: { text: string }) {
-  return (
-    <span
-      style={{
-        display: "inline-block",
-        padding: "2px 8px",
-        borderRadius: 999,
-        border: "1px solid #ddd",
-        fontSize: 12,
-        background: "#f7f7f7",
-        marginLeft: 8,
-        whiteSpace: "nowrap",
-      }}
-    >
-      {text}
-    </span>
   );
 }
 
