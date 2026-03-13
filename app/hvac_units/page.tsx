@@ -1,5 +1,7 @@
 "use client";
 
+import { SectionCard } from "./components/SectionCard";
+
 import { PillButton } from "./components/PillButton";
 
 import { SmallHint } from "./components/SmallHint";
@@ -259,36 +261,6 @@ const PT_TABLES: Record<string, PTPoint[]> = {
     { psi: 300, tempF: 114 },
   ],
 };
-
-function SectionCard(props: {
-  title: string;
-  children: React.ReactNode;
-  right?: React.ReactNode;
-}) {
-  return (
-    <div
-      style={{
-        border: "1px solid #ddd",
-        borderRadius: 12,
-        padding: 14,
-        background: "white",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 12,
-        }}
-      >
-        <div style={{ fontWeight: 900 }}>{props.title}</div>
-        {props.right ? <div>{props.right}</div> : null}
-      </div>
-      <div style={{ marginTop: 10 }}>{props.children}</div>
-    </div>
-  );
-}
 
 function ProbBar({ pct }: { pct: number }) {
   const safe = Math.max(0, Math.min(100, pct || 0));
