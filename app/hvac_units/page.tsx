@@ -2554,6 +2554,8 @@ export default function HVACUnitsPage() {
   const [equipmentType, setEquipmentType] = useState("RTU");
   const [manufacturer, setManufacturer] = useState("");
   const [model, setModel] = useState("");
+  const [errorCode, setErrorCode] = useState("");
+  const [errorCodeSource, setErrorCodeSource] = useState("Control Board");
   const [symptom, setSymptom] = useState("");
 
    const [refrigerantType, setRefrigerantType] = useState<string>("Unknown");
@@ -2831,6 +2833,8 @@ const defrostRepairGuidance = useMemo(
     setGaugeErr("");
     setGaugeRead(null);
     setSelectedPackId("no_cooling");
+    setErrorCode("");
+    setErrorCodeSource("Control Board");
     const pack = SYMPTOM_PACKS.find((p) => p.id === "no_cooling") || SYMPTOM_PACKS[0];
     setFlowNodeId(pack.nodes[0]?.id || "");
     setFlowHistory([]);
@@ -2856,6 +2860,8 @@ const defrostRepairGuidance = useMemo(
       observations,
       rawResult,
       nameplate,
+      errorCode,
+      errorCodeSource,
     };
 
     await saveUnit(record);
@@ -2880,6 +2886,8 @@ const defrostRepairGuidance = useMemo(
     setObservations(record.observations || []);
     setRawResult(record.rawResult || "");
     setNameplate(record.nameplate || null);
+    setErrorCode(record.errorCode || "");
+    setErrorCodeSource(record.errorCodeSource || "Control Board");
   }
 
   async function removeSavedUnit(id: string) {
@@ -2919,6 +2927,8 @@ const defrostRepairGuidance = useMemo(
         equipmentType,
         manufacturer: m,
         model: model.trim(),
+        errorCode: errorCode.trim(),
+        errorCodeSource,
         symptom: s,
         refrigerantType,
         observations,
@@ -2927,6 +2937,7 @@ const defrostRepairGuidance = useMemo(
         chargeAnalysis,
         airflowAnalysis,
         equipmentMemory,
+        
       });
     } finally {
       setLoading(false);
@@ -3385,6 +3396,35 @@ const defrostRepairGuidance = useMemo(
               <div><b>Equipment Type:</b> {equipmentType || "-"}</div>
               <div><b>Refrigerant:</b> {refrigerantType || "-"}</div>
             </div>
+
+            <div>
+  <label style={{ fontWeight: 900 }}>Error Code (optional)</label>
+  <br />
+  <input
+    value={errorCode}
+    onChange={(e) => setErrorCode(e.target.value)}
+    placeholder="Example: E1, F2, 3 flashes, P4"
+    style={{ width: "100%", padding: 8 }}
+  />
+</div>
+
+<div>
+  <label style={{ fontWeight: 900 }}>Error Code Source</label>
+  <br />
+  <select
+    value={errorCodeSource}
+    onChange={(e) => setErrorCodeSource(e.target.value)}
+    style={{ width: "100%", padding: 8 }}
+  >
+    <option>Control Board</option>
+    <option>Thermostat</option>
+    <option>Indoor Unit</option>
+    <option>Outdoor Unit</option>
+    <option>Display Panel</option>
+    <option>Blink Code</option>
+    <option>Unknown</option>
+  </select>
+</div>
 
             <div style={{ marginTop: 12 }}>
               <div style={{ fontWeight: 900 }}>Complaint</div>

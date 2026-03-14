@@ -37,6 +37,8 @@ export type SavedUnitRecord = {
   manufacturer: string;
   model: string;
   refrigerantType: string;
+  errorCode?: string;
+  errorCodeSource?: string;
   symptom: string;
   selectedPackId: string;
   flowNodeId: string;
