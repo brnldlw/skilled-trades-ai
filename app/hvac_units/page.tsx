@@ -155,6 +155,14 @@ type EquipmentMemoryInsight = {
   suggestedFirstChecks: string[];
   commonConfirmedFixes: string[];
   callbackWarnings: string[];
+  similarCases: {
+  savedAt: string;
+  symptom: string;
+  finalConfirmedCause: string;
+  actualFixPerformed: string;
+  outcomeStatus: string;
+  callbackOccurred: string;
+}[];
 };
 
 type PTPoint = { psi: number; tempF: number };
@@ -1128,7 +1136,7 @@ function buildEquipmentMemoryInsight(
     (r) => r.id !== current.id && isRelatedRecord(current, r)
   );
 
-   if (!related.length) {
+  if (!related.length) {
     return {
       relatedCount: 0,
       summary: "No prior matching history found yet for this unit.",
@@ -1138,108 +1146,125 @@ function buildEquipmentMemoryInsight(
       suggestedFirstChecks: [],
       commonConfirmedFixes: [],
       callbackWarnings: [],
+      similarCases: [],
     };
   }
 
-    const symptomItems = related.map((r) => (r.symptom || "").trim()).filter(Boolean);
+  const symptomItems = related.map((r) => (r.symptom || "").trim()).filter(Boolean);
 
-    const causeItems = related.flatMap((r) => {
-      const parsed = parseDiagnosis(r.rawResult || "");
-      return (parsed?.likely_causes || [])
-        .map((c) => (c.cause || "").trim())
-        .filter(Boolean);
-    });
+  const causeItems = related.flatMap((r) => {
+    const parsed = parseDiagnosis(r.rawResult || "");
+    return (parsed?.likely_causes || [])
+      .map((c) => (c.cause || "").trim())
+      .filter(Boolean);
+  });
 
-    const repeatedSymptoms = topCounts(symptomItems, 1, 4);
-    const repeatedCauses = topCounts(causeItems, 1, 4);
-    const repeatedMeasurementPatterns = deriveMeasurementPatterns(related);
+  const repeatedSymptoms = topCounts(symptomItems, 1, 4);
+  const repeatedCauses = topCounts(causeItems, 1, 4);
+  const repeatedMeasurementPatterns = deriveMeasurementPatterns(related);
 
-    const suggestionPool: string[] = [];
+  const suggestionPool: string[] = [];
 
-    for (const p of repeatedMeasurementPatterns) {
-      const low = p.toLowerCase();
-      if (low.includes("high total external static")) {
-        suggestionPool.push("Inspect filter, coil, and blower speed first");
-      }
-      if (low.includes("high coil pressure drop")) {
-        suggestionPool.push("Inspect evaporator coil and blower setup");
-      }
-      if (low.includes("high filter pressure drop")) {
-        suggestionPool.push("Check filter size, condition, and rack sealing");
-      }
-      if (low.includes("return-side restriction")) {
-        suggestionPool.push("Check return duct, filter section, and return grilles");
-      }
-      if (low.includes("supply-side restriction")) {
-        suggestionPool.push("Check supply duct restrictions and coil discharge path");
-      }
-      if (low.includes("undercharge pattern")) {
-        suggestionPool.push("Leak check refrigerant circuit before adding charge");
-      }
-      if (low.includes("restriction / metering pattern")) {
-        suggestionPool.push("Check TXV / metering device and liquid line restrictions");
-      }
-      if (low.includes("high superheat")) {
-        suggestionPool.push("Verify evaporator feed and refrigerant charge");
-      }
-      if (low.includes("low subcool")) {
-        suggestionPool.push("Verify charge level and liquid line integrity");
-      }
+  for (const p of repeatedMeasurementPatterns) {
+    const low = p.toLowerCase();
+    if (low.includes("high total external static")) {
+      suggestionPool.push("Inspect filter, coil, and blower speed first");
     }
-
-    for (const c of repeatedCauses) {
-      const low = c.toLowerCase();
-      if (low.includes("fan")) suggestionPool.push("Inspect fan motor, blade, capacitor, and rotation");
-      if (low.includes("airflow"))
-        suggestionPool.push("Check airflow before condemning refrigeration parts");
-      if (low.includes("capacitor")) suggestionPool.push("Test run capacitor and amp draw");
-      if (low.includes("contactor")) suggestionPool.push("Inspect contactor points and coil voltage");
-      if (low.includes("compressor"))
-        suggestionPool.push("Verify compressor amps, voltage, and overload condition");
-      if (low.includes("thermostat") || low.includes("control")) {
-        suggestionPool.push("Verify thermostat signal and control sequence");
-      }
+    if (low.includes("high coil pressure drop")) {
+      suggestionPool.push("Inspect evaporator coil and blower setup");
     }
-
-    const dedupedSuggestions = [...new Set(suggestionPool)].slice(0, 4);
-
-    let summary = `Found ${related.length} related prior service entr${
-      related.length === 1 ? "y" : "ies"
-    } for this unit or matching equipment.`;
-
-    if (repeatedMeasurementPatterns.length) {
-      summary = `This unit shows repeated pattern history. Most common pattern: ${repeatedMeasurementPatterns[0]}.`;
-    } else if (repeatedCauses.length) {
-      summary = `This unit has repeat issue history. Most common likely cause: ${repeatedCauses[0]}.`;
-    } else if (repeatedSymptoms.length) {
-      summary = `This unit has repeated complaint history. Most common symptom: ${repeatedSymptoms[0]}.`;
+    if (low.includes("high filter pressure drop")) {
+      suggestionPool.push("Check filter size, condition, and rack sealing");
     }
-
-    return {
-      relatedCount: related.length,
-      summary,
-      repeatedSymptoms,
-      repeatedCauses,
-      repeatedMeasurementPatterns,
-      suggestedFirstChecks: dedupedSuggestions,
-      commonConfirmedFixes: topCounts(
-        related
-          .map((r) => `${r.finalConfirmedCause || ""} -> ${r.actualFixPerformed || ""}`.trim())
-          .filter((x) => x && x !== "->"),
-        1,
-        5
-      ),
-      callbackWarnings: topCounts(
-        related
-          .filter((r) => (r.callbackOccurred || "").toLowerCase() === "yes")
-          .map((r) => `${r.finalConfirmedCause || "Unknown issue"} -> ${r.actualFixPerformed || "Unknown fix"}`),
-        1,
-        5
-      ),
-    };
+    if (low.includes("return-side restriction")) {
+      suggestionPool.push("Check return duct, filter section, and return grilles");
+    }
+    if (low.includes("supply-side restriction")) {
+      suggestionPool.push("Check supply duct restrictions and coil discharge path");
+    }
+    if (low.includes("undercharge pattern")) {
+      suggestionPool.push("Leak check refrigerant circuit before adding charge");
+    }
+    if (low.includes("restriction / metering pattern")) {
+      suggestionPool.push("Check TXV / metering device and liquid line restrictions");
+    }
+    if (low.includes("high superheat")) {
+      suggestionPool.push("Verify evaporator feed and refrigerant charge");
+    }
+    if (low.includes("low subcool")) {
+      suggestionPool.push("Verify charge level and liquid line integrity");
+    }
   }
 
-function buildServiceReportHtml(args: {
+  for (const c of repeatedCauses) {
+    const low = c.toLowerCase();
+    if (low.includes("fan")) {
+      suggestionPool.push("Inspect fan motor, blade, capacitor, and rotation");
+    }
+    if (low.includes("airflow")) {
+      suggestionPool.push("Check airflow before condemning refrigeration parts");
+    }
+    if (low.includes("capacitor")) {
+      suggestionPool.push("Test run capacitor and amp draw");
+    }
+    if (low.includes("contactor")) {
+      suggestionPool.push("Inspect contactor points and coil voltage");
+    }
+    if (low.includes("compressor")) {
+      suggestionPool.push("Verify compressor amps, voltage, and overload condition");
+    }
+    if (low.includes("thermostat") || low.includes("control")) {
+      suggestionPool.push("Verify thermostat signal and control sequence");
+    }
+  }
+
+  const dedupedSuggestions = [...new Set(suggestionPool)].slice(0, 4);
+
+  let summary = `Found ${related.length} related prior service entr${
+    related.length === 1 ? "y" : "ies"
+  } for this unit or matching equipment.`;
+
+  if (repeatedMeasurementPatterns.length) {
+    summary = `This unit shows repeated pattern history. Most common pattern: ${repeatedMeasurementPatterns[0]}.`;
+  } else if (repeatedCauses.length) {
+    summary = `This unit has repeat issue history. Most common likely cause: ${repeatedCauses[0]}.`;
+  } else if (repeatedSymptoms.length) {
+    summary = `This unit has repeated complaint history. Most common symptom: ${repeatedSymptoms[0]}.`;
+  }
+
+  return {
+    relatedCount: related.length,
+    summary,
+    repeatedSymptoms,
+    repeatedCauses,
+    repeatedMeasurementPatterns,
+    suggestedFirstChecks: dedupedSuggestions,
+    commonConfirmedFixes: topCounts(
+      related
+        .map((r) => `${r.finalConfirmedCause || ""} -> ${r.actualFixPerformed || ""}`.trim())
+        .filter((x) => x && x !== "->"),
+      1,
+      5
+    ),
+    callbackWarnings: topCounts(
+      related
+        .filter((r) => (r.callbackOccurred || "").toLowerCase() === "yes")
+        .map((r) => `${r.finalConfirmedCause || "Unknown issue"} -> ${r.actualFixPerformed || "Unknown fix"}`),
+      1,
+      5
+    ),
+    similarCases: related.slice(0, 5).map((r) => ({
+      savedAt: r.savedAt || "",
+      symptom: r.symptom || "",
+      finalConfirmedCause: r.finalConfirmedCause || "",
+      actualFixPerformed: r.actualFixPerformed || "",
+      outcomeStatus: r.outcomeStatus || "",
+      callbackOccurred: r.callbackOccurred || "",
+    })),
+  };
+}
+
+  function buildServiceReportHtml(args: {
   customerName: string;
   siteName: string;
   siteAddress: string;
@@ -1257,6 +1282,7 @@ function buildServiceReportHtml(args: {
   airflowAnalysis: AirflowAnalysis;
   equipmentMemory: EquipmentMemoryInsight;
 }) {
+
   const {
     customerName,
     siteName,
@@ -3543,6 +3569,41 @@ const errorCodeGuidance = useMemo(
           <option>Yes</option>
         </select>
       </div>
+
+      {equipmentMemory.similarCases.length ? (
+  <div style={{ marginTop: 12 }}>
+    <div style={{ fontWeight: 900 }}>Similar prior cases</div>
+    <div style={{ display: "grid", gap: 8, marginTop: 8 }}>
+      {equipmentMemory.similarCases.map((item, i) => (
+        <div
+          key={i}
+          style={{
+            border: "1px solid #eee",
+            borderRadius: 10,
+            padding: 10,
+            background: "#fafafa",
+          }}
+        >
+          <SmallHint>
+            <b>Saved:</b> {item.savedAt ? new Date(item.savedAt).toLocaleString() : "-"}
+          </SmallHint>
+          <SmallHint style={{ marginTop: 4 }}>
+            <b>Symptom:</b> {item.symptom || "-"}
+          </SmallHint>
+          <SmallHint style={{ marginTop: 4 }}>
+            <b>Confirmed cause:</b> {item.finalConfirmedCause || "-"}
+          </SmallHint>
+          <SmallHint style={{ marginTop: 4 }}>
+            <b>Actual fix:</b> {item.actualFixPerformed || "-"}
+          </SmallHint>
+          <SmallHint style={{ marginTop: 4 }}>
+            <b>Outcome:</b> {item.outcomeStatus || "-"} • <b>Callback:</b> {item.callbackOccurred || "-"}
+          </SmallHint>
+        </div>
+      ))}
+    </div>
+  </div>
+) : null}
 
       <div style={{ gridColumn: "1 / -1" }}>
         <label style={{ fontWeight: 900 }}>Tech Closeout Notes</label>
