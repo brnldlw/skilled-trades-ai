@@ -106,3 +106,18 @@ export const miniSplitPresets: PresetOption[] = [
   { label: "Line Voltage", unit: "volts" },
   { label: "Control Voltage (R-C)", unit: "volts" },
 ];
+
+export const iceMachinePresets: PresetOption[] = [
+  { label: "Water Fill Time", unit: "other" },
+  { label: "Harvest Cycle Time", unit: "other" },
+  { label: "Evap Coil Temp", unit: "°F" },
+  { label: "Suction Pressure", unit: "psi" },
+  { label: "Head Pressure", unit: "psi" },
+  { label: "Liquid Pressure", unit: "psi" },
+  { label: "Compressor Amps", unit: "amps" },
+  { label: "Line Voltage", unit: "volts" },
+  { label: "Water Supply Pressure", unit: "psi" },
+  { label: "Water Temp", unit: "°F" },
+  { label: "Bin Thermostat State", unit: "other" },
+  { label: "Hot Gas Valve Voltage", unit: "volts" },
+];

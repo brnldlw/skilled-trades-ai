@@ -24,6 +24,16 @@ import { escapeHtml, formatRawOutput } from "./lib/textHelpers";
 
 import { toNumber, round1 } from "./lib/basicHelpers";
 
+import {
+  refrigerantOptions,
+  unitOptions,
+  coolingPresets,
+  heatingPresets,
+  refrigerationPresets,
+  miniSplitPresets,
+  iceMachinePresets,
+} from "./data/presets";
+
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   deleteUnit,
@@ -33,15 +43,6 @@ import {
   type NameplateResult,
   type SavedUnitRecord,
 } from "../lib/unit-store";
-
-import {
-  refrigerantOptions,
-  unitOptions,
-  coolingPresets,
-  heatingPresets,
-  refrigerationPresets,
-  miniSplitPresets,
-} from "./data/presets";
 
 type Diagnosis = {
   summary?: string;
@@ -4199,9 +4200,12 @@ const defrostRepairGuidance = useMemo(
         <SectionCard title="Measurements / Observations">
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             {(
-  equipmentType.toLowerCase().includes("cooler") ||
-  equipmentType.toLowerCase().includes("freezer") ||
-  equipmentType.toLowerCase().includes("merchandiser")
+
+  equipmentType.toLowerCase().includes("ice machine")
+    ? iceMachinePresets
+    : equipmentType.toLowerCase().includes("cooler") ||
+      equipmentType.toLowerCase().includes("freezer") ||
+      equipmentType.toLowerCase().includes("merchandiser")
     ? refrigerationPresets
     : equipmentType.toLowerCase().includes("mini-split")
     ? miniSplitPresets
