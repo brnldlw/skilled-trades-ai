@@ -177,6 +177,114 @@ function pickGuidanceFromCause(causeText: string, whyText: string, equipmentType
     };
   }
 
+    if (c.includes("water valve") || c.includes("fill valve") || c.includes("water fill")) {
+    return {
+      title: "Ice machine water fill guidance",
+      suspectedPart: "Water inlet valve / fill circuit / water supply path",
+      why: whyText || "The diagnosis points toward a water fill or inlet problem.",
+      confirmTest: "Verify incoming water supply, check for valve command during fill, and confirm water actually enters the reservoir/trough correctly.",
+      toolToUse: "Multimeter, water pressure gauge if available, visual inspection",
+      expectedReading: "The valve should receive the proper command/voltage during fill and the machine should fill in a normal amount of time.",
+      passInterpretation: "If the valve is energized and water flow is normal, look harder at float, level control, or scaling issues.",
+      failInterpretation: "If the valve is not opening, not being energized, or water supply is weak/restricted, the fill path is the problem.",
+      nextIfFail: "Check supply shutoff/filter/pressure first, then verify valve voltage and replace the failed valve/control only after proving the fault.",
+      fieldCheck: "Inspect inlet screen, filter, water pressure, valve operation, fill timing, float movement, and trough/reservoir condition.",
+      likelyFix: "Repair the water supply issue or replace the failed inlet valve/control component and verify a normal fill cycle.",
+      commonMistake: "Replacing the inlet valve before checking water pressure, filter restriction, or board command.",
+      safetyNote: "Use electrical safety when checking live valve circuits and shut water off before opening the water path.",
+    };
+  }
+
+  if (c.includes("harvest") || c.includes("release")) {
+    return {
+      title: "Ice machine harvest guidance",
+      suspectedPart: "Harvest control / release system / slab or cube release path",
+      why: whyText || "The diagnosis points toward a harvest or release problem.",
+      confirmTest: "Verify the machine enters harvest at the right time and confirm the release method is actually working.",
+      toolToUse: "Multimeter, thermometer, visual inspection",
+      expectedReading: "The machine should shift into harvest correctly and the slab/cubes should release in a normal pattern and time.",
+      passInterpretation: "If harvest timing and release look normal, recheck freeze thickness, scaling, and complaint details.",
+      failInterpretation: "If harvest starts late, fails to start, or release is incomplete, the harvest control/mechanism path is suspect.",
+      nextIfFail: "Check board timing, harvest assist or hot gas action, scale condition, and release surface condition before replacing major parts.",
+      fieldCheck: "Inspect release pattern, slab/cube thickness, plate condition, scale, hot gas assist if used, and control timing.",
+      likelyFix: "Correct the failed harvest control or release issue and verify the machine completes repeated normal harvest cycles.",
+      commonMistake: "Blaming refrigeration first when the real issue is harvest timing, scale, or release mechanism behavior.",
+      safetyNote: "Use caution around moving parts, hot surfaces, and live controls during harvest testing.",
+    };
+  }
+
+  if (c.includes("hot gas")) {
+    return {
+      title: "Hot gas valve guidance",
+      suspectedPart: "Hot gas valve / harvest gas routing circuit",
+      why: whyText || "The diagnosis points toward a hot gas assisted harvest problem.",
+      confirmTest: "Verify the valve is being commanded during harvest and that harvest behavior changes appropriately when it operates.",
+      toolToUse: "Multimeter, thermometer, visual inspection",
+      expectedReading: "The hot gas valve should receive the correct signal during harvest and contribute to a normal release cycle.",
+      passInterpretation: "If the valve is being commanded and harvest still fails, inspect scaling, plate condition, and control timing.",
+      failInterpretation: "If the valve is not being energized or is stuck/not functioning, harvest performance can be directly affected.",
+      nextIfFail: "Check the control signal, coil condition, valve operation, and related tubing/circuit behavior before replacing the valve.",
+      fieldCheck: "Inspect coil voltage, valve actuation, harvest timing, and whether release improves when the circuit is active.",
+      likelyFix: "Repair the control issue or replace the failed hot gas valve if direct testing proves it is defective.",
+      commonMistake: "Replacing the valve without confirming the board actually sends the command during harvest.",
+      safetyNote: "This may involve live voltage and hot refrigeration lines. Use proper caution.",
+    };
+  }
+
+  if (c.includes("bin control") || c.includes("bin thermostat") || c.includes("bin full")) {
+    return {
+      title: "Ice machine bin control guidance",
+      suspectedPart: "Bin control / bin thermostat / ice level shutoff circuit",
+      why: whyText || "The diagnosis points toward a bin control or ice level issue.",
+      confirmTest: "Verify whether the bin control is open/closed in the proper state and whether it is falsely stopping production.",
+      toolToUse: "Multimeter and visual inspection",
+      expectedReading: "The bin control should change state correctly based on actual ice level and machine condition.",
+      passInterpretation: "If the bin control behaves normally, continue into the main freeze/harvest sequence.",
+      failInterpretation: "If the bin control is stuck, misreading, or falsely indicating full bin, it can stop ice production.",
+      nextIfFail: "Check the control state, placement, wiring, and actual bin condition, then replace the failed control if proven bad.",
+      fieldCheck: "Inspect sensor placement, thermostat state, wiring, contamination, and whether the machine restarts when the control is bypass-tested correctly.",
+      likelyFix: "Correct the bin control issue and verify normal stop/start behavior based on actual ice level.",
+      commonMistake: "Condemning the main control board when the machine is only being held off by a bad bin control input.",
+      safetyNote: "Use safe testing practices if temporarily bypassing controls for diagnosis.",
+    };
+  }
+
+  if (c.includes("scale") || c.includes("water distribution") || c.includes("water system")) {
+    return {
+      title: "Ice machine scale / water system guidance",
+      suspectedPart: "Water distribution path / scale buildup / reservoir or float system",
+      why: whyText || "The diagnosis points toward a water-side performance issue.",
+      confirmTest: "Inspect water distribution, trough/sump condition, scale buildup, float action, and freeze surface condition.",
+      toolToUse: "Visual inspection, cleaning tools, thermometer if needed",
+      expectedReading: "Water should distribute evenly and machine surfaces/controls should operate without scale interference.",
+      passInterpretation: "If the water system is clean and distributing normally, move back toward refrigeration or control sequence issues.",
+      failInterpretation: "If scale or poor distribution is obvious, that condition can directly cause poor freeze, harvest, or production performance.",
+      nextIfFail: "Clean/descale the system as appropriate, restore normal water flow and level control, then re-evaluate cycle operation.",
+      fieldCheck: "Inspect trough, sump, float, distribution tube, spray pattern, plate condition, and visible scale buildup.",
+      likelyFix: "Clean/descale the machine and repair any failed water-side components affecting fill or distribution.",
+      commonMistake: "Chasing refrigeration problems when the real issue is heavy scale or poor water distribution.",
+      safetyNote: "Use proper chemical handling and cleaning procedures when descaling.",
+    };
+  }
+
+  if (c.includes("dirty condenser") || c.includes("condenser") || c.includes("high head")) {
+    return {
+      title: "Ice machine condenser / heat rejection guidance",
+      suspectedPart: "Condenser coil, condenser fan, or heat rejection path",
+      why: whyText || "The diagnosis points toward poor heat rejection affecting production or freeze performance.",
+      confirmTest: "Check condenser cleanliness, fan operation, airflow/water flow as applicable, and compare head pressure behavior to normal conditions.",
+      toolToUse: "Visual inspection, gauges, amp meter",
+      expectedReading: "Condenser operation and head pressure should be appropriate for the machine’s current ambient/load conditions.",
+      passInterpretation: "If heat rejection looks normal, continue deeper into water system, freeze, or harvest logic.",
+      failInterpretation: "If the condenser is fouled or heat rejection is poor, freeze efficiency and production will suffer.",
+      nextIfFail: "Clean the condenser, verify fan/water-cooled operation, and recheck cycle performance before condemning refrigeration components.",
+      fieldCheck: "Inspect condenser coil, fan blade, motor amps, ambient around the machine, and signs of head pressure stress.",
+      likelyFix: "Restore proper heat rejection and verify improved freeze/production performance.",
+      commonMistake: "Condemning the compressor or charge before correcting an obviously dirty condenser.",
+      safetyNote: "Use electrical safety and proper cleaning methods around condenser components.",
+    };
+  }
+  
   return {
     title: "General repair guidance",
     suspectedPart: "Most likely system indicated by diagnosis",
