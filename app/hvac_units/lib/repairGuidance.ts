@@ -285,6 +285,150 @@ function pickGuidanceFromCause(causeText: string, whyText: string, equipmentType
     };
   }
   
+    if (c.includes("low pressure switch")) {
+    return {
+      title: "Low pressure switch guidance",
+      suspectedPart: "Low pressure switch / low-pressure safety circuit",
+      why: whyText || "The diagnosis points toward a low-pressure safety issue.",
+      confirmTest: "Verify actual suction pressure and compare it to the switch state before condemning the switch itself.",
+      toolToUse: "Digital gauges and multimeter",
+      expectedReading: "If suction pressure is truly low, the switch may be opening correctly. If pressure is normal, the switch/control path may be faulty.",
+      passInterpretation: "If suction pressure and switch behavior agree, the switch may be doing its job and the real cause is system-related.",
+      failInterpretation: "If the switch is open with normal suction pressure, the switch or wiring/control path is suspect.",
+      nextIfFail: "Check suction pressure, refrigerant condition, airflow, evaporator load, and wiring before replacing the switch.",
+      fieldCheck: "Inspect suction pressure, evaporator conditions, wiring, reset behavior if applicable, and whether the switch is opening under a real low-pressure condition.",
+      likelyFix: "Correct the true low-pressure cause if present, or replace the failed switch only after proving it is not responding correctly.",
+      commonMistake: "Replacing the low pressure switch without checking actual suction pressure and system operating conditions.",
+      safetyNote: "Do not bypass a safety and leave the unit running. Use it only for controlled diagnosis if appropriate.",
+    };
+  }
+
+  if (c.includes("high pressure switch")) {
+    return {
+      title: "High pressure switch guidance",
+      suspectedPart: "High pressure switch / high-pressure safety circuit",
+      why: whyText || "The diagnosis points toward a high-pressure safety issue.",
+      confirmTest: "Verify actual head pressure and compare it to the switch state before replacing the switch.",
+      toolToUse: "Digital gauges and multimeter",
+      expectedReading: "If head pressure is truly excessive, the switch may be opening correctly. If pressure is normal, the switch/control path may be faulty.",
+      passInterpretation: "If high head pressure is real, look for condenser airflow, dirty coil, overcharge, or restriction causes.",
+      failInterpretation: "If the switch is open without truly high pressure, the switch or wiring/control path may be defective.",
+      nextIfFail: "Check condenser condition, fan operation, ambient/load, charge condition, and switch state before replacing parts.",
+      fieldCheck: "Inspect condenser cleanliness, airflow, fan amps, head pressure, and whether the switch state matches reality.",
+      likelyFix: "Correct the true high-pressure cause, or replace the failed switch only after proving abnormal switch behavior.",
+      commonMistake: "Replacing the high pressure switch without checking real head pressure and condenser performance.",
+      safetyNote: "High-pressure trips often indicate a real system problem. Do not reset repeatedly without finding the cause.",
+    };
+  }
+
+  if (c.includes("pressure switch")) {
+    return {
+      title: "Furnace pressure switch guidance",
+      suspectedPart: "Pressure switch / proving circuit / inducer draft path",
+      why: whyText || "The diagnosis points toward a furnace draft proving issue.",
+      confirmTest: "Verify inducer operation, venting, tubing, port cleanliness, and proving conditions before replacing the switch.",
+      toolToUse: "Multimeter and manometer",
+      expectedReading: "The switch should change state correctly when the inducer establishes proper draft/proving conditions.",
+      passInterpretation: "If proving conditions are weak, blocked, or unstable, the switch may be reacting correctly.",
+      failInterpretation: "If proving conditions are correct but the switch still fails to respond, the switch or its immediate circuit is suspect.",
+      nextIfFail: "Inspect tubing, ports, venting, inducer performance, and then replace the switch only if direct testing proves failure.",
+      fieldCheck: "Check inducer amps/sound, vent blockage, cracked tubing, water in hose, plugged ports, and switch response.",
+      likelyFix: "Correct the draft/proving problem or replace the failed pressure switch if it is not responding to proper conditions.",
+      commonMistake: "Replacing the switch when the real issue is a blocked vent, plugged port, or weak inducer.",
+      safetyNote: "This is part of safe combustion proving. Verify safe venting before returning the unit to service.",
+    };
+  }
+
+  if (c.includes("limit switch")) {
+    return {
+      title: "Limit switch guidance",
+      suspectedPart: "High-limit switch / overtemperature protection circuit",
+      why: whyText || "The diagnosis points toward a limit or overheating issue.",
+      confirmTest: "Check heat rise, blower airflow, static pressure, filter, and coil condition before replacing the limit.",
+      toolToUse: "Multimeter, thermometer, manometer",
+      expectedReading: "A normal heat rise and airflow condition should not drive the limit open during normal operation.",
+      passInterpretation: "If temperature rise is excessive or airflow is poor, the limit may be opening correctly to protect the unit.",
+      failInterpretation: "If airflow and temperature are normal but the limit is open, the switch or connection may be faulty.",
+      nextIfFail: "Correct airflow or heat delivery problems first; replace the limit only if it fails under proper operating conditions.",
+      fieldCheck: "Inspect filter, blower, wheel, motor speed, indoor coil, static pressure, and heat rise.",
+      likelyFix: "Restore proper airflow/temperature conditions or replace the failed limit switch if proven defective.",
+      commonMistake: "Replacing the limit without checking airflow, heat rise, and static pressure first.",
+      safetyNote: "A tripped limit can indicate dangerous overheating. Do not ignore the reason it opened.",
+    };
+  }
+
+  if (c.includes("rollout switch")) {
+    return {
+      title: "Rollout switch guidance",
+      suspectedPart: "Rollout safety / unsafe burner or venting condition",
+      why: whyText || "The diagnosis points toward a rollout or unsafe combustion condition.",
+      confirmTest: "Inspect burner flame pattern, carryover, heat exchanger area, venting, and combustion conditions before resetting or replacing anything.",
+      toolToUse: "Multimeter and combustion/visual inspection tools",
+      expectedReading: "Rollout should remain normal during safe burner operation with stable flame carryover and proper venting.",
+      passInterpretation: "If there is true rollout or flame disturbance, the switch may be doing its job and the unsafe condition must be corrected.",
+      failInterpretation: "If there is no actual rollout and the switch remains open or unstable, the switch or connection may be faulty.",
+      nextIfFail: "Investigate burner condition, venting, exchanger concerns, and flame pattern before replacing the switch.",
+      fieldCheck: "Inspect burners, flame carryover, venting, exchanger area, soot, and signs of abnormal combustion.",
+      likelyFix: "Correct the unsafe combustion/venting issue, or replace the failed rollout safety only after proving it is not reacting to a real hazard.",
+      commonMistake: "Resetting rollout repeatedly without investigating the underlying combustion problem.",
+      safetyNote: "Treat rollout as a serious safety event until proven otherwise.",
+    };
+  }
+
+  if (c.includes("condensate safety")) {
+    return {
+      title: "Condensate safety guidance",
+      suspectedPart: "Condensate overflow / drain safety circuit",
+      why: whyText || "The diagnosis points toward a condensate safety shutdown or open drain protection circuit.",
+      confirmTest: "Check the drain path, pan, trap, slope, and whether the safety switch is opening because water is actually backing up.",
+      toolToUse: "Multimeter and visual inspection",
+      expectedReading: "The safety should remain normal when the drain path is clear and no overflow/back-up exists.",
+      passInterpretation: "If water is backing up, the safety may be opening correctly and the drain problem must be fixed first.",
+      failInterpretation: "If the drain is clear but the safety remains open, the switch, wiring, or mounting may be faulty.",
+      nextIfFail: "Clear and verify the drain first, then retest the safety before replacing it.",
+      fieldCheck: "Inspect drain line, trap, pan, slime buildup, safety switch state, and evidence of overflow.",
+      likelyFix: "Clear the drain issue or replace the failed condensate safety only after confirming the drain path is normal.",
+      commonMistake: "Bypassing the condensate safety without fixing the water problem or confirming switch behavior.",
+      safetyNote: "Do not leave condensate safeties bypassed in service.",
+    };
+  }
+
+  if (c.includes("bin control")) {
+    return {
+      title: "Ice machine bin control guidance",
+      suspectedPart: "Bin control / ice level shutoff circuit",
+      why: whyText || "The diagnosis points toward a bin control or full-bin shutoff issue.",
+      confirmTest: "Verify actual bin condition and confirm the control changes state correctly based on real ice level.",
+      toolToUse: "Multimeter and visual inspection",
+      expectedReading: "The bin control should change state at the correct ice level and should not falsely hold the machine off.",
+      passInterpretation: "If the bin is truly full or the control state matches actual conditions, continue into the main cycle logic.",
+      failInterpretation: "If the control falsely reads full/not full, the control, placement, contamination, or wiring may be the problem.",
+      nextIfFail: "Check sensor placement, cleanliness, wiring, and true control state before replacing the bin control.",
+      fieldCheck: "Inspect bin level condition, sensor placement, contamination, wire condition, and whether the machine restarts appropriately.",
+      likelyFix: "Correct the bin control issue and verify normal machine stop/start behavior.",
+      commonMistake: "Replacing the main board when the machine is actually being held off by a faulty bin control input.",
+      safetyNote: "Use safe diagnosis practices if temporarily bypassing controls for testing.",
+    };
+  }
+
+  if (c.includes("water level control")) {
+    return {
+      title: "Ice machine water level control guidance",
+      suspectedPart: "Float / water level sensor / reservoir level control",
+      why: whyText || "The diagnosis points toward a water level control issue.",
+      confirmTest: "Verify actual water level movement and confirm the float/sensor changes state correctly during fill and operation.",
+      toolToUse: "Multimeter and visual inspection",
+      expectedReading: "The level control should respond correctly as the sump/reservoir fills and empties.",
+      passInterpretation: "If level control changes state normally, continue into valve, board, or water path issues.",
+      failInterpretation: "If the control sticks, falsely indicates level, or never changes state, the level control path is suspect.",
+      nextIfFail: "Inspect float movement, scaling, reservoir condition, and sensor response before replacing the part.",
+      fieldCheck: "Check float freedom, slime/scale buildup, sensor cleanliness, wiring, and actual water level behavior.",
+      likelyFix: "Clean/repair the water level control path or replace the failed float/sensor if proven defective.",
+      commonMistake: "Replacing the valve or board first when the level control is actually misreading.",
+      safetyNote: "Shut power and water off as needed before opening the water control area.",
+    };
+  }
+  
   return {
     title: "General repair guidance",
     suspectedPart: "Most likely system indicated by diagnosis",
