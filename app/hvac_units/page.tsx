@@ -1,5 +1,7 @@
 "use client";
 
+import { buildErrorCodeGuidance } from "./lib/errorCodeGuidance";
+
 import { buildMeasurementCoaching } from "./lib/measurementCoaching";
 
 import { buildRepairGuidance } from "./lib/repairGuidance";
@@ -2650,6 +2652,18 @@ const defrostRepairGuidance = useMemo(
     [selectedPack, flowNodeId]
   );
 
+const errorCodeGuidance = useMemo(
+  () =>
+    buildErrorCodeGuidance({
+      manufacturer,
+      model,
+      equipmentType,
+      errorCode,
+      errorCodeSource,
+    }),
+  [manufacturer, model, equipmentType, errorCode, errorCodeSource]
+);
+
   const filteredSavedUnits = useMemo(() => {
     const q = historyFilter.trim().toLowerCase();
     if (!q) return savedUnits;
@@ -4602,6 +4616,63 @@ const defrostRepairGuidance = useMemo(
   ) : (
     <SmallHint>
       Run a diagnosis to get recommended field measurements and coaching.
+    </SmallHint>
+  )}
+</SectionCard>
+
+<SectionCard title="Error Code Guidance">
+  {errorCodeGuidance ? (
+    <div
+      style={{
+        border: "1px solid #eee",
+        borderRadius: 10,
+        padding: 10,
+        background: "#fafafa",
+      }}
+    >
+      <div style={{ fontWeight: 900 }}>{errorCodeGuidance.title}</div>
+
+      <div style={{ marginTop: 8 }}>
+        <div style={{ fontWeight: 900 }}>Summary</div>
+        <SmallHint style={{ marginTop: 4 }}>{errorCodeGuidance.summary}</SmallHint>
+      </div>
+
+      <div style={{ marginTop: 8 }}>
+        <div style={{ fontWeight: 900 }}>First checks</div>
+        <ul style={{ marginTop: 6, paddingLeft: 18 }}>
+          {errorCodeGuidance.firstChecks.map((item, idx) => (
+            <li key={idx}>
+              <SmallHint>{item}</SmallHint>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div style={{ marginTop: 8 }}>
+        <div style={{ fontWeight: 900 }}>Warnings</div>
+        <ul style={{ marginTop: 6, paddingLeft: 18 }}>
+          {errorCodeGuidance.warnings.map((item, idx) => (
+            <li key={idx}>
+              <SmallHint>{item}</SmallHint>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div style={{ marginTop: 8 }}>
+        <div style={{ fontWeight: 900 }}>What to check next</div>
+        <ul style={{ marginTop: 6, paddingLeft: 18 }}>
+          {errorCodeGuidance.nextSteps.map((item, idx) => (
+            <li key={idx}>
+              <SmallHint>{item}</SmallHint>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  ) : (
+    <SmallHint>
+      Enter an error code to generate code-specific guidance.
     </SmallHint>
   )}
 </SectionCard>
