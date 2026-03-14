@@ -2974,6 +2974,7 @@ const defrostRepairGuidance = useMemo(
               <option>Boiler</option>
               <option>Chiller</option>
               <option>Make-Up Air Unit</option>
+              <option>Ice Machine</option>
               <option>Walk-In Cooler</option>
               <option>Walk-In Freezer</option>
               <option>Reach-In Cooler</option>
