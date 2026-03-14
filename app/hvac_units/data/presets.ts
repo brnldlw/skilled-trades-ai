@@ -54,6 +54,8 @@ export const coolingPresets: PresetOption[] = [
   { label: "Compressor Amps", unit: "amps" },
   { label: "Line Voltage", unit: "volts" },
   { label: "Control Voltage (R-C)", unit: "volts" },
+  { label: "Low Pressure Switch Status", unit: "other" },
+  { label: "High Pressure Switch Status", unit: "other" },
 ];
 
 export const heatingPresets: PresetOption[] = [
@@ -69,6 +71,10 @@ export const heatingPresets: PresetOption[] = [
   { label: "Limit Switch Continuity", unit: "ohms" },
   { label: "Line Voltage", unit: "volts" },
   { label: "Control Voltage (R-W)", unit: "volts" },
+  { label: "Pressure Switch Status", unit: "other" },
+  { label: "Limit Switch Status", unit: "other" },
+  { label: "Rollout Switch Status", unit: "other" },
+  { label: "Condensate Safety Status", unit: "other" },
 ];
 
 export const refrigerationPresets: PresetOption[] = [
@@ -89,6 +95,8 @@ export const refrigerationPresets: PresetOption[] = [
   { label: "Compressor Amps", unit: "amps" },
   { label: "Line Voltage", unit: "volts" },
   { label: "Control Voltage (R-C)", unit: "volts" },
+  { label: "Low Pressure Switch Status", unit: "other" },
+  { label: "High Pressure Switch Status", unit: "other" },
 ];
 
 export const miniSplitPresets: PresetOption[] = [
@@ -120,4 +128,6 @@ export const iceMachinePresets: PresetOption[] = [
   { label: "Water Temp", unit: "°F" },
   { label: "Bin Thermostat State", unit: "other" },
   { label: "Hot Gas Valve Voltage", unit: "volts" },
+  { label: "Bin Control Status", unit: "other" },
+  { label: "Water Level Control Status", unit: "other" },
 ];
