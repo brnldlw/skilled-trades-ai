@@ -2560,7 +2560,13 @@ export default function HVACUnitsPage() {
   const [errorCodeSource, setErrorCodeSource] = useState("Control Board");
   const [symptom, setSymptom] = useState("");
 
-   const [refrigerantType, setRefrigerantType] = useState<string>("Unknown");
+  const [finalConfirmedCause, setFinalConfirmedCause] = useState("");
+  const [actualFixPerformed, setActualFixPerformed] = useState("");
+  const [outcomeStatus, setOutcomeStatus] = useState("Not Set");
+  const [callbackOccurred, setCallbackOccurred] = useState("No");
+  const [techCloseoutNotes, setTechCloseoutNotes] = useState("");
+
+  const [refrigerantType, setRefrigerantType] = useState<string>("Unknown");
 
   const [rawResult, setRawResult] = useState("");
   const [loading, setLoading] = useState(false);
@@ -2849,6 +2855,11 @@ const errorCodeGuidance = useMemo(
     setSelectedPackId("no_cooling");
     setErrorCode("");
     setErrorCodeSource("Control Board");
+    setFinalConfirmedCause("");
+    setActualFixPerformed("");
+    setOutcomeStatus("Not Set");
+    setCallbackOccurred("No");
+    setTechCloseoutNotes("");
     const pack = SYMPTOM_PACKS.find((p) => p.id === "no_cooling") || SYMPTOM_PACKS[0];
     setFlowNodeId(pack.nodes[0]?.id || "");
     setFlowHistory([]);
@@ -2871,6 +2882,11 @@ const errorCodeGuidance = useMemo(
       selectedPackId,
       flowNodeId,
       flowHistory,
+      finalConfirmedCause,
+      actualFixPerformed,
+      outcomeStatus,
+      callbackOccurred,
+      techCloseoutNotes,
       observations,
       rawResult,
       nameplate,
@@ -2902,6 +2918,11 @@ const errorCodeGuidance = useMemo(
     setNameplate(record.nameplate || null);
     setErrorCode(record.errorCode || "");
     setErrorCodeSource(record.errorCodeSource || "Control Board");
+    setFinalConfirmedCause(record.finalConfirmedCause || "");
+    setActualFixPerformed(record.actualFixPerformed || "");
+    setOutcomeStatus(record.outcomeStatus || "Not Set");
+    setCallbackOccurred(record.callbackOccurred || "No");
+    setTechCloseoutNotes(record.techCloseoutNotes || "");
   }
 
   async function removeSavedUnit(id: string) {
@@ -3438,6 +3459,85 @@ const errorCodeGuidance = useMemo(
     <option>Blink Code</option>
     <option>Unknown</option>
   </select>
+</div>
+
+<div style={{ marginTop: 16 }}>
+  <SectionCard title="Case Outcome / Learning Feedback">
+    <SmallHint>
+      Use this after the job is diagnosed or completed. This is how the app starts learning what actually fixed the unit.
+    </SmallHint>
+
+    <div
+      style={{
+        marginTop: 12,
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr",
+        gap: 12,
+      }}
+    >
+      <div style={{ gridColumn: "1 / -1" }}>
+        <label style={{ fontWeight: 900 }}>Final Confirmed Cause</label>
+        <br />
+        <input
+          value={finalConfirmedCause}
+          onChange={(e) => setFinalConfirmedCause(e.target.value)}
+          placeholder="Example: failed dual run capacitor, restricted filter-drier, dirty condenser, bad float switch"
+          style={{ width: "100%", padding: 8 }}
+        />
+      </div>
+
+      <div style={{ gridColumn: "1 / -1" }}>
+        <label style={{ fontWeight: 900 }}>Actual Fix Performed</label>
+        <br />
+        <input
+          value={actualFixPerformed}
+          onChange={(e) => setActualFixPerformed(e.target.value)}
+          placeholder="Example: replaced 45/5 capacitor, cleaned condenser, replaced water inlet valve"
+          style={{ width: "100%", padding: 8 }}
+        />
+      </div>
+
+      <div>
+        <label style={{ fontWeight: 900 }}>Outcome Status</label>
+        <br />
+        <select
+          value={outcomeStatus}
+          onChange={(e) => setOutcomeStatus(e.target.value)}
+          style={{ width: "100%", padding: 8 }}
+        >
+          <option>Not Set</option>
+          <option>Fixed</option>
+          <option>Partially Fixed</option>
+          <option>Needs More Work</option>
+          <option>Monitoring</option>
+        </select>
+      </div>
+
+      <div>
+        <label style={{ fontWeight: 900 }}>Callback Occurred</label>
+        <br />
+        <select
+          value={callbackOccurred}
+          onChange={(e) => setCallbackOccurred(e.target.value)}
+          style={{ width: "100%", padding: 8 }}
+        >
+          <option>No</option>
+          <option>Yes</option>
+        </select>
+      </div>
+
+      <div style={{ gridColumn: "1 / -1" }}>
+        <label style={{ fontWeight: 900 }}>Tech Closeout Notes</label>
+        <br />
+        <textarea
+          value={techCloseoutNotes}
+          onChange={(e) => setTechCloseoutNotes(e.target.value)}
+          placeholder="What proved the fault, what was replaced/repaired, any notes for the next tech, anything unusual"
+          style={{ width: "100%", padding: 8, minHeight: 100 }}
+        />
+      </div>
+    </div>
+  </SectionCard>
 </div>
 
             <div style={{ marginTop: 12 }}>

@@ -44,6 +44,11 @@ export type SavedUnitRecord = {
   flowNodeId: string;
   flowHistory: { nodeId: string; choice: "PASS" | "FAIL"; nextId: string | null }[];
   observations: Observation[];
+  finalConfirmedCause?: string;
+  actualFixPerformed?: string;
+  outcomeStatus?: string;
+  callbackOccurred?: string;
+  techCloseoutNotes?: string;
   rawResult: string;
   nameplate: NameplateResult | null;
 };
