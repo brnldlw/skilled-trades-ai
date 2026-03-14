@@ -191,7 +191,103 @@ function buildMeasurementCoachingItem(measurement: string): MeasurementCoachingI
     };
   }
 
-  return {
+  if (m.includes("low pressure switch status")) {
+    return {
+      measurement,
+      tool: "Multimeter / continuity check / control reading",
+      whereToMeasure: "At the low pressure switch or through the control circuit as appropriate.",
+      expectedResult: "Switch state should match actual system operating conditions.",
+      ifHigh: "Not applicable as a numeric reading; focus on whether the switch is open or closed when it should be.",
+      ifLow: "Not applicable as a numeric reading; focus on whether the switch is open or closed when it should be.",
+      nextStep: "If the switch is open unexpectedly, compare suction pressure and system conditions before condemning the switch itself.",
+    };
+  }
+
+  if (m.includes("high pressure switch status")) {
+    return {
+      measurement,
+      tool: "Multimeter / continuity check / control reading",
+      whereToMeasure: "At the high pressure switch or through the safety/control circuit.",
+      expectedResult: "Switch state should agree with actual head pressure and operating condition.",
+      ifHigh: "If the switch is opening because head pressure is truly excessive, investigate condenser airflow, overcharge, or restriction causes.",
+      ifLow: "If pressure is normal but the switch is open, the switch or control path may be faulty.",
+      nextStep: "Verify actual head pressure before replacing the switch. Prove whether the switch is reacting correctly or has failed.",
+    };
+  }
+
+  if (m.includes("pressure switch status")) {
+    return {
+      measurement,
+      tool: "Multimeter / manometer / continuity check",
+      whereToMeasure: "At the furnace pressure switch and tubing/proving circuit.",
+      expectedResult: "The switch should prove correctly when inducer draft is present and venting is normal.",
+      ifHigh: "If draft/proving is stronger than needed and the switch still does not behave correctly, suspect switch or tubing/port issues.",
+      ifLow: "If draft is weak or absent, investigate inducer, venting, blocked ports, or tubing issues first.",
+      nextStep: "Verify inducer operation, tubing, port cleanliness, and venting before replacing the pressure switch.",
+    };
+  }
+
+  if (m.includes("limit switch status")) {
+    return {
+      measurement,
+      tool: "Multimeter / continuity check / temperature assessment",
+      whereToMeasure: "Across the limit circuit and in the heat section airflow path.",
+      expectedResult: "Limit should remain in the normal operating state during proper airflow and heat rise conditions.",
+      ifHigh: "If heat rise is excessive or airflow is poor, the limit may be opening correctly to protect the unit.",
+      ifLow: "If temperatures are normal but the limit is open, suspect a failed switch or poor connection.",
+      nextStep: "Check heat rise, blower airflow, filter, coil, and static pressure before replacing the limit.",
+    };
+  }
+
+  if (m.includes("rollout switch status")) {
+    return {
+      measurement,
+      tool: "Multimeter / continuity check / combustion inspection",
+      whereToMeasure: "At the rollout switch and burner/heat exchanger area.",
+      expectedResult: "Rollout should remain in the normal state during safe burner operation.",
+      ifHigh: "If rollout has tripped due to real flame disturbance, investigate burner, venting, exchanger, and combustion issues immediately.",
+      ifLow: "If rollout is open without evidence of actual rollout, confirm switch condition and wiring carefully.",
+      nextStep: "Do not simply reset and leave. Inspect for unsafe combustion, venting, exchanger, or burner carryover issues first.",
+    };
+  }
+
+  if (m.includes("condensate safety status")) {
+    return {
+      measurement,
+      tool: "Multimeter / continuity check / visual inspection",
+      whereToMeasure: "At the condensate safety switch, drain pan, or drain circuit.",
+      expectedResult: "Safety should be in the normal state when the drain path is clear and water is not backing up.",
+      ifHigh: "If the drain is backed up or the pan is full, the safety may be opening correctly.",
+      ifLow: "If the drain is clear but the safety stays open, suspect switch, wiring, or mounting issues.",
+      nextStep: "Clear and verify the drain path first, then retest the safety before replacing it.",
+    };
+  }
+
+  if (m.includes("bin control status")) {
+    return {
+      measurement,
+      tool: "Multimeter / continuity check / visual inspection",
+      whereToMeasure: "At the ice machine bin control or ice level shutoff circuit.",
+      expectedResult: "The control should change state correctly based on actual ice level.",
+      ifHigh: "If the control indicates full bin when the bin is not truly full, it may be misadjusted, dirty, or failed.",
+      ifLow: "If the control never satisfies even when the bin is full, it may not be sensing correctly.",
+      nextStep: "Verify actual bin condition, sensor placement, and control state before replacing the bin control.",
+    };
+  }
+
+  if (m.includes("water level control status")) {
+    return {
+      measurement,
+      tool: "Multimeter / visual inspection",
+      whereToMeasure: "At the float, level sensor, or water level control circuit in the reservoir/sump.",
+      expectedResult: "The level control should respond correctly as water enters and leaves the machine.",
+      ifHigh: "If the control falsely indicates a satisfied/full condition, the machine may stop filling too early.",
+      ifLow: "If the control never satisfies, the machine may overfill or continue trying to fill.",
+      nextStep: "Inspect float movement, scaling, reservoir condition, and control response before replacing the component.",
+    };
+  }
+
+    return {
     measurement,
     tool: "Appropriate HVAC/R test instrument",
     whereToMeasure: "At the correct point in the circuit or air path for this measurement.",
