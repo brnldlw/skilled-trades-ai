@@ -438,10 +438,6 @@ function analyzeCharge(
     !equipmentType.toLowerCase().includes("furnace") &&
     !equipmentType.toLowerCase().includes("boiler");
 
-    const supabase = createSupabaseClient();
-    const [authChecked, setAuthChecked] = useState(false);
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-
   if (evapSatSource === "pt-chart") {
     findings.push(`Evap saturation estimated from ${refrigerantType} PT chart.`);
   }
