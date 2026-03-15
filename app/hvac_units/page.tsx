@@ -1,5 +1,7 @@
 "use client";
 
+import { createClient as createSupabaseClient } from "../lib/supabase/client";
+
 import { buildErrorCodeGuidance } from "./lib/errorCodeGuidance";
 
 import { buildMeasurementCoaching } from "./lib/measurementCoaching";
@@ -435,6 +437,10 @@ function analyzeCharge(
   const isCoolingType =
     !equipmentType.toLowerCase().includes("furnace") &&
     !equipmentType.toLowerCase().includes("boiler");
+
+    const supabase = createSupabaseClient();
+    const [authChecked, setAuthChecked] = useState(false);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   if (evapSatSource === "pt-chart") {
     findings.push(`Evap saturation estimated from ${refrigerantType} PT chart.`);
@@ -2661,9 +2667,22 @@ export default function HVACUnitsPage() {
   const [repairGuidanceMode, setRepairGuidanceMode] =
   useState<"apprentice" | "experienced">("apprentice");
 
+  const supabase = createSupabaseClient();
+  const [authChecked, setAuthChecked] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
+
   useEffect(() => {
     listUnits().then(setSavedUnits).catch(() => setSavedUnits([]));
   }, []);
+
+useEffect(() => {
+  supabase.auth.getSession().then(({ data }: { data: { session: { user?: { email?: string | null } } | null } }) => {
+    setIsLoggedIn(!!data.session);
+    setUserEmail(data.session?.user?.email || "");
+    setAuthChecked(true);
+  });
+}, [supabase]);
 
   const parsed = useMemo(() => parseDiagnosis(rawResult), [rawResult]);
 
@@ -3177,6 +3196,11 @@ const errorCodeGuidance = useMemo(
     }
   }
 
+  async function handleSignOut() {
+  await supabase.auth.signOut();
+  window.location.href = "/auth";
+}
+
   function openPrintableReport() {
     const html = buildServiceReportHtml({
       customerName,
@@ -3212,11 +3236,47 @@ const errorCodeGuidance = useMemo(
     }, 60000);
   }
 
+  if (!authChecked) {
+  return <div style={{ padding: 20 }}>Checking login...</div>;
+}
+
+if (!isLoggedIn) {
+  return (
+    <div style={{ padding: 20 }}>
+      <h1 style={{ fontSize: 26, fontWeight: 900 }}>Skilled Trades AI — HVAC Diagnose</h1>
+      <p>You need to log in first.</p>
+      <a href="/auth">Go to login</a>
+    </div>
+  );
+}
+
   return (
     <div style={{ padding: 20, maxWidth: 1220, margin: "0 auto" }}>
       <h1 style={{ fontSize: 26, fontWeight: 900 }}>
         Skilled Trades AI — HVAC Diagnose
       </h1>
+
+      <div
+  style={{
+    marginTop: 10,
+    padding: 10,
+    border: "1px solid #e5e5e5",
+    borderRadius: 10,
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 12,
+    flexWrap: "wrap",
+    background: "#fafafa",
+  }}
+>
+  <div>
+    <b>Logged in:</b> {userEmail || "Unknown user"}
+  </div>
+  <button onClick={handleSignOut} style={{ padding: "8px 12px", fontWeight: 900 }}>
+    Sign out
+  </button>
+</div>
 
       <div
         style={{
