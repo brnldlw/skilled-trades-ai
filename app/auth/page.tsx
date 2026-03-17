@@ -17,11 +17,32 @@ export default function AuthPage() {
     setMessage("");
 
     try {
-      if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-        });
+            if (mode === "signup") {
+          const cleanEmail = email.trim();
+          const cleanPassword = password.trim();
+
+          if (!cleanEmail || !cleanPassword) {
+            setMessage("Enter both email and password.");
+            setLoading(false);
+            return;
+          }
+
+          const redirectBase = window.location.origin;
+
+          const { error } = await supabase.auth.signUp({
+            email: cleanEmail,
+            password: cleanPassword,
+            options: {
+            emailRedirectTo: "https://myhvacrtool.com/auth/",
+            },
+          });
+
+          if (error) {
+            setMessage(error.message);
+          } else {
+            setMessage("Sign-up submitted. Check your email if confirmation is enabled.");
+          }
+
         if (error) {
           setMessage(error.message);
         } else {
@@ -32,12 +53,12 @@ export default function AuthPage() {
           email,
           password,
         });
-        if (error) {
-          setMessage(error.message);
-        } else {
-          setMessage("Logged in successfully.");
-          window.location.href = "/hvac_units";
-        }
+       if (error) {
+  setMessage(error.message);
+} else {
+  alert("LOGIN SUCCESS");
+  window.location.href = "/";
+}
       }
     } finally {
       setLoading(false);
