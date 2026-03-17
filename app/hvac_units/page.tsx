@@ -1,5 +1,43 @@
 "use client";
 
+import { createClient as createSupabaseClient } from "../lib/supabase/client";
+
+import { buildErrorCodeGuidance } from "./lib/errorCodeGuidance";
+
+import { buildMeasurementCoaching } from "./lib/measurementCoaching";
+
+import { buildRepairGuidance } from "./lib/repairGuidance";
+
+import { safeJson } from "./lib/networkHelpers";
+
+import { ProbBar } from "./components/ProbBar";
+
+import { SectionCard } from "./components/SectionCard";
+
+import { PillButton } from "./components/PillButton";
+
+import { SmallHint } from "./components/SmallHint";
+
+import { Badge } from "./components/Badge";
+
+import { readFileAsDataUrl, makeId } from "./lib/fileHelpers";
+
+import { convertToStandard, guessDefaultUnit } from "./lib/unitHelpers";
+
+import { escapeHtml, formatRawOutput } from "./lib/textHelpers";
+
+import { toNumber, round1 } from "./lib/basicHelpers";
+
+import {
+  refrigerantOptions,
+  unitOptions,
+  coolingPresets,
+  heatingPresets,
+  refrigerationPresets,
+  miniSplitPresets,
+  iceMachinePresets,
+} from "./data/presets";
+
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   deleteUnit,
@@ -9,15 +47,6 @@ import {
   type NameplateResult,
   type SavedUnitRecord,
 } from "../lib/unit-store";
-
-import {
-  refrigerantOptions,
-  unitOptions,
-  coolingPresets,
-  heatingPresets,
-  refrigerationPresets,
-  miniSplitPresets,
-} from "./data/presets";
 
 type Diagnosis = {
   summary?: string;
@@ -126,6 +155,16 @@ type EquipmentMemoryInsight = {
   repeatedCauses: string[];
   repeatedMeasurementPatterns: string[];
   suggestedFirstChecks: string[];
+  commonConfirmedFixes: string[];
+  callbackWarnings: string[];
+  similarCases: {
+  savedAt: string;
+  symptom: string;
+  finalConfirmedCause: string;
+  actualFixPerformed: string;
+  outcomeStatus: string;
+  callbackOccurred: string;
+}[];
 };
 
 type PTPoint = { psi: number; tempF: number };
@@ -245,212 +284,6 @@ const PT_TABLES: Record<string, PTPoint[]> = {
     { psi: 300, tempF: 114 },
   ],
 };
-
-function SectionCard(props: {
-  title: string;
-  children: React.ReactNode;
-  right?: React.ReactNode;
-}) {
-  return (
-    <div
-      style={{
-        border: "1px solid #ddd",
-        borderRadius: 12,
-        padding: 14,
-        background: "white",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 12,
-        }}
-      >
-        <div style={{ fontWeight: 900 }}>{props.title}</div>
-        {props.right ? <div>{props.right}</div> : null}
-      </div>
-      <div style={{ marginTop: 10 }}>{props.children}</div>
-    </div>
-  );
-}
-
-function Badge({ text }: { text: string }) {
-  return (
-    <span
-      style={{
-        display: "inline-block",
-        padding: "2px 8px",
-        borderRadius: 999,
-        border: "1px solid #ddd",
-        fontSize: 12,
-        background: "#f7f7f7",
-        marginLeft: 8,
-        whiteSpace: "nowrap",
-      }}
-    >
-      {text}
-    </span>
-  );
-}
-
-function SmallHint(props: {
-  children: React.ReactNode;
-  style?: React.CSSProperties;
-}) {
-  return (
-    <div style={{ fontSize: 12, color: "#555", lineHeight: 1.35, ...props.style }}>
-      {props.children}
-    </div>
-  );
-}
-
-function PillButton(props: {
-  text: string;
-  onClick: () => void;
-  disabled?: boolean;
-  active?: boolean;
-}) {
-  return (
-    <button
-      onClick={props.onClick}
-      disabled={props.disabled}
-      style={{
-        padding: "8px 12px",
-        borderRadius: 999,
-        border: "1px solid #ddd",
-        background: props.active ? "#111" : props.disabled ? "#f5f5f5" : "#fff",
-        color: props.active ? "#fff" : "#111",
-        fontWeight: 900,
-        cursor: props.disabled ? "not-allowed" : "pointer",
-      }}
-    >
-      {props.text}
-    </button>
-  );
-}
-
-function ProbBar({ pct }: { pct: number }) {
-  const safe = Math.max(0, Math.min(100, pct || 0));
-  return (
-    <div style={{ marginTop: 6 }}>
-      <div style={{ height: 8, background: "#eee", borderRadius: 999 }}>
-        <div
-          style={{
-            width: `${safe}%`,
-            height: 8,
-            background: "#111",
-            borderRadius: 999,
-          }}
-        />
-      </div>
-      <div style={{ fontSize: 12, color: "#444", marginTop: 4 }}>
-        {safe}% confidence
-      </div>
-    </div>
-  );
-}
-
-async function safeJson(res: Response) {
-  const txt = await res.text();
-  if (!txt) return null;
-  try {
-    return JSON.parse(txt);
-  } catch {
-    return { result: txt };
-  }
-}
-
-function toNumber(s: string): number | null {
-  const n = Number(String(s).replace(/[^\d.\-]/g, ""));
-  return Number.isFinite(n) ? n : null;
-}
-
-function round1(n: number) {
-  return Math.round(n * 10) / 10;
-}
-
-function escapeHtml(input: string) {
-  return input
-    .split("&").join("&amp;")
-    .split("<").join("&lt;")
-    .split(">").join("&gt;")
-    .split('"').join("&quot;")
-    .split("'").join("&#039;");
-}
-
-function formatRawOutput(raw: string) {
-  if (!raw) return "No results yet.";
-
-  const trimmed = raw.trim();
-
-  try {
-    const parsed = JSON.parse(trimmed);
-    return JSON.stringify(parsed, null, 2);
-  } catch {
-    return trimmed;
-  }
-}
-
-
-function convertToStandard(
-  value: number,
-  unit: string
-): { value: number; unit: string } | null {
-  const u = unit.trim();
-  if (u === "kPa") return { value: value * 0.1450377377, unit: "psi" };
-  if (u === "bar") return { value: value * 14.50377377, unit: "psi" };
-  if (u === "°C") return { value: (value * 9) / 5 + 32, unit: "°F" };
-  if (u === "Pa") return { value: value * 0.0040146308, unit: "inWC" };
-  return null;
-}
-
-function guessDefaultUnit(label: string) {
-  const s = label.toLowerCase();
-  if (
-    s.includes("suction") ||
-    s.includes("liquid") ||
-    s.includes("discharge") ||
-    s.includes("head") ||
-    s.includes("pressure")
-  ) {
-    return "psi";
-  }
-  if (s.includes("static") || s.includes("esp") || s.includes("inwc")) {
-    return "inWC";
-  }
-  if (
-    s.includes("temp") ||
-    s.includes("temperature") ||
-    s.includes("superheat") ||
-    s.includes("subcool") ||
-    s.includes("delta") ||
-    s.includes("heat rise") ||
-    s.includes("saturation") ||
-    s.includes("box temp") ||
-    s.includes("coil temp")
-  ) {
-    return "°F";
-  }
-  if (s.includes("amps")) return "amps";
-  if (s.includes("voltage")) return "volts";
-  if (s.includes("flame")) return "µA";
-  return "other";
-}
-
-function readFileAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const r = new FileReader();
-    r.onload = () => resolve(String(r.result || ""));
-    r.onerror = () => reject(new Error("Could not read file"));
-    r.readAsDataURL(file);
-  });
-}
-
-function makeId() {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-}
 
 function normalizeLabel(label: string) {
   return label.trim().toLowerCase().replace(/\s+/g, " ");
@@ -1313,6 +1146,9 @@ function buildEquipmentMemoryInsight(
       repeatedCauses: [],
       repeatedMeasurementPatterns: [],
       suggestedFirstChecks: [],
+      commonConfirmedFixes: [],
+      callbackWarnings: [],
+      similarCases: [],
     };
   }
 
@@ -1364,13 +1200,21 @@ function buildEquipmentMemoryInsight(
 
   for (const c of repeatedCauses) {
     const low = c.toLowerCase();
-    if (low.includes("fan")) suggestionPool.push("Inspect fan motor, blade, capacitor, and rotation");
-    if (low.includes("airflow"))
+    if (low.includes("fan")) {
+      suggestionPool.push("Inspect fan motor, blade, capacitor, and rotation");
+    }
+    if (low.includes("airflow")) {
       suggestionPool.push("Check airflow before condemning refrigeration parts");
-    if (low.includes("capacitor")) suggestionPool.push("Test run capacitor and amp draw");
-    if (low.includes("contactor")) suggestionPool.push("Inspect contactor points and coil voltage");
-    if (low.includes("compressor"))
+    }
+    if (low.includes("capacitor")) {
+      suggestionPool.push("Test run capacitor and amp draw");
+    }
+    if (low.includes("contactor")) {
+      suggestionPool.push("Inspect contactor points and coil voltage");
+    }
+    if (low.includes("compressor")) {
       suggestionPool.push("Verify compressor amps, voltage, and overload condition");
+    }
     if (low.includes("thermostat") || low.includes("control")) {
       suggestionPool.push("Verify thermostat signal and control sequence");
     }
@@ -1397,10 +1241,32 @@ function buildEquipmentMemoryInsight(
     repeatedCauses,
     repeatedMeasurementPatterns,
     suggestedFirstChecks: dedupedSuggestions,
+    commonConfirmedFixes: topCounts(
+      related
+        .map((r) => `${r.finalConfirmedCause || ""} -> ${r.actualFixPerformed || ""}`.trim())
+        .filter((x) => x && x !== "->"),
+      1,
+      5
+    ),
+    callbackWarnings: topCounts(
+      related
+        .filter((r) => (r.callbackOccurred || "").toLowerCase() === "yes")
+        .map((r) => `${r.finalConfirmedCause || "Unknown issue"} -> ${r.actualFixPerformed || "Unknown fix"}`),
+      1,
+      5
+    ),
+    similarCases: related.slice(0, 5).map((r) => ({
+      savedAt: r.savedAt || "",
+      symptom: r.symptom || "",
+      finalConfirmedCause: r.finalConfirmedCause || "",
+      actualFixPerformed: r.actualFixPerformed || "",
+      outcomeStatus: r.outcomeStatus || "",
+      callbackOccurred: r.callbackOccurred || "",
+    })),
   };
 }
 
-function buildServiceReportHtml(args: {
+  function buildServiceReportHtml(args: {
   customerName: string;
   siteName: string;
   siteAddress: string;
@@ -1418,6 +1284,7 @@ function buildServiceReportHtml(args: {
   airflowAnalysis: AirflowAnalysis;
   equipmentMemory: EquipmentMemoryInsight;
 }) {
+
   const {
     customerName,
     siteName,
@@ -2433,6 +2300,296 @@ const SYMPTOM_PACKS: SymptomPack[] = [
       },
     ],
   },
+    {
+    id: "ice_machine_not_making_ice",
+    label: "Ice Machine Not Making Ice",
+    defaultSymptom: "Ice machine is not producing ice.",
+    nodes: [
+      {
+        id: "a",
+        title: "Call for Ice",
+        question: "Is the machine powered and calling for an ice-making cycle?",
+        how: "Check control state, display, selector, bin control, and incoming power.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "b",
+        failNext: "a_end",
+        suggestedMeasurement: "Line Voltage",
+      },
+      {
+        id: "b",
+        title: "Water Supply",
+        question: "Does the machine have proper water supply and fill?",
+        how: "Check water inlet valve, filter, pressure, reservoir fill, and float behavior.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "c",
+        failNext: "b_end",
+        suggestedMeasurement: "Water Fill Time",
+      },
+      {
+        id: "c",
+        title: "Refrigeration / Freeze Cycle",
+        question: "Does the machine enter and maintain a normal freeze cycle?",
+        how: "Check compressor, condenser airflow, freeze plate/evaporator temp, and ice formation.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "d",
+        failNext: "c_end",
+        suggestedMeasurement: "Evap Coil Temp",
+      },
+      {
+        id: "d",
+        title: "Release / Harvest",
+        question: "Does the ice release correctly during harvest?",
+        how: "Check harvest assist, hot gas function if applicable, plate condition, and control timing.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "d_end",
+        failNext: "e_end",
+        suggestedMeasurement: "Harvest Cycle Time",
+      },
+      {
+        id: "a_end",
+        title: "Likely Direction",
+        question: "Power, control, bin control, or machine enable issue likely.",
+        terminal: true,
+      },
+      {
+        id: "b_end",
+        title: "Likely Direction",
+        question: "Water supply, inlet valve, filter, or fill control issue likely.",
+        terminal: true,
+      },
+      {
+        id: "c_end",
+        title: "Likely Direction",
+        question: "Freeze cycle / refrigeration / condenser / compressor issue likely.",
+        terminal: true,
+      },
+      {
+        id: "d_end",
+        title: "Done",
+        question: "Basic ice-making sequence appears normal. Recheck complaint details and production expectations.",
+        terminal: true,
+      },
+      {
+        id: "e_end",
+        title: "Likely Direction",
+        question: "Harvest / release / plate / hot gas / control timing issue likely.",
+        terminal: true,
+      },
+    ],
+  },
+  {
+    id: "ice_machine_low_production",
+    label: "Ice Machine Low Production",
+    defaultSymptom: "Ice machine is making ice but production is low.",
+    nodes: [
+      {
+        id: "a",
+        title: "Low Production",
+        question: "Is condenser airflow or heat rejection reduced?",
+        how: "Check condenser coil, fan motor, water-cooled condenser flow if applicable, and ambient conditions.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "a_end",
+        failNext: "b",
+        suggestedMeasurement: "Head Pressure",
+      },
+      {
+        id: "b",
+        title: "Water System",
+        question: "Is water distribution, fill, or scale affecting the freeze cycle?",
+        how: "Check distributor, trough, float, fill valve, sump, and scale buildup.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "b_end",
+        failNext: "c",
+        suggestedMeasurement: "Water Fill Time",
+      },
+      {
+        id: "c",
+        title: "Freeze Efficiency",
+        question: "Are refrigeration readings and evaporator conditions normal for a strong freeze cycle?",
+        how: "Check suction pressure, evap temp, ice thickness pattern, and cycle time.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "d",
+        failNext: "c_end",
+        suggestedMeasurement: "Suction Pressure",
+      },
+      {
+        id: "d",
+        title: "Harvest Efficiency",
+        question: "Is harvest taking too long or leaving incomplete release?",
+        how: "Check harvest timing, plate condition, assist operation, and slab/cube release pattern.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "d_end",
+        failNext: "e_end",
+        suggestedMeasurement: "Harvest Cycle Time",
+      },
+      {
+        id: "a_end",
+        title: "Likely Direction",
+        question: "Condenser / ambient / heat rejection issue likely reducing production.",
+        terminal: true,
+      },
+      {
+        id: "b_end",
+        title: "Likely Direction",
+        question: "Water supply / scale / distribution issue likely reducing production.",
+        terminal: true,
+      },
+      {
+        id: "c_end",
+        title: "Likely Direction",
+        question: "Refrigeration / freeze cycle performance issue likely.",
+        terminal: true,
+      },
+      {
+        id: "d_end",
+        title: "Likely Direction",
+        question: "Harvest inefficiency likely causing low production.",
+        terminal: true,
+      },
+      {
+        id: "e_end",
+        title: "Done",
+        question: "Production issue may be load, ambient, maintenance, or setup related. Gather more cycle details.",
+        terminal: true,
+      },
+    ],
+  },
+  {
+    id: "ice_machine_harvest_problem",
+    label: "Ice Machine Harvest Problem",
+    defaultSymptom: "Ice machine freezes but has trouble harvesting or releasing ice.",
+    nodes: [
+      {
+        id: "a",
+        title: "Harvest Problem",
+        question: "Is the machine entering harvest when expected?",
+        how: "Check board timing, thermistor/sensor input, thickness control, and control sequence.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "b",
+        failNext: "a_end",
+        suggestedMeasurement: "Harvest Cycle Time",
+      },
+      {
+        id: "b",
+        title: "Release Action",
+        question: "Is the harvest assist / hot gas / release method functioning correctly?",
+        how: "Check actuator, hot gas valve if applicable, water assist, and control output.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "c",
+        failNext: "b_end",
+        suggestedMeasurement: "Line Voltage",
+      },
+      {
+        id: "c",
+        title: "Mechanical Release",
+        question: "Are scale, plate condition, or cube/slab formation preventing release?",
+        how: "Inspect evaporator/plate surface, scale, bridging, thickness, and freeze pattern.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "c_end",
+        failNext: "d_end",
+        suggestedMeasurement: "Evap Coil Temp",
+      },
+      {
+        id: "a_end",
+        title: "Likely Direction",
+        question: "Harvest initiation / board / sensor / thickness control issue likely.",
+        terminal: true,
+      },
+      {
+        id: "b_end",
+        title: "Likely Direction",
+        question: "Harvest assist / hot gas / release mechanism issue likely.",
+        terminal: true,
+      },
+      {
+        id: "c_end",
+        title: "Likely Direction",
+        question: "Scale, surface condition, or improper ice formation likely preventing harvest.",
+        terminal: true,
+      },
+      {
+        id: "d_end",
+        title: "Done",
+        question: "Harvest sequence appears mostly normal. Recheck cycle timing and complaint details.",
+        terminal: true,
+      },
+    ],
+  },
+  {
+    id: "ice_machine_water_fill_problem",
+    label: "Ice Machine Water Fill Problem",
+    defaultSymptom: "Ice machine is not filling correctly with water.",
+    nodes: [
+      {
+        id: "a",
+        title: "Water Fill Problem",
+        question: "Is incoming water supply present and adequate?",
+        how: "Check shutoff, filter, pressure, inlet screen, and supply line condition.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "b",
+        failNext: "a_end",
+        suggestedMeasurement: "Water Fill Time",
+      },
+      {
+        id: "b",
+        title: "Valve / Control",
+        question: "Is the inlet valve being energized when the machine calls for fill?",
+        how: "Check control output, valve coil voltage, and board sequence.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "c",
+        failNext: "b_end",
+        suggestedMeasurement: "Line Voltage",
+      },
+      {
+        id: "c",
+        title: "Reservoir Response",
+        question: "Is the float / level system responding correctly once water enters?",
+        how: "Check float switch, reservoir, overflow, scale, and sticking components.",
+        passLabel: "Yes",
+        failLabel: "No",
+        passNext: "c_end",
+        failNext: "d_end",
+        suggestedMeasurement: "Water Fill Time",
+      },
+      {
+        id: "a_end",
+        title: "Likely Direction",
+        question: "Incoming water supply / filter / pressure issue likely.",
+        terminal: true,
+      },
+      {
+        id: "b_end",
+        title: "Likely Direction",
+        question: "Fill control / board / valve command issue likely.",
+        terminal: true,
+      },
+      {
+        id: "c_end",
+        title: "Done",
+        question: "Basic fill sequence appears normal. Recheck complaint details and actual cycle timing.",
+        terminal: true,
+      },
+      {
+        id: "d_end",
+        title: "Likely Direction",
+        question: "Float / reservoir / scale / level control issue likely.",
+        terminal: true,
+      },
+    ],
+  },
 ];
 
 export default function HVACUnitsPage() {
@@ -2445,9 +2602,17 @@ export default function HVACUnitsPage() {
   const [equipmentType, setEquipmentType] = useState("RTU");
   const [manufacturer, setManufacturer] = useState("");
   const [model, setModel] = useState("");
+  const [errorCode, setErrorCode] = useState("");
+  const [errorCodeSource, setErrorCodeSource] = useState("Control Board");
   const [symptom, setSymptom] = useState("");
 
-   const [refrigerantType, setRefrigerantType] = useState<string>("Unknown");
+  const [finalConfirmedCause, setFinalConfirmedCause] = useState("");
+  const [actualFixPerformed, setActualFixPerformed] = useState("");
+  const [outcomeStatus, setOutcomeStatus] = useState("Not Set");
+  const [callbackOccurred, setCallbackOccurred] = useState("No");
+  const [techCloseoutNotes, setTechCloseoutNotes] = useState("");
+
+  const [refrigerantType, setRefrigerantType] = useState<string>("Unknown");
 
   const [rawResult, setRawResult] = useState("");
   const [loading, setLoading] = useState(false);
@@ -2495,9 +2660,25 @@ export default function HVACUnitsPage() {
   const [savedUnits, setSavedUnits] = useState<SavedUnitRecord[]>([]);
   const [historyFilter, setHistoryFilter] = useState("");
 
+  const [repairGuidanceMode, setRepairGuidanceMode] =
+  useState<"apprentice" | "experienced">("apprentice");
+
+  const supabase = createSupabaseClient();
+  const [authChecked, setAuthChecked] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
+
   useEffect(() => {
     listUnits().then(setSavedUnits).catch(() => setSavedUnits([]));
   }, []);
+
+useEffect(() => {
+  supabase.auth.getSession().then(({ data }: { data: { session: { user?: { email?: string | null } } | null } }) => {
+    setIsLoggedIn(!!data.session);
+    setUserEmail(data.session?.user?.email || "");
+    setAuthChecked(true);
+  });
+}, [supabase]);
 
   const parsed = useMemo(() => parseDiagnosis(rawResult), [rawResult]);
 
@@ -2536,6 +2717,18 @@ const defrostRepairGuidance = useMemo(
     [selectedPack, flowNodeId]
   );
 
+const errorCodeGuidance = useMemo(
+  () =>
+    buildErrorCodeGuidance({
+      manufacturer,
+      model,
+      equipmentType,
+      errorCode,
+      errorCodeSource,
+    }),
+  [manufacturer, model, equipmentType, errorCode, errorCodeSource]
+);
+
   const filteredSavedUnits = useMemo(() => {
     const q = historyFilter.trim().toLowerCase();
     if (!q) return savedUnits;
@@ -2556,8 +2749,18 @@ const defrostRepairGuidance = useMemo(
     );
   }, [savedUnits, historyFilter]);
 
+  const repairGuidance = useMemo(
+  () => buildRepairGuidance(parsed, equipmentType),
+  [parsed, equipmentType]
+);
+
   const measurementOptions =
     parsed?.field_measurements_to_collect?.map((m) => m.measurement) || [];
+
+  const measurementCoaching = useMemo(
+    () => buildMeasurementCoaching(measurementOptions),
+    [measurementOptions]
+  );
 
   function resetFlowForPack(packId: string) {
     const pack = SYMPTOM_PACKS.find((p) => p.id === packId) || SYMPTOM_PACKS[0];
@@ -2709,6 +2912,13 @@ const defrostRepairGuidance = useMemo(
     setGaugeErr("");
     setGaugeRead(null);
     setSelectedPackId("no_cooling");
+    setErrorCode("");
+    setErrorCodeSource("Control Board");
+    setFinalConfirmedCause("");
+    setActualFixPerformed("");
+    setOutcomeStatus("Not Set");
+    setCallbackOccurred("No");
+    setTechCloseoutNotes("");
     const pack = SYMPTOM_PACKS.find((p) => p.id === "no_cooling") || SYMPTOM_PACKS[0];
     setFlowNodeId(pack.nodes[0]?.id || "");
     setFlowHistory([]);
@@ -2731,9 +2941,16 @@ const defrostRepairGuidance = useMemo(
       selectedPackId,
       flowNodeId,
       flowHistory,
+      finalConfirmedCause,
+      actualFixPerformed,
+      outcomeStatus,
+      callbackOccurred,
+      techCloseoutNotes,
       observations,
       rawResult,
       nameplate,
+      errorCode,
+      errorCodeSource,
     };
 
     await saveUnit(record);
@@ -2758,6 +2975,13 @@ const defrostRepairGuidance = useMemo(
     setObservations(record.observations || []);
     setRawResult(record.rawResult || "");
     setNameplate(record.nameplate || null);
+    setErrorCode(record.errorCode || "");
+    setErrorCodeSource(record.errorCodeSource || "Control Board");
+    setFinalConfirmedCause(record.finalConfirmedCause || "");
+    setActualFixPerformed(record.actualFixPerformed || "");
+    setOutcomeStatus(record.outcomeStatus || "Not Set");
+    setCallbackOccurred(record.callbackOccurred || "No");
+    setTechCloseoutNotes(record.techCloseoutNotes || "");
   }
 
   async function removeSavedUnit(id: string) {
@@ -2797,6 +3021,8 @@ const defrostRepairGuidance = useMemo(
         equipmentType,
         manufacturer: m,
         model: model.trim(),
+        errorCode: errorCode.trim(),
+        errorCodeSource,
         symptom: s,
         refrigerantType,
         observations,
@@ -2805,6 +3031,7 @@ const defrostRepairGuidance = useMemo(
         chargeAnalysis,
         airflowAnalysis,
         equipmentMemory,
+        
       });
     } finally {
       setLoading(false);
@@ -2965,6 +3192,11 @@ const defrostRepairGuidance = useMemo(
     }
   }
 
+  async function handleSignOut() {
+  await supabase.auth.signOut();
+  window.location.href = "/auth";
+}
+
   function openPrintableReport() {
     const html = buildServiceReportHtml({
       customerName,
@@ -3000,11 +3232,47 @@ const defrostRepairGuidance = useMemo(
     }, 60000);
   }
 
+  if (!authChecked) {
+  return <div style={{ padding: 20 }}>Checking login...</div>;
+}
+
+if (!isLoggedIn) {
+  return (
+    <div style={{ padding: 20 }}>
+      <h1 style={{ fontSize: 26, fontWeight: 900 }}>Skilled Trades AI — HVAC Diagnose</h1>
+      <p>You need to log in first.</p>
+      <a href="/auth">Go to login</a>
+    </div>
+  );
+}
+
   return (
     <div style={{ padding: 20, maxWidth: 1220, margin: "0 auto" }}>
       <h1 style={{ fontSize: 26, fontWeight: 900 }}>
         Skilled Trades AI — HVAC Diagnose
       </h1>
+
+      <div
+  style={{
+    marginTop: 10,
+    padding: 10,
+    border: "1px solid #e5e5e5",
+    borderRadius: 10,
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 12,
+    flexWrap: "wrap",
+    background: "#fafafa",
+  }}
+>
+  <div>
+    <b>Logged in:</b> {userEmail || "Unknown user"}
+  </div>
+  <button onClick={handleSignOut} style={{ padding: "8px 12px", fontWeight: 900 }}>
+    Sign out
+  </button>
+</div>
 
       <div
         style={{
@@ -3143,6 +3411,7 @@ const defrostRepairGuidance = useMemo(
               <option>Boiler</option>
               <option>Chiller</option>
               <option>Make-Up Air Unit</option>
+              <option>Ice Machine</option>
               <option>Walk-In Cooler</option>
               <option>Walk-In Freezer</option>
               <option>Reach-In Cooler</option>
@@ -3262,6 +3531,149 @@ const defrostRepairGuidance = useMemo(
               <div><b>Equipment Type:</b> {equipmentType || "-"}</div>
               <div><b>Refrigerant:</b> {refrigerantType || "-"}</div>
             </div>
+
+            <div>
+  <label style={{ fontWeight: 900 }}>Error Code (optional)</label>
+  <br />
+  <input
+    value={errorCode}
+    onChange={(e) => setErrorCode(e.target.value)}
+    placeholder="Example: E1, F2, 3 flashes, P4"
+    style={{ width: "100%", padding: 8 }}
+  />
+</div>
+
+<div>
+  <label style={{ fontWeight: 900 }}>Error Code Source</label>
+  <br />
+  <select
+    value={errorCodeSource}
+    onChange={(e) => setErrorCodeSource(e.target.value)}
+    style={{ width: "100%", padding: 8 }}
+  >
+    <option>Control Board</option>
+    <option>Thermostat</option>
+    <option>Indoor Unit</option>
+    <option>Outdoor Unit</option>
+    <option>Display Panel</option>
+    <option>Blink Code</option>
+    <option>Unknown</option>
+  </select>
+</div>
+
+<div style={{ marginTop: 16 }}>
+  <SectionCard title="Case Outcome / Learning Feedback">
+    <SmallHint>
+      Use this after the job is diagnosed or completed. This is how the app starts learning what actually fixed the unit.
+    </SmallHint>
+
+    <div
+      style={{
+        marginTop: 12,
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr",
+        gap: 12,
+      }}
+    >
+      <div style={{ gridColumn: "1 / -1" }}>
+        <label style={{ fontWeight: 900 }}>Final Confirmed Cause</label>
+        <br />
+        <input
+          value={finalConfirmedCause}
+          onChange={(e) => setFinalConfirmedCause(e.target.value)}
+          placeholder="Example: failed dual run capacitor, restricted filter-drier, dirty condenser, bad float switch"
+          style={{ width: "100%", padding: 8 }}
+        />
+      </div>
+
+      <div style={{ gridColumn: "1 / -1" }}>
+        <label style={{ fontWeight: 900 }}>Actual Fix Performed</label>
+        <br />
+        <input
+          value={actualFixPerformed}
+          onChange={(e) => setActualFixPerformed(e.target.value)}
+          placeholder="Example: replaced 45/5 capacitor, cleaned condenser, replaced water inlet valve"
+          style={{ width: "100%", padding: 8 }}
+        />
+      </div>
+
+      <div>
+        <label style={{ fontWeight: 900 }}>Outcome Status</label>
+        <br />
+        <select
+          value={outcomeStatus}
+          onChange={(e) => setOutcomeStatus(e.target.value)}
+          style={{ width: "100%", padding: 8 }}
+        >
+          <option>Not Set</option>
+          <option>Fixed</option>
+          <option>Partially Fixed</option>
+          <option>Needs More Work</option>
+          <option>Monitoring</option>
+        </select>
+      </div>
+
+      <div>
+        <label style={{ fontWeight: 900 }}>Callback Occurred</label>
+        <br />
+        <select
+          value={callbackOccurred}
+          onChange={(e) => setCallbackOccurred(e.target.value)}
+          style={{ width: "100%", padding: 8 }}
+        >
+          <option>No</option>
+          <option>Yes</option>
+        </select>
+      </div>
+
+      {equipmentMemory.similarCases.length ? (
+  <div style={{ marginTop: 12 }}>
+    <div style={{ fontWeight: 900 }}>Similar prior cases</div>
+    <div style={{ display: "grid", gap: 8, marginTop: 8 }}>
+      {equipmentMemory.similarCases.map((item, i) => (
+        <div
+          key={i}
+          style={{
+            border: "1px solid #eee",
+            borderRadius: 10,
+            padding: 10,
+            background: "#fafafa",
+          }}
+        >
+          <SmallHint>
+            <b>Saved:</b> {item.savedAt ? new Date(item.savedAt).toLocaleString() : "-"}
+          </SmallHint>
+          <SmallHint style={{ marginTop: 4 }}>
+            <b>Symptom:</b> {item.symptom || "-"}
+          </SmallHint>
+          <SmallHint style={{ marginTop: 4 }}>
+            <b>Confirmed cause:</b> {item.finalConfirmedCause || "-"}
+          </SmallHint>
+          <SmallHint style={{ marginTop: 4 }}>
+            <b>Actual fix:</b> {item.actualFixPerformed || "-"}
+          </SmallHint>
+          <SmallHint style={{ marginTop: 4 }}>
+            <b>Outcome:</b> {item.outcomeStatus || "-"} • <b>Callback:</b> {item.callbackOccurred || "-"}
+          </SmallHint>
+        </div>
+      ))}
+    </div>
+  </div>
+) : null}
+
+      <div style={{ gridColumn: "1 / -1" }}>
+        <label style={{ fontWeight: 900 }}>Tech Closeout Notes</label>
+        <br />
+        <textarea
+          value={techCloseoutNotes}
+          onChange={(e) => setTechCloseoutNotes(e.target.value)}
+          placeholder="What proved the fault, what was replaced/repaired, any notes for the next tech, anything unusual"
+          style={{ width: "100%", padding: 8, minHeight: 100 }}
+        />
+      </div>
+    </div>
+  </SectionCard>
+</div>
 
             <div style={{ marginTop: 12 }}>
               <div style={{ fontWeight: 900 }}>Complaint</div>
@@ -4077,9 +4489,12 @@ const defrostRepairGuidance = useMemo(
         <SectionCard title="Measurements / Observations">
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             {(
-  equipmentType.toLowerCase().includes("cooler") ||
-  equipmentType.toLowerCase().includes("freezer") ||
-  equipmentType.toLowerCase().includes("merchandiser")
+
+  equipmentType.toLowerCase().includes("ice machine")
+    ? iceMachinePresets
+    : equipmentType.toLowerCase().includes("cooler") ||
+      equipmentType.toLowerCase().includes("freezer") ||
+      equipmentType.toLowerCase().includes("merchandiser")
     ? refrigerationPresets
     : equipmentType.toLowerCase().includes("mini-split")
     ? miniSplitPresets
@@ -4249,6 +4664,253 @@ const defrostRepairGuidance = useMemo(
                 <SmallHint>No likely causes returned.</SmallHint>
               )}
             </SectionCard>
+
+<SectionCard
+  title="Repair Guidance"
+  right={
+    <div style={{ display: "flex", gap: 8 }}>
+      <PillButton
+        text="Apprentice"
+        active={repairGuidanceMode === "apprentice"}
+        onClick={() => setRepairGuidanceMode("apprentice")}
+      />
+      <PillButton
+        text="Experienced"
+        active={repairGuidanceMode === "experienced"}
+        onClick={() => setRepairGuidanceMode("experienced")}
+      />
+    </div>
+  }
+>
+  {repairGuidance.length ? (
+    <div style={{ display: "grid", gap: 10 }}>
+      {repairGuidance.map((item, idx) => (
+        <div
+          key={idx}
+          style={{
+            border: "1px solid #eee",
+            borderRadius: 10,
+            padding: 10,
+            background: "#fafafa",
+          }}
+        >
+          <div style={{ fontWeight: 900 }}>
+            {item.title}
+            {typeof item.confidence === "number" ? (
+              <Badge text={`${item.confidence}%`} />
+            ) : null}
+          </div>
+
+          <div style={{ marginTop: 8 }}>
+            <div style={{ fontWeight: 900 }}>Suspected part / system</div>
+            <SmallHint style={{ marginTop: 4 }}>{item.suspectedPart}</SmallHint>
+          </div>
+
+          <div style={{ marginTop: 8 }}>
+            <div style={{ fontWeight: 900 }}>Why it is suspect</div>
+            <SmallHint style={{ marginTop: 4 }}>{item.why}</SmallHint>
+          </div>
+
+          <div style={{ marginTop: 8 }}>
+            <div style={{ fontWeight: 900 }}>Confirm with this test</div>
+            <SmallHint style={{ marginTop: 4 }}>{item.confirmTest}</SmallHint>
+          </div>
+
+          <div style={{ marginTop: 8 }}>
+            <div style={{ fontWeight: 900 }}>Quick field check</div>
+            <SmallHint style={{ marginTop: 4 }}>{item.fieldCheck}</SmallHint>
+          </div>
+
+          <div style={{ marginTop: 8 }}>
+            <div style={{ fontWeight: 900 }}>Likely fix</div>
+            <SmallHint style={{ marginTop: 4 }}>{item.likelyFix}</SmallHint>
+          </div>
+
+          <div style={{ marginTop: 8 }}>
+            <div style={{ fontWeight: 900 }}>Common mistake</div>
+            <SmallHint style={{ marginTop: 4 }}>{item.commonMistake}</SmallHint>
+          </div>
+
+{repairGuidanceMode === "apprentice" ? (
+  <>
+    <div style={{ marginTop: 8 }}>
+      <div style={{ fontWeight: 900 }}>Tool to use</div>
+      <SmallHint style={{ marginTop: 4 }}>{item.toolToUse}</SmallHint>
+    </div>
+
+    <div style={{ marginTop: 8 }}>
+      <div style={{ fontWeight: 900 }}>Expected reading / condition</div>
+      <SmallHint style={{ marginTop: 4 }}>{item.expectedReading}</SmallHint>
+    </div>
+
+    <div style={{ marginTop: 8 }}>
+      <div style={{ fontWeight: 900 }}>If test passes</div>
+      <SmallHint style={{ marginTop: 4 }}>{item.passInterpretation}</SmallHint>
+    </div>
+
+    <div style={{ marginTop: 8 }}>
+      <div style={{ fontWeight: 900 }}>If test fails</div>
+      <SmallHint style={{ marginTop: 4 }}>{item.failInterpretation}</SmallHint>
+    </div>
+
+    <div style={{ marginTop: 8 }}>
+      <div style={{ fontWeight: 900 }}>What to do next if it fails</div>
+      <SmallHint style={{ marginTop: 4 }}>{item.nextIfFail}</SmallHint>
+    </div>
+
+    <div style={{ marginTop: 8 }}>
+      <div style={{ fontWeight: 900 }}>Quick field check</div>
+      <SmallHint style={{ marginTop: 4 }}>{item.fieldCheck}</SmallHint>
+    </div>
+
+    <div style={{ marginTop: 8 }}>
+      <div style={{ fontWeight: 900 }}>Common mistake</div>
+      <SmallHint style={{ marginTop: 4 }}>{item.commonMistake}</SmallHint>
+    </div>
+
+    <div style={{ marginTop: 8 }}>
+      <div style={{ fontWeight: 900 }}>Safety note</div>
+      <SmallHint style={{ marginTop: 4 }}>{item.safetyNote}</SmallHint>
+    </div>
+  </>
+) : (
+  <>
+    <div style={{ marginTop: 8 }}>
+      <div style={{ fontWeight: 900 }}>Tool to use</div>
+      <SmallHint style={{ marginTop: 4 }}>{item.toolToUse}</SmallHint>
+    </div>
+
+    <div style={{ marginTop: 8 }}>
+      <div style={{ fontWeight: 900 }}>What to do next if it fails</div>
+      <SmallHint style={{ marginTop: 4 }}>{item.nextIfFail}</SmallHint>
+    </div>
+  </>
+)}
+
+          <div style={{ marginTop: 8 }}>
+            <div style={{ fontWeight: 900 }}>Safety note</div>
+            <SmallHint style={{ marginTop: 4 }}>{item.safetyNote}</SmallHint>
+          </div>
+        </div>
+      ))}
+    </div>
+  ) : (
+    <SmallHint>
+      Run a diagnosis to generate repair guidance and step-by-step field checks.
+    </SmallHint>
+  )}
+</SectionCard>
+
+<SectionCard title="Recommended Measurements">
+  {measurementCoaching.length ? (
+    <div style={{ display: "grid", gap: 10 }}>
+      {measurementCoaching.map((item, idx) => (
+        <div
+          key={idx}
+          style={{
+            border: "1px solid #eee",
+            borderRadius: 10,
+            padding: 10,
+            background: "#fafafa",
+          }}
+        >
+          <div style={{ fontWeight: 900 }}>{item.measurement}</div>
+
+          <div style={{ marginTop: 8 }}>
+            <div style={{ fontWeight: 900 }}>Tool to use</div>
+            <SmallHint style={{ marginTop: 4 }}>{item.tool}</SmallHint>
+          </div>
+
+          <div style={{ marginTop: 8 }}>
+            <div style={{ fontWeight: 900 }}>Where to measure</div>
+            <SmallHint style={{ marginTop: 4 }}>{item.whereToMeasure}</SmallHint>
+          </div>
+
+          <div style={{ marginTop: 8 }}>
+            <div style={{ fontWeight: 900 }}>Expected reading / condition</div>
+            <SmallHint style={{ marginTop: 4 }}>{item.expectedResult}</SmallHint>
+          </div>
+
+          <div style={{ marginTop: 8 }}>
+            <div style={{ fontWeight: 900 }}>If high</div>
+            <SmallHint style={{ marginTop: 4 }}>{item.ifHigh}</SmallHint>
+          </div>
+
+          <div style={{ marginTop: 8 }}>
+            <div style={{ fontWeight: 900 }}>If low</div>
+            <SmallHint style={{ marginTop: 4 }}>{item.ifLow}</SmallHint>
+          </div>
+
+          <div style={{ marginTop: 8 }}>
+            <div style={{ fontWeight: 900 }}>What to do next</div>
+            <SmallHint style={{ marginTop: 4 }}>{item.nextStep}</SmallHint>
+          </div>
+        </div>
+      ))}
+    </div>
+  ) : (
+    <SmallHint>
+      Run a diagnosis to get recommended field measurements and coaching.
+    </SmallHint>
+  )}
+</SectionCard>
+
+<SectionCard title="Error Code Guidance">
+  {errorCodeGuidance ? (
+    <div
+      style={{
+        border: "1px solid #eee",
+        borderRadius: 10,
+        padding: 10,
+        background: "#fafafa",
+      }}
+    >
+      <div style={{ fontWeight: 900 }}>{errorCodeGuidance.title}</div>
+
+      <div style={{ marginTop: 8 }}>
+        <div style={{ fontWeight: 900 }}>Summary</div>
+        <SmallHint style={{ marginTop: 4 }}>{errorCodeGuidance.summary}</SmallHint>
+      </div>
+
+      <div style={{ marginTop: 8 }}>
+        <div style={{ fontWeight: 900 }}>First checks</div>
+        <ul style={{ marginTop: 6, paddingLeft: 18 }}>
+          {errorCodeGuidance.firstChecks.map((item, idx) => (
+            <li key={idx}>
+              <SmallHint>{item}</SmallHint>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div style={{ marginTop: 8 }}>
+        <div style={{ fontWeight: 900 }}>Warnings</div>
+        <ul style={{ marginTop: 6, paddingLeft: 18 }}>
+          {errorCodeGuidance.warnings.map((item, idx) => (
+            <li key={idx}>
+              <SmallHint>{item}</SmallHint>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div style={{ marginTop: 8 }}>
+        <div style={{ fontWeight: 900 }}>What to check next</div>
+        <ul style={{ marginTop: 6, paddingLeft: 18 }}>
+          {errorCodeGuidance.nextSteps.map((item, idx) => (
+            <li key={idx}>
+              <SmallHint>{item}</SmallHint>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  ) : (
+    <SmallHint>
+      Enter an error code to generate code-specific guidance.
+    </SmallHint>
+  )}
+</SectionCard>
 
             <SectionCard title="Raw output">
   <div
