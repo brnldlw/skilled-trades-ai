@@ -38,6 +38,12 @@ import {
   iceMachinePresets,
 } from "./data/presets";
 
+import {
+  deleteSavedUnitForCurrentUser,
+  insertSavedUnitForCurrentUser,
+  listSavedUnitsForCurrentUser,
+} from "../lib/supabase/saved-units";
+
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   deleteUnit,
@@ -2669,8 +2675,39 @@ export default function HVACUnitsPage() {
   const [userEmail, setUserEmail] = useState("");
 
   useEffect(() => {
-    listUnits().then(setSavedUnits).catch(() => setSavedUnits([]));
-  }, []);
+  listSavedUnitsForCurrentUser()
+  .then((rows: import("../lib/supabase/saved-units").SavedUnitRow[]) => {
+    const mapped = rows.map((r: import("../lib/supabase/saved-units").SavedUnitRow) => ({
+        id: r.id,
+        savedAt: r.saved_at || "",
+        customerName: r.customer_name || "",
+        siteName: r.site_name || "",
+        siteAddress: r.site_address || "",
+        unitNickname: r.unit_nickname || "",
+        propertyType: r.property_type || "",
+        equipmentType: r.equipment_type || "",
+        manufacturer: r.manufacturer || "",
+        model: r.model || "",
+        refrigerantType: r.refrigerant_type || "",
+        symptom: r.symptom || "",
+        errorCode: r.error_code || "",
+        errorCodeSource: r.error_code_source || "",
+        selectedPackId: r.selected_pack_id || "",
+        flowNodeId: r.flow_node_id || "",
+        flowHistory: Array.isArray(r.flow_history) ? r.flow_history : [],
+        observations: Array.isArray(r.observations) ? r.observations : [],
+        rawResult: r.raw_result || "",
+        nameplate: (r.nameplate as NameplateResult | null) || null,
+        finalConfirmedCause: r.final_confirmed_cause || "",
+        actualFixPerformed: r.actual_fix_performed || "",
+        outcomeStatus: r.outcome_status || "Not Set",
+        callbackOccurred: r.callback_occurred || "No",
+        techCloseoutNotes: r.tech_closeout_notes || "",
+      }));
+      setSavedUnits(mapped);
+    })
+    .catch(() => setSavedUnits([]));
+}, []);
 
 useEffect(() => {
   supabase.auth.getSession().then(({ data }: { data: { session: { user?: { email?: string | null } } | null } }) => {
@@ -2953,7 +2990,33 @@ const errorCodeGuidance = useMemo(
       errorCodeSource,
     };
 
-    await saveUnit(record);
+    await insertSavedUnitForCurrentUser({
+  id: record.id,
+  saved_at: record.savedAt,
+  customer_name: record.customerName,
+  site_name: record.siteName,
+  site_address: record.siteAddress,
+  unit_nickname: record.unitNickname,
+  property_type: record.propertyType,
+  equipment_type: record.equipmentType,
+  manufacturer: record.manufacturer,
+  model: record.model,
+  refrigerant_type: record.refrigerantType,
+  symptom: record.symptom,
+  error_code: record.errorCode || "",
+  error_code_source: record.errorCodeSource || "",
+  selected_pack_id: record.selectedPackId || "",
+  flow_node_id: record.flowNodeId || "",
+  flow_history: record.flowHistory || [],
+  observations: record.observations || [],
+  raw_result: record.rawResult || "",
+  nameplate: record.nameplate || null,
+  final_confirmed_cause: record.finalConfirmedCause || "",
+  actual_fix_performed: record.actualFixPerformed || "",
+  outcome_status: record.outcomeStatus || "Not Set",
+  callback_occurred: record.callbackOccurred || "No",
+  tech_closeout_notes: record.techCloseoutNotes || "",
+});
     const refreshed = await listUnits();
     setSavedUnits(refreshed);
   }
@@ -2985,7 +3048,7 @@ const errorCodeGuidance = useMemo(
   }
 
   async function removeSavedUnit(id: string) {
-    await deleteUnit(id);
+    await deleteSavedUnitForCurrentUser(id);
     const refreshed = await listUnits();
     setSavedUnits(refreshed);
   }
