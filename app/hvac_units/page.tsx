@@ -3489,8 +3489,8 @@ if (!isLoggedIn) {
   );
 }
 
-  return (
-    <div style={{ padding: 20, maxWidth: 1220, margin: "0 auto" }}>
+ return (
+  <div style={{ padding: 20, maxWidth: 1380, margin: "0 auto" }}>
       <h1 style={{ fontSize: 26, fontWeight: 900 }}>
         Skilled Trades AI — HVAC Diagnose
       </h1>
@@ -3521,7 +3521,7 @@ if (!isLoggedIn) {
         style={{
           marginTop: 14,
           display: "grid",
-          gridTemplateColumns: "1fr 1fr",
+          gridTemplateColumns: "1fr",
           gap: 12,
         }}
       >
