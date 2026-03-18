@@ -2690,6 +2690,8 @@ export default function HVACUnitsPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userEmail, setUserEmail] = useState("");
 
+  const [showAdvancedAiOutput, setShowAdvancedAiOutput] = useState(false);
+
   useEffect(() => {
   listSavedUnitsForCurrentUser()
   .then((rows: import("../lib/supabase/saved-units").SavedUnitRow[]) => {
@@ -5338,31 +5340,77 @@ if (!isLoggedIn) {
   )}
 </SectionCard>
 
-            <SectionCard title="Raw output">
-  <div
-    style={{
-      whiteSpace: "pre-wrap",
-      margin: 0,
-      border: "1px solid #eee",
-      borderRadius: 10,
-      padding: 10,
-      background: "#fafafa",
-      fontFamily: "inherit",
-      fontSize: 14,
-      lineHeight: 1.5,
-    }}
-  >
-    {formatRawOutput(rawResult)}
-  </div>
-</SectionCard>
-          </div>
-        ) : (
-          <SectionCard title="Raw output">
-            <pre style={{ whiteSpace: "pre-wrap", margin: 0 }}>
-              {rawResult || "No results yet."}
-            </pre>
-          </SectionCard>
-        )}
+                    <SectionCard title="Advanced AI Output">
+                <button
+                  onClick={() => setShowAdvancedAiOutput((v) => !v)}
+                  style={{ padding: "10px 14px", fontWeight: 900 }}
+                >
+                  {showAdvancedAiOutput
+                    ? "Hide Advanced AI Output"
+                    : "Show Advanced AI Output"}
+                </button>
+
+                {showAdvancedAiOutput ? (
+                  <div style={{ marginTop: 12 }}>
+                    <div
+                      style={{
+                        whiteSpace: "pre-wrap",
+                        margin: 0,
+                        border: "1px solid #eee",
+                        borderRadius: 10,
+                        padding: 10,
+                        background: "#fafafa",
+                        fontFamily: "inherit",
+                        fontSize: 14,
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      {formatRawOutput(rawResult || "No results yet.")}
+                    </div>
+                  </div>
+                ) : (
+                  <SmallHint style={{ marginTop: 12 }}>
+                    Advanced AI output is hidden by default to keep the field workflow clean.
+                  </SmallHint>
+                )}
+              </SectionCard>
+            </div>
+          ) : (
+            <SectionCard title="Advanced AI Output">
+              <button
+                onClick={() => setShowAdvancedAiOutput((v) => !v)}
+                style={{ padding: "10px 14px", fontWeight: 900 }}
+              >
+                {showAdvancedAiOutput
+                  ? "Hide Advanced AI Output"
+                  : "Show Advanced AI Output"}
+              </button>
+
+              {showAdvancedAiOutput ? (
+                <div style={{ marginTop: 12 }}>
+                  <div
+                    style={{
+                      whiteSpace: "pre-wrap",
+                      margin: 0,
+                      border: "1px solid #eee",
+                      borderRadius: 10,
+                      padding: 10,
+                      background: "#fafafa",
+                      fontFamily: "inherit",
+                      fontSize: 14,
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    {formatRawOutput(rawResult || "No results yet.")}
+                  </div>
+                </div>
+              ) : (
+                <SmallHint style={{ marginTop: 12 }}>
+                  Advanced AI output is hidden by default to keep the field workflow clean.
+                </SmallHint>
+              )}
+            </SectionCard>
+          )}
       </div>
     </div>
   );
