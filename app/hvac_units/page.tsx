@@ -3787,7 +3787,7 @@ if (!isLoggedIn) {
       </div>
 
       <div style={{ marginTop: 16 }}>
-  <SectionCard title="Admin / Setup Tools">
+  <SectionCard title="Admin / Work Tools">
     <button
       onClick={() => setShowBulkImportTools((v) => !v)}
       style={{ padding: "10px 14px", fontWeight: 900 }}
