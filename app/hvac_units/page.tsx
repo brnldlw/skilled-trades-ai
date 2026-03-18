@@ -3102,6 +3102,7 @@ function previewWorkOrderImport() {
 }
 
   async function saveCurrentUnit() {
+    console.log("SAVE UNIT CLICKED");
     const record: SavedUnitRecord = {
       id: makeId(),
       savedAt: new Date().toISOString(),
@@ -3157,8 +3158,35 @@ function previewWorkOrderImport() {
   callback_occurred: record.callbackOccurred || "No",
   tech_closeout_notes: record.techCloseoutNotes || "",
 });
-    const refreshed = await listUnits();
-    setSavedUnits(refreshed);
+    const refreshed = await listSavedUnitsForCurrentUser();
+const mapped = refreshed.map((r: import("../lib/supabase/saved-units").SavedUnitRow) => ({
+  id: r.id,
+  savedAt: r.saved_at || "",
+  customerName: r.customer_name || "",
+  siteName: r.site_name || "",
+  siteAddress: r.site_address || "",
+  unitNickname: r.unit_nickname || "",
+  propertyType: r.property_type || "",
+  equipmentType: r.equipment_type || "",
+  manufacturer: r.manufacturer || "",
+  model: r.model || "",
+  refrigerantType: r.refrigerant_type || "",
+  symptom: r.symptom || "",
+  errorCode: r.error_code || "",
+  errorCodeSource: r.error_code_source || "",
+  selectedPackId: r.selected_pack_id || "",
+  flowNodeId: r.flow_node_id || "",
+  flowHistory: Array.isArray(r.flow_history) ? r.flow_history : [],
+  observations: Array.isArray(r.observations) ? r.observations : [],
+  rawResult: r.raw_result || "",
+  nameplate: (r.nameplate as NameplateResult | null) || null,
+  finalConfirmedCause: r.final_confirmed_cause || "",
+  actualFixPerformed: r.actual_fix_performed || "",
+  outcomeStatus: r.outcome_status || "Not Set",
+  callbackOccurred: r.callback_occurred || "No",
+  techCloseoutNotes: r.tech_closeout_notes || "",
+}));
+setSavedUnits(mapped);
   }
 
   async function loadUnitServiceTimeline(unitId: string) {
@@ -3210,12 +3238,44 @@ function previewWorkOrderImport() {
     setOutcomeStatus(record.outcomeStatus || "Not Set");
     setCallbackOccurred(record.callbackOccurred || "No");
     setTechCloseoutNotes(record.techCloseoutNotes || "");
-  }
+    setOutcomeStatus(record.outcomeStatus || "Not Set");
+setCallbackOccurred(record.callbackOccurred || "No");
+setTechCloseoutNotes(record.techCloseoutNotes || "");
+
+loadUnitServiceTimeline(record.id);
+}
 
   async function removeSavedUnit(id: string) {
     await deleteSavedUnitForCurrentUser(id);
-    const refreshed = await listUnits();
-    setSavedUnits(refreshed);
+    const refreshed = await listSavedUnitsForCurrentUser();
+const mapped = refreshed.map((r: import("../lib/supabase/saved-units").SavedUnitRow) => ({
+  id: r.id,
+  savedAt: r.saved_at || "",
+  customerName: r.customer_name || "",
+  siteName: r.site_name || "",
+  siteAddress: r.site_address || "",
+  unitNickname: r.unit_nickname || "",
+  propertyType: r.property_type || "",
+  equipmentType: r.equipment_type || "",
+  manufacturer: r.manufacturer || "",
+  model: r.model || "",
+  refrigerantType: r.refrigerant_type || "",
+  symptom: r.symptom || "",
+  errorCode: r.error_code || "",
+  errorCodeSource: r.error_code_source || "",
+  selectedPackId: r.selected_pack_id || "",
+  flowNodeId: r.flow_node_id || "",
+  flowHistory: Array.isArray(r.flow_history) ? r.flow_history : [],
+  observations: Array.isArray(r.observations) ? r.observations : [],
+  rawResult: r.raw_result || "",
+  nameplate: (r.nameplate as NameplateResult | null) || null,
+  finalConfirmedCause: r.final_confirmed_cause || "",
+  actualFixPerformed: r.actual_fix_performed || "",
+  outcomeStatus: r.outcome_status || "Not Set",
+  callbackOccurred: r.callback_occurred || "No",
+  techCloseoutNotes: r.tech_closeout_notes || "",
+}));
+setSavedUnits(mapped);
   }
 
   async function postDiagnose(payload: any) {
