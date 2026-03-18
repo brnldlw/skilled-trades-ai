@@ -12,6 +12,14 @@ export default function AuthPage() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const [workOrderImportText, setWorkOrderImportText] = useState("");
+  const [workOrderImportRows, setWorkOrderImportRows] = useState<Record<string, string>[]>([]);
+  const [workOrderImportMessage, setWorkOrderImportMessage] = useState("");
+  const [workOrderImportLoading, setWorkOrderImportLoading] = useState(false);
+  const [workOrderImportResults, setWorkOrderImportResults] = useState<
+  { rowNumber: number; action: string; unitId: string }[]
+>([]);
+
   async function handleSubmit() {
     setLoading(true);
     setMessage("");
