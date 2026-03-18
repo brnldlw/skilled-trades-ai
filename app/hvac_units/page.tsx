@@ -95,6 +95,7 @@ import {
   createServiceEventForCurrentUser,
   createUnitForCurrentUser,
   findStrongUnitMatchForCurrentUser,
+  listServiceEventsForUnitForCurrentUser
 } from "../lib/supabase/work-orders";
 
 type LinkItem = { title: string; url: string; note?: string };
@@ -2672,6 +2673,12 @@ export default function HVACUnitsPage() {
   const [savedUnits, setSavedUnits] = useState<SavedUnitRecord[]>([]);
   const [historyFilter, setHistoryFilter] = useState("");
 
+  const [unitServiceTimeline, setUnitServiceTimeline] = useState<
+  import("../lib/supabase/work-orders").ServiceEventRow[]
+>([]);
+  const [unitServiceTimelineLoading, setUnitServiceTimelineLoading] = useState(false);
+  const [unitServiceTimelineMessage, setUnitServiceTimelineMessage] = useState("");
+
   const [showBulkImportTools, setShowBulkImportTools] = useState(false);
 
   const [workOrderImportText, setWorkOrderImportText] = useState("");
@@ -3154,6 +3161,31 @@ function previewWorkOrderImport() {
     setSavedUnits(refreshed);
   }
 
+  async function loadUnitServiceTimeline(unitId: string) {
+  if (!unitId) {
+    setUnitServiceTimeline([]);
+    setUnitServiceTimelineMessage("No unit selected.");
+    return;
+  }
+
+  setUnitServiceTimelineLoading(true);
+  setUnitServiceTimelineMessage("");
+
+  try {
+   const events = (await listServiceEventsForUnitForCurrentUser(unitId)) || [];
+  setUnitServiceTimeline(events);
+  setUnitServiceTimelineMessage(
+  events.length ? "" : "No prior service events found for this unit."
+);
+  } catch (err) {
+    console.error(err);
+    setUnitServiceTimeline([]);
+    setUnitServiceTimelineMessage("Could not load service timeline.");
+  } finally {
+    setUnitServiceTimelineLoading(false);
+  }
+}
+
   function loadUnit(record: SavedUnitRecord) {
     setCustomerName(record.customerName || "");
     setSiteName(record.siteName || "");
@@ -3634,6 +3666,76 @@ if (!isLoggedIn) {
         </ul>
       </div>
     ) : null}
+  </SectionCard>
+</div>
+
+<div style={{ marginTop: 16 }}>
+  <SectionCard title="Unit Service Timeline">
+    <SmallHint>
+      Shows prior service events for the currently loaded unit.
+    </SmallHint>
+
+    {unitServiceTimelineLoading ? (
+      <div style={{ marginTop: 12 }}>
+        <SmallHint>Loading service timeline...</SmallHint>
+      </div>
+    ) : unitServiceTimeline.length ? (
+      <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
+        {unitServiceTimeline.map((event) => (
+          <div
+            key={event.id}
+            style={{
+              border: "1px solid #eee",
+              borderRadius: 10,
+              padding: 10,
+              background: "#fafafa",
+            }}
+          >
+            <div style={{ fontWeight: 900 }}>
+              {event.service_date
+                ? new Date(event.service_date).toLocaleDateString()
+                : "Unknown service date"}
+            </div>
+
+            <div style={{ marginTop: 8 }}>
+              <SmallHint><b>Symptom:</b> {event.symptom || "-"}</SmallHint>
+            </div>
+
+            <div style={{ marginTop: 4 }}>
+              <SmallHint><b>Diagnosis:</b> {event.diagnosis_summary || "-"}</SmallHint>
+            </div>
+
+            <div style={{ marginTop: 4 }}>
+              <SmallHint><b>Confirmed Cause:</b> {event.final_confirmed_cause || "-"}</SmallHint>
+            </div>
+
+            <div style={{ marginTop: 4 }}>
+              <SmallHint><b>Parts Replaced:</b> {event.parts_replaced || "-"}</SmallHint>
+            </div>
+
+            <div style={{ marginTop: 4 }}>
+              <SmallHint><b>Actual Fix:</b> {event.actual_fix_performed || "-"}</SmallHint>
+            </div>
+
+            <div style={{ marginTop: 4 }}>
+              <SmallHint>
+                <b>Outcome:</b> {event.outcome_status || "-"} • <b>Callback:</b> {event.callback_occurred || "-"}
+              </SmallHint>
+            </div>
+
+            <div style={{ marginTop: 4 }}>
+              <SmallHint><b>Notes:</b> {event.tech_closeout_notes || "-"}</SmallHint>
+            </div>
+          </div>
+        ))}
+      </div>
+    ) : (
+      <div style={{ marginTop: 12 }}>
+        <SmallHint>
+          {unitServiceTimelineMessage || "Load a saved unit to view its service timeline."}
+        </SmallHint>
+      </div>
+    )}
   </SectionCard>
 </div>
 

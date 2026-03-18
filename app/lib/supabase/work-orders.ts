@@ -137,6 +137,22 @@ export async function findStrongUnitMatchForCurrentUser(input: {
     if (error) throw error;
     if (data && data.length) return data[0] as UnitRow;
   }
-
   return null;
 }
+
+  export async function listServiceEventsForUnitForCurrentUser(unitId: string) {
+  const supabase = createClient();
+  const userId = await getCurrentUserId();
+
+  const { data, error } = await supabase
+    .from("service_events")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("unit_id", unitId)
+    .order("service_date", { ascending: false });
+
+  if (error) throw error;
+  return (data || []) as ServiceEventRow[];
+  return null;
+}
+
