@@ -95,7 +95,8 @@ import {
   createServiceEventForCurrentUser,
   createUnitForCurrentUser,
   findStrongUnitMatchForCurrentUser,
-  listServiceEventsForUnitForCurrentUser
+  listServiceEventsForUnitForCurrentUser,
+  listUnitsForCurrentUser,
 } from "../lib/supabase/work-orders";
 
 type LinkItem = { title: string; url: string; note?: string };
@@ -3135,33 +3136,19 @@ function previewWorkOrderImport() {
 
     console.log("ABOUT TO SAVE RECORD", record);
 
-    await insertSavedUnitForCurrentUser({
-      id: record.id,
-      saved_at: record.savedAt,
-      customer_name: record.customerName,
-      site_name: record.siteName,
-      site_address: record.siteAddress,
-      unit_nickname: record.unitNickname,
-      property_type: record.propertyType,
-      equipment_type: record.equipmentType,
-      manufacturer: record.manufacturer,
-      model: record.model,
-      refrigerant_type: record.refrigerantType,
-      symptom: record.symptom,
-      error_code: record.errorCode || "",
-      error_code_source: record.errorCodeSource || "",
-      selected_pack_id: record.selectedPackId || "",
-      flow_node_id: record.flowNodeId || "",
-      flow_history: record.flowHistory || [],
-      observations: record.observations || [],
-      raw_result: record.rawResult || "",
-      nameplate: record.nameplate || null,
-      final_confirmed_cause: record.finalConfirmedCause || "",
-      actual_fix_performed: record.actualFixPerformed || "",
-      outcome_status: record.outcomeStatus || "Not Set",
-      callback_occurred: record.callbackOccurred || "No",
-      tech_closeout_notes: record.techCloseoutNotes || "",
-    });
+    await createUnitForCurrentUser({
+  id: record.id,
+  customer_name: record.customerName,
+  site_name: record.siteName,
+  site_address: record.siteAddress,
+  unit_nickname: record.unitNickname,
+  property_type: record.propertyType,
+  equipment_type: record.equipmentType,
+  manufacturer: record.manufacturer,
+  model: record.model,
+  serial: "",
+  refrigerant_type: record.refrigerantType,
+});
 
     const refreshed = await listSavedUnitsForCurrentUser();
     const mapped = refreshed.map((r: import("../lib/supabase/saved-units").SavedUnitRow) => ({
@@ -3259,10 +3246,10 @@ loadUnitServiceTimeline(record.id);
 
   async function removeSavedUnit(id: string) {
     await deleteSavedUnitForCurrentUser(id);
-    const refreshed = await listSavedUnitsForCurrentUser();
-const mapped = refreshed.map((r: import("../lib/supabase/saved-units").SavedUnitRow) => ({
+   const refreshed = await listUnitsForCurrentUser();
+const mapped = refreshed.map((r: import("../lib/supabase/work-orders").UnitRow) => ({
   id: r.id,
-  savedAt: r.saved_at || "",
+  savedAt: r.created_at || "",
   customerName: r.customer_name || "",
   siteName: r.site_name || "",
   siteAddress: r.site_address || "",
@@ -3272,20 +3259,20 @@ const mapped = refreshed.map((r: import("../lib/supabase/saved-units").SavedUnit
   manufacturer: r.manufacturer || "",
   model: r.model || "",
   refrigerantType: r.refrigerant_type || "",
-  symptom: r.symptom || "",
-  errorCode: r.error_code || "",
-  errorCodeSource: r.error_code_source || "",
-  selectedPackId: r.selected_pack_id || "",
-  flowNodeId: r.flow_node_id || "",
-  flowHistory: Array.isArray(r.flow_history) ? r.flow_history : [],
-  observations: Array.isArray(r.observations) ? r.observations : [],
-  rawResult: r.raw_result || "",
-  nameplate: (r.nameplate as NameplateResult | null) || null,
-  finalConfirmedCause: r.final_confirmed_cause || "",
-  actualFixPerformed: r.actual_fix_performed || "",
-  outcomeStatus: r.outcome_status || "Not Set",
-  callbackOccurred: r.callback_occurred || "No",
-  techCloseoutNotes: r.tech_closeout_notes || "",
+  symptom: "",
+  errorCode: "",
+  errorCodeSource: "",
+  selectedPackId: "",
+  flowNodeId: "",
+  flowHistory: [],
+  observations: [],
+  rawResult: "",
+  nameplate: null,
+  finalConfirmedCause: "",
+  actualFixPerformed: "",
+  outcomeStatus: "Not Set",
+  callbackOccurred: "No",
+  techCloseoutNotes: "",
 }));
 setSavedUnits(mapped);
   }
