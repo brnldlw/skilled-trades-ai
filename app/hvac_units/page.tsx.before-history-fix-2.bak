@@ -2678,7 +2678,6 @@ export default function HVACUnitsPage() {
 );
 
   const [showUnitLibrary, setShowUnitLibrary] = useState(false);
-const [showSavedUnitHistory, setShowSavedUnitHistory] = useState(false);
   const [unitLibrarySearch, setUnitLibrarySearch] = useState("");
   const [unitLibraryMode, setUnitLibraryMode] = useState<"recent" | "all">("recent");
   const [unitLibraryDateFrom, setUnitLibraryDateFrom] = useState("");
@@ -3681,13 +3680,6 @@ if (!isLoggedIn) {
   Load Unit
 </button>
 
-  <button
-    onClick={() => setShowSavedUnitHistory((v) => !v)}
-    style={{ padding: "8px 12px", fontWeight: 900 }}
-  >
-    {showSavedUnitHistory ? "Hide History" : "Show History"}
-  </button>
-
   <button onClick={handleSignOut} style={{ padding: "8px 12px", fontWeight: 900 }}>
     Sign out
   </button>
@@ -3743,7 +3735,7 @@ if (!isLoggedIn) {
             <PillButton text="Clear Current Form" onClick={clearCurrentForm} />
           </div>
         </SectionCard>
-<div style={{ marginTop: 16, display: showSavedUnitHistory ? "block" : "none" }}>
+<div style={{ marginTop: 16 }}>
   <SectionCard title="Unit Service Timeline">
     <SmallHint>
       Shows prior service events for the currently loaded unit.
