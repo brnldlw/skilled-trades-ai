@@ -2617,7 +2617,6 @@ export default function HVACUnitsPage() {
   const [symptom, setSymptom] = useState("");
 
   const [finalConfirmedCause, setFinalConfirmedCause] = useState("");
-  const [partsReplaced, setPartsReplaced] = useState("");
   const [actualFixPerformed, setActualFixPerformed] = useState("");
   const [outcomeStatus, setOutcomeStatus] = useState("Not Set");
   const [callbackOccurred, setCallbackOccurred] = useState("No");
@@ -3036,7 +3035,6 @@ const errorCodeGuidance = useMemo(
     setErrorCodeSource("Control Board");
     setFinalConfirmedCause("");
     setActualFixPerformed("");
-    setPartsReplaced("");
     setOutcomeStatus("Not Set");
     setCallbackOccurred("No");
     setTechCloseoutNotes("");
@@ -3469,7 +3467,7 @@ async function saveCurrentUnit() {
       symptom: symptom || "",
       diagnosis_summary: parsed?.summary || "",
       final_confirmed_cause: finalConfirmedCause || "",
-      parts_replaced: partsReplaced || "",
+      parts_replaced: actualFixPerformed || "",
       actual_fix_performed: actualFixPerformed || "",
       outcome_status: outcomeStatus || "Not Set",
       callback_occurred: callbackOccurred || "No",
@@ -3530,7 +3528,6 @@ async function saveCurrentUnit() {
     setErrorCode(record.errorCode || "");
     setErrorCodeSource(record.errorCodeSource || "Control Board");
     setFinalConfirmedCause(record.finalConfirmedCause || "");
-    setPartsReplaced("");
     setActualFixPerformed(record.actualFixPerformed || "");
     setOutcomeStatus(record.outcomeStatus || "Not Set");
     setCallbackOccurred(record.callbackOccurred || "No");
@@ -4086,17 +4083,6 @@ if (!isLoggedIn) {
     type="date"
     value={serviceDate}
     onChange={(e) => setServiceDate(e.target.value)}
-    style={{ width: "100%", padding: 8 }}
-  />
-</div>
-
-<div style={{ gridColumn: "1 / -1" }}>
-  <label style={{ fontWeight: 900 }}>Parts Replaced</label>
-  <br />
-  <input
-    value={partsReplaced}
-    onChange={(e) => setPartsReplaced(e.target.value)}
-    placeholder="Example: dual run capacitor, condenser fan motor, TXV, contactor"
     style={{ width: "100%", padding: 8 }}
   />
 </div>
