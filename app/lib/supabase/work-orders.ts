@@ -140,7 +140,7 @@ export async function findStrongUnitMatchForCurrentUser(input: {
   return null;
 }
 
-  export async function listServiceEventsForUnitForCurrentUser(unitId: string) {
+ export async function listServiceEventsForUnitForCurrentUser(unitId: string) {
   const supabase = createClient();
   const userId = await getCurrentUserId();
 
@@ -153,6 +153,18 @@ export async function findStrongUnitMatchForCurrentUser(input: {
 
   if (error) throw error;
   return (data || []) as ServiceEventRow[];
-  return null;
+}
+
+export async function deleteUnitForCurrentUser(id: string) {
+  const supabase = createClient();
+  const userId = await getCurrentUserId();
+
+  const { error } = await supabase
+    .from("units")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", userId);
+
+  if (error) throw error;
 }
 
