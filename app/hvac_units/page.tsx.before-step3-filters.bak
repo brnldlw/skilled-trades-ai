@@ -2885,18 +2885,6 @@ const libraryModelOptions = useMemo(
     );
   }
 
-  if (unitLibraryEquipmentType) {
-    rows = rows.filter((u) => (u.equipmentType || "") === unitLibraryEquipmentType);
-  }
-
-  if (unitLibraryManufacturer) {
-    rows = rows.filter((u) => (u.manufacturer || "") === unitLibraryManufacturer);
-  }
-
-  if (unitLibraryModel) {
-    rows = rows.filter((u) => (u.model || "") === unitLibraryModel);
-  }
-
   if (fromTs || toTs) {
     rows = rows.filter((u) => {
       const ts = u.savedAt ? new Date(u.savedAt).getTime() : null;
@@ -2908,16 +2896,7 @@ const libraryModelOptions = useMemo(
   }
 
   return rows;
-}, [
-  savedUnits,
-  unitLibrarySearch,
-  unitLibraryMode,
-  unitLibraryDateFrom,
-  unitLibraryDateTo,
-  unitLibraryEquipmentType,
-  unitLibraryManufacturer,
-  unitLibraryModel,
-]);
+}, [savedUnits, unitLibrarySearch, unitLibraryMode, unitLibraryDateFrom, unitLibraryDateTo]);
 
   const repairGuidance = useMemo(
   () => buildRepairGuidance(parsed, equipmentType),

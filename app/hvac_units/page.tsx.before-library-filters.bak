@@ -2684,10 +2684,6 @@ const [showSavedUnitHistory, setShowSavedUnitHistory] = useState(false);
   const [unitLibraryDateFrom, setUnitLibraryDateFrom] = useState("");
   const [unitLibraryDateTo, setUnitLibraryDateTo] = useState("");
 
-  const [unitLibraryEquipmentType, setUnitLibraryEquipmentType] = useState("");
-  const [unitLibraryManufacturer, setUnitLibraryManufacturer] = useState("");
-  const [unitLibraryModel, setUnitLibraryModel] = useState("");
-
   const [unitServiceTimeline, setUnitServiceTimeline] = useState<
   import("../lib/supabase/work-orders").ServiceEventRow[]
 >([]);
@@ -2826,30 +2822,6 @@ const errorCodeGuidance = useMemo(
     );
   }, [savedUnits, historyFilter]);
 
-  const libraryEquipmentTypeOptions = useMemo(
-  () =>
-    Array.from(
-      new Set(savedUnits.map((u) => (u.equipmentType || "").trim()).filter(Boolean))
-    ).sort((a, b) => a.localeCompare(b)),
-  [savedUnits]
-);
-
-const libraryManufacturerOptions = useMemo(
-  () =>
-    Array.from(
-      new Set(savedUnits.map((u) => (u.manufacturer || "").trim()).filter(Boolean))
-    ).sort((a, b) => a.localeCompare(b)),
-  [savedUnits]
-);
-
-const libraryModelOptions = useMemo(
-  () =>
-    Array.from(
-      new Set(savedUnits.map((u) => (u.model || "").trim()).filter(Boolean))
-    ).sort((a, b) => a.localeCompare(b)),
-  [savedUnits]
-);
-
   const filteredLibraryUnits = useMemo(() => {
   const q = unitLibrarySearch.trim().toLowerCase();
 
@@ -2885,18 +2857,6 @@ const libraryModelOptions = useMemo(
     );
   }
 
-  if (unitLibraryEquipmentType) {
-    rows = rows.filter((u) => (u.equipmentType || "") === unitLibraryEquipmentType);
-  }
-
-  if (unitLibraryManufacturer) {
-    rows = rows.filter((u) => (u.manufacturer || "") === unitLibraryManufacturer);
-  }
-
-  if (unitLibraryModel) {
-    rows = rows.filter((u) => (u.model || "") === unitLibraryModel);
-  }
-
   if (fromTs || toTs) {
     rows = rows.filter((u) => {
       const ts = u.savedAt ? new Date(u.savedAt).getTime() : null;
@@ -2908,16 +2868,7 @@ const libraryModelOptions = useMemo(
   }
 
   return rows;
-}, [
-  savedUnits,
-  unitLibrarySearch,
-  unitLibraryMode,
-  unitLibraryDateFrom,
-  unitLibraryDateTo,
-  unitLibraryEquipmentType,
-  unitLibraryManufacturer,
-  unitLibraryModel,
-]);
+}, [savedUnits, unitLibrarySearch, unitLibraryMode, unitLibraryDateFrom, unitLibraryDateTo]);
 
   const repairGuidance = useMemo(
   () => buildRepairGuidance(parsed, equipmentType),
