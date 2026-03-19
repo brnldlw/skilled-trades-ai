@@ -5743,7 +5743,7 @@ if (!isLoggedIn) {
         style={{
           marginTop: 14,
           display: "grid",
-          gridTemplateColumns: "1.2fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr auto auto auto",
+          gridTemplateColumns: "1.2fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr auto auto",
           gap: 10,
         }}
       >
@@ -5819,21 +5819,6 @@ if (!isLoggedIn) {
           style={{ padding: "8px 12px", fontWeight: 900 }}
         >
           All Units
-        </button>
-
-        <button
-          onClick={() => {
-            setUnitLibrarySearch("");
-            setUnitLibraryMode("recent");
-            setUnitLibraryDateFrom("");
-            setUnitLibraryDateTo("");
-            setUnitLibraryEquipmentType("");
-            setUnitLibraryManufacturer("");
-            setUnitLibraryModel("");
-          }}
-          style={{ padding: "8px 12px", fontWeight: 900 }}
-        >
-          Reset Filters
         </button>
       </div>
 
