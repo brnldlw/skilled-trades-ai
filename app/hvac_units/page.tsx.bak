@@ -3044,7 +3044,11 @@ async function importWorkOrderRows() {
           refrigerant_type: row.refrigerant_type || "",
         });
 
+        setCurrentLoadedUnitId(record.id);
+        await loadUnitServiceTimeline(record.id);
+
         action = "created-new-unit";
+        
       }
 
       await createServiceEventForCurrentUser({
@@ -3180,6 +3184,35 @@ function previewWorkOrderImport() {
   } catch (err) {
     console.error("SAVE UNIT FAILED", err);
     alert("Save Unit failed. Check browser console.");
+  }
+}
+
+async function saveCurrentCallAsServiceEvent() {
+  if (!currentLoadedUnitId) {
+    alert("Load a unit first, or save the unit before saving the current call.");
+    return;
+  }
+
+  try {
+    await createServiceEventForCurrentUser({
+      id: makeId(),
+      unit_id: currentLoadedUnitId,
+      service_date: new Date().toISOString(),
+      symptom: symptom || "",
+      diagnosis_summary: parsed?.summary || "",
+      final_confirmed_cause: finalConfirmedCause || "",
+      parts_replaced: actualFixPerformed || "",
+      actual_fix_performed: actualFixPerformed || "",
+      outcome_status: outcomeStatus || "Not Set",
+      callback_occurred: callbackOccurred || "No",
+      tech_closeout_notes: techCloseoutNotes || "",
+    });
+
+    await loadUnitServiceTimeline(currentLoadedUnitId);
+    alert("Current call saved to the unit timeline.");
+  } catch (err) {
+    console.error("SAVE CURRENT CALL FAILED", err);
+    alert("Could not save current call. Check browser console.");
   }
 }
 

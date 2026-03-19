@@ -2670,6 +2670,8 @@ export default function HVACUnitsPage() {
   const [savedUnits, setSavedUnits] = useState<SavedUnitRecord[]>([]);
   const [historyFilter, setHistoryFilter] = useState("");
 
+  const [currentLoadedUnitId, setCurrentLoadedUnitId] = useState<string>("");
+
   const [showUnitLibrary, setShowUnitLibrary] = useState(false);
   const [unitLibrarySearch, setUnitLibrarySearch] = useState("");
   const [unitLibraryMode, setUnitLibraryMode] = useState<"recent" | "all">("recent");
@@ -3032,6 +3034,7 @@ const errorCodeGuidance = useMemo(
     setOutcomeStatus("Not Set");
     setCallbackOccurred("No");
     setTechCloseoutNotes("");
+    setCurrentLoadedUnitId("");
     const pack = SYMPTOM_PACKS.find((p) => p.id === "no_cooling") || SYMPTOM_PACKS[0];
     setFlowNodeId(pack.nodes[0]?.id || "");
     setFlowHistory([]);
@@ -3443,6 +3446,35 @@ async function saveCurrentUnit() {
     }
   }
 
+  async function saveCurrentCallAsServiceEvent() {
+  if (!currentLoadedUnitId) {
+    alert("Load a unit first, or save the unit before saving the current call.");
+    return;
+  }
+
+  try {
+    await createServiceEventForCurrentUser({
+      id: makeId(),
+      unit_id: currentLoadedUnitId,
+      service_date: new Date().toISOString(),
+      symptom: symptom || "",
+      diagnosis_summary: parsed?.summary || "",
+      final_confirmed_cause: finalConfirmedCause || "",
+      parts_replaced: actualFixPerformed || "",
+      actual_fix_performed: actualFixPerformed || "",
+      outcome_status: outcomeStatus || "Not Set",
+      callback_occurred: callbackOccurred || "No",
+      tech_closeout_notes: techCloseoutNotes || "",
+    });
+
+    await loadUnitServiceTimeline(currentLoadedUnitId);
+    alert("Current call saved to the unit timeline.");
+  } catch (err) {
+    console.error("SAVE CURRENT CALL FAILED", err);
+    alert("Could not save current call. Check browser console.");
+  }
+}
+
   async function loadUnitServiceTimeline(unitId: string) {
   if (!unitId) {
     setUnitServiceTimeline([]);
@@ -3469,6 +3501,7 @@ async function saveCurrentUnit() {
 }
 
   function loadUnit(record: SavedUnitRecord) {
+    setCurrentLoadedUnitId(record.id);
     setCustomerName(record.customerName || "");
     setSiteName(record.siteName || "");
     setSiteAddress(record.siteAddress || "");
@@ -4123,6 +4156,25 @@ if (!isLoggedIn) {
       </div>
     </div>
   </SectionCard>
+</div>
+
+<div style={{ marginTop: 12, display: "flex", gap: 10, flexWrap: "wrap" }}>
+  <button
+    onClick={saveCurrentCallAsServiceEvent}
+    style={{ padding: "10px 14px", fontWeight: 900 }}
+  >
+    Save Current Call to Timeline
+  </button>
+
+  {!currentLoadedUnitId ? (
+    <SmallHint>
+      Load a unit first or save the unit before saving the current call.
+    </SmallHint>
+  ) : (
+    <SmallHint>
+      This will add the current diagnosis/fix/outcome as a service event on the loaded unit.
+    </SmallHint>
+  )}
 </div>
 
             <div style={{ marginTop: 12 }}>
