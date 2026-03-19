@@ -2669,12 +2669,6 @@ export default function HVACUnitsPage() {
   const [savedUnits, setSavedUnits] = useState<SavedUnitRecord[]>([]);
   const [historyFilter, setHistoryFilter] = useState("");
 
-  const [showUnitLibrary, setShowUnitLibrary] = useState(false);
-  const [unitLibrarySearch, setUnitLibrarySearch] = useState("");
-  const [unitLibraryMode, setUnitLibraryMode] = useState<"recent" | "all">("recent");
-  const [unitLibraryDateFrom, setUnitLibraryDateFrom] = useState("");
-  const [unitLibraryDateTo, setUnitLibraryDateTo] = useState("");
-
   const [unitServiceTimeline, setUnitServiceTimeline] = useState<
   import("../lib/supabase/work-orders").ServiceEventRow[]
 >([]);
@@ -2812,54 +2806,6 @@ const errorCodeGuidance = useMemo(
         .includes(q)
     );
   }, [savedUnits, historyFilter]);
-
-  const filteredLibraryUnits = useMemo(() => {
-  const q = unitLibrarySearch.trim().toLowerCase();
-
-  const fromTs = unitLibraryDateFrom
-    ? new Date(`${unitLibraryDateFrom}T00:00:00`).getTime()
-    : null;
-
-  const toTs = unitLibraryDateTo
-    ? new Date(`${unitLibraryDateTo}T23:59:59`).getTime()
-    : null;
-
-  let rows = [...savedUnits];
-
-  if (unitLibraryMode === "recent") {
-    rows = rows.slice(0, 25);
-  }
-
-  if (q) {
-    rows = rows.filter((u) =>
-      [
-        u.customerName,
-        u.siteName,
-        u.siteAddress,
-        u.unitNickname,
-        u.equipmentType,
-        u.manufacturer,
-        u.model,
-        u.refrigerantType,
-      ]
-        .join(" ")
-        .toLowerCase()
-        .includes(q)
-    );
-  }
-
-  if (fromTs || toTs) {
-    rows = rows.filter((u) => {
-      const ts = u.savedAt ? new Date(u.savedAt).getTime() : null;
-      if (!ts) return false;
-      if (fromTs && ts < fromTs) return false;
-      if (toTs && ts > toTs) return false;
-      return true;
-    });
-  }
-
-  return rows;
-}, [savedUnits, unitLibrarySearch, unitLibraryMode, unitLibraryDateFrom, unitLibraryDateTo]);
 
   const repairGuidance = useMemo(
   () => buildRepairGuidance(parsed, equipmentType),
@@ -3628,14 +3574,6 @@ if (!isLoggedIn) {
   <div>
     <b>Logged in:</b> {userEmail || "Unknown user"}
   </div>
-
-  <button
-  onClick={() => setShowUnitLibrary(true)}
-  style={{ padding: "8px 12px", fontWeight: 900 }}
->
-  Load Unit
-</button>
-
   <button onClick={handleSignOut} style={{ padding: "8px 12px", fontWeight: 900 }}>
     Sign out
   </button>
@@ -5638,158 +5576,6 @@ if (!isLoggedIn) {
             </SectionCard>
           )}
       </div>
-
-      {showUnitLibrary ? (
-  <div
-    style={{
-      position: "fixed",
-      inset: 0,
-      background: "rgba(0,0,0,0.35)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: 20,
-      zIndex: 2000,
-    }}
-  >
-    <div
-      style={{
-        width: "min(1100px, 96vw)",
-        maxHeight: "90vh",
-        overflow: "auto",
-        background: "#fff",
-        borderRadius: 14,
-        padding: 16,
-        boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: 12,
-          flexWrap: "wrap",
-        }}
-      >
-        <div>
-          <div style={{ fontSize: 22, fontWeight: 900 }}>Unit Library</div>
-          <SmallHint>Search, filter, and load saved units.</SmallHint>
-        </div>
-
-        <button
-          onClick={() => setShowUnitLibrary(false)}
-          style={{ padding: "8px 12px", fontWeight: 900 }}
-        >
-          Close
-        </button>
-      </div>
-
-      <div
-        style={{
-          marginTop: 14,
-          display: "grid",
-          gridTemplateColumns: "1.2fr 0.8fr 0.8fr auto auto",
-          gap: 10,
-        }}
-      >
-        <input
-          value={unitLibrarySearch}
-          onChange={(e) => setUnitLibrarySearch(e.target.value)}
-          placeholder="Search customer, site, address, tag, model..."
-          style={{ width: "100%", padding: 8 }}
-        />
-
-        <input
-          type="date"
-          value={unitLibraryDateFrom}
-          onChange={(e) => setUnitLibraryDateFrom(e.target.value)}
-          style={{ width: "100%", padding: 8 }}
-        />
-
-        <input
-          type="date"
-          value={unitLibraryDateTo}
-          onChange={(e) => setUnitLibraryDateTo(e.target.value)}
-          style={{ width: "100%", padding: 8 }}
-        />
-
-        <button
-          onClick={() => setUnitLibraryMode("recent")}
-          style={{ padding: "8px 12px", fontWeight: 900 }}
-        >
-          Recent
-        </button>
-
-        <button
-          onClick={() => setUnitLibraryMode("all")}
-          style={{ padding: "8px 12px", fontWeight: 900 }}
-        >
-          All Units
-        </button>
-      </div>
-
-      <div style={{ marginTop: 14 }}>
-        <SmallHint>
-          Showing {filteredLibraryUnits.length} unit(s) • Mode:{" "}
-          {unitLibraryMode === "recent" ? "Recent 25" : "All"}
-        </SmallHint>
-      </div>
-
-      <div
-        style={{
-          marginTop: 14,
-          display: "grid",
-          gap: 10,
-          maxHeight: "60vh",
-          overflow: "auto",
-        }}
-      >
-        {filteredLibraryUnits.length ? (
-          filteredLibraryUnits.map((u) => (
-            <div
-              key={u.id}
-              style={{
-                border: "1px solid #eee",
-                borderRadius: 10,
-                padding: 10,
-                background: "#fafafa",
-              }}
-            >
-              <div style={{ fontWeight: 900 }}>
-                {u.customerName || "No Customer"}
-                {u.unitNickname ? <Badge text={u.unitNickname} /> : null}
-              </div>
-
-              <SmallHint style={{ marginTop: 4 }}>
-                {u.siteName || "-"} • {u.manufacturer || "-"} {u.model || "-"} •{" "}
-                {u.equipmentType || "-"}
-              </SmallHint>
-
-              <SmallHint style={{ marginTop: 4 }}>
-                Saved: {u.savedAt ? new Date(u.savedAt).toLocaleString() : "-"}
-              </SmallHint>
-
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 8 }}>
-                <PillButton
-                  text="Load"
-                  onClick={() => {
-                    loadUnit(u);
-                    setShowUnitLibrary(false);
-                  }}
-                />
-                <PillButton text="Delete" onClick={() => removeSavedUnit(u.id)} />
-              </div>
-            </div>
-          ))
-        ) : (
-          <SmallHint>No units matched your search/filter.</SmallHint>
-        )}
-      </div>
-    </div>
-  </div>
-) : null}
-
     </div>
   );
 }
