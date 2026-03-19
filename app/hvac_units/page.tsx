@@ -2672,6 +2672,10 @@ export default function HVACUnitsPage() {
 
   const [currentLoadedUnitId, setCurrentLoadedUnitId] = useState<string>("");
 
+  const [serviceDate, setServiceDate] = useState(
+  new Date().toISOString().slice(0, 10)
+);
+
   const [showUnitLibrary, setShowUnitLibrary] = useState(false);
   const [unitLibrarySearch, setUnitLibrarySearch] = useState("");
   const [unitLibraryMode, setUnitLibraryMode] = useState<"recent" | "all">("recent");
@@ -3035,6 +3039,7 @@ const errorCodeGuidance = useMemo(
     setCallbackOccurred("No");
     setTechCloseoutNotes("");
     setCurrentLoadedUnitId("");
+    setServiceDate(new Date().toISOString().slice(0, 10));
     const pack = SYMPTOM_PACKS.find((p) => p.id === "no_cooling") || SYMPTOM_PACKS[0];
     setFlowNodeId(pack.nodes[0]?.id || "");
     setFlowHistory([]);
@@ -3456,7 +3461,9 @@ async function saveCurrentUnit() {
     await createServiceEventForCurrentUser({
       id: makeId(),
       unit_id: currentLoadedUnitId,
-      service_date: new Date().toISOString(),
+      service_date: serviceDate
+      ? new Date(`${serviceDate}T12:00:00`).toISOString()
+      : new Date().toISOString(),
       symptom: symptom || "",
       diagnosis_summary: parsed?.summary || "",
       final_confirmed_cause: finalConfirmedCause || "",
@@ -4049,6 +4056,17 @@ if (!isLoggedIn) {
     <SmallHint>
       Use this after the job is diagnosed or completed. This is how the app starts learning what actually fixed the unit.
     </SmallHint>
+
+   <div style={{ gridColumn: "1 / -1" }}>
+  <label style={{ fontWeight: 900 }}>Service Date</label>
+  <br />
+  <input
+    type="date"
+    value={serviceDate}
+    onChange={(e) => setServiceDate(e.target.value)}
+    style={{ width: "100%", padding: 8 }}
+  />
+</div>
 
     <div
       style={{
