@@ -4057,17 +4057,6 @@ if (!isLoggedIn) {
       Use this after the job is diagnosed or completed. This is how the app starts learning what actually fixed the unit.
     </SmallHint>
 
-   <div style={{ gridColumn: "1 / -1" }}>
-  <label style={{ fontWeight: 900 }}>Service Date</label>
-  <br />
-  <input
-    type="date"
-    value={serviceDate}
-    onChange={(e) => setServiceDate(e.target.value)}
-    style={{ width: "100%", padding: 8 }}
-  />
-</div>
-
     <div
       style={{
         marginTop: 12,
@@ -4086,6 +4075,17 @@ if (!isLoggedIn) {
           style={{ width: "100%", padding: 8 }}
         />
       </div>
+
+ <div style={{ gridColumn: "1 / -1" }}>
+  <label style={{ fontWeight: 900 }}>Service Date</label>
+  <br />
+  <input
+    type="date"
+    value={serviceDate}
+    onChange={(e) => setServiceDate(e.target.value)}
+    style={{ width: "100%", padding: 8 }}
+  />
+</div>
 
       <div style={{ gridColumn: "1 / -1" }}>
         <label style={{ fontWeight: 900 }}>Actual Fix Performed</label>
