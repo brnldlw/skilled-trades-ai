@@ -3812,6 +3812,7 @@ if (!isLoggedIn) {
     )}
   </SectionCard>
 </div>
+      <div style={{ marginTop: 16, display: showSavedUnitHistory ? "block" : "none" }}>
 
         <SectionCard title="Saved Unit History" right={<Badge text={`${savedUnits.length} saved`} />}>
           <input
@@ -3858,6 +3859,7 @@ if (!isLoggedIn) {
             )}
           </div>
         </SectionCard>
+      </div>
       </div>
 
       <div style={{ marginTop: 16 }}>
