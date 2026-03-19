@@ -36,6 +36,7 @@ export type SavedUnitRecord = {
   equipmentType: string;
   manufacturer: string;
   model: string;
+  serialNumber?: string;
   refrigerantType: string;
   errorCode?: string;
   errorCodeSource?: string;

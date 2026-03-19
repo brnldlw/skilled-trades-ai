@@ -2611,6 +2611,7 @@ export default function HVACUnitsPage() {
   const [equipmentType, setEquipmentType] = useState("RTU");
   const [manufacturer, setManufacturer] = useState("");
   const [model, setModel] = useState("");
+  const [serialNumber, setSerialNumber] = useState("");
   const [errorCode, setErrorCode] = useState("");
   const [errorCodeSource, setErrorCodeSource] = useState("Control Board");
   const [symptom, setSymptom] = useState("");
@@ -3911,120 +3912,6 @@ if (!isLoggedIn) {
       </div>
 
       <div style={{ marginTop: 16 }}>
-  <SectionCard title="Admin / Work Tools">
-    <button
-      onClick={() => setShowBulkImportTools((v) => !v)}
-      style={{ padding: "10px 14px", fontWeight: 900 }}
-    >
-      {showBulkImportTools ? "Hide Bulk Import" : "Show Bulk Import"}
-    </button>
-
-    {showBulkImportTools ? (
-      <div style={{ marginTop: 12 }}>
-        <SmallHint>
-          Paste CSV with a header row. Required columns for best matching:
-          customer_name,site_name,site_address,unit_nickname,property_type,equipment_type,manufacturer,model,serial,refrigerant_type,service_date,symptom,diagnosis_summary,final_confirmed_cause,parts_replaced,actual_fix_performed,outcome_status,callback_occurred,tech_closeout_notes
-        </SmallHint>
-
-        <div style={{ marginTop: 12 }}>
-          <textarea
-            value={workOrderImportText}
-            onChange={(e) => setWorkOrderImportText(e.target.value)}
-            placeholder="Paste work-order CSV here..."
-            style={{ width: "100%", minHeight: 180, padding: 10 }}
-          />
-        </div>
-
-        <div style={{ display: "flex", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
-          <button
-            onClick={previewWorkOrderImport}
-            style={{ padding: "10px 14px", fontWeight: 900 }}
-          >
-            Preview Import
-          </button>
-
-          <button
-            onClick={importWorkOrderRows}
-            disabled={workOrderImportLoading || !workOrderImportRows.length}
-            style={{ padding: "10px 14px", fontWeight: 900 }}
-          >
-            {workOrderImportLoading ? "Importing..." : "Import Rows"}
-          </button>
-        </div>
-
-        {workOrderImportMessage ? (
-          <div style={{ marginTop: 12 }}>
-            <SmallHint>{workOrderImportMessage}</SmallHint>
-          </div>
-        ) : null}
-
-        {workOrderImportRows.length ? (
-          <div style={{ marginTop: 12, overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr>
-                  {Object.keys(workOrderImportRows[0]).map((key) => (
-                    <th
-                      key={key}
-                      style={{
-                        textAlign: "left",
-                        borderBottom: "1px solid #ddd",
-                        padding: 8,
-                        fontSize: 12,
-                      }}
-                    >
-                      {key}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {workOrderImportRows.slice(0, 10).map((row, idx) => (
-                  <tr key={idx}>
-                    {Object.keys(workOrderImportRows[0]).map((key) => (
-                      <td
-                        key={key}
-                        style={{
-                          borderBottom: "1px solid #f0f0f0",
-                          padding: 8,
-                          fontSize: 12,
-                        }}
-                      >
-                        {row[key]}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <SmallHint style={{ marginTop: 8 }}>
-              Showing first {Math.min(10, workOrderImportRows.length)} row(s) of {workOrderImportRows.length}.
-            </SmallHint>
-          </div>
-        ) : null}
-
-        {workOrderImportResults.length ? (
-          <div style={{ marginTop: 12 }}>
-            <div style={{ fontWeight: 900 }}>Import Results</div>
-            <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-              {workOrderImportResults.map((item, idx) => (
-                <li key={idx}>
-                  <SmallHint>
-                    Row {item.rowNumber}: {item.action} → unit {item.unitId}
-                  </SmallHint>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
-      </div>
-    ) : (
-      <SmallHint style={{ marginTop: 12 }}>
-        Bulk import is hidden by default to keep the field workflow clean.
-      </SmallHint>
-    )}
-  </SectionCard>
-</div>
 
       <div
         style={{
@@ -4093,6 +3980,17 @@ if (!isLoggedIn) {
               style={{ width: "100%", padding: 8 }}
             />
           </div>
+
+          <div>
+  <label style={{ fontWeight: 900 }}>Serial Number</label>
+  <br />
+  <input
+    value={serialNumber}
+    onChange={(e) => setSerialNumber(e.target.value)}
+    placeholder="Example: S12345AB789"
+    style={{ width: "100%", padding: 8 }}
+  />
+</div> 
 
           <div>
             <label style={{ fontWeight: 900 }}>Refrigerant Type</label>
@@ -5638,6 +5536,121 @@ if (!isLoggedIn) {
             </SectionCard>
           )}
       </div>
+
+      <SectionCard title="Admin / Work Tools">
+    <button
+      onClick={() => setShowBulkImportTools((v) => !v)}
+      style={{ padding: "10px 14px", fontWeight: 900 }}
+    >
+      {showBulkImportTools ? "Hide Bulk Import" : "Show Bulk Import"}
+    </button>
+
+    {showBulkImportTools ? (
+      <div style={{ marginTop: 12 }}>
+        <SmallHint>
+          Paste CSV with a header row. Required columns for best matching:
+          customer_name,site_name,site_address,unit_nickname,property_type,equipment_type,manufacturer,model,serial,refrigerant_type,service_date,symptom,diagnosis_summary,final_confirmed_cause,parts_replaced,actual_fix_performed,outcome_status,callback_occurred,tech_closeout_notes
+        </SmallHint>
+
+        <div style={{ marginTop: 12 }}>
+          <textarea
+            value={workOrderImportText}
+            onChange={(e) => setWorkOrderImportText(e.target.value)}
+            placeholder="Paste work-order CSV here..."
+            style={{ width: "100%", minHeight: 180, padding: 10 }}
+          />
+        </div>
+
+        <div style={{ display: "flex", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
+          <button
+            onClick={previewWorkOrderImport}
+            style={{ padding: "10px 14px", fontWeight: 900 }}
+          >
+            Preview Import
+          </button>
+
+          <button
+            onClick={importWorkOrderRows}
+            disabled={workOrderImportLoading || !workOrderImportRows.length}
+            style={{ padding: "10px 14px", fontWeight: 900 }}
+          >
+            {workOrderImportLoading ? "Importing..." : "Import Rows"}
+          </button>
+        </div>
+
+        {workOrderImportMessage ? (
+          <div style={{ marginTop: 12 }}>
+            <SmallHint>{workOrderImportMessage}</SmallHint>
+          </div>
+        ) : null}
+
+        {workOrderImportRows.length ? (
+          <div style={{ marginTop: 12, overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr>
+                  {Object.keys(workOrderImportRows[0]).map((key) => (
+                    <th
+                      key={key}
+                      style={{
+                        textAlign: "left",
+                        borderBottom: "1px solid #ddd",
+                        padding: 8,
+                        fontSize: 12,
+                      }}
+                    >
+                      {key}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {workOrderImportRows.slice(0, 10).map((row, idx) => (
+                  <tr key={idx}>
+                    {Object.keys(workOrderImportRows[0]).map((key) => (
+                      <td
+                        key={key}
+                        style={{
+                          borderBottom: "1px solid #f0f0f0",
+                          padding: 8,
+                          fontSize: 12,
+                        }}
+                      >
+                        {row[key]}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <SmallHint style={{ marginTop: 8 }}>
+              Showing first {Math.min(10, workOrderImportRows.length)} row(s) of {workOrderImportRows.length}.
+            </SmallHint>
+          </div>
+        ) : null}
+
+        {workOrderImportResults.length ? (
+          <div style={{ marginTop: 12 }}>
+            <div style={{ fontWeight: 900 }}>Import Results</div>
+            <ul style={{ marginTop: 8, paddingLeft: 18 }}>
+              {workOrderImportResults.map((item, idx) => (
+                <li key={idx}>
+                  <SmallHint>
+                    Row {item.rowNumber}: {item.action} → unit {item.unitId}
+                  </SmallHint>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+      </div>
+    ) : (
+      <SmallHint style={{ marginTop: 12 }}>
+        Bulk import is hidden by default to keep the field workflow clean.
+      </SmallHint>
+    )}
+  </SectionCard>
+</div>
 
       {showUnitLibrary ? (
   <div
