@@ -2688,14 +2688,6 @@ const [showSavedUnitHistory, setShowSavedUnitHistory] = useState(false);
   const [unitLibraryManufacturer, setUnitLibraryManufacturer] = useState("");
   const [unitLibraryModel, setUnitLibraryModel] = useState("");
 
-  const [showUnitProfile, setShowUnitProfile] = useState(false);
-  const [unitProfileUnit, setUnitProfileUnit] = useState<SavedUnitRecord | null>(null);
-  const [unitProfileTimeline, setUnitProfileTimeline] = useState<
-  import("../lib/supabase/work-orders").ServiceEventRow[]
->([]);
-  const [unitProfileLoading, setUnitProfileLoading] = useState(false);
-  const [unitProfileMessage, setUnitProfileMessage] = useState("");
-
   const [unitServiceTimeline, setUnitServiceTimeline] = useState<
   import("../lib/supabase/work-orders").ServiceEventRow[]
 >([]);
@@ -3539,28 +3531,6 @@ async function saveCurrentUnit() {
   } catch (err) {
     console.error("SAVE CURRENT CALL FAILED", err);
     alert("Could not save current call. Check browser console.");
-  }
-}
-
-async function openUnitProfile(record: SavedUnitRecord) {
-  setShowUnitProfile(true);
-  setUnitProfileUnit(record);
-  setUnitProfileLoading(true);
-  setUnitProfileMessage("");
-  setUnitProfileTimeline([]);
-
-  try {
-    const events = (await listServiceEventsForUnitForCurrentUser(record.id)) || [];
-    setUnitProfileTimeline(events);
-    setUnitProfileMessage(
-      events.length ? "" : "No prior service events found for this unit."
-    );
-  } catch (err) {
-    console.error(err);
-    setUnitProfileTimeline([]);
-    setUnitProfileMessage("Could not load unit profile timeline.");
-  } finally {
-    setUnitProfileLoading(false);
   }
 }
 
@@ -5723,162 +5693,7 @@ if (!isLoggedIn) {
   </SectionCard>
 </div>
 
-      {showUnitProfile ? (
-  <div
-    style={{
-      position: "fixed",
-      inset: 0,
-      background: "rgba(0,0,0,0.35)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: 20,
-      zIndex: 2100,
-    }}
-  >
-    <div
-      style={{
-        width: "min(1100px, 96vw)",
-        maxHeight: "90vh",
-        overflow: "auto",
-        background: "#fff",
-        borderRadius: 14,
-        padding: 16,
-        boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: 12,
-          flexWrap: "wrap",
-        }}
-      >
-        <div>
-          <div style={{ fontSize: 22, fontWeight: 900 }}>Unit Profile</div>
-          <SmallHint>Unit details and full service history.</SmallHint>
-        </div>
-
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          {unitProfileUnit ? (
-            <button
-              onClick={() => {
-                loadUnit(unitProfileUnit);
-                setShowUnitProfile(false);
-              }}
-              style={{ padding: "8px 12px", fontWeight: 900 }}
-            >
-              Load Into Form
-            </button>
-          ) : null}
-
-          <button
-            onClick={() => setShowUnitProfile(false)}
-            style={{ padding: "8px 12px", fontWeight: 900 }}
-          >
-            Close
-          </button>
-        </div>
-      </div>
-
-      {unitProfileUnit ? (
-        <>
-          <div
-            style={{
-              marginTop: 14,
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: 10,
-              border: "1px solid #eee",
-              borderRadius: 10,
-              padding: 12,
-              background: "#fafafa",
-            }}
-          >
-            <div><b>Customer:</b> {unitProfileUnit.customerName || "-"}</div>
-            <div><b>Site:</b> {unitProfileUnit.siteName || "-"}</div>
-            <div><b>Address:</b> {unitProfileUnit.siteAddress || "-"}</div>
-            <div><b>Unit Tag:</b> {unitProfileUnit.unitNickname || "-"}</div>
-            <div><b>Equipment Type:</b> {unitProfileUnit.equipmentType || "-"}</div>
-            <div><b>Manufacturer:</b> {unitProfileUnit.manufacturer || "-"}</div>
-            <div><b>Model:</b> {unitProfileUnit.model || "-"}</div>
-            <div><b>Serial:</b> {unitProfileUnit.serialNumber || "-"}</div>
-            <div><b>Refrigerant:</b> {unitProfileUnit.refrigerantType || "-"}</div>
-            <div><b>Saved:</b> {unitProfileUnit.savedAt ? new Date(unitProfileUnit.savedAt).toLocaleString() : "-"}</div>
-          </div>
-
-          <div style={{ marginTop: 16 }}>
-            <SectionCard title="Service Timeline">
-              {unitProfileLoading ? (
-                <SmallHint>Loading unit timeline...</SmallHint>
-              ) : unitProfileTimeline.length ? (
-                <div style={{ display: "grid", gap: 10 }}>
-                  {unitProfileTimeline.map((event) => (
-                    <div
-                      key={event.id}
-                      style={{
-                        border: "1px solid #eee",
-                        borderRadius: 10,
-                        padding: 10,
-                        background: "#fafafa",
-                      }}
-                    >
-                      <div style={{ fontWeight: 900 }}>
-                        {event.service_date
-                          ? new Date(event.service_date).toLocaleDateString()
-                          : "Unknown service date"}
-                      </div>
-
-                      <div style={{ marginTop: 8 }}>
-                        <SmallHint><b>Symptom:</b> {event.symptom || "-"}</SmallHint>
-                      </div>
-
-                      <div style={{ marginTop: 4 }}>
-                        <SmallHint><b>Diagnosis:</b> {event.diagnosis_summary || "-"}</SmallHint>
-                      </div>
-
-                      <div style={{ marginTop: 4 }}>
-                        <SmallHint><b>Confirmed Cause:</b> {event.final_confirmed_cause || "-"}</SmallHint>
-                      </div>
-
-                      <div style={{ marginTop: 4 }}>
-                        <SmallHint><b>Parts Replaced:</b> {event.parts_replaced || "-"}</SmallHint>
-                      </div>
-
-                      <div style={{ marginTop: 4 }}>
-                        <SmallHint><b>Actual Fix:</b> {event.actual_fix_performed || "-"}</SmallHint>
-                      </div>
-
-                      <div style={{ marginTop: 4 }}>
-                        <SmallHint>
-                          <b>Outcome:</b> {event.outcome_status || "-"} • <b>Callback:</b> {event.callback_occurred || "-"}
-                        </SmallHint>
-                      </div>
-
-                      <div style={{ marginTop: 4 }}>
-                        <SmallHint><b>Notes:</b> {event.tech_closeout_notes || "-"}</SmallHint>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <SmallHint>
-                  {unitProfileMessage || "No service history found for this unit."}
-                </SmallHint>
-              )}
-            </SectionCard>
-          </div>
-        </>
-      ) : (
-        <SmallHint>No unit selected.</SmallHint>
-      )}
-    </div>
-  </div>
-) : null}
-
-{showUnitLibrary ? (
+      {showUnitLibrary ? (
   <div
     style={{
       position: "fixed",
@@ -6064,13 +5879,6 @@ if (!isLoggedIn) {
               </SmallHint>
 
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 8 }}>
-                <PillButton
-                  text="View Profile"
-                  onClick={() => {
-                    setShowUnitLibrary(false);
-                    openUnitProfile(u);
-                  }}
-                />
                 <PillButton
                   text="Load"
                   onClick={() => {
