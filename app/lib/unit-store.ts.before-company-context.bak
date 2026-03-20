@@ -28,7 +28,6 @@ export type NameplateResult = {
 export type SavedUnitRecord = {
   id: string;
   savedAt: string;
-  companyName?: string;
   customerName: string;
   siteName: string;
   siteAddress: string;

@@ -4,7 +4,6 @@ export type UnitRow = {
   id: string;
   user_id: string;
   created_at?: string;
-  company_name?: string | null;
   customer_name?: string | null;
   site_name?: string | null;
   site_address?: string | null;
@@ -20,7 +19,6 @@ export type UnitRow = {
 export type ServiceEventRow = {
   id: string;
   user_id: string;
-  company_name?: string | null;
   unit_id: string;
   created_at?: string;
   service_date?: string | null;

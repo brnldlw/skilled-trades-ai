@@ -2603,7 +2603,6 @@ const SYMPTOM_PACKS: SymptomPack[] = [
 
 export default function HVACUnitsPage() {
   const [customerName, setCustomerName] = useState("");
-  const [companyName, setCompanyName] = useState("");
   const [siteName, setSiteName] = useState("");
   const [siteAddress, setSiteAddress] = useState("");
   const [unitNickname, setUnitNickname] = useState("");
@@ -3067,7 +3066,6 @@ const libraryModelOptions = useMemo(
   }
 
   function clearCurrentForm() {
-    setCompanyName("");
     setCustomerName("");
     setSiteName("");
     setSiteAddress("");
@@ -3479,7 +3477,6 @@ async function saveCurrentUnit() {
           id: r.id,
           savedAt: r.created_at || "",
           customerName: r.customer_name || "",
-          companyName: r.company_name || "",
           siteName: r.site_name || "",
           siteAddress: r.site_address || "",
           unitNickname: r.unit_nickname || "",
@@ -3524,7 +3521,6 @@ async function saveCurrentUnit() {
     await createServiceEventForCurrentUser({
       id: makeId(),
       unit_id: currentLoadedUnitId,
-      company_name: companyName || "",
       service_date: serviceDate
       ? new Date(`${serviceDate}T12:00:00`).toISOString()
       : new Date().toISOString(),
@@ -3595,7 +3591,6 @@ async function openUnitProfile(record: SavedUnitRecord) {
 
   function loadUnit(record: SavedUnitRecord) {
     setCurrentLoadedUnitId(record.id);
-    setCompanyName(record.companyName || "");
     setCustomerName(record.customerName || "");
     setSiteName(record.siteName || "");
     setSiteAddress(record.siteAddress || "");
@@ -3637,7 +3632,6 @@ loadUnitServiceTimeline(record.id);
         id: r.id,
         savedAt: r.created_at || "",
         customerName: r.customer_name || "",
-        companyName: r.company_name || "",
         siteName: r.site_name || "",
         siteAddress: r.site_address || "",
         unitNickname: r.unit_nickname || "",
@@ -3797,16 +3791,6 @@ if (!isLoggedIn) {
               />
             </div>
             <div>
-              <label style={{ fontWeight: 900 }}>Company Name</label>
-              <br />
-              <input
-                value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
-                placeholder="Example: ABC Mechanical"
-                style={{ width: "100%", padding: 8 }}
-              />
-            </div>
-            <div>
               <label style={{ fontWeight: 900 }}>Site Name</label>
               <input
                 value={siteName}
@@ -3934,7 +3918,6 @@ if (!isLoggedIn) {
                 >
                   <div style={{ fontWeight: 900 }}>
                     {u.customerName || "No Customer"}
-                    {u.companyName ? <Badge text={u.companyName} /> : null}
                     {u.unitNickname ? <Badge text={u.unitNickname} /> : null}
                   </div>
                   <SmallHint style={{ marginTop: 4 }}>
@@ -4122,7 +4105,6 @@ if (!isLoggedIn) {
               }}
             >
               <div><b>Customer:</b> {customerName || "-"}</div>
-              <div><b>Company:</b> {unitProfileUnit?.companyName || "-"}</div>
               <div><b>Site:</b> {siteName || "-"}</div>
               <div><b>Address:</b> {siteAddress || "-"}</div>
               <div><b>Unit Tag:</b> {unitNickname || "-"}</div>
