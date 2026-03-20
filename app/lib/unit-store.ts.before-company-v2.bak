@@ -1,0 +1,90 @@
+export type Observation = {
+  label: string;
+  value: string;
+  unit: string;
+  note?: string;
+};
+
+export type NameplateResult = {
+  manufacturer: string | null;
+  model: string | null;
+  serial: string | null;
+  equipment_type: string | null;
+  refrigerant: string | null;
+  voltage: string | null;
+  phase: string | null;
+  hz: string | null;
+  mca: string | null;
+  mop: string | null;
+  rla: string | null;
+  fla: string | null;
+  tonnage: string | null;
+  heat_type: string | null;
+  gas_type: string | null;
+  notes: string;
+  confidence: "high" | "medium" | "low";
+};
+
+export type SavedUnitRecord = {
+  id: string;
+  savedAt: string;
+  companyName?: string;
+  customerName: string;
+  siteName: string;
+  siteAddress: string;
+  unitNickname: string;
+  propertyType: string;
+  equipmentType: string;
+  manufacturer: string;
+  model: string;
+  serialNumber?: string;
+  refrigerantType: string;
+  errorCode?: string;
+  errorCodeSource?: string;
+  symptom: string;
+  selectedPackId: string;
+  flowNodeId: string;
+  flowHistory: { nodeId: string; choice: "PASS" | "FAIL"; nextId: string | null }[];
+  observations: Observation[];
+  finalConfirmedCause?: string;
+  actualFixPerformed?: string;
+  outcomeStatus?: string;
+  callbackOccurred?: string;
+  techCloseoutNotes?: string;
+  rawResult: string;
+  nameplate: NameplateResult | null;
+};
+
+const STORAGE_KEY = "skilled_trades_ai_saved_units_v2";
+
+function loadLocal(): SavedUnitRecord[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveLocal(records: SavedUnitRecord[]) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+}
+
+export async function listUnits(): Promise<SavedUnitRecord[]> {
+  return loadLocal();
+}
+
+export async function saveUnit(record: SavedUnitRecord): Promise<void> {
+  const local = loadLocal();
+  const nextLocal = [record, ...local.filter((x) => x.id !== record.id)];
+  saveLocal(nextLocal);
+}
+
+export async function deleteUnit(id: string): Promise<void> {
+  const local = loadLocal().filter((x) => x.id !== id);
+  saveLocal(local);
+}

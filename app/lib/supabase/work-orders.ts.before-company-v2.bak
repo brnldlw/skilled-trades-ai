@@ -4,7 +4,6 @@ export type UnitRow = {
   id: string;
   user_id: string;
   created_at?: string;
-  company_id?: string | null;
   company_name?: string | null;
   customer_name?: string | null;
   site_name?: string | null;
@@ -20,11 +19,10 @@ export type UnitRow = {
 
 export type ServiceEventRow = {
   id: string;
-  user_id?: string | null;
+  user_id: string;
+  company_name?: string | null;
   unit_id: string;
   created_at?: string;
-  company_id?: string | null;
-  company_name?: string | null;
   service_date?: string | null;
   symptom?: string | null;
   diagnosis_summary?: string | null;
@@ -48,66 +46,33 @@ async function getCurrentUserId() {
   return user.id;
 }
 
-async function getActiveCompanyContext() {
-  const supabase = createClient();
-  const userId = await getCurrentUserId();
-
-  const { data: membership, error: membershipError } = await supabase
-    .from("company_memberships")
-    .select("company_id")
-    .eq("user_id", userId)
-    .eq("status", "active")
-    .limit(1)
-    .maybeSingle();
-
-  if (membershipError) throw membershipError;
-  if (!membership?.company_id) {
-    throw new Error("No active company membership found for current user.");
-  }
-
-  const { data: company, error: companyError } = await supabase
-    .from("companies")
-    .select("display_name, legal_name")
-    .eq("id", membership.company_id)
-    .maybeSingle();
-
-  if (companyError) throw companyError;
-
-  return {
-    userId,
-    companyId: membership.company_id as string,
-    companyName: (company?.display_name || company?.legal_name || "") as string,
-  };
-}
-
 export async function listUnitsForCurrentUser() {
   const supabase = createClient();
-  await getCurrentUserId();
+  const userId = await getCurrentUserId();
 
   const { data, error } = await supabase
     .from("units")
     .select("*")
+    .eq("user_id", userId)
     .order("created_at", { ascending: false });
 
   if (error) throw error;
   return (data || []) as UnitRow[];
 }
 
-export async function createUnitForCurrentUser(input: Omit<UnitRow, "user_id" | "created_at">) {
+export async function createUnitForCurrentUser(row: Omit<UnitRow, "user_id">) {
   const supabase = createClient();
-  const ctx = await getActiveCompanyContext();
+  const userId = await getCurrentUserId();
 
-  const payload = {
-    ...input,
-    user_id: ctx.userId,
-    company_id: ctx.companyId,
-    company_name: input.company_name || ctx.companyName,
+  const payload: UnitRow = {
+    ...row,
+    user_id: userId,
   };
 
   const { data, error } = await supabase
     .from("units")
     .insert(payload)
-    .select("*")
+    .select()
     .single();
 
   if (error) throw error;
@@ -115,22 +80,20 @@ export async function createUnitForCurrentUser(input: Omit<UnitRow, "user_id" | 
 }
 
 export async function createServiceEventForCurrentUser(
-  input: Omit<ServiceEventRow, "user_id">
+  row: Omit<ServiceEventRow, "user_id">
 ) {
   const supabase = createClient();
-  const ctx = await getActiveCompanyContext();
+  const userId = await getCurrentUserId();
 
-  const payload = {
-    ...input,
-    user_id: ctx.userId,
-    company_id: ctx.companyId,
-    company_name: input.company_name || ctx.companyName,
+  const payload: ServiceEventRow = {
+    ...row,
+    user_id: userId,
   };
 
   const { data, error } = await supabase
     .from("service_events")
     .insert(payload)
-    .select("*")
+    .select()
     .single();
 
   if (error) throw error;
@@ -144,7 +107,7 @@ export async function findStrongUnitMatchForCurrentUser(input: {
   serial?: string;
 }) {
   const supabase = createClient();
-  await getCurrentUserId();
+  const userId = await getCurrentUserId();
 
   const serial = (input.serial || "").trim();
   const customer = (input.customer_name || "").trim();
@@ -155,6 +118,7 @@ export async function findStrongUnitMatchForCurrentUser(input: {
     const { data, error } = await supabase
       .from("units")
       .select("*")
+      .eq("user_id", userId)
       .eq("serial", serial)
       .limit(1);
 
@@ -166,6 +130,7 @@ export async function findStrongUnitMatchForCurrentUser(input: {
     const { data, error } = await supabase
       .from("units")
       .select("*")
+      .eq("user_id", userId)
       .eq("customer_name", customer)
       .eq("site_name", site)
       .eq("unit_nickname", nickname)
@@ -174,17 +139,17 @@ export async function findStrongUnitMatchForCurrentUser(input: {
     if (error) throw error;
     if (data && data.length) return data[0] as UnitRow;
   }
-
   return null;
 }
 
-export async function listServiceEventsForUnitForCurrentUser(unitId: string) {
+ export async function listServiceEventsForUnitForCurrentUser(unitId: string) {
   const supabase = createClient();
-  await getCurrentUserId();
+  const userId = await getCurrentUserId();
 
   const { data, error } = await supabase
     .from("service_events")
     .select("*")
+    .eq("user_id", userId)
     .eq("unit_id", unitId)
     .order("service_date", { ascending: false });
 
