@@ -5960,7 +5960,7 @@ if (!isLoggedIn) {
         style={{
           marginTop: 14,
           display: "grid",
-          gridTemplateColumns: "1.2fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr auto auto auto",
+          gridTemplateColumns: "1.2fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr auto auto auto",
           gap: 10,
         }}
       >
@@ -6010,19 +6010,6 @@ if (!isLoggedIn) {
           ))}
         </select>
 
-        <select
-          value={unitLibraryCompany}
-          onChange={(e) => setUnitLibraryCompany(e.target.value)}
-          style={{ width: "100%", padding: 8 }}
-        >
-          <option value="">All Companies</option>
-          {libraryCompanyOptions.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
-
         <input
           type="date"
           value={unitLibraryDateFrom}
@@ -6060,7 +6047,6 @@ if (!isLoggedIn) {
             setUnitLibraryEquipmentType("");
             setUnitLibraryManufacturer("");
             setUnitLibraryModel("");
-            setUnitLibraryCompany("");
           }}
           style={{ padding: "8px 12px", fontWeight: 900 }}
         >

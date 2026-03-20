@@ -2688,7 +2688,6 @@ const [showSavedUnitHistory, setShowSavedUnitHistory] = useState(false);
   const [unitLibraryEquipmentType, setUnitLibraryEquipmentType] = useState("");
   const [unitLibraryManufacturer, setUnitLibraryManufacturer] = useState("");
   const [unitLibraryModel, setUnitLibraryModel] = useState("");
-  const [unitLibraryCompany, setUnitLibraryCompany] = useState("");
 
   const [showUnitProfile, setShowUnitProfile] = useState(false);
   const [unitProfileUnit, setUnitProfileUnit] = useState<SavedUnitRecord | null>(null);
@@ -2860,14 +2859,6 @@ const libraryModelOptions = useMemo(
   [savedUnits]
 );
 
-const libraryCompanyOptions = useMemo(
-  () =>
-    Array.from(
-      new Set(savedUnits.map((u) => (u.companyName || "").trim()).filter(Boolean))
-    ).sort((a, b) => a.localeCompare(b)),
-  [savedUnits]
-);
-
   const filteredLibraryUnits = useMemo(() => {
   const q = unitLibrarySearch.trim().toLowerCase();
 
@@ -2915,10 +2906,6 @@ const libraryCompanyOptions = useMemo(
     rows = rows.filter((u) => (u.model || "") === unitLibraryModel);
   }
 
-  if (unitLibraryCompany) {
-    rows = rows.filter((u) => (u.companyName || "") === unitLibraryCompany);
-  }
-
   if (fromTs || toTs) {
     rows = rows.filter((u) => {
       const ts = u.savedAt ? new Date(u.savedAt).getTime() : null;
@@ -2939,7 +2926,6 @@ const libraryCompanyOptions = useMemo(
   unitLibraryEquipmentType,
   unitLibraryManufacturer,
   unitLibraryModel,
-  unitLibraryCompany,
 ]);
 
   const repairGuidance = useMemo(
@@ -5960,7 +5946,7 @@ if (!isLoggedIn) {
         style={{
           marginTop: 14,
           display: "grid",
-          gridTemplateColumns: "1.2fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr auto auto auto",
+          gridTemplateColumns: "1.2fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr auto auto auto",
           gap: 10,
         }}
       >
@@ -6010,19 +5996,6 @@ if (!isLoggedIn) {
           ))}
         </select>
 
-        <select
-          value={unitLibraryCompany}
-          onChange={(e) => setUnitLibraryCompany(e.target.value)}
-          style={{ width: "100%", padding: 8 }}
-        >
-          <option value="">All Companies</option>
-          {libraryCompanyOptions.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
-
         <input
           type="date"
           value={unitLibraryDateFrom}
@@ -6060,7 +6033,6 @@ if (!isLoggedIn) {
             setUnitLibraryEquipmentType("");
             setUnitLibraryManufacturer("");
             setUnitLibraryModel("");
-            setUnitLibraryCompany("");
           }}
           style={{ padding: "8px 12px", fontWeight: 900 }}
         >

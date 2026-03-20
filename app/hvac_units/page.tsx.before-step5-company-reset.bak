@@ -6060,7 +6060,6 @@ if (!isLoggedIn) {
             setUnitLibraryEquipmentType("");
             setUnitLibraryManufacturer("");
             setUnitLibraryModel("");
-            setUnitLibraryCompany("");
           }}
           style={{ padding: "8px 12px", fontWeight: 900 }}
         >
