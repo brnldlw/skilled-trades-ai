@@ -3849,7 +3849,72 @@ if (needsCompanyOnboarding) {
   );
 }
 
-return (
+if (needsCompanyOnboarding) {
+  return (
+    <div style={{ padding: 20, maxWidth: 720, margin: "0 auto" }}>
+      <h1 style={{ fontSize: 26, fontWeight: 900 }}>Set Up Your Company</h1>
+      <p style={{ marginTop: 8 }}>
+        Before using the HVAC tool, create your company workspace.
+      </p>
+
+      <div
+        style={{
+          marginTop: 16,
+          border: "1px solid #e5e5e5",
+          borderRadius: 12,
+          padding: 16,
+          background: "#fafafa",
+          display: "grid",
+          gap: 12,
+        }}
+      >
+        <div>
+          <label style={{ fontWeight: 900 }}>Company Name</label>
+          <br />
+          <input
+            value={onboardingCompanyName}
+            onChange={(e) => setOnboardingCompanyName(e.target.value)}
+            placeholder="Example: Caplinger Company"
+            style={{ width: "100%", padding: 10 }}
+          />
+        </div>
+
+        {userEmail ? (
+          <SmallHint>
+            Signed in as: <b>{userEmail}</b>
+          </SmallHint>
+        ) : null}
+
+        {onboardingMessage ? (
+          <SmallHint>{onboardingMessage}</SmallHint>
+        ) : (
+          <SmallHint>
+            This will create your company and attach your account as the company admin.
+          </SmallHint>
+        )}
+
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <button
+            onClick={handleCreateCompanyOnboarding}
+            disabled={onboardingBusy}
+            style={{ padding: "10px 14px", fontWeight: 900 }}
+          >
+            {onboardingBusy ? "Creating Company..." : "Create Company"}
+          </button>
+
+          <button
+            onClick={handleSignOut}
+            style={{ padding: "10px 14px", fontWeight: 900 }}
+          >
+            Sign out
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+return (return (
   <div style={{ padding: 20, maxWidth: 1380, margin: "0 auto" }}>
       <h1 style={{ fontSize: 26, fontWeight: 900 }}>
         Skilled Trades AI — HVAC Diagnose
