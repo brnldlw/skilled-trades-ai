@@ -127,7 +127,7 @@ export async function createServiceEventForCurrentUser(
     company_name: input.company_name || ctx.companyName,
   };
 
-    const { data, error } = await supabase
+  const { data, error } = await supabase
     .from("service_events")
     .insert(payload)
     .select("*")
@@ -135,82 +135,6 @@ export async function createServiceEventForCurrentUser(
 
   if (error) throw error;
   return data as ServiceEventRow;
-}
-
-  export async function getCurrentUserMembership() {
-  const supabase = createClient();
-  const userId = await getCurrentUserId();
-
-  const { data, error } = await supabase
-    .from("company_memberships")
-    .select("id, company_id, role, status")
-    .eq("user_id", userId)
-    .eq("status", "active")
-    .limit(1)
-    .maybeSingle();
-
-  if (error) throw error;
-
-  return (data || null) as
-    | { id: string; company_id: string; role: string; status: string }
-    | null;
-}
-
-export async function ensureProfileForCurrentUser(email?: string) {
-  const supabase = createClient();
-  const userId = await getCurrentUserId();
-
-  const { error } = await supabase
-    .from("profiles")
-    .upsert(
-      {
-        id: userId,
-        email: email || null,
-      },
-      { onConflict: "id" }
-    );
-
-  if (error) throw error;
-}
-
-export async function createCompanyForCurrentUser(input: {
-  companyName: string;
-  email?: string;
-}) {
-  const supabase = createClient();
-  const userId = await getCurrentUserId();
-
-  const companyName = input.companyName.trim();
-  if (!companyName) throw new Error("Company name is required.");
-
-  const normalizedName = companyName.toLowerCase().replace(/\s+/g, " ").trim();
-
-  await ensureProfileForCurrentUser(input.email);
-
-  const { data: company, error: companyError } = await supabase
-    .from("companies")
-    .insert({
-      legal_name: companyName,
-      display_name: companyName,
-      normalized_name: normalizedName,
-    })
-    .select("*")
-    .single();
-
-  if (companyError) throw companyError;
-
-  const { error: membershipError } = await supabase
-    .from("company_memberships")
-    .insert({
-      user_id: userId,
-      company_id: company.id,
-      role: "admin",
-      status: "active",
-    });
-
-  if (membershipError) throw membershipError;
-
-  return company;
 }
 
 export async function findStrongUnitMatchForCurrentUser(input: {
