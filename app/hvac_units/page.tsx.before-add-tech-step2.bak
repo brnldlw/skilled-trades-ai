@@ -2727,9 +2727,6 @@ const [needsCompanyOnboarding, setNeedsCompanyOnboarding] = useState(false);
 const [onboardingCompanyName, setOnboardingCompanyName] = useState("");
 const [onboardingBusy, setOnboardingBusy] = useState(false);
 const [onboardingMessage, setOnboardingMessage] = useState("");
-const [addTechEmail, setAddTechEmail] = useState("");
-const [addTechBusy, setAddTechBusy] = useState(false);
-const [addTechMessage, setAddTechMessage] = useState("");
 
 
   const [showAdvancedAiOutput, setShowAdvancedAiOutput] = useState(false);
@@ -3747,66 +3744,7 @@ async function handleCreateCompanyOnboarding() {
   }
 }
 
-  async function handleAddTechToCompany() {
-  const email = addTechEmail.trim().toLowerCase();
-  if (!email) {
-    setAddTechMessage("Enter the tech email.");
-    return;
-  }
-
-  try {
-    setAddTechBusy(true);
-    setAddTechMessage("");
-
-    const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
-
-    if (sessionError) throw sessionError;
-    if (!session?.access_token) throw new Error("No active session found.");
-
-    const res = await fetch("/api/company/add-member", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${session.access_token}`,
-      },
-      body: JSON.stringify({
-        email,
-        role: "tech",
-      }),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok || !data?.ok) {
-      throw new Error(data?.error || `Server error (${res.status})`);
-    }
-
-    if (data?.alreadyMember) {
-      setAddTechMessage("That user is already attached to this company.");
-    } else {
-      setAddTechMessage("Tech added to company.");
-    }
-
-    setAddTechEmail("");
-  } catch (err) {
-    console.error("ADD TECH FAILED", err);
-    const msg =
-      err instanceof Error
-        ? err.message
-        : typeof err === "object"
-          ? JSON.stringify(err)
-          : String(err);
-
-    setAddTechMessage(`Add tech failed: ${msg}`);
-  } finally {
-    setAddTechBusy(false);
-  }
-}
-
-async function handleSignOut() {
+  async function handleSignOut() {
   await supabase.auth.signOut();
   window.location.href = "/auth";
 }
@@ -3984,47 +3922,6 @@ return (
     Sign out
   </button>
 </div>
-
-      <div style={{ marginTop: 16 }}>
-        <SectionCard title="Company Admin / Add Tech">
-          <SmallHint>
-            Add an existing user account to your company as a tech.
-          </SmallHint>
-
-          <div
-            style={{
-              marginTop: 12,
-              display: "grid",
-              gridTemplateColumns: "1fr auto",
-              gap: 10,
-              alignItems: "end",
-            }}
-          >
-            <div>
-              <label style={{ fontWeight: 900 }}>Tech Email</label>
-              <br />
-              <input
-                value={addTechEmail}
-                onChange={(e) => setAddTechEmail(e.target.value)}
-                placeholder="tech@example.com"
-                style={{ width: "100%", padding: 8 }}
-              />
-            </div>
-
-            <button
-              onClick={handleAddTechToCompany}
-              disabled={addTechBusy}
-              style={{ padding: "10px 14px", fontWeight: 900 }}
-            >
-              {addTechBusy ? "Adding..." : "Add Tech"}
-            </button>
-          </div>
-
-          {addTechMessage ? (
-            <SmallHint style={{ marginTop: 10 }}>{addTechMessage}</SmallHint>
-          ) : null}
-        </SectionCard>
-      </div>
 
       <div
         style={{

@@ -2727,10 +2727,10 @@ const [needsCompanyOnboarding, setNeedsCompanyOnboarding] = useState(false);
 const [onboardingCompanyName, setOnboardingCompanyName] = useState("");
 const [onboardingBusy, setOnboardingBusy] = useState(false);
 const [onboardingMessage, setOnboardingMessage] = useState("");
+
 const [addTechEmail, setAddTechEmail] = useState("");
 const [addTechBusy, setAddTechBusy] = useState(false);
 const [addTechMessage, setAddTechMessage] = useState("");
-
 
   const [showAdvancedAiOutput, setShowAdvancedAiOutput] = useState(false);
 
@@ -3747,7 +3747,7 @@ async function handleCreateCompanyOnboarding() {
   }
 }
 
-  async function handleAddTechToCompany() {
+async function handleAddTechToCompany() {
   const email = addTechEmail.trim().toLowerCase();
   if (!email) {
     setAddTechMessage("Enter the tech email.");
@@ -3806,7 +3806,7 @@ async function handleCreateCompanyOnboarding() {
   }
 }
 
-async function handleSignOut() {
+  async function handleSignOut() {
   await supabase.auth.signOut();
   window.location.href = "/auth";
 }
@@ -3985,47 +3985,6 @@ return (
   </button>
 </div>
 
-      <div style={{ marginTop: 16 }}>
-        <SectionCard title="Company Admin / Add Tech">
-          <SmallHint>
-            Add an existing user account to your company as a tech.
-          </SmallHint>
-
-          <div
-            style={{
-              marginTop: 12,
-              display: "grid",
-              gridTemplateColumns: "1fr auto",
-              gap: 10,
-              alignItems: "end",
-            }}
-          >
-            <div>
-              <label style={{ fontWeight: 900 }}>Tech Email</label>
-              <br />
-              <input
-                value={addTechEmail}
-                onChange={(e) => setAddTechEmail(e.target.value)}
-                placeholder="tech@example.com"
-                style={{ width: "100%", padding: 8 }}
-              />
-            </div>
-
-            <button
-              onClick={handleAddTechToCompany}
-              disabled={addTechBusy}
-              style={{ padding: "10px 14px", fontWeight: 900 }}
-            >
-              {addTechBusy ? "Adding..." : "Add Tech"}
-            </button>
-          </div>
-
-          {addTechMessage ? (
-            <SmallHint style={{ marginTop: 10 }}>{addTechMessage}</SmallHint>
-          ) : null}
-        </SectionCard>
-      </div>
-
       <div
         style={{
           marginTop: 14,
@@ -4033,6 +3992,48 @@ return (
           gridTemplateColumns: "1fr",
           gap: 12,
         }}
+
+        <div style={{ marginTop: 16 }}>
+  <SectionCard title="Company Admin / Add Tech">
+    <SmallHint>
+      Add an existing user account to your company as a tech.
+    </SmallHint>
+
+    <div
+      style={{
+        marginTop: 12,
+        display: "grid",
+        gridTemplateColumns: "1fr auto",
+        gap: 10,
+        alignItems: "end",
+      }}
+    >
+      <div>
+        <label style={{ fontWeight: 900 }}>Tech Email</label>
+        <br />
+        <input
+          value={addTechEmail}
+          onChange={(e) => setAddTechEmail(e.target.value)}
+          placeholder="tech@example.com"
+          style={{ width: "100%", padding: 8 }}
+        />
+      </div>
+
+      <button
+        onClick={handleAddTechToCompany}
+        disabled={addTechBusy}
+        style={{ padding: "10px 14px", fontWeight: 900 }}
+      >
+        {addTechBusy ? "Adding..." : "Add Tech"}
+      </button>
+    </div>
+
+    {addTechMessage ? (
+      <SmallHint style={{ marginTop: 10 }}>{addTechMessage}</SmallHint>
+    ) : null}
+  </SectionCard>
+</div>
+
       >
         <SectionCard title="Customer / Site / Unit">
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
