@@ -3914,7 +3914,7 @@ if (needsCompanyOnboarding) {
   );
 }
 
-return (return (
+return (
   <div style={{ padding: 20, maxWidth: 1380, margin: "0 auto" }}>
       <h1 style={{ fontSize: 26, fontWeight: 900 }}>
         Skilled Trades AI — HVAC Diagnose
