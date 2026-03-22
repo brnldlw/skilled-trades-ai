@@ -2730,12 +2730,6 @@ const [onboardingMessage, setOnboardingMessage] = useState("");
 const [addTechEmail, setAddTechEmail] = useState("");
 const [addTechBusy, setAddTechBusy] = useState(false);
 const [addTechMessage, setAddTechMessage] = useState("");
-const [companyMembers, setCompanyMembers] = useState<
-  { id: string; user_id: string; email: string; full_name: string; role: string; status: string; created_at?: string }[]
->([]);
-const [companyMembersBusy, setCompanyMembersBusy] = useState(false);
-const [companyMembersMessage, setCompanyMembersMessage] = useState("");
-
 
 
   const [showAdvancedAiOutput, setShowAdvancedAiOutput] = useState(false);
@@ -3797,7 +3791,6 @@ async function handleCreateCompanyOnboarding() {
     }
 
     setAddTechEmail("");
-    await loadCompanyMembers();
   } catch (err) {
     console.error("ADD TECH FAILED", err);
     const msg =
@@ -3810,49 +3803,6 @@ async function handleCreateCompanyOnboarding() {
     setAddTechMessage(`Add tech failed: ${msg}`);
   } finally {
     setAddTechBusy(false);
-  }
-}
-
-async function loadCompanyMembers() {
-  try {
-    setCompanyMembersBusy(true);
-    setCompanyMembersMessage("");
-
-    const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
-
-    if (sessionError) throw sessionError;
-    if (!session?.access_token) throw new Error("No active session found.");
-
-    const res = await fetch("/api/company/list-members", {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${session.access_token}`,
-      },
-    });
-
-    const data = await res.json();
-
-    if (!res.ok || !data?.ok) {
-      throw new Error(data?.error || `Server error (${res.status})`);
-    }
-
-    setCompanyMembers(data.members || []);
-  } catch (err) {
-    console.error("LOAD COMPANY MEMBERS FAILED", err);
-    const msg =
-      err instanceof Error
-        ? err.message
-        : typeof err === "object"
-          ? JSON.stringify(err)
-          : String(err);
-
-    setCompanyMembersMessage(`Could not load company team: ${msg}`);
-    setCompanyMembers([]);
-  } finally {
-    setCompanyMembersBusy(false);
   }
 }
 
@@ -4073,39 +4023,6 @@ return (
           {addTechMessage ? (
             <SmallHint style={{ marginTop: 10 }}>{addTechMessage}</SmallHint>
           ) : null}
-        </SectionCard>
-      </div>
-
-      <div style={{ marginTop: 16 }}>
-        <SectionCard title="Company Team">
-          {companyMembersBusy ? (
-            <SmallHint>Loading company team...</SmallHint>
-          ) : companyMembers.length ? (
-            <div style={{ display: "grid", gap: 8 }}>
-              {companyMembers.map((member) => (
-                <div
-                  key={member.id}
-                  style={{
-                    border: "1px solid #eee",
-                    borderRadius: 10,
-                    padding: 10,
-                    background: "#fafafa",
-                  }}
-                >
-                  <div style={{ fontWeight: 900 }}>
-                    {member.full_name || member.email || member.user_id}
-                  </div>
-                  <SmallHint style={{ marginTop: 4 }}>
-                    {member.email || "No email"} • {member.role || "-"} • {member.status || "-"}
-                  </SmallHint>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <SmallHint>
-              {companyMembersMessage || "No company members found yet."}
-            </SmallHint>
-          )}
         </SectionCard>
       </div>
 
