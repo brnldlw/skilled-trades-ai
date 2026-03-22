@@ -3711,7 +3711,15 @@ async function handleCreateCompanyOnboarding() {
     window.location.reload();
   } catch (err) {
     console.error("CREATE COMPANY ONBOARDING FAILED", err);
-    setOnboardingMessage("Could not create company. Check browser console.");
+
+const msg =
+  err instanceof Error
+    ? err.message
+    : typeof err === "object"
+      ? JSON.stringify(err)
+      : String(err);
+
+setOnboardingMessage(`Create company failed: ${msg}`);
   } finally {
     setOnboardingBusy(false);
   }
