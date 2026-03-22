@@ -3700,10 +3700,29 @@ async function handleCreateCompanyOnboarding() {
     setOnboardingBusy(true);
     setOnboardingMessage("");
 
-    await createCompanyForCurrentUser({
-      companyName: company,
-      email: userEmail || undefined,
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError) throw userError;
+    if (!user) throw new Error("User is not logged in.");
+
+    const res = await fetch("/api/onboarding/create-company", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        companyName: company,
+        userId: user.id,
+        email: user.email || userEmail || "",
+      }),
     });
+
+    const data = await res.json();
+
+    if (!res.ok || !data?.ok) {
+      throw new Error(data?.error || `Server error (${res.status})`);
+    }
 
     setNeedsCompanyOnboarding(false);
     setOnboardingCompanyName("");
@@ -3712,14 +3731,14 @@ async function handleCreateCompanyOnboarding() {
   } catch (err) {
     console.error("CREATE COMPANY ONBOARDING FAILED", err);
 
-const msg =
-  err instanceof Error
-    ? err.message
-    : typeof err === "object"
-      ? JSON.stringify(err)
-      : String(err);
+    const msg =
+      err instanceof Error
+        ? err.message
+        : typeof err === "object"
+          ? JSON.stringify(err)
+          : String(err);
 
-setOnboardingMessage(`Create company failed: ${msg}`);
+    setOnboardingMessage(`Create company failed: ${msg}`);
   } finally {
     setOnboardingBusy(false);
   }
