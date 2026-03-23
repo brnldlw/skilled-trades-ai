@@ -47,13 +47,13 @@ export default function AuthPage() {
           if (error) {
             setMessage(error.message);
           } else {
-            setMessage("Sign-up submitted. Check your email if confirmation is enabled.");
+            setMessage("Account created successfully. Log in with your email and password.");
           }
 
         if (error) {
           setMessage(error.message);
         } else {
-          setMessage("Sign-up submitted. Check your email if confirmation is enabled.");
+          setMessage("Account created successfully. Log in with your email and password.");
         }
       } else {
         const { error } = await supabase.auth.signInWithPassword({
