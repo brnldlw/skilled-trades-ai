@@ -2730,13 +2730,11 @@ const [onboardingMessage, setOnboardingMessage] = useState("");
 const [addTechEmail, setAddTechEmail] = useState("");
 const [addTechBusy, setAddTechBusy] = useState(false);
 const [addTechMessage, setAddTechMessage] = useState("");
-const [showAddTechTools, setShowAddTechTools] = useState(false);
 const [companyMembers, setCompanyMembers] = useState<
   { id: string; user_id: string; email: string; full_name: string; role: string; status: string; created_at?: string }[]
 >([]);
 const [companyMembersBusy, setCompanyMembersBusy] = useState(false);
 const [companyMembersMessage, setCompanyMembersMessage] = useState("");
-const [showCompanyTeam, setShowCompanyTeam] = useState(false);
 
 
 
@@ -4039,103 +4037,73 @@ return (
 
       <div style={{ marginTop: 16 }}>
         <SectionCard title="Company Admin / Add Tech">
-          <button
-            onClick={() => setShowAddTechTools((v) => !v)}
-            style={{ padding: "10px 14px", fontWeight: 900 }}
+          <SmallHint>
+            Add an existing user account to your company as a tech.
+          </SmallHint>
+
+          <div
+            style={{
+              marginTop: 12,
+              display: "grid",
+              gridTemplateColumns: "1fr auto",
+              gap: 10,
+              alignItems: "end",
+            }}
           >
-            {showAddTechTools ? "Hide Add Tech" : "Show Add Tech"}
-          </button>
-
-          {showAddTechTools ? (
-            <div style={{ marginTop: 12 }}>
-              <SmallHint>
-                Add an existing user account to your company as a tech.
-              </SmallHint>
-
-              <div
-                style={{
-                  marginTop: 12,
-                  display: "grid",
-                  gridTemplateColumns: "1fr auto",
-                  gap: 10,
-                  alignItems: "end",
-                }}
-              >
-                <div>
-                  <label style={{ fontWeight: 900 }}>Tech Email</label>
-                  <br />
-                  <input
-                    value={addTechEmail}
-                    onChange={(e) => setAddTechEmail(e.target.value)}
-                    placeholder="tech@example.com"
-                    style={{ width: "100%", padding: 8 }}
-                  />
-                </div>
-
-                <button
-                  onClick={handleAddTechToCompany}
-                  disabled={addTechBusy}
-                  style={{ padding: "10px 14px", fontWeight: 900 }}
-                >
-                  {addTechBusy ? "Adding..." : "Add Tech"}
-                </button>
-              </div>
-
-              {addTechMessage ? (
-                <SmallHint style={{ marginTop: 10 }}>{addTechMessage}</SmallHint>
-              ) : null}
+            <div>
+              <label style={{ fontWeight: 900 }}>Tech Email</label>
+              <br />
+              <input
+                value={addTechEmail}
+                onChange={(e) => setAddTechEmail(e.target.value)}
+                placeholder="tech@example.com"
+                style={{ width: "100%", padding: 8 }}
+              />
             </div>
-          ) : (
-            <SmallHint style={{ marginTop: 12 }}>
-              Hidden by default to keep the main workflow clean.
-            </SmallHint>
-          )}
+
+            <button
+              onClick={handleAddTechToCompany}
+              disabled={addTechBusy}
+              style={{ padding: "10px 14px", fontWeight: 900 }}
+            >
+              {addTechBusy ? "Adding..." : "Add Tech"}
+            </button>
+          </div>
+
+          {addTechMessage ? (
+            <SmallHint style={{ marginTop: 10 }}>{addTechMessage}</SmallHint>
+          ) : null}
         </SectionCard>
       </div>
 
       <div style={{ marginTop: 16 }}>
         <SectionCard title="Company Team">
-          <button
-            onClick={() => setShowCompanyTeam((v) => !v)}
-            style={{ padding: "10px 14px", fontWeight: 900 }}
-          >
-            {showCompanyTeam ? "Hide Team" : "Show Team"}
-          </button>
-
-          {showCompanyTeam ? (
-            <div style={{ marginTop: 12 }}>
-              {companyMembersBusy ? (
-                <SmallHint>Loading company team...</SmallHint>
-              ) : companyMembers.length ? (
-                <div style={{ display: "grid", gap: 8 }}>
-                  {companyMembers.map((member) => (
-                    <div
-                      key={member.id}
-                      style={{
-                        border: "1px solid #eee",
-                        borderRadius: 10,
-                        padding: 10,
-                        background: "#fafafa",
-                      }}
-                    >
-                      <div style={{ fontWeight: 900 }}>
-                        {member.full_name || member.email || member.user_id}
-                      </div>
-                      <SmallHint style={{ marginTop: 4 }}>
-                        {member.email || "No email"} • {member.role || "-"} • {member.status || "-"}
-                      </SmallHint>
-                    </div>
-                  ))}
+          {companyMembersBusy ? (
+            <SmallHint>Loading company team...</SmallHint>
+          ) : companyMembers.length ? (
+            <div style={{ display: "grid", gap: 8 }}>
+              {companyMembers.map((member) => (
+                <div
+                  key={member.id}
+                  style={{
+                    border: "1px solid #eee",
+                    borderRadius: 10,
+                    padding: 10,
+                    background: "#fafafa",
+                  }}
+                >
+                  <div style={{ fontWeight: 900 }}>
+                    {member.full_name || member.email || member.user_id}
+                  </div>
+                  <SmallHint style={{ marginTop: 4 }}>
+                    {member.email || "No email"} • {member.role || "-"} • {member.status || "-"}
+                  </SmallHint>
                 </div>
-              ) : (
-                <SmallHint>
-                  {companyMembersMessage || "No company members found yet."}
-                </SmallHint>
-              )}
+              ))}
             </div>
           ) : (
-            <SmallHint style={{ marginTop: 12 }}>
-              Hidden by default to keep the main workflow clean.
+            <SmallHint>
+              {companyMembersMessage || "No company members found yet."}
             </SmallHint>
           )}
         </SectionCard>
