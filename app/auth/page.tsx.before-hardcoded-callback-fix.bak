@@ -41,7 +41,7 @@ export default function AuthPage() {
             email: cleanEmail,
             password: cleanPassword,
             options: {
-            emailRedirectTo: "https://app.myhvacrtool.com/auth/callback",
+            emailRedirectTo: "https://app.myhvacrtool.com/auth",
             },
           });
 
