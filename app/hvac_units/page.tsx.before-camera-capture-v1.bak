@@ -4817,7 +4817,6 @@ return (
             ref={fileInputRef}
             type="file"
             accept="image/*"
-            capture="environment"
             style={{ display: "none" }}
             onChange={async (e) => {
               const f = e.target.files?.[0];
@@ -4894,7 +4893,6 @@ return (
             ref={gaugeInputRef}
             type="file"
             accept="image/*"
-            capture="environment"
             style={{ display: "none" }}
             onChange={async (e) => {
               const f = e.target.files?.[0];
@@ -5310,7 +5308,6 @@ return (
             ref={photoInputRef}
             type="file"
             accept="image/*"
-            capture="environment"
             style={{ display: "none" }}
             onChange={async (e) => {
               const f = e.target.files?.[0];
