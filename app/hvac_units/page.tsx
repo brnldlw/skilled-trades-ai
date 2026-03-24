@@ -4687,7 +4687,97 @@ return (
 </div>
 
 <div style={{ marginTop: 16 }}>
-  <SectionCard title="Case Outcome / Learning Feedback">
+  
+<div style={{ marginTop: 16 }}>
+  <SectionCard title="Service Event Photos">
+    <SmallHint>
+      Attach field photos to this service event so the next tech can see what happened.
+    </SmallHint>
+
+    <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
+      <div>
+        <input
+          type="file"
+          accept="image/*"
+          capture="environment"
+          multiple
+          onChange={(e) => {
+            handleUploadServiceEventPhotos(e.target.files);
+            e.currentTarget.value = "";
+          }}
+          style={{ width: "100%" }}
+        />
+      </div>
+
+      {serviceEventPhotoMessage ? (
+        <SmallHint>{serviceEventPhotoMessage}</SmallHint>
+      ) : null}
+
+      {serviceEventPhotoBusy ? (
+        <SmallHint>Uploading photo(s)...</SmallHint>
+      ) : null}
+
+      {serviceEventPhotoUrls.length ? (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+            gap: 10,
+          }}
+        >
+          {serviceEventPhotoUrls.map((url, i) => (
+            <div
+              key={url + i}
+              style={{
+                border: "1px solid #eee",
+                borderRadius: 10,
+                padding: 8,
+                background: "#fafafa",
+              }}
+            >
+              <img
+                src={url}
+                alt={`Service event photo ${i + 1}`}
+                style={{
+                  width: "100%",
+                  height: 140,
+                  objectFit: "cover",
+                  borderRadius: 8,
+                  display: "block",
+                }}
+              />
+              <button
+                onClick={() =>
+                  setServiceEventPhotoUrls((prev) =>
+                    prev.filter((_, idx) => idx !== i)
+                  )
+                }
+                style={{
+                  marginTop: 8,
+                  width: "100%",
+                  padding: "8px 10px",
+                  fontWeight: 900,
+                  border: "1px solid #cfcfcf",
+                  borderRadius: 10,
+                  background: "#ffffff",
+                  color: "#111",
+                  cursor: "pointer",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+                }}
+              >
+                Remove Photo
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <SmallHint>No service event photos attached yet.</SmallHint>
+      )}
+    </div>
+  </SectionCard>
+</div>
+
+<SectionCard title="Case Outcome / Learning Feedback">
     <SmallHint>
       Use this after the job is diagnosed or completed. This is how the app starts learning what actually fixed the unit.
     </SmallHint>
