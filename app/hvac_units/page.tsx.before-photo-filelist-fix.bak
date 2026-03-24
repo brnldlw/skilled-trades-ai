@@ -3863,9 +3863,8 @@ async function loadCompanyMembers() {
   }
 }
 
-async function handleUploadServiceEventPhotos(files: File[] | FileList | null) {
-  const fileArray = Array.isArray(files) ? files : files ? Array.from(files) : [];
-  if (!fileArray.length) return;
+async function handleUploadServiceEventPhotos(files: FileList | null) {
+  if (!files || !files.length) return;
 
   try {
     setServiceEventPhotoBusy(true);
@@ -3881,7 +3880,7 @@ async function handleUploadServiceEventPhotos(files: File[] | FileList | null) {
 
     const uploadedUrls: string[] = [];
 
-    for (const file of fileArray) {
+    for (const file of Array.from(files)) {
       const formData = new FormData();
       formData.append("file", file);
 
@@ -4704,9 +4703,8 @@ return (
           capture="environment"
           multiple
           onChange={(e) => {
-            const files = e.target.files ? Array.from(e.target.files) : [];
+            handleUploadServiceEventPhotos(e.target.files);
             e.currentTarget.value = "";
-            handleUploadServiceEventPhotos(files);
           }}
           style={{ width: "100%" }}
         />
