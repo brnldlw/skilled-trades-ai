@@ -2737,10 +2737,6 @@ const [companyMembers, setCompanyMembers] = useState<
 const [companyMembersBusy, setCompanyMembersBusy] = useState(false);
 const [companyMembersMessage, setCompanyMembersMessage] = useState("");
 const [showCompanyTeam, setShowCompanyTeam] = useState(false);
-const [serviceEventPhotoUrls, setServiceEventPhotoUrls] = useState<string[]>([]);
-const [serviceEventPhotoBusy, setServiceEventPhotoBusy] = useState(false);
-const [serviceEventPhotoMessage, setServiceEventPhotoMessage] = useState("");
-
 
 
 
@@ -3859,65 +3855,6 @@ async function loadCompanyMembers() {
     setCompanyMembers([]);
   } finally {
     setCompanyMembersBusy(false);
-  }
-}
-
-async function handleUploadServiceEventPhotos(files: FileList | null) {
-  if (!files || !files.length) return;
-
-  try {
-    setServiceEventPhotoBusy(true);
-    setServiceEventPhotoMessage("");
-
-    const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
-
-    if (sessionError) throw sessionError;
-    if (!session?.access_token) throw new Error("No active session found.");
-
-    const uploadedUrls: string[] = [];
-
-    for (const file of Array.from(files)) {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const res = await fetch("/api/photos/upload-service-event", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: formData,
-      });
-
-      const data = await res.json();
-
-      if (!res.ok || !data?.ok) {
-        throw new Error(data?.error || `Server error (${res.status})`);
-      }
-
-      if (data?.url) {
-        uploadedUrls.push(data.url);
-      }
-    }
-
-    setServiceEventPhotoUrls((prev) => [...prev, ...uploadedUrls]);
-    setServiceEventPhotoMessage(
-      uploadedUrls.length ? `Uploaded ${uploadedUrls.length} photo(s).` : ""
-    );
-  } catch (err) {
-    console.error("SERVICE EVENT PHOTO UPLOAD FAILED", err);
-    const msg =
-      err instanceof Error
-        ? err.message
-        : typeof err === "object"
-          ? JSON.stringify(err)
-          : String(err);
-
-    setServiceEventPhotoMessage(`Photo upload failed: ${msg}`);
-  } finally {
-    setServiceEventPhotoBusy(false);
   }
 }
 
