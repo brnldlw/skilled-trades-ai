@@ -6581,6 +6581,98 @@ return (
           </div>
 
           <div style={{ marginTop: 16 }}>
+            <SectionCard title="Quick Stats">
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: 10,
+                }}
+              >
+                <div>
+                  <b>Total Calls:</b> {unitProfileTimeline.length}
+                </div>
+                <div>
+                  <b>Last Service:</b>{" "}
+                  {unitProfileTimeline.length && unitProfileTimeline[0]?.service_date
+                    ? new Date(unitProfileTimeline[0].service_date).toLocaleDateString()
+                    : "-"}
+                </div>
+                <div>
+                  <b>Callback Count:</b>{" "}
+                  {
+                    unitProfileTimeline.filter(
+                      (event) =>
+                        String(event.callback_occurred || "").toLowerCase() === "yes"
+                    ).length
+                  }
+                </div>
+                <div>
+                  <b>Fixed Calls:</b>{" "}
+                  {
+                    unitProfileTimeline.filter(
+                      (event) =>
+                        String(event.outcome_status || "").toLowerCase() === "fixed"
+                    ).length
+                  }
+                </div>
+              </div>
+            </SectionCard>
+          </div>
+
+          <div style={{ marginTop: 16 }}>
+            <SectionCard title="Pattern Signals">
+              {(() => {
+                const symptomCounts = unitProfileTimeline.reduce<Record<string, number>>((acc, event) => {
+                  const key = String(event.symptom || "").trim();
+                  if (key) acc[key] = (acc[key] || 0) + 1;
+                  return acc;
+                }, {});
+
+                const causeCounts = unitProfileTimeline.reduce<Record<string, number>>((acc, event) => {
+                  const key = String(event.final_confirmed_cause || "").trim();
+                  if (key) acc[key] = (acc[key] || 0) + 1;
+                  return acc;
+                }, {});
+
+                const topSymptom = Object.entries(symptomCounts).sort((a, b) => b[1] - a[1])[0];
+                const topCause = Object.entries(causeCounts).sort((a, b) => b[1] - a[1])[0];
+                const repeatedSymptoms = Object.values(symptomCounts).filter((count) => count > 1).length;
+
+                return (
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: 10,
+                    }}
+                  >
+                    <div>
+                      <b>Most Common Symptom:</b>{" "}
+                      {topSymptom ? `${topSymptom[0]} (${topSymptom[1]})` : "-"}
+                    </div>
+                    <div>
+                      <b>Most Common Cause:</b>{" "}
+                      {topCause ? `${topCause[0]} (${topCause[1]})` : "-"}
+                    </div>
+                    <div>
+                      <b>Repeated Symptoms:</b> {repeatedSymptoms}
+                    </div>
+                    <div>
+                      <b>Saved Photo Events:</b>{" "}
+                      {
+                        unitProfileTimeline.filter(
+                          (event) => Array.isArray(event.photo_urls) && event.photo_urls.length
+                        ).length
+                      }
+                    </div>
+                  </div>
+                );
+              })()}
+            </SectionCard>
+          </div>
+
+          <div style={{ marginTop: 16 }}>
             <SectionCard title="Service Timeline">
               {unitProfileLoading ? (
                 <SmallHint>Loading unit timeline...</SmallHint>
