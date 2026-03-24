@@ -6604,6 +6604,47 @@ return (
                       <div style={{ marginTop: 4 }}>
                         <SmallHint><b>Notes:</b> {event.tech_closeout_notes || "-"}</SmallHint>
                       </div>
+
+                      {Array.isArray(event.photo_urls) && event.photo_urls.length ? (
+                        <div
+                          style={{
+                            marginTop: 10,
+                            display: "grid",
+                            gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
+                            gap: 8,
+                          }}
+                        >
+                          {event.photo_urls.map((url, idx) => (
+                            <button
+                              key={url + idx}
+                              onClick={() => window.open(url, "_blank", "noopener,noreferrer")}
+                              style={{
+                                width: "100%",
+                                padding: 0,
+                                border: "1px solid #e5e5e5",
+                                borderRadius: 8,
+                                background: "#fff",
+                                cursor: "pointer",
+                                overflow: "hidden",
+                              }}
+                              title="Open full photo"
+                            >
+                              <img
+                                src={url}
+                                alt={`Service event photo ${idx + 1}`}
+                                style={{
+                                  width: "100%",
+                                  height: 110,
+                                  objectFit: "contain",
+                                  borderRadius: 8,
+                                  display: "block",
+                                  background: "#fff",
+                                }}
+                              />
+                            </button>
+                          ))}
+                        </div>
+                      ) : null}
                     </div>
                   ))}
                 </div>
