@@ -4738,32 +4738,17 @@ return (
                 background: "#fafafa",
               }}
             >
-              <button
-                onClick={() => window.open(url, "_blank", "noopener,noreferrer")}
+              <img
+                src={url}
+                alt={`Service event photo ${i + 1}`}
                 style={{
                   width: "100%",
-                  padding: 0,
-                  border: "1px solid #e5e5e5",
+                  height: 140,
+                  objectFit: "cover",
                   borderRadius: 8,
-                  background: "#fff",
-                  cursor: "pointer",
-                  overflow: "hidden",
+                  display: "block",
                 }}
-                title="Open full photo"
-              >
-                <img
-                  src={url}
-                  alt={`Service event photo ${i + 1}`}
-                  style={{
-                    width: "100%",
-                    height: 120,
-                    objectFit: "contain",
-                    borderRadius: 8,
-                    display: "block",
-                    background: "#fff",
-                  }}
-                />
-              </button>
+              />
               <button
                 onClick={() =>
                   setServiceEventPhotoUrls((prev) =>
