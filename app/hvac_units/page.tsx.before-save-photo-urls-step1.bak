@@ -3574,7 +3574,6 @@ async function saveCurrentUnit() {
       outcome_status: outcomeStatus || "Not Set",
       callback_occurred: callbackOccurred || "No",
       tech_closeout_notes: techCloseoutNotes || "",
-      photo_urls: serviceEventPhotoUrls,
     });
 
     await loadUnitServiceTimeline(currentLoadedUnitId);
