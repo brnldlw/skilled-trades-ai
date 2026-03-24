@@ -3975,32 +3975,14 @@ if (needsCompanyOnboarding) {
           <button
             onClick={handleCreateCompanyOnboarding}
             disabled={onboardingBusy}
-            style={{
-              padding: "10px 14px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
+            style={{ padding: "10px 14px", fontWeight: 900 }}
           >
             {onboardingBusy ? "Creating Company..." : "Create Company"}
           </button>
 
           <button
             onClick={handleSignOut}
-            style={{
-              padding: "10px 14px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
+            style={{ padding: "10px 14px", fontWeight: 900 }}
           >
             Sign out
           </button>
@@ -4038,46 +4020,19 @@ return (
 
   <button
   onClick={() => setShowUnitLibrary(true)}
-  style={{
-            padding: "8px 12px",
-            fontWeight: 900,
-            border: "1px solid #cfcfcf",
-            borderRadius: 10,
-            background: "#ffffff",
-            color: "#111",
-            cursor: "pointer",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-          }}
+  style={{ padding: "8px 12px", fontWeight: 900 }}
 >
   Load Unit
 </button>
 
   <button
     onClick={() => setShowSavedUnitHistory((v) => !v)}
-    style={{
-            padding: "8px 12px",
-            fontWeight: 900,
-            border: "1px solid #cfcfcf",
-            borderRadius: 10,
-            background: "#ffffff",
-            color: "#111",
-            cursor: "pointer",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-          }}
+    style={{ padding: "8px 12px", fontWeight: 900 }}
   >
     {showSavedUnitHistory ? "Hide History" : "Show History"}
   </button>
 
-  <button onClick={handleSignOut} style={{
-            padding: "8px 12px",
-            fontWeight: 900,
-            border: "1px solid #cfcfcf",
-            borderRadius: 10,
-            background: "#ffffff",
-            color: "#111",
-            cursor: "pointer",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-          }}>
+  <button onClick={handleSignOut} style={{ padding: "8px 12px", fontWeight: 900 }}>
     Sign out
   </button>
 </div>
@@ -4086,16 +4041,7 @@ return (
         <SectionCard title="Company Admin / Add Tech">
           <button
             onClick={() => setShowAddTechTools((v) => !v)}
-            style={{
-              padding: "10px 14px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
+            style={{ padding: "10px 14px", fontWeight: 900 }}
           >
             {showAddTechTools ? "Hide Add Tech" : "Show Add Tech"}
           </button>
@@ -4129,16 +4075,7 @@ return (
                 <button
                   onClick={handleAddTechToCompany}
                   disabled={addTechBusy}
-                  style={{
-              padding: "10px 14px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
+                  style={{ padding: "10px 14px", fontWeight: 900 }}
                 >
                   {addTechBusy ? "Adding..." : "Add Tech"}
                 </button>
@@ -4160,16 +4097,7 @@ return (
         <SectionCard title="Company Team">
           <button
             onClick={() => setShowCompanyTeam((v) => !v)}
-            style={{
-              padding: "10px 14px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
+            style={{ padding: "10px 14px", fontWeight: 900 }}
           >
             {showCompanyTeam ? "Hide Team" : "Show Team"}
           </button>
@@ -4505,16 +4433,7 @@ return (
           <button
             onClick={handleDiagnose}
             disabled={loading}
-            style={{
-              padding: "10px 14px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
+            style={{ padding: "10px 14px", fontWeight: 900 }}
           >
             {loading ? "Diagnosing..." : "Diagnose"}
           </button>
@@ -4522,16 +4441,7 @@ return (
           <button
             onClick={updateDiagnosisNow}
             disabled={loading}
-            style={{
-              padding: "10px 14px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
+            style={{ padding: "10px 14px", fontWeight: 900 }}
           >
             Update diagnosis (with measurements)
           </button>
@@ -4539,16 +4449,7 @@ return (
           <button
             onClick={findManualsParts}
             disabled={mpBusy || !manufacturer.trim()}
-            style={{
-              padding: "10px 14px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
+            style={{ padding: "10px 14px", fontWeight: 900 }}
           >
             {mpBusy ? "Finding..." : "Parts & Manuals"}
           </button>
@@ -4762,16 +4663,7 @@ return (
 <div style={{ marginTop: 12, display: "flex", gap: 10, flexWrap: "wrap" }}>
   <button
     onClick={saveCurrentCallAsServiceEvent}
-    style={{
-              padding: "10px 14px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
+    style={{ padding: "10px 14px", fontWeight: 900 }}
   >
     Save Current Call to Timeline
   </button>
@@ -5699,30 +5591,12 @@ return (
             </label>
 
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <button onClick={addMeasurement} style={{
-              padding: "10px 14px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}>
+              <button onClick={addMeasurement} style={{ padding: "10px 14px", fontWeight: 900 }}>
                 Add measurement
               </button>
               <button
                 onClick={() => setObservations([])}
-                style={{
-              padding: "10px 14px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
+                style={{ padding: "10px 14px", fontWeight: 900 }}
               >
                 Clear all
               </button>
@@ -6048,16 +5922,7 @@ return (
                     <SectionCard title="Advanced AI Output">
                 <button
                   onClick={() => setShowAdvancedAiOutput((v) => !v)}
-                  style={{
-              padding: "10px 14px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
+                  style={{ padding: "10px 14px", fontWeight: 900 }}
                 >
                   {showAdvancedAiOutput
                     ? "Hide Advanced AI Output"
@@ -6093,16 +5958,7 @@ return (
             <SectionCard title="Advanced AI Output">
               <button
                 onClick={() => setShowAdvancedAiOutput((v) => !v)}
-                style={{
-              padding: "10px 14px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
+                style={{ padding: "10px 14px", fontWeight: 900 }}
               >
                 {showAdvancedAiOutput
                   ? "Hide Advanced AI Output"
@@ -6139,16 +5995,7 @@ return (
       <SectionCard title="Admin / Work Tools">
     <button
       onClick={() => setShowBulkImportTools((v) => !v)}
-      style={{
-              padding: "10px 14px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
+      style={{ padding: "10px 14px", fontWeight: 900 }}
     >
       {showBulkImportTools ? "Hide Bulk Import" : "Show Bulk Import"}
     </button>
@@ -6172,16 +6019,7 @@ return (
         <div style={{ display: "flex", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
           <button
             onClick={previewWorkOrderImport}
-            style={{
-              padding: "10px 14px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
+            style={{ padding: "10px 14px", fontWeight: 900 }}
           >
             Preview Import
           </button>
@@ -6189,16 +6027,7 @@ return (
           <button
             onClick={importWorkOrderRows}
             disabled={workOrderImportLoading || !workOrderImportRows.length}
-            style={{
-              padding: "10px 14px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
+            style={{ padding: "10px 14px", fontWeight: 900 }}
           >
             {workOrderImportLoading ? "Importing..." : "Import Rows"}
           </button>
@@ -6323,16 +6152,7 @@ return (
                 loadUnit(unitProfileUnit);
                 setShowUnitProfile(false);
               }}
-              style={{
-            padding: "8px 12px",
-            fontWeight: 900,
-            border: "1px solid #cfcfcf",
-            borderRadius: 10,
-            background: "#ffffff",
-            color: "#111",
-            cursor: "pointer",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-          }}
+              style={{ padding: "8px 12px", fontWeight: 900 }}
             >
               Load Into Form
             </button>
@@ -6340,16 +6160,7 @@ return (
 
           <button
             onClick={() => setShowUnitProfile(false)}
-            style={{
-            padding: "8px 12px",
-            fontWeight: 900,
-            border: "1px solid #cfcfcf",
-            borderRadius: 10,
-            background: "#ffffff",
-            color: "#111",
-            cursor: "pointer",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-          }}
+            style={{ padding: "8px 12px", fontWeight: 900 }}
           >
             Close
           </button>
@@ -6491,16 +6302,7 @@ return (
 
         <button
           onClick={() => setShowUnitLibrary(false)}
-          style={{
-            padding: "8px 12px",
-            fontWeight: 900,
-            border: "1px solid #cfcfcf",
-            borderRadius: 10,
-            background: "#ffffff",
-            color: "#111",
-            cursor: "pointer",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-          }}
+          style={{ padding: "8px 12px", fontWeight: 900 }}
         >
           Close
         </button>
@@ -6589,32 +6391,14 @@ return (
 
         <button
           onClick={() => setUnitLibraryMode("recent")}
-          style={{
-            padding: "8px 12px",
-            fontWeight: 900,
-            border: "1px solid #cfcfcf",
-            borderRadius: 10,
-            background: "#ffffff",
-            color: "#111",
-            cursor: "pointer",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-          }}
+          style={{ padding: "8px 12px", fontWeight: 900 }}
         >
           Recent
         </button>
 
         <button
           onClick={() => setUnitLibraryMode("all")}
-          style={{
-            padding: "8px 12px",
-            fontWeight: 900,
-            border: "1px solid #cfcfcf",
-            borderRadius: 10,
-            background: "#ffffff",
-            color: "#111",
-            cursor: "pointer",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-          }}
+          style={{ padding: "8px 12px", fontWeight: 900 }}
         >
           All Units
         </button>
@@ -6630,16 +6414,7 @@ return (
             setUnitLibraryModel("");
             setUnitLibraryCompany("");
           }}
-          style={{
-            padding: "8px 12px",
-            fontWeight: 900,
-            border: "1px solid #cfcfcf",
-            borderRadius: 10,
-            background: "#ffffff",
-            color: "#111",
-            cursor: "pointer",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-          }}
+          style={{ padding: "8px 12px", fontWeight: 900 }}
         >
           Reset Filters
         </button>
