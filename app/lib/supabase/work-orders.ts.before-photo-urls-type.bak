@@ -34,7 +34,6 @@ export type ServiceEventRow = {
   outcome_status?: string | null;
   callback_occurred?: string | null;
   tech_closeout_notes?: string | null;
-  photo_urls?: string[] | null;
 };
 
 async function getCurrentUserId() {
