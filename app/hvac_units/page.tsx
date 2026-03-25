@@ -4967,6 +4967,72 @@ return (
           <option>Needs More Work</option>
           <option>Monitoring</option>
         </select>
+
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
+            <button
+              onClick={() => setOutcomeStatus("Fixed")}
+              style={{
+                padding: "8px 12px",
+                fontWeight: 900,
+                border: "1px solid #cfcfcf",
+                borderRadius: 10,
+                background: "#ffffff",
+                color: "#111",
+                cursor: "pointer",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+              }}
+            >
+              Fixed
+            </button>
+
+            <button
+              onClick={() => setOutcomeStatus("Needs Follow-Up")}
+              style={{
+                padding: "8px 12px",
+                fontWeight: 900,
+                border: "1px solid #cfcfcf",
+                borderRadius: 10,
+                background: "#ffffff",
+                color: "#111",
+                cursor: "pointer",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+              }}
+            >
+              Needs Follow-Up
+            </button>
+
+            <button
+              onClick={() => setOutcomeStatus("Partial")}
+              style={{
+                padding: "8px 12px",
+                fontWeight: 900,
+                border: "1px solid #cfcfcf",
+                borderRadius: 10,
+                background: "#ffffff",
+                color: "#111",
+                cursor: "pointer",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+              }}
+            >
+              Partial
+            </button>
+
+            <button
+              onClick={() => setOutcomeStatus("Not Set")}
+              style={{
+                padding: "8px 12px",
+                fontWeight: 900,
+                border: "1px solid #cfcfcf",
+                borderRadius: 10,
+                background: "#ffffff",
+                color: "#111",
+                cursor: "pointer",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+              }}
+            >
+              Not Set
+            </button>
+          </div>
       </div>
 
       <div>
@@ -4980,6 +5046,40 @@ return (
           <option>No</option>
           <option>Yes</option>
         </select>
+
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
+            <button
+              onClick={() => setCallbackOccurred("No")}
+              style={{
+                padding: "8px 12px",
+                fontWeight: 900,
+                border: "1px solid #cfcfcf",
+                borderRadius: 10,
+                background: "#ffffff",
+                color: "#111",
+                cursor: "pointer",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+              }}
+            >
+              Callback No
+            </button>
+
+            <button
+              onClick={() => setCallbackOccurred("Yes")}
+              style={{
+                padding: "8px 12px",
+                fontWeight: 900,
+                border: "1px solid #cfcfcf",
+                borderRadius: 10,
+                background: "#ffffff",
+                color: "#111",
+                cursor: "pointer",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+              }}
+            >
+              Callback Yes
+            </button>
+          </div>
       </div>
 
       {equipmentMemory.similarCases.length ? (
