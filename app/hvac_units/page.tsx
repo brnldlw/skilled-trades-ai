@@ -2741,6 +2741,7 @@ const [serviceEventPhotoUrls, setServiceEventPhotoUrls] = useState<string[]>([])
 const [serviceEventPhotoBusy, setServiceEventPhotoBusy] = useState(false);
 const [serviceEventPhotoMessage, setServiceEventPhotoMessage] = useState("");
 const [showServiceEventPhotos, setShowServiceEventPhotos] = useState(false);
+const [historicalEntryMode, setHistoricalEntryMode] = useState(false);
 
 
 
@@ -4193,6 +4194,7 @@ return (
   </button>
 </div>
 
+{!historicalEntryMode ? (
       <div style={{ marginTop: 16 }}>
         <SectionCard title="Company Admin / Add Tech">
           <button
@@ -4266,7 +4268,9 @@ return (
           )}
         </SectionCard>
       </div>
+      ) : null}
 
+{!historicalEntryMode ? (
       <div style={{ marginTop: 16 }}>
         <SectionCard title="Company Team">
           <button
@@ -4323,6 +4327,7 @@ return (
           )}
         </SectionCard>
       </div>
+      ) : null}
 
       <div
         style={{
@@ -4332,6 +4337,32 @@ return (
           gap: 12,
         }}
       >
+      <div style={{ marginTop: 16 }}>
+        <SectionCard title="Historical Entry Mode">
+          <button
+            onClick={() => setHistoricalEntryMode((v) => !v)}
+            style={{
+              padding: "10px 14px",
+              fontWeight: 900,
+              border: "1px solid #cfcfcf",
+              borderRadius: 10,
+              background: "#ffffff",
+              color: "#111",
+              cursor: "pointer",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+            }}
+          >
+            {historicalEntryMode ? "Turn Historical Entry Mode Off" : "Turn Historical Entry Mode On"}
+          </button>
+
+          <SmallHint style={{ marginTop: 12 }}>
+            {historicalEntryMode
+              ? "Historical Entry Mode is ON. Company/admin sections are hidden so you can enter past calls faster."
+              : "Turn this on when entering old service calls. It hides company/admin clutter and keeps the screen cleaner."}
+          </SmallHint>
+        </SectionCard>
+      </div>
+
         <SectionCard title="Customer / Site / Unit">
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             <div>
