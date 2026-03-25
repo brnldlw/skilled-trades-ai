@@ -6688,10 +6688,36 @@ return (
                         background: "#fafafa",
                       }}
                     >
-                      <div style={{ fontWeight: 900 }}>
-                        {event.service_date
-                          ? new Date(event.service_date).toLocaleDateString()
-                          : "Unknown service date"}
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: 8,
+                          flexWrap: "wrap",
+                          alignItems: "center",
+                        }}
+                      >
+                        <div style={{ fontWeight: 900 }}>
+                          {event.service_date
+                            ? new Date(event.service_date).toLocaleDateString()
+                            : "Unknown service date"}
+                        </div>
+
+                        {Array.isArray(event.photo_urls) && event.photo_urls.length ? (
+                          <span
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              padding: "4px 8px",
+                              borderRadius: 999,
+                              border: "1px solid #cfcfcf",
+                              background: "#f7f7f7",
+                              fontSize: 12,
+                              fontWeight: 900,
+                            }}
+                          >
+                            {event.photo_urls.length} {event.photo_urls.length === 1 ? "Photo" : "Photos"}
+                          </span>
+                        ) : null}
                       </div>
 
                       <div style={{ marginTop: 8 }}>
