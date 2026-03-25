@@ -6746,56 +6746,6 @@ return (
                         </SmallHint>
                       </div>
 
-                      <div
-                        style={{
-                          marginTop: 8,
-                          display: "flex",
-                          gap: 8,
-                          flexWrap: "wrap",
-                          alignItems: "center",
-                        }}
-                      >
-                        {event.outcome_status ? (
-                          <span
-                            style={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              padding: "4px 8px",
-                              borderRadius: 999,
-                              border: "1px solid #cfcfcf",
-                              background:
-                                String(event.outcome_status || "").toLowerCase() === "fixed"
-                                  ? "#eefaf0"
-                                  : "#f7f7f7",
-                              fontSize: 12,
-                              fontWeight: 900,
-                            }}
-                          >
-                            {String(event.outcome_status || "").toUpperCase()}
-                          </span>
-                        ) : null}
-
-                        {String(event.callback_occurred || "").trim() ? (
-                          <span
-                            style={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              padding: "4px 8px",
-                              borderRadius: 999,
-                              border: "1px solid #cfcfcf",
-                              background:
-                                String(event.callback_occurred || "").toLowerCase() === "yes"
-                                  ? "#fff3e8"
-                                  : "#f7f7f7",
-                              fontSize: 12,
-                              fontWeight: 900,
-                            }}
-                          >
-                            CALLBACK {String(event.callback_occurred || "").toUpperCase()}
-                          </span>
-                        ) : null}
-                      </div>
-
                       <div style={{ marginTop: 4 }}>
                         <SmallHint><b>Notes:</b> {event.tech_closeout_notes || "-"}</SmallHint>
                       </div>
