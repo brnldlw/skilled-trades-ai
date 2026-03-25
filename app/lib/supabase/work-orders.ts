@@ -95,6 +95,17 @@ export async function listUnitsForCurrentUser() {
 }
 
 export async function createUnitForCurrentUser(input: Omit<UnitRow, "user_id" | "created_at">) {
+  const existing = await findStrongUnitMatchForCurrentUser({
+    customer_name: input.customer_name || "",
+    site_name: input.site_name || "",
+    unit_nickname: input.unit_nickname || "",
+    serial: input.serial || "",
+  });
+
+  if (existing?.id) {
+    return existing as UnitRow;
+  }
+
   const supabase = createClient();
   const ctx = await getActiveCompanyContext();
 
