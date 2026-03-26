@@ -4,18 +4,14 @@ path = Path("app/hvac_units/page.tsx")
 text = path.read_text()
 
 if 'title="Parts & Manuals Assist"' in text:
-    raise SystemExit("Parts & Manuals Assist panel already appears to exist.")
+    raise SystemExit("Parts & Manuals Assist panel already exists in the file.")
 
-marker = 'title="Service Event Photos"'
-title_idx = text.find(marker)
-if title_idx == -1:
-    raise SystemExit('Could not find "Service Event Photos" section.')
+anchor = '<SectionCard title="Service Event Photos">'
+idx = text.find(anchor)
+if idx == -1:
+    raise SystemExit('Could not find "Service Event Photos" anchor.')
 
-start = text.rfind('        <div style={{ marginTop: 16 }}>', 0, title_idx)
-if start == -1:
-    raise SystemExit('Could not find wrapper div before "Service Event Photos".')
-
-panel = """
+block = """
         <div style={{ marginTop: 16 }}>
           <SectionCard title="Parts & Manuals Assist">
             {(() => {
@@ -142,6 +138,6 @@ panel = """
 
 """
 
-text = text[:start] + panel + text[start:]
+text = text[:idx] + block + text[idx:]
 path.write_text(text)
-print("Added Parts & Manuals Assist v1 panel.")
+print("Force-inserted Parts & Manuals Assist panel before Service Event Photos.")
