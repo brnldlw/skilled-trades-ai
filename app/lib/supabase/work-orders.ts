@@ -289,6 +289,29 @@ export async function findStrongUnitMatchForCurrentUser(input: {
   return null;
 }
 
+
+export async function updateServiceEventForCurrentUser(
+  eventId: string,
+  input: Partial<Omit<ServiceEventRow, "id" | "user_id" | "created_at">>
+) {
+  const supabase = createClient();
+  await getCurrentUserId();
+
+  const payload = {
+    ...input,
+  };
+
+  const { data, error } = await supabase
+    .from("service_events")
+    .update(payload)
+    .eq("id", eventId)
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return data as ServiceEventRow;
+}
+
 export async function listServiceEventsForUnitForCurrentUser(unitId: string) {
   const supabase = createClient();
   await getCurrentUserId();
