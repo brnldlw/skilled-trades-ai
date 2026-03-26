@@ -126,6 +126,29 @@ export async function createUnitForCurrentUser(input: Omit<UnitRow, "user_id" | 
   return data as UnitRow;
 }
 
+
+export async function updateUnitForCurrentUser(
+  unitId: string,
+  input: Partial<Omit<UnitRow, "id" | "user_id" | "created_at">>
+) {
+  const supabase = createClient();
+  await getCurrentUserId();
+
+  const payload = {
+    ...input,
+  };
+
+  const { data, error } = await supabase
+    .from("units")
+    .update(payload)
+    .eq("id", unitId)
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return data as UnitRow;
+}
+
 export async function createServiceEventForCurrentUser(
   input: Omit<ServiceEventRow, "user_id">
 ) {

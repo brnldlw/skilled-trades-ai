@@ -94,6 +94,7 @@ import {
   getCurrentUserMembership,
   listServiceEventsForUnitForCurrentUser,
   listUnitsForCurrentUser,
+  updateUnitForCurrentUser,
 } from "../lib/supabase/work-orders";
 
 type LinkItem = { title: string; url: string; note?: string };
@@ -3494,6 +3495,37 @@ function findLikelyDuplicateWithoutSerial() {
   );
 }
 
+
+async function updateCurrentLoadedUnit() {
+  if (!currentLoadedUnitId) {
+    alert("Load a unit first.");
+    return;
+  }
+
+  try {
+    const updated = await updateUnitForCurrentUser(currentLoadedUnitId, {
+      company_name: companyName || "",
+      customer_name: customerName || "",
+      site_name: siteName || "",
+      site_address: siteAddress || "",
+      unit_nickname: unitNickname || "",
+      property_type: propertyType || "",
+      equipment_type: equipmentType || "",
+      manufacturer: manufacturer || "",
+      model: model || "",
+      serial: serialNumber || "",
+      refrigerant_type: refrigerantType || "",
+    });
+
+    setCurrentLoadedUnitId(updated.id || currentLoadedUnitId);
+
+    alert("Loaded unit updated.");
+  } catch (err) {
+    console.error("UPDATE LOADED UNIT FAILED", err);
+    alert("Could not update loaded unit. Check browser console.");
+  }
+}
+
 async function saveCurrentUnit() {
   const likelyDuplicateWithoutSerial = findLikelyDuplicateWithoutSerial();
   if (likelyDuplicateWithoutSerial) {
@@ -4454,6 +4486,7 @@ return (
 
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
             <PillButton text="Save Current Unit" onClick={saveCurrentUnit} />
+              {currentLoadedUnitId ? <PillButton text="Update Loaded Unit" onClick={updateCurrentLoadedUnit} /> : null}
             <PillButton text="Clear Current Form" onClick={clearCurrentForm} />
           </div>
         </SectionCard>
