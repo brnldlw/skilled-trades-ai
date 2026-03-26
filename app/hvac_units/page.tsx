@@ -3465,7 +3465,49 @@ async function analyzePhoto() {
     }
   }
 
+
+function findLikelyDuplicateWithoutSerial() {
+  const serialValue = serialNumber.trim();
+  if (serialValue) return null;
+
+  const customer = customerName.trim().toLowerCase();
+  const site = siteName.trim().toLowerCase();
+  const make = manufacturer.trim().toLowerCase();
+  const modelValue = model.trim().toLowerCase();
+  const tag = unitNickname.trim().toLowerCase();
+
+  if (!customer || !site || !make || !modelValue) return null;
+
+  return (
+    savedUnits.find((u) => {
+      const sameCustomer = (u.customerName || "").trim().toLowerCase() === customer;
+      const sameSite = (u.siteName || "").trim().toLowerCase() === site;
+      const sameMake = (u.manufacturer || "").trim().toLowerCase() === make;
+      const sameModel = (u.model || "").trim().toLowerCase() === modelValue;
+      const existingTag = (u.unitNickname || "").trim().toLowerCase();
+
+      const needsReview =
+        !tag || !existingTag || existingTag !== tag;
+
+      return sameCustomer && sameSite && sameMake && sameModel && needsReview;
+    }) || null
+  );
+}
+
 async function saveCurrentUnit() {
+  const likelyDuplicateWithoutSerial = findLikelyDuplicateWithoutSerial();
+  if (likelyDuplicateWithoutSerial) {
+    alert(
+      "Serial number is blank and this looks like an existing unit at this site.\n\n" +
+      `Customer: ${likelyDuplicateWithoutSerial.customerName || "-"}\n` +
+      `Site: ${likelyDuplicateWithoutSerial.siteName || "-"}\n` +
+      `Unit Tag: ${likelyDuplicateWithoutSerial.unitNickname || "-"}\n` +
+      `Make/Model: ${likelyDuplicateWithoutSerial.manufacturer || "-"} ${likelyDuplicateWithoutSerial.model || "-"}\n\n` +
+      "Load the existing unit if this is the same machine, or add a stronger identifier like serial number or a clear unit tag before saving."
+    );
+    return;
+  }
+
     console.log("SAVE UNIT CLICKED");
 
     try {
@@ -4416,7 +4458,14 @@ return (
           </div>
         </SectionCard>
 
-        <div style={{ marginTop: 16 }}>
+        <div
+          style={{
+            marginTop: 16,
+            position: "sticky",
+            top: 12,
+            zIndex: 20,
+          }}
+        >
           <SectionCard title="Current Loaded Unit">
             <div
               style={{
@@ -4424,6 +4473,7 @@ return (
                 borderRadius: 12,
                 padding: 12,
                 background: currentLoadedUnitId ? "#f7fbff" : "#fafafa",
+                boxShadow: "0 4px 14px rgba(0,0,0,0.08)",
               }}
             >
               <div
