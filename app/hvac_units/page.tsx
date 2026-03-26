@@ -94,6 +94,7 @@ import {
   getCurrentUserMembership,
   listServiceEventsForUnitForCurrentUser,
   listUnitsForCurrentUser,
+  updateServiceEventForCurrentUser,
   updateUnitForCurrentUser,
 } from "../lib/supabase/work-orders";
 
@@ -2741,6 +2742,7 @@ const [showCompanyTeam, setShowCompanyTeam] = useState(false);
 const [serviceEventPhotoUrls, setServiceEventPhotoUrls] = useState<string[]>([]);
 const [serviceEventPhotoBusy, setServiceEventPhotoBusy] = useState(false);
 const [serviceEventPhotoMessage, setServiceEventPhotoMessage] = useState("");
+const [editingServiceEventId, setEditingServiceEventId] = useState("");
 const [showServiceEventPhotos, setShowServiceEventPhotos] = useState(false);
 const [historicalEntryMode, setHistoricalEntryMode] = useState(false);
 
@@ -3628,7 +3630,75 @@ async function saveCurrentUnit() {
     }
   }
 
-  async function saveCurrentCallAsServiceEvent() {
+  
+function loadServiceEventIntoForm(event: any) {
+  setEditingServiceEventId(event.id || "");
+  setServiceDate(event.service_date ? String(event.service_date).slice(0, 10) : new Date().toISOString().slice(0, 10));
+  setSymptom(event.symptom || "");
+  setFinalConfirmedCause(event.final_confirmed_cause || "");
+  setActualFixPerformed(event.actual_fix_performed || "");
+  setPartsReplaced(event.parts_replaced || "");
+  setOutcomeStatus(event.outcome_status || "Not Set");
+  setCallbackOccurred(event.callback_occurred || "No");
+  setTechCloseoutNotes(event.tech_closeout_notes || "");
+  setServiceEventPhotoUrls(Array.isArray(event.photo_urls) ? event.photo_urls : []);
+  setServiceEventPhotoMessage("");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function cancelEditingServiceEvent() {
+  setEditingServiceEventId("");
+  setServiceDate(new Date().toISOString().slice(0, 10));
+  setSymptom("");
+  setFinalConfirmedCause("");
+  setActualFixPerformed("");
+  setPartsReplaced("");
+  setOutcomeStatus("Not Set");
+  setCallbackOccurred("No");
+  setTechCloseoutNotes("");
+  setServiceEventPhotoUrls([]);
+  setServiceEventPhotoMessage("");
+}
+
+async function updateCurrentServiceEvent() {
+  if (!editingServiceEventId) {
+    alert("No service event is being edited.");
+    return;
+  }
+
+  if (!currentLoadedUnitId) {
+    alert("Load a unit first.");
+    return;
+  }
+
+  try {
+    await updateServiceEventForCurrentUser(editingServiceEventId, {
+      unit_id: currentLoadedUnitId,
+      company_name: companyName || "",
+      service_date: serviceDate
+        ? new Date(`${serviceDate}T12:00:00`).toISOString()
+        : new Date().toISOString(),
+      symptom: symptom || "",
+      diagnosis_summary: parsed?.summary || "",
+      final_confirmed_cause: finalConfirmedCause || "",
+      parts_replaced: partsReplaced || "",
+      actual_fix_performed: actualFixPerformed || "",
+      outcome_status: outcomeStatus || "Not Set",
+      callback_occurred: callbackOccurred || "No",
+      tech_closeout_notes: techCloseoutNotes || "",
+      photo_urls: serviceEventPhotoUrls,
+    });
+
+    await loadUnitServiceTimeline(currentLoadedUnitId);
+    alert("Service event updated.");
+    cancelEditingServiceEvent();
+  } catch (err) {
+    console.error("UPDATE SERVICE EVENT FAILED", err);
+    alert("Could not update service event. Check browser console.");
+  }
+}
+
+async function saveCurrentCallAsServiceEvent() {
   if (!currentLoadedUnitId) {
     alert("Load a unit first, or save the unit before saving the current call.");
     return;
@@ -4628,6 +4698,24 @@ return (
 
             <div style={{ marginTop: 4 }}>
               <SmallHint><b>Notes:</b> {event.tech_closeout_notes || "-"}</SmallHint>
+
+              <div style={{ marginTop: 8 }}>
+                <button
+                  onClick={() => loadServiceEventIntoForm(event)}
+                  style={{
+                    padding: "8px 12px",
+                    fontWeight: 900,
+                    border: "1px solid #cfcfcf",
+                    borderRadius: 10,
+                    background: "#ffffff",
+                    color: "#111",
+                    cursor: "pointer",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+                  }}
+                >
+                  Edit Event
+                </button>
+              </div>
             </div>
           </div>
         ))}
@@ -5187,6 +5275,24 @@ return (
 </div>
 
 <SectionCard title="Case Outcome / Learning Feedback">
+    {editingServiceEventId ? (
+      <div style={{ marginTop: 10 }}>
+        <span
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            padding: "4px 8px",
+            borderRadius: 999,
+            border: "1px solid #cfcfcf",
+            background: "#fff3e8",
+            fontSize: 12,
+            fontWeight: 900,
+          }}
+        >
+          EDITING SAVED EVENT
+        </span>
+      </div>
+    ) : null}
     <SmallHint>
       Use this after the job is diagnosed or completed. This is how the app starts learning what actually fixed the unit.
     </SmallHint>
@@ -5851,6 +5957,41 @@ return (
               >
                 Save & Add Another
               </button>
+              {editingServiceEventId ? (
+                <button
+                  onClick={updateCurrentServiceEvent}
+                  style={{
+                    padding: "10px 14px",
+                    fontWeight: 900,
+                    border: "1px solid #cfcfcf",
+                    borderRadius: 10,
+                    background: "#ffffff",
+                    color: "#111",
+                    cursor: "pointer",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+                  }}
+                >
+                  Update Event
+                </button>
+              ) : null}
+
+              {editingServiceEventId ? (
+                <button
+                  onClick={cancelEditingServiceEvent}
+                  style={{
+                    padding: "10px 14px",
+                    fontWeight: 900,
+                    border: "1px solid #cfcfcf",
+                    borderRadius: 10,
+                    background: "#ffffff",
+                    color: "#111",
+                    cursor: "pointer",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+                  }}
+                >
+                  Cancel Edit
+                </button>
+              ) : null}
 
   {!currentLoadedUnitId ? (
     <SmallHint>

@@ -1,53 +1,32 @@
 from pathlib import Path
+import re
 
 path = Path("app/hvac_units/page.tsx")
 text = path.read_text()
 
-# ---------- A) add import ----------
-old_import = """import {
-  createCompanyForCurrentUser,
-  createServiceEventForCurrentUser,
-  createUnitForCurrentUser,
-  deleteUnitForCurrentUser,
-  findStrongUnitMatchForCurrentUser,
-  getCurrentUserMembership,
-  listServiceEventsForUnitForCurrentUser,
-  listUnitsForCurrentUser,
-  updateUnitForCurrentUser,
-} from "../lib/supabase/work-orders";"""
+# A) import
+if "updateServiceEventForCurrentUser" not in text:
+    old = '  updateUnitForCurrentUser,\n} from "../lib/supabase/work-orders";'
+    new = '  updateServiceEventForCurrentUser,\n  updateUnitForCurrentUser,\n} from "../lib/supabase/work-orders";'
+    if old not in text:
+        raise SystemExit("Could not find import anchor.")
+    text = text.replace(old, new, 1)
 
-new_import = """import {
-  createCompanyForCurrentUser,
-  createServiceEventForCurrentUser,
-  createUnitForCurrentUser,
-  deleteUnitForCurrentUser,
-  findStrongUnitMatchForCurrentUser,
-  getCurrentUserMembership,
-  listServiceEventsForUnitForCurrentUser,
-  listUnitsForCurrentUser,
-  updateServiceEventForCurrentUser,
-  updateUnitForCurrentUser,
-} from "../lib/supabase/work-orders";"""
-
-if "updateServiceEventForCurrentUser," not in text:
-    if old_import not in text:
-        raise SystemExit("Could not find work-orders import block.")
-    text = text.replace(old_import, new_import, 1)
-
-# ---------- B) add editing state ----------
+# B) state
 state_anchor = 'const [serviceEventPhotoMessage, setServiceEventPhotoMessage] = useState("");'
-state_insert = state_anchor + '\nconst [editingServiceEventId, setEditingServiceEventId] = useState("");'
-
 if 'const [editingServiceEventId, setEditingServiceEventId] = useState("");' not in text:
     if state_anchor not in text:
-        raise SystemExit("Could not find service event photo state anchor.")
-    text = text.replace(state_anchor, state_insert, 1)
+        raise SystemExit("Could not find state anchor.")
+    text = text.replace(
+        state_anchor,
+        state_anchor + '\nconst [editingServiceEventId, setEditingServiceEventId] = useState("");',
+        1,
+    )
 
-# ---------- C) add helpers above saveCurrentCallAsServiceEvent ----------
-func_anchor = "async function saveCurrentCallAsServiceEvent() {"
+# C) helpers
 if "function loadServiceEventIntoForm(" not in text:
-    idx = text.find(func_anchor)
-    if idx == -1:
+    func_anchor = "async function saveCurrentCallAsServiceEvent() {"
+    if func_anchor not in text:
         raise SystemExit("Could not find saveCurrentCallAsServiceEvent anchor.")
 
     helpers = """
@@ -57,10 +36,12 @@ function loadServiceEventIntoForm(event: any) {
   setSymptom(event.symptom || "");
   setFinalConfirmedCause(event.final_confirmed_cause || "");
   setActualFixPerformed(event.actual_fix_performed || "");
+  setPartsReplaced(event.parts_replaced || "");
   setOutcomeStatus(event.outcome_status || "Not Set");
   setCallbackOccurred(event.callback_occurred || "No");
   setTechCloseoutNotes(event.tech_closeout_notes || "");
   setServiceEventPhotoUrls(Array.isArray(event.photo_urls) ? event.photo_urls : []);
+  setServiceEventPhotoMessage("");
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -70,6 +51,7 @@ function cancelEditingServiceEvent() {
   setSymptom("");
   setFinalConfirmedCause("");
   setActualFixPerformed("");
+  setPartsReplaced("");
   setOutcomeStatus("Not Set");
   setCallbackOccurred("No");
   setTechCloseoutNotes("");
@@ -98,7 +80,7 @@ async function updateCurrentServiceEvent() {
       symptom: symptom || "",
       diagnosis_summary: parsed?.summary || "",
       final_confirmed_cause: finalConfirmedCause || "",
-      parts_replaced: actualFixPerformed || "",
+      parts_replaced: partsReplaced || "",
       actual_fix_performed: actualFixPerformed || "",
       outcome_status: outcomeStatus || "Not Set",
       callback_occurred: callbackOccurred || "No",
@@ -116,24 +98,61 @@ async function updateCurrentServiceEvent() {
 }
 
 """
-    text = text[:idx] + helpers + text[idx:]
+    text = text.replace(func_anchor, helpers + func_anchor, 1)
 
-# ---------- D) add Update Event + Cancel Edit buttons next to save buttons ----------
-save_button_anchor = '<PillButton text="Save Current Call to Timeline" onClick={saveCurrentCallAsServiceEvent} />'
-if 'text="Update Event"' not in text:
-    if save_button_anchor not in text:
-        raise SystemExit("Could not find Save Current Call button anchor.")
-    text = text.replace(
-        save_button_anchor,
-        save_button_anchor
-        + '\n              {editingServiceEventId ? <PillButton text="Update Event" onClick={updateCurrentServiceEvent} /> : null}'
-        + '\n              {editingServiceEventId ? <PillButton text="Cancel Edit" onClick={cancelEditingServiceEvent} /> : null}',
-        1,
+# D) add Update / Cancel buttons after Save & Add Another block
+if 'Update Event' not in text:
+    save_add_another_pattern = re.compile(
+        r'(<button\s+[^>]*onClick=\{saveHistoricalCallAndReset\}[\s\S]*?Save & Add Another[\s\S]*?</button>)',
+        re.S,
     )
+    m = save_add_another_pattern.search(text)
+    if not m:
+        raise SystemExit("Could not find Save & Add Another button block.")
 
-# ---------- E) add editing badge in Case Outcome section ----------
+    buttons = m.group(1) + """
+              {editingServiceEventId ? (
+                <button
+                  onClick={updateCurrentServiceEvent}
+                  style={{
+                    padding: "10px 14px",
+                    fontWeight: 900,
+                    border: "1px solid #cfcfcf",
+                    borderRadius: 10,
+                    background: "#ffffff",
+                    color: "#111",
+                    cursor: "pointer",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+                  }}
+                >
+                  Update Event
+                </button>
+              ) : null}
+
+              {editingServiceEventId ? (
+                <button
+                  onClick={cancelEditingServiceEvent}
+                  style={{
+                    padding: "10px 14px",
+                    fontWeight: 900,
+                    border: "1px solid #cfcfcf",
+                    borderRadius: 10,
+                    background: "#ffffff",
+                    color: "#111",
+                    cursor: "pointer",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+                  }}
+                >
+                  Cancel Edit
+                </button>
+              ) : null}"""
+    text = text[:m.start()] + buttons + text[m.end():]
+
+# E) editing badge
 section_anchor = '<SectionCard title="Case Outcome / Learning Feedback">'
 if "EDITING SAVED EVENT" not in text:
+    if section_anchor not in text:
+        raise SystemExit("Could not find Case Outcome section anchor.")
     text = text.replace(
         section_anchor,
         section_anchor + """
@@ -158,23 +177,36 @@ if "EDITING SAVED EVENT" not in text:
         1,
     )
 
-# ---------- F) add Edit Event button to Unit Service Timeline cards ----------
-timeline_anchor = """              <div style={{ marginTop: 4 }}>
-                <SmallHint><b>Notes:</b> {event.tech_closeout_notes || "-"}</SmallHint>
-              </div>"""
+# F) add Edit Event button in Unit Service Timeline
+if 'Edit Event' not in text:
+    notes_pattern = re.compile(
+        r'(<SmallHint><b>Notes:</b>\s*\{event\.tech_closeout_notes\s*\|\|\s*"-"\}</SmallHint>)',
+        re.S,
+    )
+    m = notes_pattern.search(text)
+    if not m:
+        raise SystemExit("Could not find Unit Service Timeline notes block.")
 
-if 'text="Edit Event"' not in text:
-    if timeline_anchor not in text:
-        raise SystemExit("Could not find Unit Service Timeline notes anchor.")
-    text = text.replace(
-        timeline_anchor,
-        timeline_anchor + """
+    replacement = m.group(1) + """
 
               <div style={{ marginTop: 8 }}>
-                <PillButton text="Edit Event" onClick={() => loadServiceEventIntoForm(event)} />
-              </div>""",
-        1,
-    )
+                <button
+                  onClick={() => loadServiceEventIntoForm(event)}
+                  style={{
+                    padding: "8px 12px",
+                    fontWeight: 900,
+                    border: "1px solid #cfcfcf",
+                    borderRadius: 10,
+                    background: "#ffffff",
+                    color: "#111",
+                    cursor: "pointer",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+                  }}
+                >
+                  Edit Event
+                </button>
+              </div>"""
+    text = text[:m.start()] + replacement + text[m.end():]
 
 path.write_text(text)
 print("Added Edit Service Event v1 wiring.")
