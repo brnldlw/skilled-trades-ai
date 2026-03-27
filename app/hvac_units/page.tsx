@@ -5179,7 +5179,11 @@ return (
                 .replace(/\s+/g, " ")
                 .trim();
 
-              const partsSearchQuery = `${baseUnitQuery} ${topCause?.[0] || cleanedSymptom || topFix?.[0] || "parts"}`
+              const broadPartsSearchQuery = `${baseUnitQuery} ${cleanedSymptom || "parts"}`
+                .replace(/\s+/g, " ")
+                .trim();
+
+              const historyAwarePartsSearchQuery = `${baseUnitQuery} ${topCause?.[0] || topFix?.[0] || cleanedSymptom || "parts"}`
                 .replace(/\s+/g, " ")
                 .trim();
 
@@ -5252,7 +5256,7 @@ return (
                       <b>Manual Search:</b> {manualSearchQuery || "-"}
                     </div>
                     <div>
-                      <b>Parts Search:</b> {partsSearchQuery || "-"}
+                      <b>Current Symptom Search:</b> {broadPartsSearchQuery || "-"}
                     </div>
                   </div>
 
@@ -5278,7 +5282,7 @@ return (
                       background: "#fafafa",
                     }}
                   >
-                    <div style={{ fontWeight: 900, marginBottom: 8 }}>Likely Parts to Check</div>
+                    <div style={{ fontWeight: 900, marginBottom: 8 }}>History-Based Likely Parts</div>
 
                     {suggestedParts.length ? (
                       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -5331,7 +5335,7 @@ return (
                     <button
                       onClick={() =>
                         window.open(
-                          `https://www.google.com/search?q=${encodeURIComponent(partsSearchQuery)}`,
+                          `https://www.google.com/search?q=${encodeURIComponent(broadPartsSearchQuery)}`,
                           "_blank",
                           "noopener,noreferrer"
                         )
@@ -5347,7 +5351,29 @@ return (
                         boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
                       }}
                     >
-                      Open Parts Search
+                      Open Broad Parts Search
+                    </button>
+
+                    <button
+                      onClick={() =>
+                        window.open(
+                          `https://www.google.com/search?q=${encodeURIComponent(historyAwarePartsSearchQuery)}`,
+                          "_blank",
+                          "noopener,noreferrer"
+                        )
+                      }
+                      style={{
+                        padding: "10px 14px",
+                        fontWeight: 900,
+                        border: "1px solid #cfcfcf",
+                        borderRadius: 10,
+                        background: "#ffffff",
+                        color: "#111",
+                        cursor: "pointer",
+                        boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+                      }}
+                    >
+                      Open History-Aware Parts Search
                     </button>
                   </div>
                 </div>
