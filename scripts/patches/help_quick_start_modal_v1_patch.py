@@ -3,26 +3,29 @@ from pathlib import Path
 path = Path("app/hvac_units/page.tsx")
 text = path.read_text()
 
-# ---------- A) Add state ----------
+# ---------- A) add state if missing ----------
 state_anchor = 'const [historicalEntryMode, setHistoricalEntryMode] = useState(false);'
-state_insert = state_anchor + '\nconst [showQuickStartHelp, setShowQuickStartHelp] = useState(false);'
-
 if 'const [showQuickStartHelp, setShowQuickStartHelp] = useState(false);' not in text:
     if state_anchor not in text:
         raise SystemExit("Could not find historicalEntryMode state anchor.")
-    text = text.replace(state_anchor, state_insert, 1)
+    text = text.replace(
+        state_anchor,
+        state_anchor + '\nconst [showQuickStartHelp, setShowQuickStartHelp] = useState(false);',
+        1,
+    )
 
-# ---------- B) Insert Help / Quick Start card before Customer / Site / Unit ----------
-section_anchor = '        <SectionCard title="Customer / Site / Unit">'
-section_idx = text.find(section_anchor)
-if section_idx == -1:
-    raise SystemExit('Could not find "Customer / Site / Unit" section.')
+# ---------- B) force-insert top Help / Quick Start card ----------
+if 'title="Help / Quick Start"' not in text:
+    anchor = '        <SectionCard title="Customer / Site / Unit">'
+    idx = text.find(anchor)
+    if idx == -1:
+        raise SystemExit('Could not find "Customer / Site / Unit" anchor.')
 
-wrapper_start = text.rfind('        <div style={{ marginTop: 16 }}>', 0, section_idx)
-if wrapper_start == -1:
-    raise SystemExit('Could not find wrapper div before "Customer / Site / Unit".')
+    wrapper_start = text.rfind('        <div style={{ marginTop: 16 }}>', 0, idx)
+    if wrapper_start == -1:
+        raise SystemExit('Could not find wrapper before "Customer / Site / Unit".')
 
-help_card = """
+    help_card = """
         <div style={{ marginTop: 16 }}>
           <SectionCard title="Help / Quick Start">
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
@@ -50,17 +53,16 @@ help_card = """
         </div>
 
 """
-
-if 'title="Help / Quick Start"' not in text:
     text = text[:wrapper_start] + help_card + text[wrapper_start:]
 
-# ---------- C) Insert modal before Unit Profile modal ----------
-modal_anchor = '      {showUnitProfile ? ('
-modal_idx = text.find(modal_anchor)
-if modal_idx == -1:
-    raise SystemExit('Could not find showUnitProfile modal anchor.')
+# ---------- C) force-insert modal if missing ----------
+if 'Quick Start Guide' not in text:
+    modal_anchor = '      {showUnitProfile ? ('
+    idx = text.find(modal_anchor)
+    if idx == -1:
+        raise SystemExit('Could not find showUnitProfile modal anchor.')
 
-modal_block = """
+    modal_block = """
       {showQuickStartHelp ? (
         <div
           onClick={() => setShowQuickStartHelp(false)}
@@ -177,9 +179,7 @@ modal_block = """
       ) : null}
 
 """
-
-if 'Quick Start Guide' not in text or 'title="Help / Quick Start"' not in text:
-    text = text[:modal_idx] + modal_block + text[modal_idx:]
+    text = text[:idx] + modal_block + text[idx:]
 
 path.write_text(text)
-print("Added Help / Quick Start modal v1.")
+print("Forced Help / Quick Start card and modal into page.tsx.")
