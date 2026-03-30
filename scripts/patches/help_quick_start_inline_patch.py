@@ -6,14 +6,9 @@ text = path.read_text()
 if 'title="Help / Quick Start"' in text:
     raise SystemExit("Help / Quick Start section already exists.")
 
-anchor = '        <SectionCard title="Customer / Site / Unit">'
-idx = text.find(anchor)
-if idx == -1:
+anchor = '<SectionCard title="Customer / Site / Unit">'
+if anchor not in text:
     raise SystemExit('Could not find "Customer / Site / Unit" anchor.')
-
-wrapper_start = text.rfind('        <div style={{ marginTop: 16 }}>', 0, idx)
-if wrapper_start == -1:
-    raise SystemExit('Could not find wrapper before "Customer / Site / Unit".')
 
 block = """
         <div style={{ marginTop: 16 }}>
@@ -56,8 +51,8 @@ block = """
           </SectionCard>
         </div>
 
-"""
+        """
 
-text = text[:wrapper_start] + block + text[wrapper_start:]
+text = text.replace(anchor, block + anchor, 1)
 path.write_text(text)
 print("Added inline Help / Quick Start section.")
