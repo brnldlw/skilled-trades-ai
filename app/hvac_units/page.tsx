@@ -2747,6 +2747,19 @@ const [showServiceEventPhotos, setShowServiceEventPhotos] = useState(false);
 const [historicalEntryMode, setHistoricalEntryMode] = useState(false);
 const [showQuickStartInline, setShowQuickStartInline] = useState(true);
 
+const siteUnitsAtLocation = savedUnits.filter((u) => {
+  const sameCustomer =
+    String(u.customerName || "").trim().toLowerCase() ===
+    String(customerName || "").trim().toLowerCase();
+
+  const sameSite =
+    String(u.siteName || "").trim().toLowerCase() ===
+    String(siteName || "").trim().toLowerCase();
+
+  return Boolean(customerName.trim() && siteName.trim() && sameCustomer && sameSite);
+});
+
+
 
 
 
@@ -5213,7 +5226,92 @@ return (
 <div style={{ marginTop: 16 }}>
   
         <div style={{ marginTop: 16 }}>
-          <SectionCard title="Parts & Manuals Assist">
+          
+        <div style={{ marginTop: 16 }}>
+          <SectionCard title="Site Units at This Location">
+            {!customerName.trim() || !siteName.trim() ? (
+              <SmallHint>
+                Enter customer and site to see other units already saved at this location.
+              </SmallHint>
+            ) : !siteUnitsAtLocation.length ? (
+              <SmallHint>
+                No saved units found yet for this customer/site.
+              </SmallHint>
+            ) : (
+              <div style={{ display: "grid", gap: 8 }}>
+                <SmallHint>
+                  Saved units already at this site: <b>{siteUnitsAtLocation.length}</b>
+                </SmallHint>
+
+                {siteUnitsAtLocation.map((unit) => (
+                  <div
+                    key={unit.id}
+                    style={{
+                      border: "1px solid #e5e5e5",
+                      borderRadius: 10,
+                      padding: 10,
+                      background:
+                        currentLoadedUnitId && currentLoadedUnitId === unit.id
+                          ? "#f7fbff"
+                          : "#fafafa",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: 8,
+                        flexWrap: "wrap",
+                        alignItems: "center",
+                      }}
+                    >
+                      <div style={{ fontWeight: 900 }}>
+                        {unit.unitNickname || "No Unit Tag"}
+                      </div>
+
+                      <span
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          padding: "4px 8px",
+                          borderRadius: 999,
+                          border: "1px solid #cfcfcf",
+                          background: "#f7f7f7",
+                          fontSize: 12,
+                          fontWeight: 900,
+                        }}
+                      >
+                        {unit.equipmentType || "Unknown Type"}
+                      </span>
+
+                      {currentLoadedUnitId && currentLoadedUnitId === unit.id ? (
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            padding: "4px 8px",
+                            borderRadius: 999,
+                            border: "1px solid #cfcfcf",
+                            background: "#eefaf0",
+                            fontSize: 12,
+                            fontWeight: 900,
+                          }}
+                        >
+                          CURRENTLY LOADED
+                        </span>
+                      ) : null}
+                    </div>
+
+                    <SmallHint style={{ marginTop: 6 }}>
+                      {unit.manufacturer || "-"} {unit.model || "-"} • Serial: {unit.serialNumber || "-"}
+                    </SmallHint>
+                  </div>
+                ))}
+              </div>
+            )}
+          </SectionCard>
+        </div>
+
+<SectionCard title="Parts & Manuals Assist">
             {(() => {
               const baseUnitQuery = [manufacturer, model, equipmentType]
                 .filter(Boolean)
