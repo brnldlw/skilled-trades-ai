@@ -2745,6 +2745,7 @@ const [serviceEventPhotoMessage, setServiceEventPhotoMessage] = useState("");
 const [editingServiceEventId, setEditingServiceEventId] = useState("");
 const [showServiceEventPhotos, setShowServiceEventPhotos] = useState(false);
 const [historicalEntryMode, setHistoricalEntryMode] = useState(false);
+const [showQuickStartInline, setShowQuickStartInline] = useState(true);
 
 
 
@@ -4510,6 +4511,24 @@ return (
         
         <div style={{ marginTop: 16 }}>
           <SectionCard title="Help / Quick Start">
+            <button
+              onClick={() => setShowQuickStartInline((v) => !v)}
+              style={{
+                padding: "10px 14px",
+                fontWeight: 900,
+                border: "1px solid #cfcfcf",
+                borderRadius: 10,
+                background: "#ffffff",
+                color: "#111",
+                cursor: "pointer",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+              }}
+            >
+              {showQuickStartInline ? "Hide Quick Start" : "Show Quick Start"}
+            </button>
+
+            {showQuickStartInline ? (
+
             <div style={{ display: "grid", gap: 14 }}>
               <div>
                 <div style={{ fontWeight: 900, marginBottom: 6 }}>1. Quick Start</div>
@@ -4545,6 +4564,11 @@ return (
                 <SmallHint><b>Where do photos go?</b> Photos attach to the service event and show in the timeline/profile later.</SmallHint>
               </div>
             </div>
+            ) : (
+              <SmallHint style={{ marginTop: 12 }}>
+                Hidden to keep the main workflow clean.
+              </SmallHint>
+            )}
           </SectionCard>
         </div>
 
