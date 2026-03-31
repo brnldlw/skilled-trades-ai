@@ -25,18 +25,6 @@ export type NameplateResult = {
   confidence: "high" | "medium" | "low";
 };
 
-export type LinkedEquipmentComponentRecord = {
-  id: string;
-  role: string;
-  tag: string;
-  manufacturer: string;
-  model: string;
-  serial: string;
-  tagStatus: "readable" | "partial" | "unreadable";
-  tagIssueReason: string;
-  checkedInsideForInternalLabel: boolean;
-};
-
 export type SavedUnitRecord = {
   id: string;
   savedAt: string;
@@ -65,13 +53,6 @@ export type SavedUnitRecord = {
   techCloseoutNotes?: string;
   rawResult: string;
   nameplate: NameplateResult | null;
-
-  systemType?: "single" | "split_system" | "furnace_ac" | "heat_pump_air_handler" | "walk_in" | "mini_split" | "other_multi";
-  primaryComponentRole?: string;
-  primaryTagStatus?: "readable" | "partial" | "unreadable";
-  primaryTagIssueReason?: string;
-  primaryCheckedInsideForInternalLabel?: boolean;
-  linkedEquipmentComponents?: LinkedEquipmentComponentRecord[];
 };
 
 const STORAGE_KEY = "skilled_trades_ai_saved_units_v2";
