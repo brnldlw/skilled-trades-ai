@@ -4886,16 +4886,16 @@ return (
   </button>
 </div>
 
-{/* repeat-call-banner-v4 */}
+{/* repeat-call-banner-v3 */}
 {(() => {
-  const __repeatCallAllHistory =
+  const __repeatCallHistory =
     (Array.isArray(unitServiceTimeline) && unitServiceTimeline.length
       ? unitServiceTimeline
       : Array.isArray(unitProfileTimeline)
         ? unitProfileTimeline
         : []);
 
-  if (!__repeatCallAllHistory.length) return null;
+  if (!__repeatCallHistory.length) return null;
 
   const __repeatCallGetRecord = (event: unknown): Record<string, unknown> | null => {
     if (event && typeof event === "object") {
@@ -4942,41 +4942,6 @@ return (
     return Number.isFinite(ms) ? ms : 0;
   };
 
-  const __repeatCallSelectedComponentId = String(affectedComponentId || "").trim();
-  const __repeatCallSelectedComponentLabel = String(affectedComponentLabel || "").trim();
-
-  const __repeatCallMatchingComponentHistory =
-    systemType !== "single" && (__repeatCallSelectedComponentId || __repeatCallSelectedComponentLabel)
-      ? __repeatCallAllHistory.filter((event) => {
-          const overlay = getAffectedComponentOverlayForEvent(String((event as { id?: string | number } | null)?.id || ""));
-          if (!overlay) return false;
-
-          if (__repeatCallSelectedComponentId && overlay.affectedComponentId === __repeatCallSelectedComponentId) {
-            return true;
-          }
-
-          if (
-            __repeatCallSelectedComponentLabel &&
-            overlay.affectedComponentLabel === __repeatCallSelectedComponentLabel
-          ) {
-            return true;
-          }
-
-          return false;
-        })
-      : [];
-
-  const __repeatCallHasComponentFocus =
-    systemType !== "single" && !!(__repeatCallSelectedComponentId || __repeatCallSelectedComponentLabel);
-
-  const __repeatCallHistory =
-    __repeatCallHasComponentFocus && __repeatCallMatchingComponentHistory.length
-      ? __repeatCallMatchingComponentHistory
-      : __repeatCallAllHistory;
-
-  const __repeatCallIsSystemFallback =
-    __repeatCallHasComponentFocus && __repeatCallMatchingComponentHistory.length === 0;
-
   const __repeatCallSorted = [...__repeatCallHistory].sort(
     (a, b) => __repeatCallGetTime(b) - __repeatCallGetTime(a)
   );
@@ -4993,7 +4958,6 @@ return (
 
   const __repeatCallLastCause =
     __repeatCallGetString(__repeatCallLast, [
-      "final_confirmed_cause",
       "confirmed_cause",
       "confirmedCause",
       "cause",
@@ -5004,7 +4968,6 @@ return (
 
   const __repeatCallLastFix =
     __repeatCallGetString(__repeatCallLast, [
-      "actual_fix_performed",
       "actual_fix",
       "actualFix",
       "fix",
@@ -5027,7 +4990,7 @@ return (
     ? __repeatCallHistory.filter((event) => {
         const symptom =
           __repeatCallGetString(event, ["symptom", "customer_complaint", "complaint"]) || "";
-        return symptom && symptom.toLowerCase() === __repeatCallLastSymptom.toLowerCase();
+        return symptom && symptom.toLowerCase() == __repeatCallLastSymptom.toLowerCase();
       }).length
     : 0;
 
@@ -5038,25 +5001,8 @@ return (
       "isCallback",
       "callback_visit",
       "callbackVisit",
-      "callback_occurred",
     ])
   );
-
-  const __repeatCallScopeLabel = __repeatCallHasComponentFocus
-    ? (__repeatCallSelectedComponentLabel || "Selected component")
-    : (systemType === "single" ? "Primary component" : "System-wide history");
-
-  const __repeatCallScopeMessage = __repeatCallHasComponentFocus
-    ? (
-        __repeatCallIsSystemFallback
-          ? `No prior visits were found for ${__repeatCallScopeLabel}. Showing system-wide history instead.`
-          : `Showing prior visits for ${__repeatCallScopeLabel}.`
-      )
-    : (
-        systemType === "single"
-          ? "Showing prior visits for the primary component."
-          : "Select an affected component to see component-specific prior visits."
-      );
 
   return (
     <div
@@ -5073,7 +5019,7 @@ return (
       </div>
 
       <div style={{ marginTop: 4, fontSize: 13, color: "#555" }}>
-        {__repeatCallScopeMessage}
+        This unit already has service history. Review the last visit before entering a new call.
       </div>
 
       <div
@@ -5084,13 +5030,6 @@ return (
           gap: 10,
         }}
       >
-        <div style={{ border: "1px solid #ead9a4", borderRadius: 10, padding: 10, background: "#fffdf7" }}>
-          <div style={{ fontSize: 11, fontWeight: 900, color: "#666", textTransform: "uppercase" }}>
-            Scope
-          </div>
-          <div style={{ marginTop: 4, fontWeight: 700 }}>{__repeatCallScopeLabel || "System-wide history"}</div>
-        </div>
-
         <div style={{ border: "1px solid #ead9a4", borderRadius: 10, padding: 10, background: "#fffdf7" }}>
           <div style={{ fontSize: 11, fontWeight: 900, color: "#666", textTransform: "uppercase" }}>
             Last Call Date
@@ -5137,17 +5076,6 @@ return (
             {__repeatCallHasCallbackHistory ? " • Callback history" : ""}
           </div>
         </div>
-
-        {__repeatCallHasComponentFocus ? (
-          <div style={{ border: "1px solid #ead9a4", borderRadius: 10, padding: 10, background: "#fffdf7" }}>
-            <div style={{ fontSize: 11, fontWeight: 900, color: "#666", textTransform: "uppercase" }}>
-              Component History Count
-            </div>
-            <div style={{ marginTop: 4, fontWeight: 700 }}>
-              {__repeatCallMatchingComponentHistory.length}
-            </div>
-          </div>
-        ) : null}
       </div>
     </div>
   );
