@@ -3543,23 +3543,6 @@ async function updateCurrentLoadedUnit() {
 }
 
 async function saveCurrentUnit() {
-    // unit-tag-save-guard-v1
-    const __unitTagGuardCustomer = String(customerName ?? "").trim();
-    const __unitTagGuardSite = String(siteName ?? "").trim();
-    const __unitTagGuardTag = String(unitNickname ?? "").trim();
-    const __unitTagGuardSiteUnits = Array.isArray(siteUnitsAtLocation) ? siteUnitsAtLocation : [];
-    if (
-      __unitTagGuardCustomer &&
-      __unitTagGuardSite &&
-      __unitTagGuardSiteUnits.length >= 2 &&
-      !__unitTagGuardTag
-    ) {
-      const proceedWithoutTag = window.confirm(
-        "This site already has multiple saved units. Saving without a Unit Nickname / Tag can mix units up. Use a clear tag like RTU-1, RTU-2, WIC-1, Reach-In 3, or Merchandiser 2. Save anyway?"
-      );
-      if (!proceedWithoutTag) return;
-    }
-
 
   const siteUnitCount = siteUnitsAtLocation.length;
   if (
@@ -4653,7 +4636,7 @@ return (
               />
             </div>
             <div>
-              <label style={{ fontWeight: 900, fontSize: 16 }}>Unit Nickname / Tag *</label>
+              <label style={{ fontWeight: 900, fontSize: 16 }}>Unit Nickname / Tag</label>
           <SmallHint>
             Use a clear unit tag like RTU-1, RTU-2, WIC-1, Reach-In 3, or Merchandiser 2.
           </SmallHint>
