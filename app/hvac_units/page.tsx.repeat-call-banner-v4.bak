@@ -1169,6 +1169,109 @@ function buildEquipmentMemoryInsight(
 
   const causeItems = related.flatMap((r) => {
     const parsed = parseDiagnosis(r.rawResult || "");
+    // repeat-call-derived-v3
+    const __repeatCallHistoryRawCandidate = unitProfileTimeline;
+    const __repeatCallHistoryRaw = Array.isArray(__repeatCallHistoryRawCandidate)
+      ? __repeatCallHistoryRawCandidate
+      : [];
+    const __repeatCallHistory = __repeatCallHistoryRaw.filter(
+      (event): event is Record<string, any> => !!event && typeof event === "object"
+    );
+
+    const __repeatCallStr = (value: unknown) => String(value ?? "").trim();
+    const __repeatCallBool = (value: unknown) =>
+      value === true ||
+      value === "true" ||
+      value === "yes" ||
+      value === "Yes" ||
+      value === 1 ||
+      value === "1";
+
+    const __repeatCallDateValue = (event: Record<string, any>) =>
+      event.completedAt ??
+      event.completed_at ??
+      event.serviceDate ??
+      event.service_date ??
+      event.callDate ??
+      event.date ??
+      event.createdAt ??
+      event.created_at ??
+      null;
+
+    const __repeatCallSortTime = (value: unknown) => {
+      if (!value) return 0;
+      const ms = new Date(String(value)).getTime();
+      return Number.isFinite(ms) ? ms : 0;
+    };
+
+    const __repeatCallSorted = [...__repeatCallHistory].sort(
+      (a, b) => __repeatCallSortTime(__repeatCallDateValue(b)) - __repeatCallSortTime(__repeatCallDateValue(a))
+    );
+
+    const __repeatCallLast = __repeatCallSorted[0] ?? null;
+
+    const __repeatCallLastDateRaw = __repeatCallLast ? __repeatCallDateValue(__repeatCallLast) : "";
+    const __repeatCallLastDateLabel =
+      __repeatCallSortTime(__repeatCallLastDateRaw) > 0
+        ? new Date(String(__repeatCallLastDateRaw)).toLocaleDateString()
+        : "";
+
+    const __repeatCallLastSymptom = __repeatCallLast
+      ? __repeatCallStr(__repeatCallLast.symptom) ||
+        __repeatCallStr(__repeatCallLast.issue) ||
+        __repeatCallStr(__repeatCallLast.problem) ||
+        __repeatCallStr(__repeatCallLast.complaint)
+      : "";
+
+    const __repeatCallLastCause = __repeatCallLast
+      ? __repeatCallStr(__repeatCallLast.confirmedCause) ||
+        __repeatCallStr(__repeatCallLast.cause) ||
+        __repeatCallStr(__repeatCallLast.diagnosis) ||
+        __repeatCallStr(__repeatCallLast.rootCause)
+      : "";
+
+    const __repeatCallLastFix = __repeatCallLast
+      ? __repeatCallStr(__repeatCallLast.actualFix) ||
+        __repeatCallStr(__repeatCallLast.fix) ||
+        __repeatCallStr(__repeatCallLast.repairAction) ||
+        __repeatCallStr(__repeatCallLast.resolution)
+      : "";
+
+    const __repeatCallLastPartsValue = __repeatCallLast
+      ? (__repeatCallLast.partsReplaced ??
+          __repeatCallLast.parts_used ??
+          __repeatCallLast.parts ??
+          __repeatCallLast.part ??
+          "")
+      : "";
+
+    const __repeatCallLastPartsLabel = Array.isArray(__repeatCallLastPartsValue)
+      ? __repeatCallLastPartsValue
+          .map((part: unknown) => __repeatCallStr(part))
+          .filter(Boolean)
+          .join(", ")
+      : __repeatCallStr(__repeatCallLastPartsValue);
+
+    const __repeatCallSameSymptomCount = __repeatCallLastSymptom
+      ? __repeatCallHistory.filter((event) => {
+          const eventSymptom =
+            __repeatCallStr(event.symptom) ||
+            __repeatCallStr(event.issue) ||
+            __repeatCallStr(event.problem) ||
+            __repeatCallStr(event.complaint);
+          return eventSymptom && eventSymptom.toLowerCase() === __repeatCallLastSymptom.toLowerCase();
+        }).length
+      : 0;
+
+    const __repeatCallHasCallbackHistory = __repeatCallHistory.some(
+      (event) =>
+        __repeatCallBool(event.callback) ||
+        __repeatCallBool(event.isCallback) ||
+        __repeatCallBool(event.callbackVisit) ||
+        __repeatCallBool(event.is_callback)
+    );
+
+    const __showRepeatCallBanner = __repeatCallHistory.length > 0;
     return (parsed?.likely_causes || [])
       .map((c) => (c.cause || "").trim())
       .filter(Boolean);
@@ -4383,201 +4486,6 @@ return (
   </button>
 </div>
 
-{/* repeat-call-banner-v3 */}
-{(() => {
-  const __repeatCallHistory =
-    (Array.isArray(unitServiceTimeline) && unitServiceTimeline.length
-      ? unitServiceTimeline
-      : Array.isArray(unitProfileTimeline)
-        ? unitProfileTimeline
-        : []);
-
-  if (!__repeatCallHistory.length) return null;
-
-  const __repeatCallGetRecord = (event: unknown): Record<string, unknown> | null => {
-    if (event && typeof event === "object") {
-      return event as Record<string, unknown>;
-    }
-    return null;
-  };
-
-  const __repeatCallGetString = (event: unknown, keys: string[]) => {
-    const record = __repeatCallGetRecord(event);
-    if (!record) return "";
-    for (const key of keys) {
-      const value = record[key];
-      if (typeof value === "string" && value.trim()) return value.trim();
-      if (typeof value === "number") return String(value);
-    }
-    return "";
-  };
-
-  const __repeatCallGetBool = (event: unknown, keys: string[]) => {
-    const record = __repeatCallGetRecord(event);
-    if (!record) return false;
-    for (const key of keys) {
-      const value = record[key];
-      if (
-        value === true ||
-        value === "true" ||
-        value === "yes" ||
-        value === "Yes" ||
-        value === 1 ||
-        value === "1"
-      ) {
-        return true;
-      }
-    }
-    return false;
-  };
-
-  const __repeatCallGetTime = (event: unknown) => {
-    const raw =
-      __repeatCallGetString(event, ["service_date", "created_at", "updated_at", "date"]) || "";
-    if (!raw) return 0;
-    const ms = new Date(raw).getTime();
-    return Number.isFinite(ms) ? ms : 0;
-  };
-
-  const __repeatCallSorted = [...__repeatCallHistory].sort(
-    (a, b) => __repeatCallGetTime(b) - __repeatCallGetTime(a)
-  );
-
-  const __repeatCallLast = __repeatCallSorted[0] ?? null;
-  const __repeatCallLastDateRaw =
-    __repeatCallGetString(__repeatCallLast, ["service_date", "created_at", "updated_at", "date"]) || "";
-  const __repeatCallLastDateLabel = __repeatCallLastDateRaw
-    ? new Date(__repeatCallLastDateRaw).toLocaleDateString()
-    : "";
-
-  const __repeatCallLastSymptom =
-    __repeatCallGetString(__repeatCallLast, ["symptom", "customer_complaint", "complaint"]) || "";
-
-  const __repeatCallLastCause =
-    __repeatCallGetString(__repeatCallLast, [
-      "confirmed_cause",
-      "confirmedCause",
-      "cause",
-      "diagnosis",
-      "root_cause",
-      "rootCause",
-    ]) || "";
-
-  const __repeatCallLastFix =
-    __repeatCallGetString(__repeatCallLast, [
-      "actual_fix",
-      "actualFix",
-      "fix",
-      "repair_action",
-      "repairAction",
-      "resolution",
-    ]) || "";
-
-  const __repeatCallLastParts =
-    __repeatCallGetString(__repeatCallLast, [
-      "parts_replaced",
-      "partsReplaced",
-      "parts_used",
-      "partsUsed",
-      "parts",
-      "part",
-    ]) || "";
-
-  const __repeatCallSameSymptomCount = __repeatCallLastSymptom
-    ? __repeatCallHistory.filter((event) => {
-        const symptom =
-          __repeatCallGetString(event, ["symptom", "customer_complaint", "complaint"]) || "";
-        return symptom && symptom.toLowerCase() == __repeatCallLastSymptom.toLowerCase();
-      }).length
-    : 0;
-
-  const __repeatCallHasCallbackHistory = __repeatCallHistory.some((event) =>
-    __repeatCallGetBool(event, [
-      "callback",
-      "is_callback",
-      "isCallback",
-      "callback_visit",
-      "callbackVisit",
-    ])
-  );
-
-  return (
-    <div
-      style={{
-        marginTop: 16,
-        border: "1px solid #f0c36d",
-        borderRadius: 12,
-        padding: 12,
-        background: "#fff8e8",
-      }}
-    >
-      <div style={{ fontWeight: 900, fontSize: 16 }}>
-        Repeat Call / Prior Visit Signal
-      </div>
-
-      <div style={{ marginTop: 4, fontSize: 13, color: "#555" }}>
-        This unit already has service history. Review the last visit before entering a new call.
-      </div>
-
-      <div
-        style={{
-          marginTop: 10,
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-          gap: 10,
-        }}
-      >
-        <div style={{ border: "1px solid #ead9a4", borderRadius: 10, padding: 10, background: "#fffdf7" }}>
-          <div style={{ fontSize: 11, fontWeight: 900, color: "#666", textTransform: "uppercase" }}>
-            Last Call Date
-          </div>
-          <div style={{ marginTop: 4, fontWeight: 700 }}>{__repeatCallLastDateLabel || "—"}</div>
-        </div>
-
-        <div style={{ border: "1px solid #ead9a4", borderRadius: 10, padding: 10, background: "#fffdf7" }}>
-          <div style={{ fontSize: 11, fontWeight: 900, color: "#666", textTransform: "uppercase" }}>
-            Last Symptom
-          </div>
-          <div style={{ marginTop: 4, fontWeight: 700 }}>{__repeatCallLastSymptom || "—"}</div>
-        </div>
-
-        <div style={{ border: "1px solid #ead9a4", borderRadius: 10, padding: 10, background: "#fffdf7" }}>
-          <div style={{ fontSize: 11, fontWeight: 900, color: "#666", textTransform: "uppercase" }}>
-            Most Recent Cause
-          </div>
-          <div style={{ marginTop: 4, fontWeight: 700 }}>{__repeatCallLastCause || "—"}</div>
-        </div>
-
-        <div style={{ border: "1px solid #ead9a4", borderRadius: 10, padding: 10, background: "#fffdf7" }}>
-          <div style={{ fontSize: 11, fontWeight: 900, color: "#666", textTransform: "uppercase" }}>
-            Most Recent Fix
-          </div>
-          <div style={{ marginTop: 4, fontWeight: 700 }}>{__repeatCallLastFix || "—"}</div>
-        </div>
-
-        <div style={{ border: "1px solid #ead9a4", borderRadius: 10, padding: 10, background: "#fffdf7" }}>
-          <div style={{ fontSize: 11, fontWeight: 900, color: "#666", textTransform: "uppercase" }}>
-            Last Parts Used
-          </div>
-          <div style={{ marginTop: 4, fontWeight: 700 }}>{__repeatCallLastParts || "—"}</div>
-        </div>
-
-        <div style={{ border: "1px solid #ead9a4", borderRadius: 10, padding: 10, background: "#fffdf7" }}>
-          <div style={{ fontSize: 11, fontWeight: 900, color: "#666", textTransform: "uppercase" }}>
-            History Signal
-          </div>
-          <div style={{ marginTop: 4, fontWeight: 700 }}>
-            {__repeatCallSameSymptomCount > 1
-              ? `${__repeatCallSameSymptomCount} similar symptom calls`
-              : "Prior service history found"}
-            {__repeatCallHasCallbackHistory ? " • Callback history" : ""}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-})()}
-
 {!historicalEntryMode ? (
       <div style={{ marginTop: 16 }}>
         <SectionCard title="Company Admin / Add Tech">
@@ -7711,7 +7619,58 @@ return (
 
 {repairGuidanceMode === "apprentice" ? (
   <>
-    <div style={{ marginTop: 8 }}>
+    
+      {__showRepeatCallBanner ? (
+        <div className="mb-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4">
+          {/* repeat-call-banner-v1 */}
+          <div className="flex flex-col gap-1">
+            <div className="text-sm font-semibold text-amber-100">
+              Repeat Call / Prior Visit Signal
+            </div>
+            <div className="text-xs text-amber-200/90">
+              This unit already has service history. Review the last visit before entering a new call.
+            </div>
+          </div>
+
+          <div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+            <div className="rounded-xl border border-white/10 bg-black/10 p-3">
+              <div className="text-[11px] uppercase tracking-wide text-white/60">Last Call Date</div>
+              <div className="mt-1 text-sm text-white">{__repeatCallLastDateLabel || "—"}</div>
+            </div>
+
+            <div className="rounded-xl border border-white/10 bg-black/10 p-3">
+              <div className="text-[11px] uppercase tracking-wide text-white/60">Last Symptom</div>
+              <div className="mt-1 text-sm text-white">{__repeatCallLastSymptom || "—"}</div>
+            </div>
+
+            <div className="rounded-xl border border-white/10 bg-black/10 p-3">
+              <div className="text-[11px] uppercase tracking-wide text-white/60">Most Recent Cause</div>
+              <div className="mt-1 text-sm text-white">{__repeatCallLastCause || "—"}</div>
+            </div>
+
+            <div className="rounded-xl border border-white/10 bg-black/10 p-3">
+              <div className="text-[11px] uppercase tracking-wide text-white/60">Most Recent Fix</div>
+              <div className="mt-1 text-sm text-white">{__repeatCallLastFix || "—"}</div>
+            </div>
+
+            <div className="rounded-xl border border-white/10 bg-black/10 p-3">
+              <div className="text-[11px] uppercase tracking-wide text-white/60">Last Parts Used</div>
+              <div className="mt-1 text-sm text-white">{__repeatCallLastPartsLabel || "—"}</div>
+            </div>
+
+            <div className="rounded-xl border border-white/10 bg-black/10 p-3">
+              <div className="text-[11px] uppercase tracking-wide text-white/60">History Signal</div>
+              <div className="mt-1 text-sm text-white">
+                {__repeatCallSameSymptomCount > 1
+                  ? `${__repeatCallSameSymptomCount} similar symptom calls`
+                  : "Prior service history found"}
+                {__repeatCallHasCallbackHistory ? " • Callback history" : ""}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+<div style={{ marginTop: 8 }}>
       <div style={{ fontWeight: 900 }}>Tool to use</div>
       <SmallHint style={{ marginTop: 4 }}>{item.toolToUse}</SmallHint>
     </div>
