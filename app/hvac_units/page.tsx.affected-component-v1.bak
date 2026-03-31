@@ -2879,118 +2879,6 @@ const [checkedInsideForInternalLabel, setCheckedInsideForInternalLabel] = useSta
         return records.map((record) => mergeLinkedEquipmentOverlayIntoSavedUnit(record));
       }
 
-      // affected-component-overlay-v1
-      const [affectedComponentId, setAffectedComponentId] = useState("");
-      const [affectedComponentLabel, setAffectedComponentLabel] = useState("");
-
-      type AffectedComponentOverlayRecord = {
-        affectedComponentId: string;
-        affectedComponentLabel: string;
-      };
-
-      const AFFECTED_COMPONENT_OVERLAY_KEY = "skilled_trades_ai_affected_component_overlay_v1";
-
-      function loadAffectedComponentOverlayMap(): Record<string, AffectedComponentOverlayRecord> {
-        if (typeof window === "undefined") return {};
-        try {
-          const raw = localStorage.getItem(AFFECTED_COMPONENT_OVERLAY_KEY);
-          if (!raw) return {};
-          const parsed = JSON.parse(raw);
-          return parsed && typeof parsed === "object" ? parsed : {};
-        } catch {
-          return {};
-        }
-      }
-
-      function saveAffectedComponentOverlayMap(map: Record<string, AffectedComponentOverlayRecord>) {
-        if (typeof window === "undefined") return;
-        localStorage.setItem(AFFECTED_COMPONENT_OVERLAY_KEY, JSON.stringify(map));
-      }
-
-      function getPrimaryAffectedComponentLabel() {
-        const roleLabel =
-          primaryComponentRole
-            ? primaryComponentRole.replaceAll("_", " ")
-            : "primary component";
-
-        const detail = [
-          unitNickname || "",
-          manufacturer || "",
-          model || "",
-          serialNumber || "",
-        ].filter(Boolean).join(" • ");
-
-        return detail ? `${roleLabel} — ${detail}` : roleLabel;
-      }
-
-      function getAffectedComponentOptions(): Array<{ id: string; label: string }> {
-        const options: Array<{ id: string; label: string }> = [
-          {
-            id: "primary",
-            label: getPrimaryAffectedComponentLabel(),
-          },
-        ];
-
-        if (Array.isArray(linkedEquipmentComponents)) {
-          for (const component of linkedEquipmentComponents) {
-            const labelBits = [
-              component.role ? String(component.role).replaceAll("_", " ") : "linked component",
-              component.tag || "",
-              component.manufacturer || "",
-              component.model || "",
-              component.serial || "",
-            ].filter(Boolean);
-
-            options.push({
-              id: String(component.id || ""),
-              label: labelBits.join(" • "),
-            });
-          }
-        }
-
-        return options.filter((option) => option.id && option.label);
-      }
-
-      function resolveAffectedComponentSelection() {
-        const options = getAffectedComponentOptions();
-
-        if (affectedComponentId.trim()) {
-          const selected = options.find((option) => option.id === affectedComponentId.trim());
-          return {
-            id: affectedComponentId.trim(),
-            label: affectedComponentLabel.trim() || selected?.label || affectedComponentId.trim(),
-          };
-        }
-
-        if (systemType === "single" && options.length) {
-          return options[0];
-        }
-
-        return { id: "", label: "" };
-      }
-
-      function saveAffectedComponentOverlayForEvent(eventId: string, componentId: string, componentLabel: string) {
-        if (!eventId) return;
-        const map = loadAffectedComponentOverlayMap();
-        map[eventId] = {
-          affectedComponentId: componentId,
-          affectedComponentLabel: componentLabel,
-        };
-        saveAffectedComponentOverlayMap(map);
-      }
-
-      function getAffectedComponentOverlayForEvent(eventId: string) {
-        if (!eventId) return null;
-        const map = loadAffectedComponentOverlayMap();
-        return map[eventId] || null;
-      }
-
-      function getAffectedComponentDisplayForEvent(event: any) {
-        if (!event?.id) return "";
-        const overlay = getAffectedComponentOverlayForEvent(String(event.id));
-        return overlay?.affectedComponentLabel || "";
-      }
-
 const [showBulkImportTools, setShowBulkImportTools] = useState(false);
 
   const [workOrderImportText, setWorkOrderImportText] = useState("");
@@ -4121,7 +4009,6 @@ const siteUnitCount = siteUnitsAtLocation.length;
 
   
 function loadServiceEventIntoForm(event: any) {
-  const overlay = getAffectedComponentOverlayForEvent(String(event?.id || ""));
   setEditingServiceEventId(event.id || "");
   setServiceDate(event.service_date ? String(event.service_date).slice(0, 10) : new Date().toISOString().slice(0, 10));
   setSymptom(event.symptom || "");
@@ -4133,8 +4020,6 @@ function loadServiceEventIntoForm(event: any) {
   setTechCloseoutNotes(event.tech_closeout_notes || "");
   setServiceEventPhotoUrls(Array.isArray(event.photo_urls) ? event.photo_urls : []);
   setServiceEventPhotoMessage("");
-  setAffectedComponentId(overlay?.affectedComponentId || "");
-  setAffectedComponentLabel(overlay?.affectedComponentLabel || "");
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -4150,8 +4035,6 @@ function cancelEditingServiceEvent() {
   setTechCloseoutNotes("");
   setServiceEventPhotoUrls([]);
   setServiceEventPhotoMessage("");
-  setAffectedComponentId("");
-  setAffectedComponentLabel("");
 }
 
 async function updateCurrentServiceEvent() {
@@ -4165,15 +4048,8 @@ async function updateCurrentServiceEvent() {
     return;
   }
 
-  const affectedSelection = resolveAffectedComponentSelection();
-
-  if (systemType !== "single" && !affectedSelection.id) {
-    alert("Select the affected component before updating this service event.");
-    return;
-  }
-
   try {
-    const updatedEvent = await updateServiceEventForCurrentUser(editingServiceEventId, {
+    await updateServiceEventForCurrentUser(editingServiceEventId, {
       unit_id: currentLoadedUnitId,
       company_name: companyName || "",
       service_date: serviceDate
@@ -4190,12 +4066,6 @@ async function updateCurrentServiceEvent() {
       photo_urls: serviceEventPhotoUrls,
     });
 
-    saveAffectedComponentOverlayForEvent(
-      updatedEvent?.id || editingServiceEventId,
-      affectedSelection.id,
-      affectedSelection.label
-    );
-
     await loadUnitServiceTimeline(currentLoadedUnitId);
     alert("Service event updated.");
     cancelEditingServiceEvent();
@@ -4211,15 +4081,8 @@ async function saveCurrentCallAsServiceEvent() {
     return;
   }
 
-  const affectedSelection = resolveAffectedComponentSelection();
-
-  if (systemType !== "single" && !affectedSelection.id) {
-    alert("Select the affected component before saving this service event.");
-    return;
-  }
-
   try {
-    const createdEvent = await createServiceEventForCurrentUser({
+    await createServiceEventForCurrentUser({
       id: makeId(),
       unit_id: currentLoadedUnitId,
       company_name: companyName || "",
@@ -4237,17 +4100,9 @@ async function saveCurrentCallAsServiceEvent() {
       photo_urls: serviceEventPhotoUrls,
     });
 
-    saveAffectedComponentOverlayForEvent(
-      createdEvent?.id || "",
-      affectedSelection.id,
-      affectedSelection.label
-    );
-
     await loadUnitServiceTimeline(currentLoadedUnitId);
     setServiceEventPhotoUrls([]);
     setServiceEventPhotoMessage("");
-    setAffectedComponentId(systemType === "single" ? "" : affectedSelection.id);
-    setAffectedComponentLabel(systemType === "single" ? "" : affectedSelection.label);
     alert("Current call saved to the unit timeline.");
   } catch (err) {
     console.error("SAVE CURRENT CALL FAILED", err);
@@ -4261,15 +4116,8 @@ async function saveHistoricalCallAndReset() {
     return;
   }
 
-  const affectedSelection = resolveAffectedComponentSelection();
-
-  if (systemType !== "single" && !affectedSelection.id) {
-    alert("Select the affected component before saving this historical service event.");
-    return;
-  }
-
   try {
-    const createdEvent = await createServiceEventForCurrentUser({
+    await createServiceEventForCurrentUser({
       id: makeId(),
       unit_id: currentLoadedUnitId,
       company_name: companyName || "",
@@ -4287,12 +4135,6 @@ async function saveHistoricalCallAndReset() {
       photo_urls: serviceEventPhotoUrls,
     });
 
-    saveAffectedComponentOverlayForEvent(
-      createdEvent?.id || "",
-      affectedSelection.id,
-      affectedSelection.label
-    );
-
     await loadUnitServiceTimeline(currentLoadedUnitId);
     setServiceDate(new Date().toISOString().slice(0, 10));
     setSymptom("");
@@ -4301,8 +4143,6 @@ async function saveHistoricalCallAndReset() {
     setOutcomeStatus("Not Set");
     setCallbackOccurred("No");
     setTechCloseoutNotes("");
-    setAffectedComponentId("");
-    setAffectedComponentLabel("");
     setServiceEventPhotoUrls([]);
     setServiceEventPhotoMessage("");
     alert("Historical call saved. Enter the next call for this same unit.");
@@ -5882,56 +5722,6 @@ return (
             </div>
           </SectionCard>
         </div>
-
-      {/* affected-component-ui-v1 */}
-      <div style={{ marginTop: 16 }}>
-        <SectionCard title="Affected Component for This Call">
-          <SmallHint>
-            Select the exact piece of equipment this call is about. This is required for split systems,
-            walk-ins, mini-splits, and any multi-component setup so history stays tied to the right component.
-          </SmallHint>
-
-          {(() => {
-            const options = getAffectedComponentOptions();
-            return (
-              <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
-                <select
-                  value={affectedComponentId}
-                  onChange={(e) => {
-                    const nextId = e.target.value;
-                    const selected = options.find((option) => option.id === nextId);
-                    setAffectedComponentId(nextId);
-                    setAffectedComponentLabel(selected?.label || "");
-                  }}
-                  style={{ width: "100%", padding: 8 }}
-                >
-                  <option value="">Select affected component</option>
-                  {options.map((option) => (
-                    <option key={option.id} value={option.id}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-
-                {affectedComponentId ? (
-                  <SmallHint>
-                    Selected: <b>{affectedComponentLabel || affectedComponentId}</b>
-                  </SmallHint>
-                ) : systemType !== "single" ? (
-                  <SmallHint>
-                    Required for multi-component systems.
-                  </SmallHint>
-                ) : (
-                  <SmallHint>
-                    For single-equipment calls this will default to the primary component if you leave it blank.
-                  </SmallHint>
-                )}
-              </div>
-            );
-          })()}
-        </SectionCard>
-      </div>
-
 <div style={{ marginTop: 16, display: showSavedUnitHistory ? "block" : "none" }}>
   <SectionCard title="Unit Service Timeline">
     <SmallHint>
@@ -5971,15 +5761,6 @@ return (
             <div style={{ marginTop: 4 }}>
               <SmallHint><b>Confirmed Cause:</b> {event.final_confirmed_cause || "-"}</SmallHint>
             </div>
-
-            {getAffectedComponentDisplayForEvent(event) ? (
-              <div style={{ marginTop: 4 }}>
-                <SmallHint>
-                  {/* affected-component-display-v1 */}
-                  <b>Affected Component:</b> {getAffectedComponentDisplayForEvent(event)}
-                </SmallHint>
-              </div>
-            ) : null}
 
             <div style={{ marginTop: 4 }}>
               <SmallHint><b>Parts Replaced:</b> {event.parts_replaced || "-"}</SmallHint>
@@ -9370,15 +9151,6 @@ return (
                       <div style={{ marginTop: 4 }}>
                         <SmallHint><b>Confirmed Cause:</b> {event.final_confirmed_cause || "-"}</SmallHint>
                       </div>
-
-                      {getAffectedComponentDisplayForEvent(event) ? (
-                        <div style={{ marginTop: 4 }}>
-                          <SmallHint>
-                            {/* affected-component-display-v2 */}
-                            <b>Affected Component:</b> {getAffectedComponentDisplayForEvent(event)}
-                          </SmallHint>
-                        </div>
-                      ) : null}
 
                       <div style={{ marginTop: 4 }}>
                         <SmallHint><b>Parts Replaced:</b> {event.parts_replaced || "-"}</SmallHint>
