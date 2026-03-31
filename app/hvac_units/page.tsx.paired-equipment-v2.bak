@@ -2708,13 +2708,6 @@ const [showSavedUnitHistory, setShowSavedUnitHistory] = useState(false);
   const [unitServiceTimelineLoading, setUnitServiceTimelineLoading] = useState(false);
   const [unitServiceTimelineMessage, setUnitServiceTimelineMessage] = useState("");
 
-// paired-equipment-state-v2
-const [pairedEquipmentType, setPairedEquipmentType] = useState("none");
-const [secondaryUnitTag, setSecondaryUnitTag] = useState("");
-const [unitTagStatus, setUnitTagStatus] = useState<"readable" | "partial" | "unreadable">("readable");
-const [tagIssueReason, setTagIssueReason] = useState("");
-const [checkedInsideForInternalLabel, setCheckedInsideForInternalLabel] = useState(false);
-
   const [showBulkImportTools, setShowBulkImportTools] = useState(false);
 
   const [workOrderImportText, setWorkOrderImportText] = useState("");
@@ -3568,49 +3561,7 @@ async function saveCurrentUnit() {
     }
 
 
-  
-// paired-equipment-save-guard-v2
-const __pairedType = String(pairedEquipmentType ?? "").trim();
-const __secondaryTag = String(secondaryUnitTag ?? "").trim();
-const __unitTagState = String(unitTagStatus ?? "readable").trim();
-const __tagIssueReason = String(tagIssueReason ?? "").trim();
-const __hasPrimaryTag = String(unitNickname ?? "").trim().length > 0;
-const __hasSupportId =
-  String(manufacturer ?? "").trim().length > 0 ||
-  String(model ?? "").trim().length > 0 ||
-  String(nameplate?.serial ?? "").trim().length > 0 ||
-  __secondaryTag.length > 0;
-
-if (__pairedType && __pairedType !== "none" && !__secondaryTag) {
-  const continueWithoutMateTag = window.confirm(
-    "This looks like paired equipment. Add the secondary / mate tag if available so linked equipment does not get mixed up. Save anyway without the mate tag?"
-  );
-  if (!continueWithoutMateTag) return;
-}
-
-if (__unitTagState !== "readable") {
-  if (!checkedInsideForInternalLabel) {
-    window.alert(
-      "Before saving a partial or unreadable tag, check inside the electrical, fan, or control area for an internal label and confirm that step."
-    );
-    return;
-  }
-
-  if (!__tagIssueReason) {
-    window.alert(
-      "Add a short reason explaining why the tag is partial or unreadable before saving."
-    );
-    return;
-  }
-
-  if (!__hasPrimaryTag && !__hasSupportId) {
-    window.alert(
-      "Do not save a damaged or unreadable tag without at least one supporting identifier like manufacturer, model, serial, or mate tag."
-    );
-    return;
-  }
-}
-const siteUnitCount = siteUnitsAtLocation.length;
+  const siteUnitCount = siteUnitsAtLocation.length;
   if (
     customerName.trim() &&
     siteName.trim() &&
@@ -4626,152 +4577,6 @@ return (
     </div>
   );
 })()}
-
-{/* paired-equipment-ui-v2 */}
-<SectionCard title="Paired Equipment / Tag Identity">
-  <div
-    style={{
-      display: "grid",
-      gap: 10,
-    }}
-  >
-    <SmallHint>
-      Use this when one call involves two linked pieces of equipment like outdoor + indoor,
-      condensing unit + evaporator, furnace + AC, or mini-split outdoor + indoor.
-    </SmallHint>
-
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-        gap: 10,
-      }}
-    >
-      <label style={{ display: "grid", gap: 6 }}>
-        <span style={{ fontWeight: 900 }}>Paired Equipment Type</span>
-        <select
-          value={pairedEquipmentType}
-          onChange={(e) => setPairedEquipmentType(e.target.value)}
-          style={{
-            padding: 10,
-            border: "1px solid #cfcfcf",
-            borderRadius: 10,
-            background: "#fff",
-          }}
-        >
-          <option value="none">None / single piece of equipment</option>
-          <option value="split_system">Split system</option>
-          <option value="furnace_ac">Furnace + AC</option>
-          <option value="heat_pump_air_handler">Heat pump + air handler</option>
-          <option value="walk_in_condensing_evap">Walk-in condensing unit + evaporator</option>
-          <option value="mini_split">Mini-split outdoor + indoor</option>
-          <option value="other_paired">Other paired system</option>
-        </select>
-      </label>
-
-      <label style={{ display: "grid", gap: 6 }}>
-        <span style={{ fontWeight: 900 }}>Secondary / Mate Tag</span>
-        <input
-          value={secondaryUnitTag}
-          onChange={(e) => setSecondaryUnitTag(e.target.value)}
-          placeholder="Example: AHU-1, EVAP-1, Indoor Head 2"
-          style={{
-            padding: 10,
-            border: "1px solid #cfcfcf",
-            borderRadius: 10,
-            background: "#fff",
-          }}
-        />
-      </label>
-
-      <label style={{ display: "grid", gap: 6 }}>
-        <span style={{ fontWeight: 900 }}>Tag Status</span>
-        <select
-          value={unitTagStatus}
-          onChange={(e) => setUnitTagStatus(e.target.value as "readable" | "partial" | "unreadable")}
-          style={{
-            padding: 10,
-            border: "1px solid #cfcfcf",
-            borderRadius: 10,
-            background: "#fff",
-          }}
-        >
-          <option value="readable">Readable</option>
-          <option value="partial">Partial / damaged</option>
-          <option value="unreadable">Unreadable / destroyed</option>
-        </select>
-      </label>
-    </div>
-
-    {pairedEquipmentType !== "none" && !secondaryUnitTag.trim() ? (
-      <div
-        style={{
-          border: "1px solid #f0c36d",
-          borderRadius: 10,
-          padding: 10,
-          background: "#fff8e8",
-          fontWeight: 700,
-        }}
-      >
-        This looks like paired equipment. Add the mate tag if available so indoor/outdoor or
-        condensing/evaporator equipment does not get mixed up.
-      </div>
-    ) : null}
-
-    {unitTagStatus !== "readable" ? (
-      <div
-        style={{
-          border: "1px solid #f0c36d",
-          borderRadius: 10,
-          padding: 12,
-          background: "#fff8e8",
-          display: "grid",
-          gap: 10,
-        }}
-      >
-        <div style={{ fontWeight: 900 }}>Damaged or unreadable tag workflow</div>
-
-        <SmallHint>
-          Some manufacturers place another label inside the electrical, fan, or control compartment.
-          Check inside the unit before saving incomplete tag information.
-        </SmallHint>
-
-        <label style={{ display: "grid", gap: 6 }}>
-          <span style={{ fontWeight: 900 }}>Reason tag could not be fully read</span>
-          <textarea
-            value={tagIssueReason}
-            onChange={(e) => setTagIssueReason(e.target.value)}
-            placeholder="Example: Outdoor tag sun-faded, serial unreadable. Checked inside electrical compartment and found partial model only."
-            rows={3}
-            style={{
-              padding: 10,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#fff",
-            }}
-          />
-        </label>
-
-        <label
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            fontWeight: 700,
-          }}
-        >
-          <input
-            type="checkbox"
-            checked={checkedInsideForInternalLabel}
-            onChange={(e) => setCheckedInsideForInternalLabel(e.target.checked)}
-          />
-          I checked inside the electrical / fan / control area for an internal label.
-        </label>
-      </div>
-    ) : null}
-  </div>
-</SectionCard>
-
 
 {!historicalEntryMode ? (
       <div style={{ marginTop: 16 }}>
