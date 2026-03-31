@@ -3543,6 +3543,20 @@ async function updateCurrentLoadedUnit() {
 }
 
 async function saveCurrentUnit() {
+
+  const siteUnitCount = siteUnitsAtLocation.length;
+  if (
+    customerName.trim() &&
+    siteName.trim() &&
+    siteUnitCount > 1 &&
+    !unitNickname.trim()
+  ) {
+    alert(
+      "This site already has multiple saved units. Add a clear Unit Nickname / Tag before saving so this unit does not get confused with others at the same location."
+    );
+    return;
+  }
+
   const likelyDuplicateWithoutSerial = findLikelyDuplicateWithoutSerial();
   if (likelyDuplicateWithoutSerial) {
     alert(
@@ -4622,7 +4636,10 @@ return (
               />
             </div>
             <div>
-              <label style={{ fontWeight: 900 }}>Unit Nickname / Tag</label>
+              <label style={{ fontWeight: 900, fontSize: 16 }}>Unit Nickname / Tag</label>
+          <SmallHint>
+            Use a clear unit tag like RTU-1, RTU-2, WIC-1, Reach-In 3, or Merchandiser 2.
+          </SmallHint>
               <input
                 value={unitNickname}
                 onChange={(e) => setUnitNickname(e.target.value)}
