@@ -4098,7 +4098,6 @@ function browserSupportsSmartReadingsDictation() {
       const [showFailureDashboard, setShowFailureDashboard] = useState(false);
       // guided-next-test-engine-v2
       function buildGuidedNextTests() {
-        // guided-next-test-engine-v3
         const componentLabel = String(getCurrentAffectedComponentLabelForAssist() || "Primary component").trim();
         const componentLabelLower = componentLabel.toLowerCase();
         const equipment = String(equipmentType || "").trim().toLowerCase();
@@ -4106,57 +4105,6 @@ function browserSupportsSmartReadingsDictation() {
         const sameComponentHistory = getSameComponentHistoryForTroubleshooting();
         const recentParts = getRecentSameComponentPartsForAssist();
         const recentFix = getMostRecentSameComponentFixForAssist();
-
-        const suctionPressure = getObservationValue(
-          observations,
-          (l) => l === "suction pressure" || (l.includes("suction") && l.includes("pressure")),
-          "psi"
-        );
-
-        const headPressure = getObservationValue(
-          observations,
-          (l) =>
-            l === "head pressure" ||
-            ((l.includes("liquid") || l.includes("head") || l.includes("high")) && l.includes("pressure")),
-          "psi"
-        );
-
-        const returnAirTemp = getObservationValue(
-          observations,
-          (l) => l.includes("return air temp") || (l.includes("return") && l.includes("temp")),
-          "°F"
-        );
-
-        const supplyAirTemp = getObservationValue(
-          observations,
-          (l) => l.includes("supply air temp") || (l.includes("supply") && l.includes("temp")),
-          "°F"
-        );
-
-        const boxTemp = getObservationValue(
-          observations,
-          (l) => l.includes("box temp"),
-          "°F"
-        );
-
-        const ambientTemp = getObservationValue(
-          observations,
-          (l) =>
-            l.includes("ambient temp") ||
-            l.includes("outside temp") ||
-            l.includes("outdoor ambient") ||
-            l.includes("outdoor temp") ||
-            l.includes("oa temp"),
-          "°F"
-        );
-
-        const superheat = chargeAnalysis?.superheat ?? null;
-        const subcool = chargeAnalysis?.subcool ?? null;
-
-        const deltaT =
-          returnAirTemp !== null && supplyAirTemp !== null
-            ? Math.round((returnAirTemp - supplyAirTemp) * 10) / 10
-            : null;
 
         const tests: Array<{
           title: string;
@@ -4173,108 +4121,6 @@ function browserSupportsSmartReadingsDictation() {
             "Verify the selected affected component, confirm there is an active call on that component, and check disconnect / breaker / fuse / board output before deeper diagnosis.",
         });
 
-        // Readings-aware paths
-        if (superheat !== null && subcool !== null && superheat > 18 && subcool < 5) {
-          tests.push({
-            title: "High SH + low SC path",
-            tool: "Gauges + line temperatures + airflow check",
-            why: "This pattern leans toward underfeed, undercharge, or restriction.",
-            how:
-              "Verify airflow first, then check refrigerant feed path, obvious restrictions, and whether the system may be undercharged before replacing major parts.",
-          });
-        }
-
-        if (superheat !== null && subcool !== null && superheat < 6 && subcool > 15) {
-          tests.push({
-            title: "Low SH + high SC path",
-            tool: "Gauges + airflow + metering/device check",
-            why: "This pattern can point toward floodback, overfeed, or an airflow problem.",
-            how:
-              "Verify indoor / evaporator airflow, blower or fan operation, and metering behavior before condemning the compressor or charge condition.",
-          });
-        }
-
-        if (superheat !== null && subcool !== null && superheat > 18 && subcool > 15) {
-          tests.push({
-            title: "High SH + high SC path",
-            tool: "Gauges + liquid line temperature + restriction check",
-            why: "This pattern can indicate a liquid-line restriction or a feed problem.",
-            how:
-              "Check liquid line temperature drop, filter drier / restriction points, and the metering path before replacing components.",
-          });
-        }
-
-        if (superheat !== null && subcool !== null && superheat >= 6 && superheat <= 18 && subcool >= 5 && subcool <= 15) {
-          tests.push({
-            title: "Readings are not screaming charge problem first",
-            tool: "Meter + airflow / controls check",
-            why: "When SH/SC look reasonable, the next win is often electrical, control, or airflow related.",
-            how:
-              "Shift the next tests toward controls, fan operation, relays/contactors, safeties, and component-specific sequence checks before changing refrigerant-side parts.",
-          });
-        }
-
-        if (deltaT !== null && deltaT < 14 && (issue.includes("not cooling") || issue.includes("no cool"))) {
-          tests.push({
-            title: "Low air temperature split path",
-            tool: "Thermometer + airflow check",
-            why: "A weak split often points toward airflow, control, or charge/feed issues.",
-            how:
-              "Verify blower / fan operation, filter / coil condition, indoor airflow, and then compare refrigerant readings before replacing parts.",
-          });
-        }
-
-        if (deltaT !== null && deltaT > 24) {
-          tests.push({
-            title: "High air temperature split path",
-            tool: "Thermometer + airflow / freeze check",
-            why: "A very high split can point toward airflow restriction, icing, or low load conditions.",
-            how:
-              "Check filter / coil condition, fan performance, frost pattern, and actual load conditions before deciding the system is fixed or before replacing feed components.",
-          });
-        }
-
-        if (headPressure !== null && ambientTemp !== null && headPressure > ambientTemp * 3.2) {
-          tests.push({
-            title: "Heat rejection check first",
-            tool: "Gauges + visual condenser check",
-            why: "Head pressure is running hot against ambient conditions.",
-            how:
-              "Check condenser coil condition, fan operation, rotation, airflow blockage, and ambient / load conditions before condemning the refrigerant circuit.",
-          });
-        }
-
-        if (suctionPressure !== null && superheat !== null && superheat > 20) {
-          tests.push({
-            title: "Low-feed evaporator path",
-            tool: "Gauges + line temps + visual coil check",
-            why: "Low suction with high superheat leans toward a starved evaporator.",
-            how:
-              "Check airflow, frost pattern, metering device feed, and restriction points before replacing major components.",
-          });
-        }
-
-        if (suctionPressure !== null && superheat !== null && superheat < 5) {
-          tests.push({
-            title: "Floodback / overfeed path",
-            tool: "Gauges + airflow + metering check",
-            why: "Low superheat says do not rush to add charge or change compressors.",
-            how:
-              "Check evaporator airflow, metering device behavior, and whether the coil is overfeeding before making a major repair decision.",
-          });
-        }
-
-        if (boxTemp !== null && equipment.includes("walk-in")) {
-          tests.push({
-            title: "Use actual box temperature to set the next move",
-            tool: "Thermometer + control / defrost check",
-            why: "Walk-in decisions should track the real box condition, not just the complaint.",
-            how:
-              `Box temp is ${boxTemp}°F. Compare that against setpoint, product load, and defrost behavior before ordering parts.`,
-          });
-        }
-
-        // Component / symptom / history aware paths
         if (
           componentLabelLower.includes("condensing") ||
           componentLabelLower.includes("outdoor") ||
@@ -4411,7 +4257,7 @@ function browserSupportsSmartReadingsDictation() {
           if (seen.has(key)) return false;
           seen.add(key);
           return true;
-        }).slice(0, 6);
+        }).slice(0, 5);
       }
 
 const [showBulkImportTools, setShowBulkImportTools] = useState(false);
