@@ -3578,10 +3578,6 @@ const [checkedInsideForInternalLabel, setCheckedInsideForInternalLabel] = useSta
           .filter(Boolean) as Observation[];
 
         if (parsedObservationRows.length) {
-          setSmartReadingsUndoSnapshot(
-            Array.isArray(observations) ? observations.map((item) => ({ ...item })) : []
-          );
-
           setObservations((prev) => {
             const next = [...prev];
 
@@ -3719,24 +3715,6 @@ const [checkedInsideForInternalLabel, setCheckedInsideForInternalLabel] = useSta
           }
         }
         setSmartReadingsListening(false);
-      }
-
-      // smart-readings-undo-v1
-      const [smartReadingsUndoSnapshot, setSmartReadingsUndoSnapshot] = useState<Observation[] | null>(null);
-
-      function undoLastSmartReadingsParse() {
-        if (!smartReadingsUndoSnapshot) {
-          setSmartReadingsMessage("No parsed readings to undo.");
-          return;
-        }
-
-        setObservations(
-          Array.isArray(smartReadingsUndoSnapshot)
-            ? smartReadingsUndoSnapshot.map((item) => ({ ...item }))
-            : []
-        );
-        setSmartReadingsUndoSnapshot(null);
-        setSmartReadingsMessage("Last parsed readings were undone.");
       }
 
 const [showBulkImportTools, setShowBulkImportTools] = useState(false);
@@ -7297,26 +7275,6 @@ return (
                   }}
                 >
                   Parse Readings
-                </button>
-
-
-                <button
-                  type="button"
-                  onClick={undoLastSmartReadingsParse}
-                  disabled={!smartReadingsUndoSnapshot}
-                  style={{
-                    padding: "8px 12px",
-                    fontWeight: 900,
-                    border: "1px solid #cfcfcf",
-                    borderRadius: 10,
-                    background: "#ffffff",
-                    color: "#111",
-                    cursor: smartReadingsUndoSnapshot ? "pointer" : "not-allowed",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                    opacity: smartReadingsUndoSnapshot ? 1 : 0.7,
-                  }}
-                >
-                  Undo Last Parse
                 </button>
 
                 <button
