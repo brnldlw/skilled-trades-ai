@@ -16,30 +16,6 @@ export type UnitRow = {
   model?: string | null;
   serial?: string | null;
   refrigerant_type?: string | null;
-  system_type?: string | null;
-  primary_component_role?: string | null;
-  primary_tag_status?: string | null;
-  primary_tag_issue_reason?: string | null;
-  primary_checked_inside_for_internal_label?: boolean | null;
-};
-
-export type UnitComponentRow = {
-  id: string;
-  user_id?: string | null;
-  created_at?: string | null;
-  updated_at?: string | null;
-  company_id?: string | null;
-  company_name?: string | null;
-  unit_id: string;
-  position?: number | null;
-  role?: string | null;
-  component_tag?: string | null;
-  manufacturer?: string | null;
-  model?: string | null;
-  serial?: string | null;
-  tag_status?: string | null;
-  tag_issue_reason?: string | null;
-  checked_inside_for_internal_label?: boolean | null;
 };
 
 export type ServiceEventRow = {
@@ -59,8 +35,6 @@ export type ServiceEventRow = {
   callback_occurred?: string | null;
   tech_closeout_notes?: string | null;
   photo_urls?: string[] | null;
-  affected_component_label_snapshot?: string | null;
-  affected_component_role_snapshot?: string | null;
 };
 
 async function getCurrentUserId() {
@@ -175,73 +149,6 @@ export async function updateUnitForCurrentUser(
   return data as UnitRow;
 }
 
-
-
-export async function listUnitComponentsForUnitForCurrentUser(unitId: string) {
-  const supabase = createClient();
-  await getCurrentUserId();
-
-  const { data, error } = await supabase
-    .from("unit_components")
-    .select("*")
-    .eq("unit_id", unitId)
-    .order("position", { ascending: true })
-    .order("created_at", { ascending: true });
-
-  if (error) throw error;
-  return (data || []) as UnitComponentRow[];
-}
-
-export async function replaceUnitComponentsForUnitForCurrentUser(
-  unitId: string,
-  input: Array<{
-    position?: number | null;
-    role?: string | null;
-    component_tag?: string | null;
-    manufacturer?: string | null;
-    model?: string | null;
-    serial?: string | null;
-    tag_status?: string | null;
-    tag_issue_reason?: string | null;
-    checked_inside_for_internal_label?: boolean | null;
-  }>
-) {
-  const supabase = createClient();
-  const ctx = await getActiveCompanyContext();
-
-  const { error: deleteError } = await supabase
-    .from("unit_components")
-    .delete()
-    .eq("unit_id", unitId);
-
-  if (deleteError) throw deleteError;
-
-  if (!input.length) return [] as UnitComponentRow[];
-
-  const payload = input.map((row, index) => ({
-    user_id: ctx.userId,
-    company_id: ctx.companyId,
-    company_name: ctx.companyName,
-    unit_id: unitId,
-    position: row.position ?? index,
-    role: row.role || "",
-    component_tag: row.component_tag || "",
-    manufacturer: row.manufacturer || "",
-    model: row.model || "",
-    serial: row.serial || "",
-    tag_status: row.tag_status || "readable",
-    tag_issue_reason: row.tag_issue_reason || "",
-    checked_inside_for_internal_label: Boolean(row.checked_inside_for_internal_label),
-  }));
-
-  const { data, error } = await supabase
-    .from("unit_components")
-    .insert(payload)
-    .select("*");
-
-  if (error) throw error;
-  return (data || []) as UnitComponentRow[];
-}
 export async function createServiceEventForCurrentUser(
   input: Omit<ServiceEventRow, "user_id">
 ) {
