@@ -3541,69 +3541,18 @@ const [checkedInsideForInternalLabel, setCheckedInsideForInternalLabel] = useSta
       }
 
       function applySmartReadingsParser() {
-        // smart-readings-parser-observations-v1
         const parsed = parseSmartReadingsInput(smartReadingsInput);
         const applied: string[] = [];
-
-        const observationDefinitions = [
-          { key: "suctionPressure", label: "Suction Pressure", unit: "psi" },
-          { key: "headPressure", label: "Head Pressure", unit: "psi" },
-          { key: "superheat", label: "Superheat", unit: "°F" },
-          { key: "subcool", label: "Subcool", unit: "°F" },
-          { key: "suctionTemp", label: "Suction Line Temp", unit: "°F" },
-          { key: "liquidTemp", label: "Liquid Line Temp", unit: "°F" },
-          { key: "returnAir", label: "Return Air Temp", unit: "°F" },
-          { key: "supplyAir", label: "Supply Air Temp", unit: "°F" },
-          { key: "boxTemp", label: "Box Temp", unit: "°F" },
-          { key: "ambientTemp", label: "Ambient Temp", unit: "°F" },
-        ] as const;
-
-        const parsedObservationRows = observationDefinitions
-          .map((definition) => {
-            const value = parsed[definition.key as keyof typeof parsed];
-            if (value === null || value === undefined || String(value).trim() === "") return null;
-
-            applied.push(`${definition.label}: ${value}`);
-
-            return {
-              label: definition.label,
-              value: String(value),
-              unit: definition.unit,
-              note: "Added by Smart Readings Parser",
-            };
-          })
-          .filter(Boolean) as Observation[];
-
-        if (parsedObservationRows.length) {
-          setObservations((prev) => {
-            const next = [...prev];
-
-            for (const row of parsedObservationRows) {
-              const normalizedLabel = row.label.trim().toLowerCase();
-              const existingIndex = next.findIndex(
-                (item) => String(item?.label || "").trim().toLowerCase() === normalizedLabel
-              );
-
-              if (existingIndex >= 0) {
-                next[existingIndex] = row;
-              } else {
-                next.push(row);
-              }
-            }
-
-            return next;
-          });
-        }
         // No matching reading fields were detected in this page yet.
 
         if (!applied.length) {
           setSmartReadingsMessage(
-            "Nothing was recognized. Try entries like: suction 50 head 175 superheat 18 subcool 7 return 74 supply 58 box 10"
+            "Nothing matched existing reading fields yet. Try entries like: suction 50 head 175 superheat 18 subcool 7 return 74 supply 58"
           );
           return;
         }
 
-        setSmartReadingsMessage("Applied to observations: " + applied.join(" • "));
+        setSmartReadingsMessage("Applied: " + applied.join(" • "));
       }
 
       function clearSmartReadingsParser() {
