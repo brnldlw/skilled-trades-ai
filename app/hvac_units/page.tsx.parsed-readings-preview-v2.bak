@@ -3491,7 +3491,6 @@ const [checkedInsideForInternalLabel, setCheckedInsideForInternalLabel] = useSta
 
       // smart-readings-parser-helpers-v1
       const [smartReadingsInput, setSmartReadingsInput] = useState("");
-      const [smartReadingsListening, setSmartReadingsListening] = useState(false);
       const [smartReadingsMessage, setSmartReadingsMessage] = useState("");
 
       function parseSmartReadingsInput(input: string) {
@@ -3555,7 +3554,6 @@ const [checkedInsideForInternalLabel, setCheckedInsideForInternalLabel] = useSta
       function applySmartReadingsParser(inputOverride?: string) {
         // smart-readings-parser-observations-v1
         // smart-readings-auto-parse-v1
-        // smart-readings-preview-v2
         const parserInput =
           typeof inputOverride === "string" ? inputOverride : smartReadingsInput;
         const parsed = parseSmartReadingsInput(parserInput);
@@ -3590,25 +3588,51 @@ const [checkedInsideForInternalLabel, setCheckedInsideForInternalLabel] = useSta
           })
           .filter(Boolean) as Observation[];
 
+        if (parsedObservationRows.length) {
+          setSmartReadingsUndoSnapshot(
+            Array.isArray(observations) ? observations.map((item) => ({ ...item })) : []
+          );
+
+          setObservations((prev) => {
+            const next = [...prev];
+
+            for (const row of parsedObservationRows) {
+              const normalizedLabel = row.label.trim().toLowerCase();
+              const existingIndex = next.findIndex(
+                (item) => String(item?.label || "").trim().toLowerCase() === normalizedLabel
+              );
+
+              if (existingIndex >= 0) {
+                next[existingIndex] = row;
+              } else {
+                next.push(row);
+              }
+            }
+
+            return next;
+          });
+        }
+        // No matching reading fields were detected in this page yet.
+
         if (!applied.length) {
-          setSmartReadingsPreviewRows([]);
           setSmartReadingsMessage(
             "Nothing was recognized. Try entries like: suction 50 head 175 superheat 18 subcool 7 return 74 supply 58 box 10"
           );
           return;
         }
 
-        setSmartReadingsPreviewRows(parsedObservationRows);
-        setSmartReadingsMessage("Preview ready: " + applied.join(" • "));
+        setSmartReadingsMessage("Applied to observations: " + applied.join(" • "));
       }
 
-function clearSmartReadingsParser() {
+      function clearSmartReadingsParser() {
         setSmartReadingsInput("");
         setSmartReadingsMessage("");
-        setSmartReadingsPreviewRows([]);
       }
 
-function browserSupportsSmartReadingsDictation() {
+      // smart-readings-mic-v1
+      const [smartReadingsListening, setSmartReadingsListening] = useState(false);
+
+      function browserSupportsSmartReadingsDictation() {
         if (typeof window === "undefined") return false;
         const w = window as any;
         return Boolean(w.SpeechRecognition || w.webkitSpeechRecognition);
@@ -3724,56 +3748,6 @@ function browserSupportsSmartReadingsDictation() {
         );
         setSmartReadingsUndoSnapshot(null);
         setSmartReadingsMessage("Last parsed readings were undone.");
-      }
-
-      // smart-readings-preview-v2
-      const [smartReadingsPreviewRows, setSmartReadingsPreviewRows] = useState<Observation[]>([]);
-
-      function mergeSmartReadingRows(
-        base: Observation[],
-        rows: Observation[]
-      ): Observation[] {
-        const next = [...base];
-
-        for (const row of rows) {
-          const normalizedLabel = row.label.trim().toLowerCase();
-          const existingIndex = next.findIndex(
-            (item) => String(item?.label || "").trim().toLowerCase() === normalizedLabel
-          );
-
-          if (existingIndex >= 0) {
-            next[existingIndex] = row;
-          } else {
-            next.push(row);
-          }
-        }
-
-        return next;
-      }
-
-      function applySmartReadingsPreview() {
-        if (!smartReadingsPreviewRows.length) {
-          setSmartReadingsMessage("No parsed readings are waiting for confirmation.");
-          return;
-        }
-
-        setSmartReadingsUndoSnapshot(
-          Array.isArray(observations) ? observations.map((item) => ({ ...item })) : []
-        );
-
-        setObservations((prev) => mergeSmartReadingRows(prev, smartReadingsPreviewRows));
-        setSmartReadingsMessage(
-          "Applied to observations: " +
-            smartReadingsPreviewRows
-              .map((row) => `${row.label}: ${row.value}${row.unit ? ` ${row.unit}` : ""}`)
-              .join(" • ")
-        );
-        setSmartReadingsPreviewRows([]);
-      }
-
-      function cancelSmartReadingsPreview() {
-        setSmartReadingsPreviewRows([]);
-        setSmartReadingsMessage("Parsed readings preview cleared.");
       }
 
 const [showBulkImportTools, setShowBulkImportTools] = useState(false);
@@ -7426,86 +7400,6 @@ return (
                 <SmallHint>
                   <b>Parser Result:</b> {smartReadingsMessage}
                 </SmallHint>
-              ) : null}
-
-              {smartReadingsPreviewRows.length ? (
-                <div
-                  style={{
-                    border: "1px solid #e5e5e5",
-                    borderRadius: 10,
-                    padding: 12,
-                    background: "#fffdf7",
-                    display: "grid",
-                    gap: 10,
-                  }}
-                >
-                  <div style={{ fontWeight: 900 }}>
-                    Parsed Readings Preview
-                  </div>
-
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                      gap: 10,
-                    }}
-                  >
-                    {smartReadingsPreviewRows.map((row, idx) => (
-                      <div
-                        key={`${row.label}-${idx}`}
-                        style={{
-                          border: "1px solid #eee",
-                          borderRadius: 10,
-                          padding: 10,
-                          background: "#fafafa",
-                        }}
-                      >
-                        <div style={{ fontSize: 11, fontWeight: 900, color: "#666", textTransform: "uppercase" }}>
-                          {row.label}
-                        </div>
-                        <div style={{ marginTop: 4, fontWeight: 700 }}>
-                          {row.value}{row.unit ? ` ${row.unit}` : ""}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                    <button
-                      type="button"
-                      onClick={applySmartReadingsPreview}
-                      style={{
-                        padding: "8px 12px",
-                        fontWeight: 900,
-                        border: "1px solid #cfcfcf",
-                        borderRadius: 10,
-                        background: "#ffffff",
-                        color: "#111",
-                        cursor: "pointer",
-                        boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                      }}
-                    >
-                      Apply Parsed Readings
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={cancelSmartReadingsPreview}
-                      style={{
-                        padding: "8px 12px",
-                        fontWeight: 900,
-                        border: "1px solid #cfcfcf",
-                        borderRadius: 10,
-                        background: "#ffffff",
-                        color: "#111",
-                        cursor: "pointer",
-                        boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                      }}
-                    >
-                      Cancel Preview
-                    </button>
-                  </div>
-                </div>
               ) : null}
             </div>
           </div>
