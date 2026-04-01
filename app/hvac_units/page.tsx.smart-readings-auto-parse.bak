@@ -3540,12 +3540,9 @@ const [checkedInsideForInternalLabel, setCheckedInsideForInternalLabel] = useSta
         };
       }
 
-      function applySmartReadingsParser(inputOverride?: string) {
+      function applySmartReadingsParser() {
         // smart-readings-parser-observations-v1
-        // smart-readings-auto-parse-v1
-        const parserInput =
-          typeof inputOverride === "string" ? inputOverride : smartReadingsInput;
-        const parsed = parseSmartReadingsInput(parserInput);
+        const parsed = parseSmartReadingsInput(smartReadingsInput);
         const applied: string[] = [];
 
         const observationDefinitions = [
@@ -3669,14 +3666,11 @@ const [checkedInsideForInternalLabel, setCheckedInsideForInternalLabel] = useSta
             const cleaned = transcript.trim();
             if (!cleaned) return;
 
-            const nextText = [String(smartReadingsInput || "").trim(), cleaned]
-              .filter(Boolean)
-              .join(" ");
-
-            setSmartReadingsInput(nextText);
-            applySmartReadingsParser(nextText);
+            setSmartReadingsInput((prev) =>
+              [String(prev || "").trim(), cleaned].filter(Boolean).join(" ")
+            );
             setSmartReadingsMessage(
-              "Dictation captured and auto-parsed. Review the parser result below."
+              "Dictation captured. Review the text and tap Parse Readings."
             );
           };
 
@@ -7262,7 +7256,7 @@ return (
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                 <button
                   type="button"
-                  onClick={() => applySmartReadingsParser()}
+                  onClick={applySmartReadingsParser}
                   style={{
                     padding: "8px 12px",
                     fontWeight: 900,
