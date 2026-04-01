@@ -242,21 +242,6 @@ export async function replaceUnitComponentsForUnitForCurrentUser(
   if (error) throw error;
   return (data || []) as UnitComponentRow[];
 }
-
-
-export async function listServiceEventsForCurrentUser() {
-  const supabase = createClient();
-  await getCurrentUserId();
-
-  const { data, error } = await supabase
-    .from("service_events")
-    .select("*")
-    .order("service_date", { ascending: false })
-    .order("created_at", { ascending: false });
-
-  if (error) throw error;
-  return (data || []) as ServiceEventRow[];
-}
 export async function createServiceEventForCurrentUser(
   input: Omit<ServiceEventRow, "user_id">
 ) {
