@@ -2991,340 +2991,6 @@ const [checkedInsideForInternalLabel, setCheckedInsideForInternalLabel] = useSta
         return overlay?.affectedComponentLabel || "";
       }
 
-      // component-filter-helpers-v1
-      const [unitTimelineComponentFilter, setUnitTimelineComponentFilter] = useState("all");
-      const [unitProfileTimelineComponentFilter, setUnitProfileTimelineComponentFilter] = useState("all");
-
-      function normalizeComponentFilterValue(value: string) {
-        return String(value || "").trim().toLowerCase();
-      }
-
-      function getTimelineComponentFilterOptions(events: any[]) {
-        const seen = new Set<string>();
-        const options: Array<{ value: string; label: string }> = [
-          { value: "all", label: "All components" },
-        ];
-
-        for (const event of Array.isArray(events) ? events : []) {
-          const label = getAffectedComponentDisplayForEvent(event);
-          if (!label) continue;
-          const value = normalizeComponentFilterValue(label);
-          if (!value || seen.has(value)) continue;
-          seen.add(value);
-          options.push({ value, label });
-        }
-
-        return options;
-      }
-
-      function timelineEventMatchesComponentFilter(event: any, filterValue: string) {
-        const normalizedFilter = normalizeComponentFilterValue(filterValue);
-        if (!normalizedFilter || normalizedFilter === "all") return true;
-        const label = getAffectedComponentDisplayForEvent(event);
-        return normalizeComponentFilterValue(label) === normalizedFilter;
-      }
-
-      // component-aware-parts-manuals-helpers-v1
-      function normalizeComponentAssistText(value: unknown) {
-        return String(value || "").trim().toLowerCase();
-      }
-
-      function getCurrentAffectedComponentLabelForAssist() {
-        return String(affectedComponentLabel || "").trim() || getPrimaryAffectedComponentLabel();
-      }
-
-      function getSameComponentHistoryForAssist() {
-        const allEvents = Array.isArray(unitServiceTimeline) ? unitServiceTimeline : [];
-        if (systemType === "single") return allEvents;
-
-        const selectedLabel = String(affectedComponentLabel || "").trim();
-        if (!selectedLabel) return [];
-
-        return allEvents.filter((event) => {
-          const label = String(getAffectedComponentDisplayForEvent(event) || "").trim();
-          return label === selectedLabel;
-        });
-      }
-
-      function getRecentSameComponentPartsForAssist() {
-        const history = getSameComponentHistoryForAssist();
-        const seen = new Set<string>();
-        const parts: string[] = [];
-
-        for (const event of history) {
-          const raw = String(event?.parts_replaced || "").trim();
-          if (!raw) continue;
-
-          for (const part of raw.split(/[;,]/)) {
-            const cleaned = part.trim();
-            const key = cleaned.toLowerCase();
-            if (!cleaned || seen.has(key)) continue;
-            seen.add(key);
-            parts.push(cleaned);
-          }
-        }
-
-        return parts.slice(0, 6);
-      }
-
-      function getMostRecentSameComponentFixForAssist() {
-        const history = getSameComponentHistoryForAssist();
-        if (!history.length) return "";
-        const sorted = [...history].sort((a, b) => {
-          const aTime = a?.service_date ? new Date(String(a.service_date)).getTime() : 0;
-          const bTime = b?.service_date ? new Date(String(b.service_date)).getTime() : 0;
-          return bTime - aTime;
-        });
-        return String(sorted[0]?.actual_fix_performed || "").trim();
-      }
-
-      function uniqueAssistList(items: string[]) {
-        const seen = new Set<string>();
-        const out: string[] = [];
-        for (const item of items) {
-          const cleaned = item.trim();
-          const key = cleaned.toLowerCase();
-          if (!cleaned || seen.has(key)) continue;
-          seen.add(key);
-          out.push(cleaned);
-        }
-        return out;
-      }
-
-      function getComponentAwareLikelyParts() {
-        const componentLabel = normalizeComponentAssistText(getCurrentAffectedComponentLabelForAssist());
-        const equipment = normalizeComponentAssistText(equipmentType);
-        const issue = normalizeComponentAssistText(symptom);
-        const priorParts = getRecentSameComponentPartsForAssist();
-
-        const parts: string[] = [...priorParts];
-
-        if (componentLabel.includes("evaporator") || componentLabel.includes("indoor head")) {
-          parts.push(
-            "Evaporator fan motor",
-            "Fan blade / wheel",
-            "Defrost heater",
-            "Defrost termination / sensor",
-            "TXV / EEV",
-            "Drain heater",
-            "Drain pan heater",
-            "Distributor / nozzle / check distributor circuit",
-          );
-        }
-
-        if (
-          componentLabel.includes("condensing") ||
-          componentLabel.includes("outdoor") ||
-          componentLabel.includes("condenser")
-        ) {
-          parts.push(
-            "Contactor",
-            "Run capacitor",
-            "Condenser fan motor",
-            "Fan blade",
-            "Pressure control",
-            "Compressor overload / start components",
-            "Crankcase heater",
-          );
-        }
-
-        if (componentLabel.includes("furnace")) {
-          parts.push(
-            "Control board",
-            "Ignitor",
-            "Flame sensor",
-            "Pressure switch",
-            "Inducer motor",
-            "Gas valve",
-            "Limit switch",
-          );
-        }
-
-        if (componentLabel.includes("air handler") || componentLabel.includes("indoor unit")) {
-          parts.push(
-            "Blower motor",
-            "Blower capacitor / module",
-            "Fan relay / board",
-            "Electric heat sequencer",
-            "Float switch",
-            "Control board",
-          );
-        }
-
-        if (equipment.includes("walk-in")) {
-          parts.push(
-            "Defrost timer / board",
-            "Defrost termination",
-            "Door heater / frame heater",
-            "Drain line heat",
-            "Evaporator fan delay",
-          );
-        }
-
-        if (equipment.includes("ice machine")) {
-          parts.push(
-            "Water valve",
-            "Water pump",
-            "Bin control",
-            "Hot gas valve",
-            "Thermistor / probe",
-            "Curtain switch / sensor",
-          );
-        }
-
-        if (issue.includes("no cool") || issue.includes("not cooling")) {
-          parts.push(
-            "Contactor",
-            "Capacitor",
-            "Fan motor",
-            "Control board / relay",
-            "TXV / metering device",
-          );
-        }
-
-        if (issue.includes("freeze") || issue.includes("icing") || issue.includes("ice")) {
-          parts.push(
-            "Defrost heater",
-            "Defrost control",
-            "Fan motor",
-            "TXV / EEV",
-            "Drain heater",
-          );
-        }
-
-        if (issue.includes("heat")) {
-          parts.push(
-            "Ignitor",
-            "Flame sensor",
-            "Pressure switch",
-            "Gas valve",
-            "Heat relay / sequencer",
-          );
-        }
-
-        return uniqueAssistList(parts).slice(0, 10);
-      }
-
-      function getComponentAwareVerifyFirst() {
-        const componentLabel = normalizeComponentAssistText(getCurrentAffectedComponentLabelForAssist());
-        const equipment = normalizeComponentAssistText(equipmentType);
-        const issue = normalizeComponentAssistText(symptom);
-
-        const steps: string[] = [
-          "Verify the call is tied to the correct affected component before ordering parts.",
-          "Compare the current symptom against prior same-component history first.",
-        ];
-
-        if (
-          componentLabel.includes("condensing") ||
-          componentLabel.includes("outdoor") ||
-          componentLabel.includes("condenser")
-        ) {
-          steps.push(
-            "Verify line voltage, contactor pull-in, capacitor value, and condenser fan operation.",
-            "Check condenser coil condition and airflow before condemning refrigeration components.",
-          );
-        }
-
-        if (componentLabel.includes("evaporator") || componentLabel.includes("indoor head")) {
-          steps.push(
-            "Verify fan operation, coil condition, drain condition, and any defrost circuit before replacing parts.",
-            "Check for airflow / frost pattern issues before condemning TXV or refrigerant charge.",
-          );
-        }
-
-        if (componentLabel.includes("furnace")) {
-          steps.push(
-            "Verify call for heat, board outputs, safeties, ignitor, and flame sense before replacing parts.",
-          );
-        }
-
-        if (componentLabel.includes("air handler") || componentLabel.includes("indoor unit")) {
-          steps.push(
-            "Verify blower operation, board / relay outputs, and drain safety before replacing indoor components.",
-          );
-        }
-
-        if (equipment.includes("walk-in")) {
-          steps.push(
-            "Verify box temp, defrost schedule, fan delay, and door / drain heat conditions before ordering parts.",
-          );
-        }
-
-        if (issue.includes("freeze") || issue.includes("icing") || issue.includes("ice")) {
-          steps.push(
-            "Check airflow, fan operation, defrost operation, and frost pattern before replacing refrigeration parts.",
-          );
-        }
-
-        if (issue.includes("no cool") || issue.includes("not cooling")) {
-          steps.push(
-            "Verify power, controls, airflow, and obvious electrical failures before replacing higher-cost parts.",
-          );
-        }
-
-        return uniqueAssistList(steps).slice(0, 8);
-      }
-
-      function getComponentAwareManualTargets() {
-        const componentLabel = normalizeComponentAssistText(getCurrentAffectedComponentLabelForAssist());
-        const equipment = normalizeComponentAssistText(equipmentType);
-
-        const targets: string[] = [
-          "OEM installation / service manual for the exact model",
-          "Wiring diagram for the affected component",
-        ];
-
-        if (
-          componentLabel.includes("condensing") ||
-          componentLabel.includes("outdoor") ||
-          componentLabel.includes("condenser")
-        ) {
-          targets.push(
-            "Condenser section electrical diagram",
-            "Compressor and condenser fan motor wiring / sequence of operation",
-          );
-        }
-
-        if (componentLabel.includes("evaporator") || componentLabel.includes("indoor head")) {
-          targets.push(
-            "Evaporator / indoor section wiring and fan circuit",
-            "Defrost sequence and sensor / termination information",
-            "TXV / metering device information and refrigerant circuit diagram",
-          );
-        }
-
-        if (componentLabel.includes("furnace")) {
-          targets.push(
-            "Furnace ignition sequence / safety diagram",
-            "Board pinout / pressure switch / inducer wiring information",
-          );
-        }
-
-        if (componentLabel.includes("air handler") || componentLabel.includes("indoor unit")) {
-          targets.push(
-            "Indoor blower section wiring diagram",
-            "Electric heat / sequencer / blower relay information",
-          );
-        }
-
-        if (equipment.includes("walk-in")) {
-          targets.push(
-            "Walk-in defrost control sequence",
-            "Evaporator fan delay / heater / drain heat documentation",
-          );
-        }
-
-        if (equipment.includes("ice machine")) {
-          targets.push(
-            "Harvest / freeze sequence chart",
-            "Water system and sensor diagnostic chart",
-          );
-        }
-
-        return uniqueAssistList(targets).slice(0, 8);
-      }
-
 const [showBulkImportTools, setShowBulkImportTools] = useState(false);
 
   const [workOrderImportText, setWorkOrderImportText] = useState("");
@@ -6338,123 +6004,6 @@ return (
         </SectionCard>
       </div>
 
-      {/* component-aware-parts-manuals-v1 */}
-      <div style={{ marginTop: 16 }}>
-        <SectionCard title="Component-Aware Parts & Manuals Target">
-          <SmallHint>
-            Uses the selected affected component, system structure, symptom, and same-component history
-            to point you toward the most likely parts and the most useful manuals / info to open first.
-          </SmallHint>
-
-          {(() => {
-            const componentLabel = getCurrentAffectedComponentLabelForAssist();
-            const sameComponentHistory = getSameComponentHistoryForAssist();
-            const likelyParts = getComponentAwareLikelyParts();
-            const verifyFirst = getComponentAwareVerifyFirst();
-            const manualTargets = getComponentAwareManualTargets();
-            const priorParts = getRecentSameComponentPartsForAssist();
-            const recentFix = getMostRecentSameComponentFixForAssist();
-
-            return (
-              <div style={{ marginTop: 10, display: "grid", gap: 12 }}>
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                    gap: 10,
-                  }}
-                >
-                  <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10, background: "#fafafa" }}>
-                    <div style={{ fontWeight: 900, fontSize: 12, color: "#666", textTransform: "uppercase" }}>
-                      Target Component
-                    </div>
-                    <div style={{ marginTop: 4, fontWeight: 700 }}>{componentLabel || "Primary component"}</div>
-                  </div>
-
-                  <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10, background: "#fafafa" }}>
-                    <div style={{ fontWeight: 900, fontSize: 12, color: "#666", textTransform: "uppercase" }}>
-                      Same-Component History Count
-                    </div>
-                    <div style={{ marginTop: 4, fontWeight: 700 }}>{sameComponentHistory.length}</div>
-                  </div>
-
-                  <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10, background: "#fafafa" }}>
-                    <div style={{ fontWeight: 900, fontSize: 12, color: "#666", textTransform: "uppercase" }}>
-                      Recent Same-Component Fix
-                    </div>
-                    <div style={{ marginTop: 4, fontWeight: 700 }}>{recentFix || "—"}</div>
-                  </div>
-                </div>
-
-                {systemType !== "single" && !affectedComponentLabel ? (
-                  <div
-                    style={{
-                      border: "1px solid #f0c36d",
-                      borderRadius: 10,
-                      padding: 10,
-                      background: "#fff8e8",
-                      fontWeight: 700,
-                    }}
-                  >
-                    Select an affected component to tighten the parts/manuals targeting for this system.
-                  </div>
-                ) : null}
-
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-                    gap: 12,
-                  }}
-                >
-                  <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 12, background: "#fafafa" }}>
-                    <div style={{ fontWeight: 900 }}>Likely Parts for This Component</div>
-                    <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                      {likelyParts.map((item, idx) => (
-                        <li key={idx}>
-                          <SmallHint>{item}</SmallHint>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 12, background: "#fafafa" }}>
-                    <div style={{ fontWeight: 900 }}>Verify First Before Replacing</div>
-                    <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                      {verifyFirst.map((item, idx) => (
-                        <li key={idx}>
-                          <SmallHint>{item}</SmallHint>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 12, background: "#fafafa" }}>
-                    <div style={{ fontWeight: 900 }}>Manuals / Info to Open First</div>
-                    <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                      {manualTargets.map((item, idx) => (
-                        <li key={idx}>
-                          <SmallHint>{item}</SmallHint>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-
-                {priorParts.length ? (
-                  <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 12, background: "#fafafa" }}>
-                    <div style={{ fontWeight: 900 }}>Recent Same-Component Parts History</div>
-                    <SmallHint style={{ marginTop: 6 }}>
-                      {priorParts.join(" • ")}
-                    </SmallHint>
-                  </div>
-                ) : null}
-              </div>
-            );
-          })()}
-        </SectionCard>
-      </div>
-
 <div style={{ marginTop: 16, display: showSavedUnitHistory ? "block" : "none" }}>
   <SectionCard title="Unit Service Timeline">
     <SmallHint>
@@ -6467,36 +6016,7 @@ return (
       </div>
     ) : unitServiceTimeline.length ? (
       <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
-        {(() => {
-          const __options = getTimelineComponentFilterOptions(unitServiceTimeline);
-          const __activeFilter = __options.some((option) => option.value === unitTimelineComponentFilter)
-            ? unitTimelineComponentFilter
-            : "all";
-          const __filteredEvents = unitServiceTimeline.filter((event) =>
-            timelineEventMatchesComponentFilter(event, __activeFilter)
-          );
-
-          return (
-            <>
-              <div style={{ marginBottom: 10, display: "grid", gap: 6 }}>
-                <label style={{ display: "grid", gap: 6 }}>
-                  <span style={{ fontWeight: 900 }}>Filter Timeline by Component</span>
-                  <select
-                    value={__activeFilter}
-                    onChange={(e) => setUnitTimelineComponentFilter(e.target.value)}
-                    style={{ width: "100%", padding: 8 }}
-                  >
-                    {__options.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-
-              {__filteredEvents.length ? (
-                __filteredEvents.map((event) => (
+        {unitServiceTimeline.map((event) => (
           <div
             key={event.id}
             style={{
@@ -6527,7 +6047,7 @@ return (
             {getAffectedComponentDisplayForEvent(event) ? (
               <div style={{ marginTop: 4 }}>
                 <SmallHint>
-                  {/* affected-component-display-v1 */ /* component-filter-ui-current-timeline-v1 */}
+                  {/* affected-component-display-v1 */}
                   <b>Affected Component:</b> {getAffectedComponentDisplayForEvent(event)}
                 </SmallHint>
               </div>
@@ -6569,22 +6089,7 @@ return (
               </div>
             </div>
           </div>
-                ))
-              ) : (
-                <div
-                  style={{
-                    border: "1px solid #eee",
-                    borderRadius: 10,
-                    padding: 10,
-                    background: "#fafafa",
-                  }}
-                >
-                  <SmallHint>No service events match the selected component filter.</SmallHint>
-                </div>
-              )}
-            </>
-          );
-        })()}
+        ))}
       </div>
     ) : (
       <div style={{ marginTop: 12 }}>
@@ -9884,36 +9389,7 @@ return (
                 <SmallHint>Loading unit timeline...</SmallHint>
               ) : unitProfileTimeline.length ? (
                 <div style={{ display: "grid", gap: 10 }}>
-                  {(() => {
-                    const __options = getTimelineComponentFilterOptions(unitProfileTimeline);
-                    const __activeFilter = __options.some((option) => option.value === unitProfileTimelineComponentFilter)
-                      ? unitProfileTimelineComponentFilter
-                      : "all";
-                    const __filteredEvents = unitProfileTimeline.filter((event) =>
-                      timelineEventMatchesComponentFilter(event, __activeFilter)
-                    );
-
-                    return (
-                      <>
-                        <div style={{ marginBottom: 10, display: "grid", gap: 6 }}>
-                          <label style={{ display: "grid", gap: 6 }}>
-                            <span style={{ fontWeight: 900 }}>Filter Timeline by Component</span>
-                            <select
-                              value={__activeFilter}
-                              onChange={(e) => setUnitProfileTimelineComponentFilter(e.target.value)}
-                              style={{ width: "100%", padding: 8 }}
-                            >
-                              {__options.map((option) => (
-                                <option key={option.value} value={option.value}>
-                                  {option.label}
-                                </option>
-                              ))}
-                            </select>
-                          </label>
-                        </div>
-
-                        {__filteredEvents.length ? (
-                          __filteredEvents.map((event) => (
+                  {unitProfileTimeline.map((event) => (
                     <div
                       key={event.id}
                       style={{
@@ -9970,7 +9446,7 @@ return (
                       {getAffectedComponentDisplayForEvent(event) ? (
                         <div style={{ marginTop: 4 }}>
                           <SmallHint>
-                            {/* affected-component-display-v2 */ /* component-filter-ui-profile-timeline-v1 */}
+                            {/* affected-component-display-v2 */}
                             <b>Affected Component:</b> {getAffectedComponentDisplayForEvent(event)}
                           </SmallHint>
                         </div>
@@ -10085,22 +9561,7 @@ return (
                         </div>
                       ) : null}
                     </div>
-                          ))
-                        ) : (
-                          <div
-                            style={{
-                              border: "1px solid #eee",
-                              borderRadius: 10,
-                              padding: 10,
-                              background: "#fafafa",
-                            }}
-                          >
-                            <SmallHint>No service events match the selected component filter.</SmallHint>
-                          </div>
-                        )}
-                      </>
-                    );
-                  })()}
+                  ))}
                 </div>
               ) : (
                 <SmallHint>
