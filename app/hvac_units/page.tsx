@@ -5540,7 +5540,128 @@ function browserSupportsSmartReadingsDictation() {
         setPartsReplacedListening(false);
       }
 
-const [showBulkImportTools, setShowBulkImportTools] = useState(false);
+      // core-field-dictation-v1
+            const [confirmedCauseListening, setConfirmedCauseListening] = useState(false);
+      
+            const [confirmedCauseDictationMessage, setConfirmedCauseDictationMessage] = useState("");
+      
+      function browserSupportsFieldDictation() {
+        if (typeof window === "undefined") return false;
+        const w = window as any;
+        return Boolean(w.SpeechRecognition || w.webkitSpeechRecognition);
+      }
+
+      function stopSharedFieldDictationInstance(instanceKey: string) {
+        if (typeof window === "undefined") return;
+        const w = window as any;
+        if (w[instanceKey]) {
+          try {
+            w[instanceKey].stop();
+          } catch (err) {
+            console.error("FIELD DICTATION STOP FAILED", err);
+          }
+          w[instanceKey] = null;
+        }
+      }
+
+      function startFieldDictation(config: {
+        instanceKey: string;
+        setListening: (value: boolean) => void;
+        setMessage: (value: string) => void;
+        getCurrentValue: () => string;
+        setValue: (value: string) => void;
+        listening: boolean;
+        listeningMessage: string;
+        successMessage: string;
+      }) {
+        if (typeof window === "undefined") return;
+
+        const w = window as any;
+        const SpeechRecognitionCtor = w.SpeechRecognition || w.webkitSpeechRecognition;
+
+        if (!SpeechRecognitionCtor) {
+          config.setMessage("Speech recognition is not supported in this browser. Try Chrome or Edge.");
+          return;
+        }
+
+        try {
+          if (w[config.instanceKey] && config.listening) {
+            return;
+          }
+
+          const recognition = new SpeechRecognitionCtor();
+          w[config.instanceKey] = recognition;
+
+          recognition.lang = "en-US";
+          recognition.interimResults = false;
+          recognition.continuous = false;
+          recognition.maxAlternatives = 1;
+
+          recognition.onstart = () => {
+            config.setListening(true);
+            config.setMessage(config.listeningMessage);
+          };
+
+          recognition.onresult = (event: any) => {
+            let transcript = "";
+
+            for (let i = event.resultIndex; i < event.results.length; i += 1) {
+              const result = event.results[i];
+              if (result?.isFinal && result[0]?.transcript) {
+                transcript += String(result[0].transcript).trim() + " ";
+              }
+            }
+
+            const cleaned = transcript.trim();
+            if (!cleaned) return;
+
+            config.setValue(
+              [String(config.getCurrentValue() || "").trim(), cleaned].filter(Boolean).join(" ")
+            );
+            config.setMessage(config.successMessage);
+          };
+
+          recognition.onerror = (event: any) => {
+            config.setListening(false);
+            w[config.instanceKey] = null;
+            config.setMessage(
+              event?.error ? `Dictation error: ${String(event.error)}` : "Dictation failed."
+            );
+          };
+
+          recognition.onend = () => {
+            config.setListening(false);
+            w[config.instanceKey] = null;
+          };
+
+          recognition.start();
+        } catch (err) {
+          config.setListening(false);
+          w[config.instanceKey] = null;
+          config.setMessage("Could not start dictation.");
+          console.error("FIELD DICTATION START FAILED", err);
+        }
+      }
+
+                  function startConfirmedCauseDictation() {
+        startFieldDictation({
+          instanceKey: "__confirmedCauseRecognition",
+          setListening: setConfirmedCauseListening,
+          setMessage: setConfirmedCauseDictationMessage,
+          getCurrentValue: () => String(finalConfirmedCause || ""),
+          setValue: setFinalConfirmedCause,
+          listening: confirmedCauseListening,
+          listeningMessage: "Listening... describe the confirmed cause.",
+          successMessage: "Dictation captured and added to Confirmed Cause.",
+        });
+      }
+
+      function stopConfirmedCauseDictation() {
+        stopSharedFieldDictationInstance("__confirmedCauseRecognition");
+        setConfirmedCauseListening(false);
+      }
+
+            const [showBulkImportTools, setShowBulkImportTools] = useState(false);
 
   const [workOrderImportText, setWorkOrderImportText] = useState("");
   const [workOrderImportRows, setWorkOrderImportRows] = useState<Record<string, string>[]>([]);
@@ -9702,6 +9823,60 @@ return (
               onChange={(e) => setSymptom(e.target.value)}
             />
 
+          {/* core-field-dictation-v1-symptom */}
+          <div style={{ marginTop: 8, display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <button
+              type="button"
+              onClick={startSymptomDictation}
+              disabled={!browserSupportsFieldDictation() || symptomListening}
+              style={{
+                padding: "8px 12px",
+                fontWeight: 900,
+                border: "1px solid #cfcfcf",
+                borderRadius: 10,
+                background: symptomListening ? "#f7f7f7" : "#ffffff",
+                color: "#111",
+                cursor: !browserSupportsFieldDictation() || symptomListening ? "not-allowed" : "pointer",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+                opacity: !browserSupportsFieldDictation() || symptomListening ? 0.7 : 1,
+              }}
+            >
+              {symptomListening ? "Listening..." : "Start Symptom Dictation"}
+            </button>
+
+            <button
+              type="button"
+              onClick={stopSymptomDictation}
+              disabled={!symptomListening}
+              style={{
+                padding: "8px 12px",
+                fontWeight: 900,
+                border: "1px solid #cfcfcf",
+                borderRadius: 10,
+                background: "#ffffff",
+                color: "#111",
+                cursor: symptomListening ? "pointer" : "not-allowed",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+                opacity: symptomListening ? 1 : 0.7,
+              }}
+            >
+              Stop Dictation
+            </button>
+          </div>
+
+          {!browserSupportsFieldDictation() ? (
+            <SmallHint style={{ marginTop: 6 }}>
+              Dictation is not supported in this browser. Try Chrome or Edge.
+            </SmallHint>
+          ) : null}
+
+          {symptomDictationMessage ? (
+            <SmallHint style={{ marginTop: 6 }}>
+              <b>Symptom Dictation:</b> {symptomDictationMessage}
+            </SmallHint>
+          ) : null}
+
+
           {/* symptom-dictation-v1 */}
           <div style={{ marginTop: 8, display: "flex", gap: 10, flexWrap: "wrap" }}>
             <button
@@ -10511,6 +10686,60 @@ return (
           onChange={(e) => setFinalConfirmedCause(e.target.value)}
         ></textarea>
 
+          {/* core-field-dictation-v1-confirmed-cause */}
+          <div style={{ marginTop: 8, display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <button
+              type="button"
+              onClick={startConfirmedCauseDictation}
+              disabled={!browserSupportsFieldDictation() || confirmedCauseListening}
+              style={{
+                padding: "8px 12px",
+                fontWeight: 900,
+                border: "1px solid #cfcfcf",
+                borderRadius: 10,
+                background: confirmedCauseListening ? "#f7f7f7" : "#ffffff",
+                color: "#111",
+                cursor: !browserSupportsFieldDictation() || confirmedCauseListening ? "not-allowed" : "pointer",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+                opacity: !browserSupportsFieldDictation() || confirmedCauseListening ? 0.7 : 1,
+              }}
+            >
+              {confirmedCauseListening ? "Listening..." : "Start Confirmed Cause Dictation"}
+            </button>
+
+            <button
+              type="button"
+              onClick={stopConfirmedCauseDictation}
+              disabled={!confirmedCauseListening}
+              style={{
+                padding: "8px 12px",
+                fontWeight: 900,
+                border: "1px solid #cfcfcf",
+                borderRadius: 10,
+                background: "#ffffff",
+                color: "#111",
+                cursor: confirmedCauseListening ? "pointer" : "not-allowed",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+                opacity: confirmedCauseListening ? 1 : 0.7,
+              }}
+            >
+              Stop Dictation
+            </button>
+          </div>
+
+          {!browserSupportsFieldDictation() ? (
+            <SmallHint style={{ marginTop: 6 }}>
+              Dictation is not supported in this browser. Try Chrome or Edge.
+            </SmallHint>
+          ) : null}
+
+          {confirmedCauseDictationMessage ? (
+            <SmallHint style={{ marginTop: 6 }}>
+              <b>Confirmed Cause Dictation:</b> {confirmedCauseDictationMessage}
+            </SmallHint>
+          ) : null}
+
+
           {/* final-confirmed-cause-dictation-v1 */}
           <div style={{ marginTop: 8, display: "flex", gap: 10, flexWrap: "wrap" }}>
             <button
@@ -10794,6 +11023,60 @@ return (
                   value={actualFixPerformed}
           onChange={(e) => setActualFixPerformed(e.target.value)}
         ></textarea>
+
+          {/* core-field-dictation-v1-actual-fix */}
+          <div style={{ marginTop: 8, display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <button
+              type="button"
+              onClick={startActualFixDictation}
+              disabled={!browserSupportsFieldDictation() || actualFixListening}
+              style={{
+                padding: "8px 12px",
+                fontWeight: 900,
+                border: "1px solid #cfcfcf",
+                borderRadius: 10,
+                background: actualFixListening ? "#f7f7f7" : "#ffffff",
+                color: "#111",
+                cursor: !browserSupportsFieldDictation() || actualFixListening ? "not-allowed" : "pointer",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+                opacity: !browserSupportsFieldDictation() || actualFixListening ? 0.7 : 1,
+              }}
+            >
+              {actualFixListening ? "Listening..." : "Start Actual Fix Dictation"}
+            </button>
+
+            <button
+              type="button"
+              onClick={stopActualFixDictation}
+              disabled={!actualFixListening}
+              style={{
+                padding: "8px 12px",
+                fontWeight: 900,
+                border: "1px solid #cfcfcf",
+                borderRadius: 10,
+                background: "#ffffff",
+                color: "#111",
+                cursor: actualFixListening ? "pointer" : "not-allowed",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+                opacity: actualFixListening ? 1 : 0.7,
+              }}
+            >
+              Stop Dictation
+            </button>
+          </div>
+
+          {!browserSupportsFieldDictation() ? (
+            <SmallHint style={{ marginTop: 6 }}>
+              Dictation is not supported in this browser. Try Chrome or Edge.
+            </SmallHint>
+          ) : null}
+
+          {actualFixDictationMessage ? (
+            <SmallHint style={{ marginTop: 6 }}>
+              <b>Actual Fix Dictation:</b> {actualFixDictationMessage}
+            </SmallHint>
+          ) : null}
+
 
           {/* actual-fix-performed-dictation-v1 */}
           <div style={{ marginTop: 8, display: "flex", gap: 10, flexWrap: "wrap" }}>
