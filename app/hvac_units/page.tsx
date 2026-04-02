@@ -9922,17 +9922,18 @@ return (
                 border: "1px solid #e5e5e5",
                 borderRadius: 12,
                 padding: 10,
-                background: "#fffdf7",
+                background: "#eef6ff",
                 display: "grid",
                 gap: 8,
                 position: "sticky",
                 top: 8,
                 zIndex: 21,
-                boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+                border: "2px solid #7fb3ff",
+                boxShadow: "0 2px 10px rgba(0,0,0,0.10)",
               }}
             >
-              <div style={{ fontWeight: 900, fontSize: 15 }}>
-                Current Call Summary
+              <div style={{ fontWeight: 900, fontSize: 18 }}>
+                ⚡ Current Call Summary
               </div>
 
               <div
