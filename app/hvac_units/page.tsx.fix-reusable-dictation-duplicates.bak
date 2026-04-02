@@ -5541,10 +5541,14 @@ function browserSupportsSmartReadingsDictation() {
       }
 
       // core-field-dictation-v1
-            const [confirmedCauseListening, setConfirmedCauseListening] = useState(false);
-      
-            const [confirmedCauseDictationMessage, setConfirmedCauseDictationMessage] = useState("");
-      
+      const [symptomListening, setSymptomListening] = useState(false);
+      const [confirmedCauseListening, setConfirmedCauseListening] = useState(false);
+      const [actualFixListening, setActualFixListening] = useState(false);
+
+      const [symptomDictationMessage, setSymptomDictationMessage] = useState("");
+      const [confirmedCauseDictationMessage, setConfirmedCauseDictationMessage] = useState("");
+      const [actualFixDictationMessage, setActualFixDictationMessage] = useState("");
+
       function browserSupportsFieldDictation() {
         if (typeof window === "undefined") return false;
         const w = window as any;
@@ -5643,7 +5647,25 @@ function browserSupportsSmartReadingsDictation() {
         }
       }
 
-                  function startConfirmedCauseDictation() {
+      function startSymptomDictation() {
+        startFieldDictation({
+          instanceKey: "__symptomRecognition",
+          setListening: setSymptomListening,
+          setMessage: setSymptomDictationMessage,
+          getCurrentValue: () => String(symptom || ""),
+          setValue: setSymptom,
+          listening: symptomListening,
+          listeningMessage: "Listening... describe the complaint or symptom.",
+          successMessage: "Dictation captured and added to Symptom.",
+        });
+      }
+
+      function stopSymptomDictation() {
+        stopSharedFieldDictationInstance("__symptomRecognition");
+        setSymptomListening(false);
+      }
+
+      function startConfirmedCauseDictation() {
         startFieldDictation({
           instanceKey: "__confirmedCauseRecognition",
           setListening: setConfirmedCauseListening,
@@ -5661,38 +5683,86 @@ function browserSupportsSmartReadingsDictation() {
         setConfirmedCauseListening(false);
       }
 
-                  // parts-replaced-dictation-only-v1
-            
-                        // follow-up-dictation-only-v1
-      const [followUpListening, setFollowUpListening] = useState(false);
-      const [followUpDictationMessage, setFollowUpDictationMessage] = useState("");
+      function startActualFixDictation() {
+        startFieldDictation({
+          instanceKey: "__actualFixRecognition",
+          setListening: setActualFixListening,
+          setMessage: setActualFixDictationMessage,
+          getCurrentValue: () => String(actualFixPerformed || ""),
+          setValue: setActualFixPerformed,
+          listening: actualFixListening,
+          listeningMessage: "Listening... describe the repair that was performed.",
+          successMessage: "Dictation captured and added to Actual Fix.",
+        });
+      }
 
-      function browserSupportsFollowUpDictation() {
+      function stopActualFixDictation() {
+        stopSharedFieldDictationInstance("__actualFixRecognition");
+        setActualFixListening(false);
+      }
+
+      // reusable-field-dictation-v1
+      const [sharedTextDictationActiveField, setSharedTextDictationActiveField] = useState("");
+      const [sharedTextDictationMessages, setSharedTextDictationMessages] = useState<Record<string, string>>({
+        techCloseoutNotes: "",
+        partsReplaced: "",
+        followUp: "",
+      });
+
+      function browserSupportsSharedTextDictation() {
         if (typeof window === "undefined") return false;
         const w = window as any;
         return Boolean(w.SpeechRecognition || w.webkitSpeechRecognition);
       }
 
-      function startFollowUpDictation() {
+      function setSharedTextDictationFieldMessage(fieldKey: string, message: string) {
+        setSharedTextDictationMessages((prev) => ({
+          ...prev,
+          [fieldKey]: message,
+        }));
+      }
+
+      function stopSharedTextDictation() {
+        if (typeof window === "undefined") return;
+        const w = window as any;
+        if (w.__sharedTextFieldRecognition) {
+          try {
+            w.__sharedTextFieldRecognition.stop();
+          } catch (err) {
+            console.error("SHARED TEXT DICTATION STOP FAILED", err);
+          }
+          w.__sharedTextFieldRecognition = null;
+        }
+        setSharedTextDictationActiveField("");
+      }
+
+      function startSharedTextDictation(config: {
+        fieldKey: string;
+        listeningMessage: string;
+        successMessage: string;
+        getCurrentValue: () => string;
+        setValue: (value: string) => void;
+      }) {
         if (typeof window === "undefined") return;
 
         const w = window as any;
         const SpeechRecognitionCtor = w.SpeechRecognition || w.webkitSpeechRecognition;
 
         if (!SpeechRecognitionCtor) {
-          setFollowUpDictationMessage(
+          setSharedTextDictationFieldMessage(
+            config.fieldKey,
             "Speech recognition is not supported in this browser. Try Chrome or Edge."
           );
           return;
         }
 
         try {
-          if (w.__followUpRecognition && followUpListening) {
-            return;
+          if (w.__sharedTextFieldRecognition) {
+            stopSharedTextDictation();
           }
 
           const recognition = new SpeechRecognitionCtor();
-          w.__followUpRecognition = recognition;
+          w.__sharedTextFieldRecognition = recognition;
 
           recognition.lang = "en-US";
           recognition.interimResults = false;
@@ -5700,10 +5770,8 @@ function browserSupportsSmartReadingsDictation() {
           recognition.maxAlternatives = 1;
 
           recognition.onstart = () => {
-            setFollowUpListening(true);
-            setFollowUpDictationMessage(
-              "Listening... describe the recommended follow-up."
-            );
+            setSharedTextDictationActiveField(config.fieldKey);
+            setSharedTextDictationFieldMessage(config.fieldKey, config.listeningMessage);
           };
 
           recognition.onresult = (event: any) => {
@@ -5719,49 +5787,110 @@ function browserSupportsSmartReadingsDictation() {
             const cleaned = transcript.trim();
             if (!cleaned) return;
 
-            setDiagnosticCloseoutDrafts((prev) => ({
-              ...prev,
-              followUp: [String(prev.followUp || "").trim(), cleaned].filter(Boolean).join("\n"),
-            }));
-            setFollowUpDictationMessage(
-              "Dictation captured and added to Recommended Follow-Up."
+            config.setValue(
+              [String(config.getCurrentValue() || "").trim(), cleaned].filter(Boolean).join(" ")
             );
+            setSharedTextDictationFieldMessage(config.fieldKey, config.successMessage);
           };
 
           recognition.onerror = (event: any) => {
-            setFollowUpListening(false);
-            w.__followUpRecognition = null;
-            setFollowUpDictationMessage(
+            setSharedTextDictationActiveField("");
+            w.__sharedTextFieldRecognition = null;
+            setSharedTextDictationFieldMessage(
+              config.fieldKey,
               event?.error ? `Dictation error: ${String(event.error)}` : "Dictation failed."
             );
           };
 
           recognition.onend = () => {
-            setFollowUpListening(false);
-            w.__followUpRecognition = null;
+            setSharedTextDictationActiveField("");
+            w.__sharedTextFieldRecognition = null;
           };
 
           recognition.start();
         } catch (err) {
-          setFollowUpListening(false);
-          w.__followUpRecognition = null;
-          setFollowUpDictationMessage("Could not start dictation.");
-          console.error("FOLLOW-UP DICTATION FAILED", err);
+          setSharedTextDictationActiveField("");
+          w.__sharedTextFieldRecognition = null;
+          setSharedTextDictationFieldMessage(config.fieldKey, "Could not start dictation.");
+          console.error("SHARED TEXT DICTATION START FAILED", err);
         }
       }
 
-      function stopFollowUpDictation() {
-        if (typeof window === "undefined") return;
-        const w = window as any;
-        if (w.__followUpRecognition) {
-          try {
-            w.__followUpRecognition.stop();
-          } catch (err) {
-            console.error("FOLLOW-UP DICTATION STOP FAILED", err);
-          }
-          w.__followUpRecognition = null;
-        }
-        setFollowUpListening(false);
+      function renderSharedTextDictationControls(config: {
+        fieldKey: string;
+        startLabel: string;
+        messageLabel: string;
+        listeningMessage: string;
+        successMessage: string;
+        getCurrentValue: () => string;
+        setValue: (value: string) => void;
+      }) {
+        const active = sharedTextDictationActiveField === config.fieldKey;
+        const message = sharedTextDictationMessages[config.fieldKey] || "";
+
+        return (
+          <>
+            <div style={{ marginTop: 8, display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <button
+                type="button"
+                onClick={() =>
+                  startSharedTextDictation({
+                    fieldKey: config.fieldKey,
+                    listeningMessage: config.listeningMessage,
+                    successMessage: config.successMessage,
+                    getCurrentValue: config.getCurrentValue,
+                    setValue: config.setValue,
+                  })
+                }
+                disabled={!browserSupportsSharedTextDictation() || active}
+                style={{
+                  padding: "8px 12px",
+                  fontWeight: 900,
+                  border: "1px solid #cfcfcf",
+                  borderRadius: 10,
+                  background: active ? "#f7f7f7" : "#ffffff",
+                  color: "#111",
+                  cursor: !browserSupportsSharedTextDictation() || active ? "not-allowed" : "pointer",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+                  opacity: !browserSupportsSharedTextDictation() || active ? 0.7 : 1,
+                }}
+              >
+                {active ? "Listening..." : config.startLabel}
+              </button>
+
+              <button
+                type="button"
+                onClick={stopSharedTextDictation}
+                disabled={!active}
+                style={{
+                  padding: "8px 12px",
+                  fontWeight: 900,
+                  border: "1px solid #cfcfcf",
+                  borderRadius: 10,
+                  background: "#ffffff",
+                  color: "#111",
+                  cursor: active ? "pointer" : "not-allowed",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+                  opacity: active ? 1 : 0.7,
+                }}
+              >
+                Stop Dictation
+              </button>
+            </div>
+
+            {!browserSupportsSharedTextDictation() ? (
+              <SmallHint style={{ marginTop: 6 }}>
+                Dictation is not supported in this browser. Try Chrome or Edge.
+              </SmallHint>
+            ) : null}
+
+            {message ? (
+              <SmallHint style={{ marginTop: 6 }}>
+                <b>{config.messageLabel}:</b> {message}
+              </SmallHint>
+            ) : null}
+          </>
+        );
       }
 
 const [showBulkImportTools, setShowBulkImportTools] = useState(false);
@@ -9697,237 +9826,7 @@ return (
             </select>
           </div>
 
-                    {/* field-action-bar-v1 */}
-          <div style={{ gridColumn: "1 / -1", marginTop: 12 }}>
-            <div
-              style={{
-                border: "1px solid #e5e5e5",
-                borderRadius: 12,
-                padding: 12,
-                background: "#fff",
-                display: "grid",
-                gap: 10,
-                position: "sticky",
-                top: 8,
-                zIndex: 20,
-                boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
-                <div style={{ fontWeight: 900, fontSize: 16 }}>
-                  Field Action Bar
-                </div>
-
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  {currentLoadedUnitId ? (
-                    <span
-                      style={{
-                        border: "1px solid #d9d9d9",
-                        borderRadius: 999,
-                        padding: "4px 10px",
-                        fontSize: 12,
-                        fontWeight: 700,
-                        background: "#fafafa",
-                      }}
-                    >
-                      Loaded Unit
-                    </span>
-                  ) : null}
-
-                  {editingServiceEventId ? (
-                    <span
-                      style={{
-                        border: "1px solid #d9d9d9",
-                        borderRadius: 999,
-                        padding: "4px 10px",
-                        fontSize: 12,
-                        fontWeight: 700,
-                        background: "#fff8e8",
-                      }}
-                    >
-                      Editing Event
-                    </span>
-                  ) : null}
-
-                  {historicalEntryMode ? (
-                    <span
-                      style={{
-                        border: "1px solid #d9d9d9",
-                        borderRadius: 999,
-                        padding: "4px 10px",
-                        fontSize: 12,
-                        fontWeight: 700,
-                        background: "#eef6ff",
-                      }}
-                    >
-                      Historical Mode
-                    </span>
-                  ) : null}
-                </div>
-              </div>
-
-              <SmallHint>
-                Quick access to the main actions a tech uses on the live call.
-              </SmallHint>
-
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <button
-                  type="button"
-                  onClick={() => applySmartReadingsParser()}
-                  style={{
-                    padding: "8px 12px",
-                    fontWeight: 900,
-                    border: "1px solid #cfcfcf",
-                    borderRadius: 10,
-                    background: "#ffffff",
-                    color: "#111",
-                    cursor: "pointer",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                  }}
-                >
-                  Parse Readings
-                </button>
-
-                <button
-                  type="button"
-                  onClick={buildDiagnosticCloseoutDrafts}
-                  style={{
-                    padding: "8px 12px",
-                    fontWeight: 900,
-                    border: "1px solid #cfcfcf",
-                    borderRadius: 10,
-                    background: "#ffffff",
-                    color: "#111",
-                    cursor: "pointer",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                  }}
-                >
-                  Generate Closeout
-                </button>
-
-                {!editingServiceEventId ? (
-                  <button
-                    type="button"
-                    onClick={() => void saveCurrentCallAsServiceEvent()}
-                    disabled={!currentLoadedUnitId}
-                    style={{
-                      padding: "8px 12px",
-                      fontWeight: 900,
-                      border: "1px solid #cfcfcf",
-                      borderRadius: 10,
-                      background: "#ffffff",
-                      color: "#111",
-                      cursor: currentLoadedUnitId ? "pointer" : "not-allowed",
-                      boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                      opacity: currentLoadedUnitId ? 1 : 0.7,
-                    }}
-                  >
-                    Save Current Call
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => void updateCurrentServiceEvent()}
-                    disabled={!currentLoadedUnitId}
-                    style={{
-                      padding: "8px 12px",
-                      fontWeight: 900,
-                      border: "1px solid #cfcfcf",
-                      borderRadius: 10,
-                      background: "#ffffff",
-                      color: "#111",
-                      cursor: currentLoadedUnitId ? "pointer" : "not-allowed",
-                      boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                      opacity: currentLoadedUnitId ? 1 : 0.7,
-                    }}
-                  >
-                    Update Event
-                  </button>
-                )}
-
-                {editingServiceEventId ? (
-                  <button
-                    type="button"
-                    onClick={cancelEditingServiceEvent}
-                    style={{
-                      padding: "8px 12px",
-                      fontWeight: 900,
-                      border: "1px solid #cfcfcf",
-                      borderRadius: 10,
-                      background: "#ffffff",
-                      color: "#111",
-                      cursor: "pointer",
-                      boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                    }}
-                  >
-                    Cancel Edit
-                  </button>
-                ) : null}
-
-                {historicalEntryMode ? (
-                  <button
-                    type="button"
-                    onClick={() => void saveHistoricalCallAndReset()}
-                    disabled={!currentLoadedUnitId}
-                    style={{
-                      padding: "8px 12px",
-                      fontWeight: 900,
-                      border: "1px solid #cfcfcf",
-                      borderRadius: 10,
-                      background: "#ffffff",
-                      color: "#111",
-                      cursor: currentLoadedUnitId ? "pointer" : "not-allowed",
-                      boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                      opacity: currentLoadedUnitId ? 1 : 0.7,
-                    }}
-                  >
-                    Save & Add Another
-                  </button>
-                ) : null}
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowFailureDashboard((prev) => !prev);
-                    if (!showFailureDashboard) {
-                      void loadFailureIntelligenceDashboardData();
-                    }
-                  }}
-                  style={{
-                    padding: "8px 12px",
-                    fontWeight: 900,
-                    border: "1px solid #cfcfcf",
-                    borderRadius: 10,
-                    background: "#ffffff",
-                    color: "#111",
-                    cursor: "pointer",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                  }}
-                >
-                  {showFailureDashboard ? "Hide Dashboard" : "Open Dashboard"}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => void loadFailureIntelligenceDashboardData()}
-                  style={{
-                    padding: "8px 12px",
-                    fontWeight: 900,
-                    border: "1px solid #cfcfcf",
-                    borderRadius: 10,
-                    background: "#ffffff",
-                    color: "#111",
-                    cursor: "pointer",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                  }}
-                >
-                  Refresh Dashboard
-                </button>
-              </div>
-            </div>
-          </div>
-
-{/* smart-readings-parser-v1 */}
+          {/* smart-readings-parser-v1 */}
           <div style={{ gridColumn: "1 / -1", marginTop: 12 }}>
             <div
               style={{
@@ -11288,62 +11187,16 @@ return (
     style={{ width: "100%", padding: 8 }}
   />
 
-          {/* parts-replaced-dictation-only-v1 */}
-          <div style={{ marginTop: 8, display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <button
-              type="button"
-              onClick={startPartsReplacedDictation}
-              disabled={!browserSupportsPartsReplacedDictation() || partsReplacedListening}
-              style={{
-                padding: "8px 12px",
-                fontWeight: 900,
-                border: "1px solid #cfcfcf",
-                borderRadius: 10,
-                background: partsReplacedListening ? "#f7f7f7" : "#ffffff",
-                color: "#111",
-                cursor:
-                  !browserSupportsPartsReplacedDictation() || partsReplacedListening
-                    ? "not-allowed"
-                    : "pointer",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                opacity:
-                  !browserSupportsPartsReplacedDictation() || partsReplacedListening ? 0.7 : 1,
-              }}
-            >
-              {partsReplacedListening ? "Listening..." : "Start Parts Replaced Dictation"}
-            </button>
-
-            <button
-              type="button"
-              onClick={stopPartsReplacedDictation}
-              disabled={!partsReplacedListening}
-              style={{
-                padding: "8px 12px",
-                fontWeight: 900,
-                border: "1px solid #cfcfcf",
-                borderRadius: 10,
-                background: "#ffffff",
-                color: "#111",
-                cursor: partsReplacedListening ? "pointer" : "not-allowed",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                opacity: partsReplacedListening ? 1 : 0.7,
-              }}
-            >
-              Stop Dictation
-            </button>
-          </div>
-
-          {!browserSupportsPartsReplacedDictation() ? (
-            <SmallHint style={{ marginTop: 6 }}>
-              Dictation is not supported in this browser. Try Chrome or Edge.
-            </SmallHint>
-          ) : null}
-
-          {partsReplacedDictationMessage ? (
-            <SmallHint style={{ marginTop: 6 }}>
-              <b>Parts Replaced Dictation:</b> {partsReplacedDictationMessage}
-            </SmallHint>
-          ) : null}
+          {/* reusable-field-dictation-v1-parts-replaced */}
+          {renderSharedTextDictationControls({
+            fieldKey: "partsReplaced",
+            startLabel: "Start Parts Replaced Dictation",
+            messageLabel: "Parts Replaced Dictation",
+            listeningMessage: "Listening... name the parts that were replaced.",
+            successMessage: "Dictation captured and added to Parts Replaced.",
+            getCurrentValue: () => String(partsReplaced || ""),
+            setValue: setPartsReplaced,
+          })}
 
 
           {/* parts-replaced-dictation-v1 */}
@@ -12000,62 +11853,20 @@ return (
                   style={{ width: "100%", padding: 8 }}
                 />
 
-                {/* follow-up-dictation-only-v1 */}
-                <div style={{ marginTop: 8, display: "flex", gap: 10, flexWrap: "wrap" }}>
-                  <button
-                    type="button"
-                    onClick={startFollowUpDictation}
-                    disabled={!browserSupportsFollowUpDictation() || followUpListening}
-                    style={{
-                      padding: "8px 12px",
-                      fontWeight: 900,
-                      border: "1px solid #cfcfcf",
-                      borderRadius: 10,
-                      background: followUpListening ? "#f7f7f7" : "#ffffff",
-                      color: "#111",
-                      cursor:
-                        !browserSupportsFollowUpDictation() || followUpListening
-                          ? "not-allowed"
-                          : "pointer",
-                      boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                      opacity:
-                        !browserSupportsFollowUpDictation() || followUpListening ? 0.7 : 1,
-                    }}
-                  >
-                    {followUpListening ? "Listening..." : "Start Follow-Up Dictation"}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={stopFollowUpDictation}
-                    disabled={!followUpListening}
-                    style={{
-                      padding: "8px 12px",
-                      fontWeight: 900,
-                      border: "1px solid #cfcfcf",
-                      borderRadius: 10,
-                      background: "#ffffff",
-                      color: "#111",
-                      cursor: followUpListening ? "pointer" : "not-allowed",
-                      boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                      opacity: followUpListening ? 1 : 0.7,
-                    }}
-                  >
-                    Stop Dictation
-                  </button>
-                </div>
-
-                {!browserSupportsFollowUpDictation() ? (
-                  <SmallHint style={{ marginTop: 6 }}>
-                    Dictation is not supported in this browser. Try Chrome or Edge.
-                  </SmallHint>
-                ) : null}
-
-                {followUpDictationMessage ? (
-                  <SmallHint style={{ marginTop: 6 }}>
-                    <b>Follow-Up Dictation:</b> {followUpDictationMessage}
-                  </SmallHint>
-                ) : null}
+                {/* reusable-field-dictation-v1-follow-up */}
+                {renderSharedTextDictationControls({
+                  fieldKey: "followUp",
+                  startLabel: "Start Follow-Up Dictation",
+                  messageLabel: "Follow-Up Dictation",
+                  listeningMessage: "Listening... describe the recommended follow-up.",
+                  successMessage: "Dictation captured and added to Recommended Follow-Up.",
+                  getCurrentValue: () => String(diagnosticCloseoutDrafts.followUp || ""),
+                  setValue: (value: string) =>
+                    setDiagnosticCloseoutDrafts((prev) => ({
+                      ...prev,
+                      followUp: value,
+                    })),
+                })}
 
                 <button
                   type="button"
@@ -12337,62 +12148,17 @@ return (
           onChange={(e) => setTechCloseoutNotes(e.target.value)}
         />
 
-          {/* closeout-note-dictation-v1 */}
-          <div style={{ marginTop: 8, display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <button
-              type="button"
-              onClick={startTechCloseoutDictation}
-              disabled={!browserSupportsTechCloseoutDictation() || techCloseoutListening}
-              style={{
-                padding: "8px 12px",
-                fontWeight: 900,
-                border: "1px solid #cfcfcf",
-                borderRadius: 10,
-                background: techCloseoutListening ? "#f7f7f7" : "#ffffff",
-                color: "#111",
-                cursor:
-                  !browserSupportsTechCloseoutDictation() || techCloseoutListening
-                    ? "not-allowed"
-                    : "pointer",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                opacity:
-                  !browserSupportsTechCloseoutDictation() || techCloseoutListening ? 0.7 : 1,
-              }}
-            >
-              {techCloseoutListening ? "Listening..." : "Start Note Dictation"}
-            </button>
+          {/* reusable-field-dictation-v1-tech-notes */}
+          {renderSharedTextDictationControls({
+            fieldKey: "techCloseoutNotes",
+            startLabel: "Start Tech Notes Dictation",
+            messageLabel: "Tech Notes Dictation",
+            listeningMessage: "Listening... describe your closeout notes.",
+            successMessage: "Dictation captured and added to Tech Closeout Notes.",
+            getCurrentValue: () => String(techCloseoutNotes || ""),
+            setValue: setTechCloseoutNotes,
+          })}
 
-            <button
-              type="button"
-              onClick={stopTechCloseoutDictation}
-              disabled={!techCloseoutListening}
-              style={{
-                padding: "8px 12px",
-                fontWeight: 900,
-                border: "1px solid #cfcfcf",
-                borderRadius: 10,
-                background: "#ffffff",
-                color: "#111",
-                cursor: techCloseoutListening ? "pointer" : "not-allowed",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                opacity: techCloseoutListening ? 1 : 0.7,
-              }}
-            >
-              Stop Dictation
-            </button>
-          </div>
-
-          {!browserSupportsTechCloseoutDictation() ? (
-            <SmallHint style={{ marginTop: 6 }}>
-              Dictation is not supported in this browser. Try Chrome or Edge.
-            </SmallHint>
-          ) : null}
-
-          {techCloseoutDictationMessage ? (
-            <SmallHint style={{ marginTop: 6 }}>
-              <b>Dictation:</b> {techCloseoutDictationMessage}
-            </SmallHint>
-          ) : null}
 
 
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
