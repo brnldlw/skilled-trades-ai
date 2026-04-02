@@ -5661,7 +5661,9 @@ function browserSupportsSmartReadingsDictation() {
         setConfirmedCauseListening(false);
       }
 
-            const [showBulkImportTools, setShowBulkImportTools] = useState(false);
+                  // parts-replaced-dictation-only-v1
+            
+                  const [showBulkImportTools, setShowBulkImportTools] = useState(false);
 
   const [workOrderImportText, setWorkOrderImportText] = useState("");
   const [workOrderImportRows, setWorkOrderImportRows] = useState<Record<string, string>[]>([]);
@@ -10954,6 +10956,64 @@ return (
     placeholder="Example: dual run capacitor, condenser fan motor, TXV, contactor"
     style={{ width: "100%", padding: 8 }}
   />
+
+          {/* parts-replaced-dictation-only-v1 */}
+          <div style={{ marginTop: 8, display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <button
+              type="button"
+              onClick={startPartsReplacedDictation}
+              disabled={!browserSupportsPartsReplacedDictation() || partsReplacedListening}
+              style={{
+                padding: "8px 12px",
+                fontWeight: 900,
+                border: "1px solid #cfcfcf",
+                borderRadius: 10,
+                background: partsReplacedListening ? "#f7f7f7" : "#ffffff",
+                color: "#111",
+                cursor:
+                  !browserSupportsPartsReplacedDictation() || partsReplacedListening
+                    ? "not-allowed"
+                    : "pointer",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+                opacity:
+                  !browserSupportsPartsReplacedDictation() || partsReplacedListening ? 0.7 : 1,
+              }}
+            >
+              {partsReplacedListening ? "Listening..." : "Start Parts Replaced Dictation"}
+            </button>
+
+            <button
+              type="button"
+              onClick={stopPartsReplacedDictation}
+              disabled={!partsReplacedListening}
+              style={{
+                padding: "8px 12px",
+                fontWeight: 900,
+                border: "1px solid #cfcfcf",
+                borderRadius: 10,
+                background: "#ffffff",
+                color: "#111",
+                cursor: partsReplacedListening ? "pointer" : "not-allowed",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+                opacity: partsReplacedListening ? 1 : 0.7,
+              }}
+            >
+              Stop Dictation
+            </button>
+          </div>
+
+          {!browserSupportsPartsReplacedDictation() ? (
+            <SmallHint style={{ marginTop: 6 }}>
+              Dictation is not supported in this browser. Try Chrome or Edge.
+            </SmallHint>
+          ) : null}
+
+          {partsReplacedDictationMessage ? (
+            <SmallHint style={{ marginTop: 6 }}>
+              <b>Parts Replaced Dictation:</b> {partsReplacedDictationMessage}
+            </SmallHint>
+          ) : null}
+
 
           {/* parts-replaced-dictation-v1 */}
           <div style={{ marginTop: 8, display: "flex", gap: 10, flexWrap: "wrap" }}>
