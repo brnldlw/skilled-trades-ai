@@ -5001,30 +5001,6 @@ function browserSupportsSmartReadingsDictation() {
         setActualFixListening(false);
       }
 
-      // auto-grow-dictation-textareas-v1
-      function autoGrowTextarea(event: any) {
-        const el = event?.target as HTMLTextAreaElement | undefined;
-        if (!el) return;
-        el.style.minHeight = "120px";
-        el.style.resize = "vertical";
-        el.style.height = "auto";
-        el.style.height = `${Math.max(el.scrollHeight, 120)}px`;
-      }
-
-      function refreshAutoGrowTextareas() {
-        if (typeof document === "undefined") return;
-        const nodes = Array.from(
-          document.querySelectorAll('textarea[data-auto-grow="true"]')
-        ) as HTMLTextAreaElement[];
-
-        for (const el of nodes) {
-          el.style.minHeight = "120px";
-          el.style.resize = "vertical";
-          el.style.height = "auto";
-          el.style.height = `${Math.max(el.scrollHeight, 120)}px`;
-        }
-      }
-
 const [showBulkImportTools, setShowBulkImportTools] = useState(false);
 
   const [workOrderImportText, setWorkOrderImportText] = useState("");
@@ -5833,21 +5809,6 @@ function findLikelyDuplicateWithoutSerial() {
   useEffect(() => {
     void loadFailureIntelligenceDashboardData();
   }, [savedUnits]);
-
-
-  useEffect(() => {
-    const id = requestAnimationFrame(() => refreshAutoGrowTextareas());
-    return () => cancelAnimationFrame(id);
-  }, [
-    smartReadingsInput,
-    symptom,
-    finalConfirmedCause,
-    actualFixPerformed,
-    techCloseoutNotes,
-    diagnosticCloseoutDrafts.customerSummary,
-    diagnosticCloseoutDrafts.internalSummary,
-    diagnosticCloseoutDrafts.followUp,
-  ]);
 
 async function updateCurrentLoadedUnit() {
   if (!currentLoadedUnitId) {
@@ -8852,7 +8813,7 @@ return (
                 Example: suction 50 head 175 superheat 18 subcool 7 return 74 supply 58
               </SmallHint>
 
-              <textarea data-auto-grow="true" onInput={autoGrowTextarea}
+              <textarea
                 value={smartReadingsInput}
                 onChange={(e) => setSmartReadingsInput(e.target.value)}
                 placeholder="Example: suction 50 head 175 superheat 18 subcool 7 return 74 supply 58 box 10"
@@ -9055,7 +9016,7 @@ return (
           <div style={{ gridColumn: "1 / -1" }}>
             <label style={{ fontWeight: 900 }}>Symptom</label>
             <br />
-            <textarea data-auto-grow="true" onInput={autoGrowTextarea}
+            <textarea
               value={symptom}
               onChange={(e) => setSymptom(e.target.value)}
             />
@@ -10530,7 +10491,7 @@ return (
                 }}
               >
                 <div style={{ fontWeight: 900 }}>Customer Summary</div>
-                <textarea data-auto-grow="true" onInput={autoGrowTextarea}
+                <textarea
                   value={diagnosticCloseoutDrafts.customerSummary}
                   onChange={(e) =>
                     setDiagnosticCloseoutDrafts((prev) => ({
@@ -10570,7 +10531,7 @@ return (
                 }}
               >
                 <div style={{ fontWeight: 900 }}>Internal Tech Summary</div>
-                <textarea data-auto-grow="true" onInput={autoGrowTextarea}
+                <textarea
                   value={diagnosticCloseoutDrafts.internalSummary}
                   onChange={(e) =>
                     setDiagnosticCloseoutDrafts((prev) => ({
@@ -10610,7 +10571,7 @@ return (
                 }}
               >
                 <div style={{ fontWeight: 900 }}>Recommended Follow-Up</div>
-                <textarea data-auto-grow="true" onInput={autoGrowTextarea}
+                <textarea
                   value={diagnosticCloseoutDrafts.followUp}
                   onChange={(e) =>
                     setDiagnosticCloseoutDrafts((prev) => ({
@@ -10643,7 +10604,7 @@ return (
 
 <label style={{ fontWeight: 900 }}>Tech Closeout Notes</label>
         <br />
-        <textarea data-auto-grow="true" onInput={autoGrowTextarea}
+        <textarea
           value={techCloseoutNotes}
           onChange={(e) => setTechCloseoutNotes(e.target.value)}
         />
