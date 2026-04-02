@@ -5663,7 +5663,108 @@ function browserSupportsSmartReadingsDictation() {
 
                   // parts-replaced-dictation-only-v1
             
-                  const [showBulkImportTools, setShowBulkImportTools] = useState(false);
+                        // follow-up-dictation-only-v1
+      const [followUpListening, setFollowUpListening] = useState(false);
+      const [followUpDictationMessage, setFollowUpDictationMessage] = useState("");
+
+      function browserSupportsFollowUpDictation() {
+        if (typeof window === "undefined") return false;
+        const w = window as any;
+        return Boolean(w.SpeechRecognition || w.webkitSpeechRecognition);
+      }
+
+      function startFollowUpDictation() {
+        if (typeof window === "undefined") return;
+
+        const w = window as any;
+        const SpeechRecognitionCtor = w.SpeechRecognition || w.webkitSpeechRecognition;
+
+        if (!SpeechRecognitionCtor) {
+          setFollowUpDictationMessage(
+            "Speech recognition is not supported in this browser. Try Chrome or Edge."
+          );
+          return;
+        }
+
+        try {
+          if (w.__followUpRecognition && followUpListening) {
+            return;
+          }
+
+          const recognition = new SpeechRecognitionCtor();
+          w.__followUpRecognition = recognition;
+
+          recognition.lang = "en-US";
+          recognition.interimResults = false;
+          recognition.continuous = false;
+          recognition.maxAlternatives = 1;
+
+          recognition.onstart = () => {
+            setFollowUpListening(true);
+            setFollowUpDictationMessage(
+              "Listening... describe the recommended follow-up."
+            );
+          };
+
+          recognition.onresult = (event: any) => {
+            let transcript = "";
+
+            for (let i = event.resultIndex; i < event.results.length; i += 1) {
+              const result = event.results[i];
+              if (result?.isFinal && result[0]?.transcript) {
+                transcript += String(result[0].transcript).trim() + " ";
+              }
+            }
+
+            const cleaned = transcript.trim();
+            if (!cleaned) return;
+
+            setDiagnosticCloseoutDrafts((prev) => ({
+              ...prev,
+              followUp: [String(prev.followUp || "").trim(), cleaned].filter(Boolean).join("\n"),
+            }));
+            setFollowUpDictationMessage(
+              "Dictation captured and added to Recommended Follow-Up."
+            );
+          };
+
+          recognition.onerror = (event: any) => {
+            setFollowUpListening(false);
+            w.__followUpRecognition = null;
+            setFollowUpDictationMessage(
+              event?.error ? `Dictation error: ${String(event.error)}` : "Dictation failed."
+            );
+          };
+
+          recognition.onend = () => {
+            setFollowUpListening(false);
+            w.__followUpRecognition = null;
+          };
+
+          recognition.start();
+        } catch (err) {
+          setFollowUpListening(false);
+          w.__followUpRecognition = null;
+          setFollowUpDictationMessage("Could not start dictation.");
+          console.error("FOLLOW-UP DICTATION FAILED", err);
+        }
+      }
+
+      function stopFollowUpDictation() {
+        if (typeof window === "undefined") return;
+        const w = window as any;
+        if (w.__followUpRecognition) {
+          try {
+            w.__followUpRecognition.stop();
+          } catch (err) {
+            console.error("FOLLOW-UP DICTATION STOP FAILED", err);
+          }
+          w.__followUpRecognition = null;
+        }
+        setFollowUpListening(false);
+      }
+
+const [showBulkImportTools, setShowBulkImportTools] = useState(false);
 
   const [workOrderImportText, setWorkOrderImportText] = useState("");
   const [workOrderImportRows, setWorkOrderImportRows] = useState<Record<string, string>[]>([]);
@@ -11668,6 +11769,64 @@ return (
                   rows={8}
                   style={{ width: "100%", padding: 8 }}
                 />
+
+                {/* follow-up-dictation-only-v1 */}
+                <div style={{ marginTop: 8, display: "flex", gap: 10, flexWrap: "wrap" }}>
+                  <button
+                    type="button"
+                    onClick={startFollowUpDictation}
+                    disabled={!browserSupportsFollowUpDictation() || followUpListening}
+                    style={{
+                      padding: "8px 12px",
+                      fontWeight: 900,
+                      border: "1px solid #cfcfcf",
+                      borderRadius: 10,
+                      background: followUpListening ? "#f7f7f7" : "#ffffff",
+                      color: "#111",
+                      cursor:
+                        !browserSupportsFollowUpDictation() || followUpListening
+                          ? "not-allowed"
+                          : "pointer",
+                      boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+                      opacity:
+                        !browserSupportsFollowUpDictation() || followUpListening ? 0.7 : 1,
+                    }}
+                  >
+                    {followUpListening ? "Listening..." : "Start Follow-Up Dictation"}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={stopFollowUpDictation}
+                    disabled={!followUpListening}
+                    style={{
+                      padding: "8px 12px",
+                      fontWeight: 900,
+                      border: "1px solid #cfcfcf",
+                      borderRadius: 10,
+                      background: "#ffffff",
+                      color: "#111",
+                      cursor: followUpListening ? "pointer" : "not-allowed",
+                      boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+                      opacity: followUpListening ? 1 : 0.7,
+                    }}
+                  >
+                    Stop Dictation
+                  </button>
+                </div>
+
+                {!browserSupportsFollowUpDictation() ? (
+                  <SmallHint style={{ marginTop: 6 }}>
+                    Dictation is not supported in this browser. Try Chrome or Edge.
+                  </SmallHint>
+                ) : null}
+
+                {followUpDictationMessage ? (
+                  <SmallHint style={{ marginTop: 6 }}>
+                    <b>Follow-Up Dictation:</b> {followUpDictationMessage}
+                  </SmallHint>
+                ) : null}
+
                 <button
                   type="button"
                   onClick={() => void copyDiagnosticCloseoutText("followUp")}
