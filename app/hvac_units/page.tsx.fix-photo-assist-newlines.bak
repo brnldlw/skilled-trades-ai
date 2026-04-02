@@ -5766,7 +5766,8 @@ function browserSupportsSmartReadingsDictation() {
 
       // photo-driven-diagnostic-assist-v1
       const [photoAssistSubject, setPhotoAssistSubject] = useState("iced_coil");
-      
+      const [photoAssistMessage, setPhotoAssistMessage] = useState("");
+
       function buildPhotoDrivenDiagnosticAssistPayload() {
         const targetComponent = String(getCurrentAffectedComponentLabelForAssist() || "Primary component").trim();
         const componentLabelLower = targetComponent.toLowerCase();
@@ -5969,9 +5970,15 @@ function browserSupportsSmartReadingsDictation() {
         const text = [
           "Photo Diagnostic Assist",
           payload.summary,
-          payload.inspect.length ? "Inspect:\n- " + payload.inspect.join("\n- ") : "",
-          payload.verifyNext.length ? "Verify Next:\n- " + payload.verifyNext.join("\n- ") : "",
-          payload.watchOuts.length ? "Watch-Outs:\n- " + payload.watchOuts.join("\n- ") : "",
+          payload.inspect.length ? "Inspect:
+- " + payload.inspect.join("
+- ") : "",
+          payload.verifyNext.length ? "Verify Next:
+- " + payload.verifyNext.join("
+- ") : "",
+          payload.watchOuts.length ? "Watch-Outs:
+- " + payload.watchOuts.join("
+- ") : "",
         ]
           .filter(Boolean)
           .join("\n\n");
@@ -9915,123 +9922,7 @@ return (
             </select>
           </div>
 
-                              {/* sticky-mini-summary-banner-v1 */}
-          <div style={{ gridColumn: "1 / -1", marginTop: 12 }}>
-            <div
-              style={{
-                border: "1px solid #e5e5e5",
-                borderRadius: 12,
-                padding: 10,
-                background: "#fffdf7",
-                display: "grid",
-                gap: 8,
-                position: "sticky",
-                top: 8,
-                zIndex: 21,
-                boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-              }}
-            >
-              <div style={{ fontWeight: 900, fontSize: 15 }}>
-                Current Call Summary
-              </div>
-
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                  gap: 8,
-                }}
-              >
-                <div
-                  style={{
-                    border: "1px solid #eee",
-                    borderRadius: 999,
-                    padding: "6px 10px",
-                    background: "#fff",
-                  }}
-                >
-                  <SmallHint>
-                    <b>Unit:</b>{" "}
-                    {currentLoadedUnitId
-                      ? unitNickname || [manufacturer, model].filter(Boolean).join(" ") || "Loaded unit"
-                      : "No unit loaded"}
-                  </SmallHint>
-                </div>
-
-                <div
-                  style={{
-                    border: "1px solid #eee",
-                    borderRadius: 999,
-                    padding: "6px 10px",
-                    background: "#fff",
-                  }}
-                >
-                  <SmallHint>
-                    <b>Site:</b> {siteName || siteAddress || customerName || "-"}
-                  </SmallHint>
-                </div>
-
-                <div
-                  style={{
-                    border: "1px solid #eee",
-                    borderRadius: 999,
-                    padding: "6px 10px",
-                    background: "#fff",
-                  }}
-                >
-                  <SmallHint>
-                    <b>Component:</b> {getCurrentAffectedComponentLabelForAssist() || primaryComponentRole || "Primary component"}
-                  </SmallHint>
-                </div>
-
-                <div
-                  style={{
-                    border: "1px solid #eee",
-                    borderRadius: 999,
-                    padding: "6px 10px",
-                    background: "#fff",
-                  }}
-                >
-                  <SmallHint>
-                    <b>Symptom:</b> {symptom || "-"}
-                  </SmallHint>
-                </div>
-
-                <div
-                  style={{
-                    border: "1px solid #eee",
-                    borderRadius: 999,
-                    padding: "6px 10px",
-                    background: "#fff",
-                  }}
-                >
-                  <SmallHint>
-                    <b>Mode:</b>{" "}
-                    {editingServiceEventId
-                      ? "Editing Event"
-                      : historicalEntryMode
-                        ? "Historical Entry"
-                        : "Live Call"}
-                  </SmallHint>
-                </div>
-
-                <div
-                  style={{
-                    border: "1px solid #eee",
-                    borderRadius: 999,
-                    padding: "6px 10px",
-                    background: "#fff",
-                  }}
-                >
-                  <SmallHint>
-                    <b>Dashboard:</b> {showFailureDashboard ? "Open" : "Hidden"}
-                  </SmallHint>
-                </div>
-              </div>
-            </div>
-          </div>
-
-{/* field-action-bar-v1 */}
+                    {/* field-action-bar-v1 */}
           <div style={{ gridColumn: "1 / -1", marginTop: 12 }}>
             <div
               style={{
@@ -10042,7 +9933,7 @@ return (
                 display: "grid",
                 gap: 10,
                 position: "sticky",
-                top: 76,
+                top: 8,
                 zIndex: 20,
                 boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
               }}
