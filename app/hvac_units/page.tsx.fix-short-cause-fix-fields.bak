@@ -9862,12 +9862,10 @@ return (
       <div style={{ gridColumn: "1 / -1" }}>
         <label style={{ fontWeight: 900 }}>Final Confirmed Cause</label>
         <br />
-        <textarea data-auto-grow="true" onInput={autoGrowTextarea}
-          rows={6}
-                  style={{ width: "100%", padding: 8, minHeight: 160, resize: "vertical" }}
-                  value={finalConfirmedCause}
+        <input
+          value={finalConfirmedCause}
           onChange={(e) => setFinalConfirmedCause(e.target.value)}
-        ></textarea>
+        />
 
           {/* final-confirmed-cause-dictation-v1 */}
           <div style={{ marginTop: 8, display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -10088,12 +10086,10 @@ return (
       <div style={{ gridColumn: "1 / -1" }}>
         <label style={{ fontWeight: 900 }}>Actual Fix Performed</label>
         <br />
-        <textarea data-auto-grow="true" onInput={autoGrowTextarea}
-          rows={6}
-                  style={{ width: "100%", padding: 8, minHeight: 160, resize: "vertical" }}
-                  value={actualFixPerformed}
+        <input
+          value={actualFixPerformed}
           onChange={(e) => setActualFixPerformed(e.target.value)}
-        ></textarea>
+        />
 
           {/* actual-fix-performed-dictation-v1 */}
           <div style={{ marginTop: 8, display: "flex", gap: 10, flexWrap: "wrap" }}>
