@@ -5780,8 +5780,6 @@ function browserSupportsSmartReadingsDictation() {
         const inspect: string[] = [];
         const verifyNext: string[] = [];
         const watchOuts: string[] = [];
-        const repairDecisionEmphasis: string[] = [];
-        const partsToVerifyEmphasis: string[] = [];
         const summaryParts: string[] = [];
 
         summaryParts.push(
@@ -5805,16 +5803,6 @@ function browserSupportsSmartReadingsDictation() {
             "Verify fan operation, airflow, and defrost operation before condemning charge or TXV/EEV.",
             "Compare frost pattern to current suction, superheat, and box/load condition."
           );
-          repairDecisionEmphasis.push(
-            "Do not move into a refrigerant-side repair decision until airflow, drain, and defrost are checked.",
-            "Use the frost pattern to decide whether this is airflow/defrost versus feed/restriction."
-          );
-          partsToVerifyEmphasis.push(
-            "Evaporator Fan Motor",
-            "Defrost Heater",
-            "Defrost Termination / Defrost Control",
-            "TXV / EEV / Metering Device"
-          );
           watchOuts.push(
             "Do not jump straight to refrigerant-side parts if the photo points more toward airflow or defrost."
           );
@@ -5829,16 +5817,6 @@ function browserSupportsSmartReadingsDictation() {
             "Meter line/load voltage, verify coil pull-in, and test capacitor value before replacing other parts.",
             "Confirm the failed part is the root cause and not the result of another electrical problem."
           );
-          repairDecisionEmphasis.push(
-            "Bias the repair decision toward electrical verification first before refrigerant-side conclusions.",
-            "Prove whether the contactor/capacitor is the failure or a symptom of motor/compressor load."
-          );
-          partsToVerifyEmphasis.push(
-            "Contactor",
-            "Run Capacitor",
-            "Condenser Fan Motor",
-            "Compressor"
-          );
           watchOuts.push(
             "A bad contactor or capacitor can be the symptom of motor/compressor issues, not always the root cause."
           );
@@ -5851,15 +5829,6 @@ function browserSupportsSmartReadingsDictation() {
           );
           verifyNext.push(
             "Verify incoming power, control signals, safeties, and outputs with a meter before replacing the board."
-          );
-          repairDecisionEmphasis.push(
-            "Push the repair decision toward proving inputs and outputs instead of replacing the board from appearance alone."
-          );
-          partsToVerifyEmphasis.push(
-            "Control Board",
-            "Relay / Sequencer",
-            "Pressure Switch",
-            "Ignitor / Flame Sensor"
           );
           watchOuts.push(
             "Board replacement without verifying inputs/outputs often creates callbacks."
@@ -5874,15 +5843,6 @@ function browserSupportsSmartReadingsDictation() {
           verifyNext.push(
             "Ohm/check continuity only after confirming safe isolation. Then verify live voltage path as needed."
           );
-          repairDecisionEmphasis.push(
-            "Pause any part replacement until wiring integrity and landed connections are verified."
-          );
-          partsToVerifyEmphasis.push(
-            "Contactor",
-            "Control Board",
-            "Relay / Sequencer",
-            "Pressure Switch"
-          );
           watchOuts.push(
             "A wiring photo can explain repeated intermittent failures if connections are loose or heat damaged."
           );
@@ -5895,13 +5855,6 @@ function browserSupportsSmartReadingsDictation() {
           );
           verifyNext.push(
             "Use the tag to tighten parts/manuals lookup and confirm the correct system section is being diagnosed."
-          );
-          repairDecisionEmphasis.push(
-            "Use the tag to narrow the repair path to the correct system section before ordering or replacing anything."
-          );
-          partsToVerifyEmphasis.push(
-            "Model-specific OEM part verification",
-            "Correct paired-equipment part lookup"
           );
           watchOuts.push(
             "Do not order parts off the wrong tag when paired equipment is involved."
@@ -5916,15 +5869,6 @@ function browserSupportsSmartReadingsDictation() {
           verifyNext.push(
             "Verify defrost controls, termination, heaters, drain heat, and fan delay before replacing refrigeration parts."
           );
-          repairDecisionEmphasis.push(
-            "Lean the repair decision toward the complete defrost path before refrigerant-side replacement."
-          );
-          partsToVerifyEmphasis.push(
-            "Defrost Heater",
-            "Defrost Termination",
-            "Defrost Control",
-            "Drain Heater"
-          );
           watchOuts.push(
             "Repeated icing or water issues often come back if the defrost path is not fully checked."
           );
@@ -5938,14 +5882,6 @@ function browserSupportsSmartReadingsDictation() {
           verifyNext.push(
             "Verify airflow and cleanliness first, then compare readings before calling charge/feed issues."
           );
-          repairDecisionEmphasis.push(
-            "Push the repair path toward airflow correction before refrigerant-side parts replacement."
-          );
-          partsToVerifyEmphasis.push(
-            "Condenser Fan Motor",
-            "Evaporator Fan Motor",
-            "Blower Motor"
-          );
           watchOuts.push(
             "Dirty coil / airflow problems can distort pressures, split, box temp, and frost pattern."
           );
@@ -5958,15 +5894,6 @@ function browserSupportsSmartReadingsDictation() {
           );
           verifyNext.push(
             "Verify voltage, amp draw, start components, and compressor protection before condemning the compressor."
-          );
-          repairDecisionEmphasis.push(
-            "Keep the repair decision on electrical and protection verification before calling the compressor."
-          );
-          partsToVerifyEmphasis.push(
-            "Run Capacitor",
-            "Contactor",
-            "Compressor Protection",
-            "Compressor"
           );
           watchOuts.push(
             "Do not call a compressor from a photo alone. Verify electrically and against system conditions."
@@ -6025,8 +5952,6 @@ function browserSupportsSmartReadingsDictation() {
           summary: summaryParts.join(" "),
           inspect: dedupe(inspect).slice(0, 5),
           verifyNext: dedupe(verifyNext).slice(0, 5),
-          repairDecisionEmphasis: dedupe(repairDecisionEmphasis).slice(0, 5),
-          partsToVerifyEmphasis: dedupe(partsToVerifyEmphasis).slice(0, 5),
           watchOuts: dedupe(watchOuts).slice(0, 5),
         };
       }
@@ -13630,28 +13555,6 @@ return (
                       <div style={{ fontWeight: 900 }}>What to Verify Next</div>
                       <ul style={{ marginTop: 8, paddingLeft: 18 }}>
                         {payload.verifyNext.map((item, idx) => (
-                          <li key={idx}>
-                            <SmallHint>{item}</SmallHint>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 12, background: "#fff" }}>
-                      <div style={{ fontWeight: 900 }}>Repair Decision Emphasis</div>
-                      <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                        {payload.repairDecisionEmphasis.map((item, idx) => (
-                          <li key={idx}>
-                            <SmallHint>{item}</SmallHint>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 12, background: "#fff" }}>
-                      <div style={{ fontWeight: 900 }}>Parts to Verify Emphasis</div>
-                      <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                        {payload.partsToVerifyEmphasis.map((item, idx) => (
                           <li key={idx}>
                             <SmallHint>{item}</SmallHint>
                           </li>
