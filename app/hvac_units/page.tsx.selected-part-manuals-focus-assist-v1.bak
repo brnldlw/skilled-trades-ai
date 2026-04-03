@@ -5782,26 +5782,12 @@ function browserSupportsSmartReadingsDictation() {
         const watchOuts: string[] = [];
         const repairDecisionEmphasis: string[] = [];
         const partsToVerifyEmphasis: string[] = [];
-        const photoCanSupport: string[] = [];
-        const photoCannotProve: string[] = [];
-        const photoPartTieIn: string[] = [];
         const summaryParts: string[] = [];
 
         summaryParts.push(
           `${photoCount ? `${photoCount} photo${photoCount === 1 ? "" : "s"} attached` : "No photos attached yet"}.`
         );
         summaryParts.push(`Target component: ${targetComponent}.`);
-
-        const selectedPart = String(selectedVerificationPart || "").trim();
-        const selectedOutcome = String(selectedVerificationOutcome || "").trim();
-
-        if (selectedPart) {
-          summaryParts.push(`Selected verification part: ${selectedPart}.`);
-        }
-
-        if (selectedOutcome) {
-          summaryParts.push(`Verification outcome focus: ${selectedOutcome}.`);
-        }
 
         if (sameComponentHistory.length) {
           summaryParts.push(
@@ -5829,15 +5815,6 @@ function browserSupportsSmartReadingsDictation() {
             "Defrost Termination / Defrost Control",
             "TXV / EEV / Metering Device"
           );
-          photoCanSupport.push(
-            "Frost pattern clues",
-            "Airflow restriction clues",
-            "Drain/defrost pattern clues"
-          );
-          photoCannotProve.push(
-            "Exact TXV/EEV failure by itself",
-            "Exact refrigerant charge by itself"
-          );
           watchOuts.push(
             "Do not jump straight to refrigerant-side parts if the photo points more toward airflow or defrost."
           );
@@ -5862,17 +5839,6 @@ function browserSupportsSmartReadingsDictation() {
             "Condenser Fan Motor",
             "Compressor"
           );
-          photoCanSupport.push(
-            "Burnt contacts",
-            "Heat damage",
-            "Swollen/leaking capacitor clues",
-            "Loose lug / overheated wire clues"
-          );
-          photoCannotProve.push(
-            "Actual voltage drop under load",
-            "Actual coil control signal",
-            "Actual capacitance value"
-          );
           watchOuts.push(
             "A bad contactor or capacitor can be the symptom of motor/compressor issues, not always the root cause."
           );
@@ -5894,16 +5860,6 @@ function browserSupportsSmartReadingsDictation() {
             "Relay / Sequencer",
             "Pressure Switch",
             "Ignitor / Flame Sensor"
-          );
-          photoCanSupport.push(
-            "Burnt trace clues",
-            "Water intrusion clues",
-            "Loose connector clues"
-          );
-          photoCannotProve.push(
-            "Correct board inputs",
-            "Correct board outputs",
-            "Board failure by appearance alone"
           );
           watchOuts.push(
             "Board replacement without verifying inputs/outputs often creates callbacks."
@@ -5927,15 +5883,6 @@ function browserSupportsSmartReadingsDictation() {
             "Relay / Sequencer",
             "Pressure Switch"
           );
-          photoCanSupport.push(
-            "Loose connection clues",
-            "Heat damage clues",
-            "Miswired field modification clues"
-          );
-          photoCannotProve.push(
-            "Actual live voltage path by appearance alone",
-            "Intermittent open under load by appearance alone"
-          );
           watchOuts.push(
             "A wiring photo can explain repeated intermittent failures if connections are loose or heat damaged."
           );
@@ -5955,14 +5902,6 @@ function browserSupportsSmartReadingsDictation() {
           partsToVerifyEmphasis.push(
             "Model-specific OEM part verification",
             "Correct paired-equipment part lookup"
-          );
-          photoCanSupport.push(
-            "Correct model/serial identification",
-            "Correct paired-equipment side identification"
-          );
-          photoCannotProve.push(
-            "That the selected part is bad by itself",
-            "That the wrong side of the system is the failure"
           );
           watchOuts.push(
             "Do not order parts off the wrong tag when paired equipment is involved."
@@ -5986,15 +5925,6 @@ function browserSupportsSmartReadingsDictation() {
             "Defrost Control",
             "Drain Heater"
           );
-          photoCanSupport.push(
-            "Drain blockage clues",
-            "Ice pattern clues around defrost path",
-            "Heater/termination wiring clues"
-          );
-          photoCannotProve.push(
-            "Actual control timing by appearance alone",
-            "Actual heater continuity by appearance alone"
-          );
           watchOuts.push(
             "Repeated icing or water issues often come back if the defrost path is not fully checked."
           );
@@ -6015,15 +5945,6 @@ function browserSupportsSmartReadingsDictation() {
             "Condenser Fan Motor",
             "Evaporator Fan Motor",
             "Blower Motor"
-          );
-          photoCanSupport.push(
-            "Dirty coil clues",
-            "Blocked airflow path clues",
-            "Fan/blower airflow restriction clues"
-          );
-          photoCannotProve.push(
-            "Charge condition by appearance alone",
-            "Metering-device failure by appearance alone"
           );
           watchOuts.push(
             "Dirty coil / airflow problems can distort pressures, split, box temp, and frost pattern."
@@ -6046,15 +5967,6 @@ function browserSupportsSmartReadingsDictation() {
             "Contactor",
             "Compressor Protection",
             "Compressor"
-          );
-          photoCanSupport.push(
-            "Overheated terminal clues",
-            "Oil-stain clues",
-            "Start-component area clues"
-          );
-          photoCannotProve.push(
-            "Internal compressor mechanical failure by appearance alone",
-            "Correct amp draw by appearance alone"
           );
           watchOuts.push(
             "Do not call a compressor from a photo alone. Verify electrically and against system conditions."
@@ -6099,61 +6011,6 @@ function browserSupportsSmartReadingsDictation() {
           watchOuts.push(warning);
         }
 
-        const selectedPartLower = selectedPart.toLowerCase();
-
-        if (selectedPartLower.includes("contactor") && photoAssistSubject === "contactor_capacitor") {
-          photoPartTieIn.push("This photo should help support burnt contacts, heat damage, and lug condition on the contactor.");
-          photoCannotProve.push("This photo cannot prove coil voltage or contact drop under load.");
-          verifyNext.push("Use the photo as visual support, then meter line/load and coil voltage before replacement.");
-        }
-
-        if (selectedPartLower.includes("capacitor") && photoAssistSubject === "contactor_capacitor") {
-          photoPartTieIn.push("This photo should help support visible capacitor swelling, leakage, and terminal condition.");
-          photoCannotProve.push("This photo cannot prove actual µF value.");
-          verifyNext.push("Use the photo as visual support, then test actual capacitance before replacement.");
-        }
-
-        if (
-          (selectedPartLower.includes("txv") || selectedPartLower.includes("eev") || selectedPartLower.includes("metering")) &&
-          photoAssistSubject === "iced_coil"
-        ) {
-          photoPartTieIn.push("This photo may support frost pattern clues that help decide whether feed/restriction is even in play.");
-          photoCannotProve.push("This photo cannot prove TXV/EEV failure by itself.");
-          verifyNext.push("Tie the frost pattern back to airflow, SH/SC, and restriction checks before replacing the metering device.");
-        }
-
-        if (
-          (selectedPartLower.includes("defrost") || selectedPartLower.includes("drain heater")) &&
-          (photoAssistSubject === "iced_coil" || photoAssistSubject === "drain_defrost")
-        ) {
-          photoPartTieIn.push("This photo should help support icing pattern, drain issues, and overall defrost-path clues.");
-          photoCannotProve.push("This photo cannot prove the exact failed defrost component by itself.");
-          verifyNext.push("Use the photo to support the defrost pattern, then verify heater/control/termination electrically.");
-        }
-
-        if (selectedPartLower.includes("control board") && photoAssistSubject === "control_board") {
-          photoPartTieIn.push("This photo should help support burnt trace, water intrusion, and connector condition clues.");
-          photoCannotProve.push("This photo cannot prove correct inputs/outputs by itself.");
-          verifyNext.push("Use the photo to support board suspicion, then verify inputs and outputs with a meter before replacement.");
-        }
-
-        if (
-          (selectedPartLower.includes("blower motor") || selectedPartLower.includes("evaporator fan motor") || selectedPartLower.includes("condenser fan motor")) &&
-          photoAssistSubject === "dirty_coil_airflow"
-        ) {
-          photoPartTieIn.push("This photo should help support airflow restriction or dirty-coil context around the motor decision.");
-          photoCannotProve.push("This photo cannot prove the motor is electrically failed by itself.");
-          verifyNext.push("Use the photo to support airflow context, then verify motor voltage/amp draw before replacement.");
-        }
-
-        if (selectedOutcome === "Tested good") {
-          photoPartTieIn.push("Current outcome says the selected part tested good, so use the photo to help rule it out rather than justify replacement.");
-        }
-
-        if (selectedOutcome === "Replaced") {
-          photoPartTieIn.push("Current outcome says the selected part was replaced, so the photo should support why the repair path made sense.");
-        }
-
         const dedupe = (items: string[]) => {
           const seen = new Set<string>();
           return items.filter((item) => {
@@ -6170,9 +6027,6 @@ function browserSupportsSmartReadingsDictation() {
           verifyNext: dedupe(verifyNext).slice(0, 5),
           repairDecisionEmphasis: dedupe(repairDecisionEmphasis).slice(0, 5),
           partsToVerifyEmphasis: dedupe(partsToVerifyEmphasis).slice(0, 5),
-          photoCanSupport: dedupe(photoCanSupport).slice(0, 5),
-          photoCannotProve: dedupe(photoCannotProve).slice(0, 5),
-          photoPartTieIn: dedupe(photoPartTieIn).slice(0, 5),
           watchOuts: dedupe(watchOuts).slice(0, 5),
         };
       }
@@ -7014,190 +6868,6 @@ function browserSupportsSmartReadingsDictation() {
         }
 
         setVerificationOutcomeMessage("Verification outcome added to Tech Closeout Notes.");
-      }
-
-      // selected-part-manuals-focus-assist-v1
-      function buildSelectedPartManualsFocusAssist() {
-        const partChecklist = buildPartVerificationChecklistItems();
-        const selectedPart = String(partChecklist.selectedPart || "").trim();
-        const targetComponent = String(getCurrentAffectedComponentLabelForAssist() || "Primary component").trim();
-        const componentLower = targetComponent.toLowerCase();
-        const issue = String(symptom || "").trim().toLowerCase();
-        const equipment = String(equipmentType || "").trim().toLowerCase();
-        const photoSubject = String(photoAssistSubject || "").trim().toLowerCase();
-        const modelContext = [manufacturer, model].filter(Boolean).join(" ").trim();
-
-        const manualFocus: string[] = [];
-        const partsFocus: string[] = [];
-        const sideFocus: string[] = [];
-        const warnings: string[] = [];
-
-        const addUnique = (items: string[], value: string) => {
-          const clean = String(value || "").trim();
-          if (!clean) return;
-          if (!items.some((item) => item.trim().toLowerCase() === clean.toLowerCase())) {
-            items.push(clean);
-          }
-        };
-
-        if (!selectedPart) {
-          return {
-            selectedPart: "",
-            modelContext,
-            manualFocus,
-            partsFocus,
-            sideFocus,
-            warnings,
-          };
-        }
-
-        const partLower = selectedPart.toLowerCase();
-
-        addUnique(sideFocus, `Target component: ${targetComponent}`);
-        addUnique(sideFocus, modelContext ? `Model context: ${modelContext}` : "Use current make/model before broad lookup.");
-
-        if (partLower.includes("contactor")) {
-          addUnique(manualFocus, "Condensing unit electrical sequence and contactor circuit");
-          addUnique(manualFocus, "Line/load voltage path and contactor coil path");
-          addUnique(partsFocus, "Contactor");
-          addUnique(partsFocus, "Electrical service parts");
-          addUnique(sideFocus, "Condensing / outdoor electrical side");
-        }
-
-        if (partLower.includes("capacitor")) {
-          addUnique(manualFocus, "Run capacitor wiring and motor/compressor run circuit");
-          addUnique(partsFocus, "Run Capacitor");
-          addUnique(partsFocus, "Start / run electrical parts");
-          addUnique(sideFocus, "Condensing / outdoor electrical side");
-        }
-
-        if (partLower.includes("condenser fan motor")) {
-          addUnique(manualFocus, "Condenser fan wiring and heat-rejection section");
-          addUnique(partsFocus, "Condenser Fan Motor");
-          addUnique(partsFocus, "Outdoor airflow / heat-rejection parts");
-          addUnique(sideFocus, "Condensing / outdoor airflow side");
-        }
-
-        if (partLower.includes("evaporator fan motor")) {
-          addUnique(manualFocus, "Evaporator airflow and fan circuit section");
-          addUnique(manualFocus, "Drain / ice / airflow related service section");
-          addUnique(partsFocus, "Evaporator Fan Motor");
-          addUnique(partsFocus, "Evaporator airflow parts");
-          addUnique(sideFocus, "Evaporator / indoor airflow side");
-        }
-
-        if (partLower.includes("defrost heater")) {
-          addUnique(manualFocus, "Defrost heater circuit and defrost sequence section");
-          addUnique(partsFocus, "Defrost Heater");
-          addUnique(partsFocus, "Defrost system parts");
-          addUnique(sideFocus, "Evaporator / defrost side");
-        }
-
-        if (partLower.includes("defrost termination") || partLower.includes("defrost control")) {
-          addUnique(manualFocus, "Defrost control / termination / fan delay section");
-          addUnique(partsFocus, "Defrost Termination");
-          addUnique(partsFocus, "Defrost Control");
-          addUnique(sideFocus, "Evaporator / defrost control side");
-        }
-
-        if (partLower.includes("txv") || partLower.includes("eev") || partLower.includes("metering")) {
-          addUnique(manualFocus, "Metering device / feed path / distributor section");
-          addUnique(manualFocus, "Restriction and evaporator feed verification section");
-          addUnique(partsFocus, "TXV / EEV / Metering Device");
-          addUnique(sideFocus, "Evaporator / feed side");
-        }
-
-        if (partLower.includes("blower motor")) {
-          addUnique(manualFocus, "Indoor blower circuit and airflow sequence section");
-          addUnique(partsFocus, "Blower Motor / Module");
-          addUnique(partsFocus, "Indoor airflow parts");
-          addUnique(sideFocus, "Indoor / air-handler airflow side");
-        }
-
-        if (partLower.includes("float switch") || partLower.includes("drain safety")) {
-          addUnique(manualFocus, "Drain safety / condensate interrupt section");
-          addUnique(partsFocus, "Float Switch / Drain Safety");
-          addUnique(sideFocus, "Indoor drain / safety side");
-        }
-
-        if (partLower.includes("ignitor")) {
-          addUnique(manualFocus, "Heating sequence / ignition section");
-          addUnique(partsFocus, "Ignitor");
-          addUnique(partsFocus, "Heating ignition parts");
-          addUnique(sideFocus, "Furnace heating sequence side");
-        }
-
-        if (partLower.includes("flame sensor")) {
-          addUnique(manualFocus, "Flame proving / ignition verification section");
-          addUnique(partsFocus, "Flame Sensor");
-          addUnique(partsFocus, "Heating proving parts");
-          addUnique(sideFocus, "Furnace flame-proving side");
-        }
-
-        if (partLower.includes("pressure switch")) {
-          addUnique(manualFocus, "Inducer / pressure proving / vent safety section");
-          addUnique(partsFocus, "Pressure Switch");
-          addUnique(partsFocus, "Heating proving parts");
-          addUnique(sideFocus, "Furnace draft / proving side");
-        }
-
-        if (partLower.includes("water valve") || partLower.includes("water pump") || partLower.includes("sensor")) {
-          addUnique(manualFocus, "Water system / freeze-harvest sequence section");
-          addUnique(partsFocus, selectedPart);
-          addUnique(sideFocus, "Ice machine water / sequence side");
-        }
-
-        if (equipment.includes("walk-in")) {
-          addUnique(sideFocus, "Walk-in refrigeration / box-control context");
-        }
-
-        if (photoSubject === "nameplate_tag") {
-          addUnique(manualFocus, "Model-specific parts list / exploded view / OEM lookup");
-          addUnique(warnings, "Use the photographed tag/model to avoid pulling the wrong paired-equipment parts.");
-        }
-
-        if (photoSubject === "contactor_capacitor") {
-          addUnique(warnings, "Stay on electrical verification first before shifting into refrigerant-side lookup.");
-        }
-
-        if (photoSubject === "iced_coil" || photoSubject === "drain_defrost") {
-          addUnique(warnings, "Freeze-up photo context means airflow/defrost/feed sections should stay ahead of broad part swapping.");
-        }
-
-        if (issue.includes("icing") || issue.includes("freeze") || issue.includes("ice")) {
-          addUnique(warnings, "The complaint is freeze/icing-related, so keep lookup anchored to airflow/defrost/feed verification.");
-        }
-
-        if (componentLower.includes("condensing") || componentLower.includes("outdoor")) {
-          if (
-            partLower.includes("evaporator") ||
-            partLower.includes("defrost") ||
-            partLower.includes("txv") ||
-            partLower.includes("blower")
-          ) {
-            addUnique(warnings, "Selected part does not match the current outdoor/condensing-side focus. Re-check the target component.");
-          }
-        }
-
-        if (componentLower.includes("evaporator") || componentLower.includes("indoor")) {
-          if (
-            partLower.includes("contactor") ||
-            partLower.includes("capacitor") ||
-            partLower.includes("condenser fan") ||
-            partLower == "compressor"
-          ) {
-            addUnique(warnings, "Selected part does not match the current evap/indoor-side focus. Re-check the target component.");
-          }
-        }
-
-        return {
-          selectedPart,
-          modelContext,
-          manualFocus: manualFocus.slice(0, 5),
-          partsFocus: partsFocus.slice(0, 5),
-          sideFocus: sideFocus.slice(0, 5),
-          warnings: warnings.slice(0, 4),
-        };
       }
 
 const [showBulkImportTools, setShowBulkImportTools] = useState(false);
@@ -10773,116 +10443,7 @@ return (
         </SectionCard>
       </div>
 
-                  {/* selected-part-manuals-focus-assist-v1 */}
-      <div style={{ marginTop: 16 }}>
-        <SectionCard title="Selected Part → Manual / Parts Focus Assist">
-          <SmallHint>
-            Uses the selected part to point the tech toward the right manual section, parts category, and side of the system.
-          </SmallHint>
-
-          {(() => {
-            const assist = buildSelectedPartManualsFocusAssist();
-
-            if (!assist.selectedPart) {
-              return (
-                <div style={{ marginTop: 12 }}>
-                  <SmallHint>Select a part in Part Verification Checklist first.</SmallHint>
-                </div>
-              );
-            }
-
-            return (
-              <div style={{ marginTop: 12, display: "grid", gap: 12 }}>
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                    gap: 10,
-                  }}
-                >
-                  <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10, background: "#fafafa" }}>
-                    <div style={{ fontWeight: 900, fontSize: 12, color: "#666", textTransform: "uppercase" }}>
-                      Selected Part
-                    </div>
-                    <div style={{ marginTop: 4, fontWeight: 700 }}>
-                      {assist.selectedPart}
-                    </div>
-                  </div>
-
-                  <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10, background: "#fafafa" }}>
-                    <div style={{ fontWeight: 900, fontSize: 12, color: "#666", textTransform: "uppercase" }}>
-                      Model Context
-                    </div>
-                    <div style={{ marginTop: 4, fontWeight: 700 }}>
-                      {assist.modelContext || "Use current make/model"}
-                    </div>
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-                    gap: 12,
-                  }}
-                >
-                  <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 12, background: "#fff" }}>
-                    <div style={{ fontWeight: 900 }}>Manual Section Focus</div>
-                    <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                      {assist.manualFocus.map((item, idx) => (
-                        <li key={idx}>
-                          <SmallHint>{item}</SmallHint>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 12, background: "#fff" }}>
-                    <div style={{ fontWeight: 900 }}>Parts Category Focus</div>
-                    <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                      {assist.partsFocus.map((item, idx) => (
-                        <li key={idx}>
-                          <SmallHint>{item}</SmallHint>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 12, background: "#fff" }}>
-                    <div style={{ fontWeight: 900 }}>System Side Focus</div>
-                    <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                      {assist.sideFocus.map((item, idx) => (
-                        <li key={idx}>
-                          <SmallHint>{item}</SmallHint>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 12, background: "#fff" }}>
-                    <div style={{ fontWeight: 900 }}>Warnings</div>
-                    <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                      {assist.warnings.length ? (
-                        assist.warnings.map((item, idx) => (
-                          <li key={idx}>
-                            <SmallHint>{item}</SmallHint>
-                          </li>
-                        ))
-                      ) : (
-                        <li>
-                          <SmallHint>No special focus warnings.</SmallHint>
-                        </li>
-                      )}
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            );
-          })()}
-        </SectionCard>
-      </div>
-
-{/* tighter-parts-manuals-assist-v3 */}
+            {/* tighter-parts-manuals-assist-v3 */}
       <div style={{ marginTop: 16 }}>
         <SectionCard title="Tighter Parts & Manuals Assist">
           <SmallHint>
@@ -14817,39 +14378,6 @@ return (
                       <div style={{ fontWeight: 900 }}>Parts to Verify Emphasis</div>
                       <ul style={{ marginTop: 8, paddingLeft: 18 }}>
                         {payload.partsToVerifyEmphasis.map((item, idx) => (
-                          <li key={idx}>
-                            <SmallHint>{item}</SmallHint>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 12, background: "#fff" }}>
-                      <div style={{ fontWeight: 900 }}>What This Photo Can Support</div>
-                      <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                        {payload.photoCanSupport.map((item, idx) => (
-                          <li key={idx}>
-                            <SmallHint>{item}</SmallHint>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 12, background: "#fff" }}>
-                      <div style={{ fontWeight: 900 }}>What This Photo Cannot Prove</div>
-                      <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                        {payload.photoCannotProve.map((item, idx) => (
-                          <li key={idx}>
-                            <SmallHint>{item}</SmallHint>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 12, background: "#fff" }}>
-                      <div style={{ fontWeight: 900 }}>Selected Part Tie-In</div>
-                      <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                        {payload.photoPartTieIn.map((item, idx) => (
                           <li key={idx}>
                             <SmallHint>{item}</SmallHint>
                           </li>
