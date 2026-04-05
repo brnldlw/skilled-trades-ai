@@ -12532,6 +12532,80 @@ return (
             </select>
           </div>
 
+          {/* restore-error-code-top-section-v1 */}
+          <div style={{ gridColumn: "1 / -1", marginTop: 12 }}>
+            <div
+              style={{
+                border: "1px solid #e5e5e5",
+                borderRadius: 12,
+                padding: 12,
+                background: "#fff",
+                display: "grid",
+                gap: 12,
+              }}
+            >
+              <div style={{ fontWeight: 900, fontSize: 16 }}>
+                Step 1A — Error Codes
+              </div>
+
+              <SmallHint>
+                Enter the active error code early if the board, controller, thermostat, or display is showing one.
+              </SmallHint>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+                  gap: 12,
+                }}
+              >
+                <div>
+                  <label style={{ fontWeight: 900 }}>Error Code</label>
+                  <input
+                    value={errorCode}
+                    onChange={(e) => setErrorCode(e.target.value)}
+                    placeholder="Example: E1, HPS, 3 Flash, LP Lockout"
+                    style={{ width: "100%", padding: 8 }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontWeight: 900 }}>Error Code Source</label>
+                  <select
+                    value={errorCodeSource}
+                    onChange={(e) => setErrorCodeSource(e.target.value)}
+                    style={{ width: "100%", padding: 8 }}
+                  >
+                    <option value="Control Board">Control Board</option>
+                    <option value="Thermostat / Controller">Thermostat / Controller</option>
+                    <option value="Display / HMI">Display / HMI</option>
+                    <option value="VFD / Drive">VFD / Drive</option>
+                    <option value="Sensor / Safety Circuit">Sensor / Safety Circuit</option>
+                    <option value="Unknown">Unknown</option>
+                  </select>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  border: "1px solid #eee",
+                  borderRadius: 10,
+                  padding: 10,
+                  background: "#fafafa",
+                }}
+              >
+                {errorCode.trim() ? (
+                  <SmallHint>
+                    <b>Current Error Code:</b> {errorCode.trim()} • <b>Source:</b> {errorCodeSource || "Unknown"}
+                  </SmallHint>
+                ) : (
+                  <SmallHint>No error code entered yet.</SmallHint>
+                )}
+              </div>
+            </div>
+          </div>
+
+
                               {/* sticky-mini-summary-banner-v1 */}
           <div style={{ gridColumn: "1 / -1", marginTop: 12 }}>
             <div
