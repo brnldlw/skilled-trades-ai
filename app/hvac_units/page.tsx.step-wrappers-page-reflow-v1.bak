@@ -10738,27 +10738,7 @@ return (
         </SectionCard>
       </div>
 
-                                          
-      {/* step-wrappers-page-reflow-v1-step-4 */}
-      <div style={{ marginTop: 16 }}>
-        <div
-          style={{
-            border: "1px solid #dfe7f3",
-            borderRadius: 12,
-            padding: 12,
-            background: "#f8fbff",
-            display: "grid",
-            gap: 6,
-          }}
-        >
-          <div style={{ fontWeight: 900, fontSize: 18 }}>Step 4 — Repair</div>
-          <SmallHint>
-            Once a part is selected, use these sections to verify it correctly, focus on the right manual/parts area, and execute the repair safely.
-          </SmallHint>
-        </div>
-      </div>
-
-{/* repair-execution-assist-v1 */}
+                                          {/* repair-execution-assist-v1 */}
       <div style={{ marginTop: 16 }}>
         <SectionCard title="Repair Execution Assist">
           <SmallHint>
@@ -11023,27 +11003,7 @@ return (
         </SectionCard>
       </div>
 
-            
-      {/* step-wrappers-page-reflow-v1-step-5 */}
-      <div style={{ marginTop: 16 }}>
-        <div
-          style={{
-            border: "1px solid #dfe7f3",
-            borderRadius: 12,
-            padding: 12,
-            background: "#f8fbff",
-            display: "grid",
-            gap: 6,
-          }}
-        >
-          <div style={{ fontWeight: 900, fontSize: 18 }}>Step 5 — Closeout + Follow-Up</div>
-          <SmallHint>
-            Commit what was verified or replaced, generate the closeout, and leave with a follow-up watchlist that lowers callback risk.
-          </SmallHint>
-        </div>
-      </div>
-
-{/* suggested-follow-up-watchlist-v1 */}
+            {/* suggested-follow-up-watchlist-v1 */}
       <div style={{ marginTop: 16 }}>
         <SectionCard title="Suggested Follow-Up Watchlist">
           <SmallHint>
@@ -11393,26 +11353,6 @@ return (
             );
           })()}
         </SectionCard>
-      </div>
-
-
-      {/* step-wrappers-page-reflow-v1-step-3 */}
-      <div style={{ marginTop: 16 }}>
-        <div
-          style={{
-            border: "1px solid #dfe7f3",
-            borderRadius: 12,
-            padding: 12,
-            background: "#f8fbff",
-            display: "grid",
-            gap: 6,
-          }}
-        >
-          <div style={{ fontWeight: 900, fontSize: 18 }}>Step 3 — Diagnose</div>
-          <SmallHint>
-            Use these sections to decide what to test next, which parts are really in play, and what still needs to be proven before replacement.
-          </SmallHint>
-        </div>
       </div>
 
 {/* repair-decision-panel-v2 */}
@@ -12165,27 +12105,7 @@ return (
         </SectionCard>
       </div>
 
-      
-      {/* step-wrappers-page-reflow-v1-step-6 */}
-      <div style={{ marginTop: 16 }}>
-        <div
-          style={{
-            border: "1px solid #f0e6c8",
-            borderRadius: 12,
-            padding: 12,
-            background: "#fffaf0",
-            display: "grid",
-            gap: 6,
-          }}
-        >
-          <div style={{ fontWeight: 900, fontSize: 18 }}>Step 6 — Advanced / Optional</div>
-          <SmallHint>
-            These sections are useful, but they are not the main live-call path. Use them when you need extra intelligence or deeper context.
-          </SmallHint>
-        </div>
-      </div>
-
-{/* failure-dashboard-toggle-only-v1 */}
+      {/* failure-dashboard-toggle-only-v1 */}
       <div style={{ marginTop: 16 }}>
         <div
           style={{
@@ -13173,26 +13093,6 @@ return (
                 >
                   Refresh Dashboard
                 </button>
-
-          {/* step-wrappers-page-reflow-v1-step-2 */}
-          <div style={{ gridColumn: "1 / -1", marginTop: 16 }}>
-            <div
-              style={{
-                border: "1px solid #dfe7f3",
-                borderRadius: 12,
-                padding: 12,
-                background: "#f8fbff",
-                display: "grid",
-                gap: 6,
-              }}
-            >
-              <div style={{ fontWeight: 900, fontSize: 18 }}>Step 2 — Complaint + Evidence</div>
-              <SmallHint>
-                Enter the complaint, select the affected component, and capture readings / photo / observations before using the deeper guidance tools.
-              </SmallHint>
-            </div>
-          </div>
-
               </div>
             </div>
           </div>
