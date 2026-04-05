@@ -1,3 +1,5 @@
+/* top-surface-simplification-no-fail-v1 */
+/* safe-cleanup-pass-current-file-v1 */
 /* circuit-persistence-safe-patch-v1 */
 /* repair-execution-assist-visibility-cleanup-v1 */
 /* circuit-wiring-cleanup-pass1-v3 */
@@ -12786,13 +12788,17 @@ return (
                 }}
               >
                 <div>
-                  <label style={{ fontWeight: 900 }}>Error Code</label>
-                  <input
+                  <label style={{ fontWeight: 900 }}>Error Code(s)</label>
+                  <textarea
                     value={errorCode}
                     onChange={(e) => setErrorCode(e.target.value)}
-                    placeholder="Example: E1, HPS, 3 Flash, LP Lockout"
+                    placeholder={"Enter one or more codes. Example:\nE1\nHPS\n3 Flash"}
+                    rows={4}
                     style={{ width: "100%", padding: 8 }}
                   />
+                  <SmallHint>
+                    Enter multiple active codes one per line. The app will store them together in the current Error Code field.
+                  </SmallHint>
                 </div>
 
                 <div>
@@ -12822,7 +12828,7 @@ return (
               >
                 {errorCode.trim() ? (
                   <SmallHint>
-                    <b>Current Error Code:</b> {errorCode.trim()} • <b>Source:</b> {errorCodeSource || "Unknown"}
+                    <b>Current Error Code(s):</b> {errorCode.trim()} • <b>Source:</b> {errorCodeSource || "Unknown"}
                   </SmallHint>
                 ) : (
                   <SmallHint>No error code entered yet.</SmallHint>
@@ -13006,6 +13012,20 @@ return (
                 >
                   <SmallHint>
                     <b>Symptom:</b> {symptom || "-"}
+                  </SmallHint>
+                </div>
+
+                
+                <div
+                  style={{
+                    border: "1px solid #eee",
+                    borderRadius: 999,
+                    padding: "6px 10px",
+                    background: "#fff",
+                  }}
+                >
+                  <SmallHint>
+                    <b>Circuit:</b> {getSelectedCircuitDisplay() || "-"}
                   </SmallHint>
                 </div>
 
