@@ -1,4 +1,3 @@
-/* circuit-wiring-cleanup-pass1-v3 */
 /* replace-old-loaded-unit-banner-v1 */
 "use client";
 
@@ -7703,41 +7702,6 @@ function browserSupportsSmartReadingsDictation() {
         return [circuitLabel ? `Circuit: ${circuitLabel}` : "", clean].filter(Boolean).join("\n");
       }
 
-      function hydrateCircuitFromNotes(text: string) {
-        const raw = String(text || "");
-        const lines = raw.split("\n");
-        const circuitLine = lines.find((line) => line.trim().toLowerCase().startsWith("circuit:"));
-
-        if (!circuitLine) {
-          setSelectedCircuit("Circuit 1");
-          setCustomCircuitLabel("");
-          return stripCircuitLineFromNotes(raw);
-        }
-
-        const value = circuitLine.split(":").slice(1).join(":").trim();
-        const match = /^Circuit\s+(\d+)$/i.exec(value);
-
-        if (match) {
-          const num = Number.parseInt(match[1], 10);
-          if (Number.isFinite(num) && num > 0) {
-            setCircuitCount(String(Math.max(num, Number.parseInt(String(circuitCount || "1"), 10) || 1)));
-            setSelectedCircuit(`Circuit ${num}`);
-            setCustomCircuitLabel("");
-          } else {
-            setSelectedCircuit("Circuit 1");
-            setCustomCircuitLabel("");
-          }
-        } else if (value) {
-          setSelectedCircuit("Custom");
-          setCustomCircuitLabel(value);
-        } else {
-          setSelectedCircuit("Circuit 1");
-          setCustomCircuitLabel("");
-        }
-
-        return stripCircuitLineFromNotes(raw);
-      }
-
 const [showBulkImportTools, setShowBulkImportTools] = useState(false);
 
   const [workOrderImportText, setWorkOrderImportText] = useState("");
@@ -8897,7 +8861,7 @@ function loadServiceEventIntoForm(event: any) {
   setPartsReplaced(event.parts_replaced || "");
   setOutcomeStatus(event.outcome_status || "Not Set");
   setCallbackOccurred(event.callback_occurred || "No");
-  setTechCloseoutNotes(hydrateCircuitFromNotes(event.tech_closeout_notes || ""));
+  setTechCloseoutNotes(event.tech_closeout_notes || "");
   setServiceEventPhotoUrls(Array.isArray(event.photo_urls) ? event.photo_urls : []);
   setServiceEventPhotoMessage("");
   setAffectedComponentId(overlay?.affectedComponentId || "");
@@ -8915,9 +8879,6 @@ function cancelEditingServiceEvent() {
   setOutcomeStatus("Not Set");
   setCallbackOccurred("No");
   setTechCloseoutNotes("");
-  setCircuitCount("1");
-  setSelectedCircuit("Circuit 1");
-  setCustomCircuitLabel("");
   setServiceEventPhotoUrls([]);
   setServiceEventPhotoMessage("");
   setAffectedComponentId("");
@@ -9162,7 +9123,7 @@ async function openUnitProfile(record: SavedUnitRecord) {
     setActualFixPerformed(mergedRecord.actualFixPerformed || "");
     setOutcomeStatus(mergedRecord.outcomeStatus || "Not Set");
     setCallbackOccurred(mergedRecord.callbackOccurred || "No");
-    setTechCloseoutNotes(hydrateCircuitFromNotes(mergedRecord.techCloseoutNotes || ""));
+    setTechCloseoutNotes(mergedRecord.techCloseoutNotes || "");
 
     setSystemType(mergedRecord.systemType || "single");
     setPrimaryComponentRole(mergedRecord.primaryComponentRole || "unit");
@@ -12936,19 +12897,6 @@ return (
                 >
                   <SmallHint>
                     <b>Symptom:</b> {symptom || "-"}
-                  </SmallHint>
-                </div>
-
-                <div
-                  style={{
-                    border: "1px solid #eee",
-                    borderRadius: 999,
-                    padding: "6px 10px",
-                    background: "#fff",
-                  }}
-                >
-                  <SmallHint>
-                    <b>Circuit:</b> {getSelectedCircuitDisplay() || "-"}
                   </SmallHint>
                 </div>
 

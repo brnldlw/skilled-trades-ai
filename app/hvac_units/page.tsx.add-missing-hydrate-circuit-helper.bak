@@ -7703,41 +7703,6 @@ function browserSupportsSmartReadingsDictation() {
         return [circuitLabel ? `Circuit: ${circuitLabel}` : "", clean].filter(Boolean).join("\n");
       }
 
-      function hydrateCircuitFromNotes(text: string) {
-        const raw = String(text || "");
-        const lines = raw.split("\n");
-        const circuitLine = lines.find((line) => line.trim().toLowerCase().startsWith("circuit:"));
-
-        if (!circuitLine) {
-          setSelectedCircuit("Circuit 1");
-          setCustomCircuitLabel("");
-          return stripCircuitLineFromNotes(raw);
-        }
-
-        const value = circuitLine.split(":").slice(1).join(":").trim();
-        const match = /^Circuit\s+(\d+)$/i.exec(value);
-
-        if (match) {
-          const num = Number.parseInt(match[1], 10);
-          if (Number.isFinite(num) && num > 0) {
-            setCircuitCount(String(Math.max(num, Number.parseInt(String(circuitCount || "1"), 10) || 1)));
-            setSelectedCircuit(`Circuit ${num}`);
-            setCustomCircuitLabel("");
-          } else {
-            setSelectedCircuit("Circuit 1");
-            setCustomCircuitLabel("");
-          }
-        } else if (value) {
-          setSelectedCircuit("Custom");
-          setCustomCircuitLabel(value);
-        } else {
-          setSelectedCircuit("Circuit 1");
-          setCustomCircuitLabel("");
-        }
-
-        return stripCircuitLineFromNotes(raw);
-      }
-
 const [showBulkImportTools, setShowBulkImportTools] = useState(false);
 
   const [workOrderImportText, setWorkOrderImportText] = useState("");
