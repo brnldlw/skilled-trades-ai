@@ -1,5 +1,3 @@
-/* loadunit-cleanup-no-fail-v1 */
-/* top-surface-simplification-no-fail-v1 */
 /* safe-cleanup-pass-current-file-v1 */
 /* circuit-persistence-safe-patch-v1 */
 /* repair-execution-assist-visibility-cleanup-v1 */
@@ -13013,20 +13011,6 @@ return (
                 >
                   <SmallHint>
                     <b>Symptom:</b> {symptom || "-"}
-                  </SmallHint>
-                </div>
-
-                
-                <div
-                  style={{
-                    border: "1px solid #eee",
-                    borderRadius: 999,
-                    padding: "6px 10px",
-                    background: "#fff",
-                  }}
-                >
-                  <SmallHint>
-                    <b>Circuit:</b> {getSelectedCircuitDisplay() || "-"}
                   </SmallHint>
                 </div>
 
