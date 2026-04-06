@@ -1,5 +1,3 @@
-/* top-complaint-evidence-block-v1 */
-/* deemphasize-lower-legacy-equipment-entry-v2 */
 /* top-equipment-details-block-v1 */
 /* top-identify-equipment-block-v1 */
 /* loadunit-cleanup-no-fail-v1 */
@@ -12931,71 +12929,6 @@ return (
             </div>
           </div>
 
-
-          {/* top-complaint-evidence-block-v1 */}
-          <div style={{ gridColumn: "1 / -1", marginTop: 12 }}>
-            <div
-              style={{
-                border: "1px solid #dfe7f3",
-                borderRadius: 12,
-                padding: 12,
-                background: "#f8fbff",
-                display: "grid",
-                gap: 12,
-              }}
-            >
-              <div style={{ fontWeight: 900, fontSize: 16 }}>Step 2 — Complaint + Evidence</div>
-              <SmallHint>
-                Enter the service date and complaint here first. Use the lower troubleshooting sections for deeper guidance.
-              </SmallHint>
-
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                  gap: 12,
-                }}
-              >
-                <div>
-                  <label style={{ fontWeight: 900 }}>Service Date</label>
-                  <input
-                    type="date"
-                    value={serviceDate}
-                    onChange={(e) => setServiceDate(e.target.value)}
-                    style={{ width: "100%", padding: 8 }}
-                  />
-                </div>
-
-                <div>
-                  <label style={{ fontWeight: 900 }}>Affected Component</label>
-                  <div
-                    style={{
-                      width: "100%",
-                      padding: 8,
-                      border: "1px solid #ddd",
-                      borderRadius: 8,
-                      background: "#fff",
-                      minHeight: 38,
-                    }}
-                  >
-                    {getCurrentAffectedComponentLabelForAssist() || "Set in lower component/troubleshooting section"}
-                  </div>
-                </div>
-
-                <div style={{ gridColumn: "1 / -1" }}>
-                  <label style={{ fontWeight: 900 }}>Symptom / Complaint</label>
-                  <textarea
-                    value={symptom}
-                    onChange={(e) => setSymptom(e.target.value)}
-                    rows={4}
-                    placeholder="Example: not cooling, high head pressure, circuit 2 freezing, repeated defrost issue"
-                    style={{ width: "100%", padding: 8 }}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
 {/* restore-error-code-top-section-v1 */}
           <div style={{ gridColumn: "1 / -1", marginTop: 12 }}>
             <div
@@ -13168,22 +13101,6 @@ return (
             </div>
           </div>
 
-
-
-          <div style={{ gridColumn: "1 / -1", marginTop: 10 }}>
-            <div
-              style={{
-                border: "1px dashed #d6d6d6",
-                borderRadius: 10,
-                padding: 10,
-                background: "#f7f7f7",
-              }}
-            >
-              <SmallHint>
-                <b>Legacy lower equipment entry area:</b> Use <b>Step 1 — Identify Equipment</b> and <b>Step 1B — Equipment Details</b> at the top of the page as the main place to enter equipment information. These older lower fields remain for continuity while the page is being cleaned up.
-              </SmallHint>
-            </div>
-          </div>
 
                               {/* sticky-mini-summary-banner-v1 */}
           <div style={{ gridColumn: "1 / -1", marginTop: 12 }}>
