@@ -1,3 +1,4 @@
+/* deemphasize-lower-legacy-equipment-entry-v2 */
 /* top-equipment-details-block-v1 */
 /* top-identify-equipment-block-v1 */
 /* loadunit-cleanup-no-fail-v1 */
@@ -13101,6 +13102,22 @@ return (
             </div>
           </div>
 
+
+
+          <div style={{ gridColumn: "1 / -1", marginTop: 10 }}>
+            <div
+              style={{
+                border: "1px dashed #d6d6d6",
+                borderRadius: 10,
+                padding: 10,
+                background: "#f7f7f7",
+              }}
+            >
+              <SmallHint>
+                <b>Legacy lower equipment entry area:</b> Use <b>Step 1 — Identify Equipment</b> and <b>Step 1B — Equipment Details</b> at the top of the page as the main place to enter equipment information. These older lower fields remain for continuity while the page is being cleaned up.
+              </SmallHint>
+            </div>
+          </div>
 
                               {/* sticky-mini-summary-banner-v1 */}
           <div style={{ gridColumn: "1 / -1", marginTop: 12 }}>
