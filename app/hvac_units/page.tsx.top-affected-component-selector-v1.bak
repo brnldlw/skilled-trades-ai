@@ -1,5 +1,3 @@
-/* top-evidence-quick-entry-v1 */
-/* top-affected-component-selector-v1 */
 /* top-complaint-evidence-block-v1 */
 /* deemphasize-lower-legacy-equipment-entry-v2 */
 /* top-equipment-details-block-v1 */
@@ -12970,43 +12968,18 @@ return (
 
                 <div>
                   <label style={{ fontWeight: 900 }}>Affected Component</label>
-                  {(() => {
-                    const options = getAffectedComponentOptions();
-                    return (
-                      <div style={{ display: "grid", gap: 8 }}>
-                        <select
-                          value={affectedComponentId}
-                          onChange={(e) => {
-                            const nextId = e.target.value;
-                            const selected = options.find((option) => option.id === nextId);
-                            setAffectedComponentId(nextId);
-                            setAffectedComponentLabel(selected?.label || "");
-                          }}
-                          style={{ width: "100%", padding: 8 }}
-                        >
-                          <option value="">Select affected component</option>
-                          {options.map((option) => (
-                            <option key={option.id} value={option.id}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </select>
-
-                        <div
-                          style={{
-                            width: "100%",
-                            padding: 8,
-                            border: "1px solid #ddd",
-                            borderRadius: 8,
-                            background: "#fff",
-                            minHeight: 38,
-                          }}
-                        >
-                          {getCurrentAffectedComponentLabelForAssist() || "Select the exact component for this call"}
-                        </div>
-                      </div>
-                    );
-                  })()}
+                  <div
+                    style={{
+                      width: "100%",
+                      padding: 8,
+                      border: "1px solid #ddd",
+                      borderRadius: 8,
+                      background: "#fff",
+                      minHeight: 38,
+                    }}
+                  >
+                    {getCurrentAffectedComponentLabelForAssist() || "Set in lower component/troubleshooting section"}
+                  </div>
                 </div>
 
                 <div style={{ gridColumn: "1 / -1" }}>
@@ -13018,84 +12991,6 @@ return (
                     placeholder="Example: not cooling, high head pressure, circuit 2 freezing, repeated defrost issue"
                     style={{ width: "100%", padding: 8 }}
                   />
-                </div>
-              </div>
-            </div>
-          </div>
-
-
-          {/* top-evidence-quick-entry-v1 */}
-          <div style={{ gridColumn: "1 / -1", marginTop: 10 }}>
-            <div
-              style={{
-                border: "1px solid #dfe7f3",
-                borderRadius: 12,
-                padding: 12,
-                background: "#f8fbff",
-                display: "grid",
-                gap: 12,
-              }}
-            >
-              <div style={{ fontWeight: 900, fontSize: 16 }}>Step 2A — Quick Evidence</div>
-              <SmallHint>
-                Set the photo subject early and quickly confirm whether photos and observations have been added for this call.
-              </SmallHint>
-
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                  gap: 12,
-                }}
-              >
-                <div>
-                  <label style={{ fontWeight: 900 }}>Photo Subject</label>
-                  <select
-                    value={photoAssistSubject}
-                    onChange={(e) => setPhotoAssistSubject(e.target.value)}
-                    style={{ width: "100%", padding: 8 }}
-                  >
-                    <option value="iced_coil">Iced Coil</option>
-                    <option value="contactor_capacitor">Contactor / Capacitor</option>
-                    <option value="control_board">Control Board</option>
-                    <option value="wiring">Wiring</option>
-                    <option value="nameplate_tag">Nameplate / Tag</option>
-                    <option value="drain_defrost">Drain / Defrost</option>
-                    <option value="dirty_coil_airflow">Dirty Coil / Airflow</option>
-                    <option value="compressor_section">Compressor Section</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label style={{ fontWeight: 900 }}>Photos Attached</label>
-                  <div
-                    style={{
-                      width: "100%",
-                      padding: 8,
-                      border: "1px solid #ddd",
-                      borderRadius: 8,
-                      background: "#fff",
-                      minHeight: 38,
-                    }}
-                  >
-                    {Array.isArray(serviceEventPhotoUrls) ? serviceEventPhotoUrls.length : 0}
-                  </div>
-                </div>
-
-                <div>
-                  <label style={{ fontWeight: 900 }}>Observations Entered</label>
-                  <div
-                    style={{
-                      width: "100%",
-                      padding: 8,
-                      border: "1px solid #ddd",
-                      borderRadius: 8,
-                      background: "#fff",
-                      minHeight: 38,
-                    }}
-                  >
-                    {Array.isArray(observations) ? observations.length : 0}
-                  </div>
                 </div>
               </div>
             </div>
