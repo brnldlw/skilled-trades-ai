@@ -1,4 +1,3 @@
-/* deemphasize-lower-measurements-section-v1 */
 /* top-measurements-observations-block-v1 */
 /* deemphasize-lower-legacy-context-area-v1 */
 /* top-site-units-block-v1 */
@@ -17758,25 +17757,7 @@ return (
           )}
         </SectionCard>
 
-        
-<div style={{ marginTop: 12 }}>
-  <div
-    style={{
-      border: "1px dashed #d6d6d6",
-      borderRadius: 10,
-      padding: 10,
-      background: "#f7f7f7",
-    }}
-  >
-    <SmallHint>
-      <b>Legacy lower measurements area:</b> Use the top <b>Step 2 — Complaint + Evidence</b> and
-      <b> Step 2B — Quick Measurements / Observations</b> first. This deeper section remains for
-      full entry and review while the page flow is being cleaned up.
-    </SmallHint>
-  </div>
-</div>
-
-<SectionCard title="Legacy Measurements / Observations">
+        <SectionCard title="Measurements / Observations">
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             {(
 
