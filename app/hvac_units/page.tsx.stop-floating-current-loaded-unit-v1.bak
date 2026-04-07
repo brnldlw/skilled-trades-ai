@@ -1,4 +1,3 @@
-/* stop-floating-current-loaded-unit-v1 */
 /* top-evidence-quick-entry-v1 */
 /* top-affected-component-selector-v1 */
 /* top-complaint-evidence-block-v1 */
@@ -10643,9 +10642,12 @@ return (
         <div
           style={{
             marginTop: 16,
+            position: "sticky",
+            top: 12,
+            zIndex: 20,
           }}
         >
-          <SectionCard title="Current Loaded Unit">
+          <SectionCard title="Current Loaded Unit (hidden)">
             <div
               style={{
                 border: "1px solid #e5e5e5",
