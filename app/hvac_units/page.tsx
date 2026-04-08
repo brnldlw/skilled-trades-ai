@@ -12219,6 +12219,80 @@ return (
   </SectionCard>
 </div>
 
+   <SectionCard
+          title="Photo Diagnosis"
+          right={<PillButton text="Choose photo" onClick={() => photoInputRef.current?.click()} />}
+        >
+          <input
+            ref={photoInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            style={{ display: "none" }}
+            onChange={async (e) => {
+              const f = e.target.files?.[0];
+              if (!f) return;
+              const dataUrl = await readFileAsDataUrl(f);
+              setPhotoImage(dataUrl);
+              setPhotoResult("");
+              setPhotoError("");
+            }}
+          />
+
+          {photoImage ? (
+            <div style={{ display: "grid", gap: 10 }}>
+              <img
+                src={photoImage}
+                alt="Diagnostic photo"
+                style={{
+                  width: "100%",
+                  maxHeight: 280,
+                  objectFit: "contain",
+                  border: "1px solid #eee",
+                  borderRadius: 10,
+                }}
+              />
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <PillButton
+                  text={photoLoading ? "Analyzing..." : "Analyze Photo"}
+                  onClick={analyzePhoto}
+                  disabled={photoLoading}
+                />
+                <PillButton
+                  text="Clear"
+                  onClick={() => {
+                    setPhotoImage("");
+                    setPhotoResult("");
+                    setPhotoError("");
+                  }}
+                />
+              </div>
+              {photoError ? (
+                <div style={{ color: "crimson", fontWeight: 800 }}>{photoError}</div>
+              ) : null}
+              {photoResult ? (
+                <pre
+                  style={{
+                    margin: 0,
+                    whiteSpace: "pre-wrap",
+                    border: "1px solid #eee",
+                    borderRadius: 10,
+                    padding: 10,
+                    background: "#fafafa",
+                  }}
+                >
+                  {photoResult}
+                </pre>
+              ) : null}
+            </div>
+          ) : (
+            <SmallHint>
+              Upload a photo of a control board, capacitor, contactor, iced coil, wiring,
+              gauges, or error code and let the app analyze it.
+            </SmallHint>
+          )}
+        </SectionCard>
+
 {/* step-wrappers-page-reflow-v1-step-3 */}
       <div style={{ marginTop: 16 }}>
         <div
@@ -17725,80 +17799,6 @@ return (
           )}
         </SectionCard>
       </div>
-
-        <SectionCard
-          title="Photo Diagnosis"
-          right={<PillButton text="Choose photo" onClick={() => photoInputRef.current?.click()} />}
-        >
-          <input
-            ref={photoInputRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            style={{ display: "none" }}
-            onChange={async (e) => {
-              const f = e.target.files?.[0];
-              if (!f) return;
-              const dataUrl = await readFileAsDataUrl(f);
-              setPhotoImage(dataUrl);
-              setPhotoResult("");
-              setPhotoError("");
-            }}
-          />
-
-          {photoImage ? (
-            <div style={{ display: "grid", gap: 10 }}>
-              <img
-                src={photoImage}
-                alt="Diagnostic photo"
-                style={{
-                  width: "100%",
-                  maxHeight: 280,
-                  objectFit: "contain",
-                  border: "1px solid #eee",
-                  borderRadius: 10,
-                }}
-              />
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <PillButton
-                  text={photoLoading ? "Analyzing..." : "Analyze Photo"}
-                  onClick={analyzePhoto}
-                  disabled={photoLoading}
-                />
-                <PillButton
-                  text="Clear"
-                  onClick={() => {
-                    setPhotoImage("");
-                    setPhotoResult("");
-                    setPhotoError("");
-                  }}
-                />
-              </div>
-              {photoError ? (
-                <div style={{ color: "crimson", fontWeight: 800 }}>{photoError}</div>
-              ) : null}
-              {photoResult ? (
-                <pre
-                  style={{
-                    margin: 0,
-                    whiteSpace: "pre-wrap",
-                    border: "1px solid #eee",
-                    borderRadius: 10,
-                    padding: 10,
-                    background: "#fafafa",
-                  }}
-                >
-                  {photoResult}
-                </pre>
-              ) : null}
-            </div>
-          ) : (
-            <SmallHint>
-              Upload a photo of a control board, capacitor, contactor, iced coil, wiring,
-              gauges, or error code and let the app analyze it.
-            </SmallHint>
-          )}
-        </SectionCard>
 
         <SectionCard title="Real Flowchart Engine">
           <div style={{ border: "1px solid #eee", borderRadius: 12, padding: 12 }}>
