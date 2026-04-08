@@ -11395,126 +11395,6 @@ return (
       </div>
 
 {/* suggested-parts-to-verify-v1 */}
-      <div style={{ marginTop: 16 }}>
-        <SectionCard title="Suggested Parts to Verify Before Replacing">
-          <SmallHint>
-            Ranks suggested parts by confidence so the tech can verify the strongest repair path before making a blind swap.
-          </SmallHint>
-
-          {(() => {
-            const items = buildSuggestedPartsToVerifyItems();
-
-            if (!items.length) {
-              return (
-                <div style={{ marginTop: 12 }}>
-                  <SmallHint>No suggested parts are ready yet. Add component, symptom, or readings to tighten the list.</SmallHint>
-                </div>
-              );
-            }
-
-            return (
-              <div style={{ marginTop: 12, display: "grid", gap: 12 }}>
-                {items.map((item, idx) => (
-                  <div
-                    key={`${item.part}-${idx}`}
-                    style={{
-                      border: "1px solid #eee",
-                      borderRadius: 10,
-                      padding: 12,
-                      background: "#fafafa",
-                      display: "grid",
-                      gap: 8,
-                    }}
-                  >
-                    <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
-                      <div style={{ fontWeight: 900 }}>
-                        Part {idx + 1}: {item.part}
-                      </div>
-
-                      <div
-                        style={{
-                          border: "1px solid #d9d9d9",
-                          borderRadius: 999,
-                          padding: "4px 10px",
-                          fontSize: 12,
-                          fontWeight: 800,
-                          background:
-                            item.confidence === "High confidence"
-                              ? "#eef6ff"
-                              : item.confidence === "Verify first"
-                                ? "#fff8e8"
-                                : "#fff1f1",
-                        }}
-                      >
-                        {item.confidence}
-                      </div>
-                    </div>
-
-                    <div>
-                      <SmallHint><b>Why this part is in play:</b></SmallHint>
-                      <ul style={{ marginTop: 6, paddingLeft: 18 }}>
-                        {item.reasons.map((reason, reasonIdx) => (
-                          <li key={reasonIdx}>
-                            <SmallHint>{reason}</SmallHint>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <div>
-                      <SmallHint><b>Prove before replacing:</b></SmallHint>
-                      <ul style={{ marginTop: 6, paddingLeft: 18 }}>
-                        {item.prove.map((entry, proveIdx) => (
-                          <li key={proveIdx}>
-                            <SmallHint>{entry}</SmallHint>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <SmallHint><b>Blind replace risk:</b> {item.blindRisk}</SmallHint>
-
-                    <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setPartsReplaced((prev) => {
-                            const current = String(prev || "").trim();
-                            const existing = current
-                              .split(/[;,]/)
-                              .map((entry) => entry.trim().toLowerCase())
-                              .filter(Boolean);
-
-                            if (existing.includes(item.part.trim().toLowerCase())) {
-                              return current;
-                            }
-
-                            return [current, item.part].filter(Boolean).join(", ");
-                          })
-                        }
-                        style={{
-                          padding: "8px 12px",
-                          fontWeight: 900,
-                          border: "1px solid #cfcfcf",
-                          borderRadius: 10,
-                          background: "#ffffff",
-                          color: "#111",
-                          cursor: "pointer",
-                          boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                        }}
-                      >
-                        Add Part Name to Parts Replaced
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            );
-          })()}
-        </SectionCard>
-      </div>
-
-
       
       {/* top-measurements-observations-block-v1 */}
       <div style={{ marginTop: 16 }}>
@@ -12737,6 +12617,125 @@ return (
                     </div>
                   ))}
                 </div>
+              </div>
+            );
+          })()}
+        </SectionCard>
+      </div>
+
+        <div style={{ marginTop: 16 }}>
+        <SectionCard title="Suggested Parts to Verify Before Replacing">
+          <SmallHint>
+            Ranks suggested parts by confidence so the tech can verify the strongest repair path before making a blind swap.
+          </SmallHint>
+
+          {(() => {
+            const items = buildSuggestedPartsToVerifyItems();
+
+            if (!items.length) {
+              return (
+                <div style={{ marginTop: 12 }}>
+                  <SmallHint>No suggested parts are ready yet. Add component, symptom, or readings to tighten the list.</SmallHint>
+                </div>
+              );
+            }
+
+            return (
+              <div style={{ marginTop: 12, display: "grid", gap: 12 }}>
+                {items.map((item, idx) => (
+                  <div
+                    key={`${item.part}-${idx}`}
+                    style={{
+                      border: "1px solid #eee",
+                      borderRadius: 10,
+                      padding: 12,
+                      background: "#fafafa",
+                      display: "grid",
+                      gap: 8,
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+                      <div style={{ fontWeight: 900 }}>
+                        Part {idx + 1}: {item.part}
+                      </div>
+
+                      <div
+                        style={{
+                          border: "1px solid #d9d9d9",
+                          borderRadius: 999,
+                          padding: "4px 10px",
+                          fontSize: 12,
+                          fontWeight: 800,
+                          background:
+                            item.confidence === "High confidence"
+                              ? "#eef6ff"
+                              : item.confidence === "Verify first"
+                                ? "#fff8e8"
+                                : "#fff1f1",
+                        }}
+                      >
+                        {item.confidence}
+                      </div>
+                    </div>
+
+                    <div>
+                      <SmallHint><b>Why this part is in play:</b></SmallHint>
+                      <ul style={{ marginTop: 6, paddingLeft: 18 }}>
+                        {item.reasons.map((reason, reasonIdx) => (
+                          <li key={reasonIdx}>
+                            <SmallHint>{reason}</SmallHint>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div>
+                      <SmallHint><b>Prove before replacing:</b></SmallHint>
+                      <ul style={{ marginTop: 6, paddingLeft: 18 }}>
+                        {item.prove.map((entry, proveIdx) => (
+                          <li key={proveIdx}>
+                            <SmallHint>{entry}</SmallHint>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <SmallHint><b>Blind replace risk:</b> {item.blindRisk}</SmallHint>
+
+                    <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setPartsReplaced((prev) => {
+                            const current = String(prev || "").trim();
+                            const existing = current
+                              .split(/[;,]/)
+                              .map((entry) => entry.trim().toLowerCase())
+                              .filter(Boolean);
+
+                            if (existing.includes(item.part.trim().toLowerCase())) {
+                              return current;
+                            }
+
+                            return [current, item.part].filter(Boolean).join(", ");
+                          })
+                        }
+                        style={{
+                          padding: "8px 12px",
+                          fontWeight: 900,
+                          border: "1px solid #cfcfcf",
+                          borderRadius: 10,
+                          background: "#ffffff",
+                          color: "#111",
+                          cursor: "pointer",
+                          boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+                        }}
+                      >
+                        Add Part Name to Parts Replaced
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             );
           })()}
