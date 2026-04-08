@@ -13870,6 +13870,30 @@ return (
           )}
         </SectionCard>
 
+         <div
+        style={{
+          marginTop: 16,
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 12,
+        }}
+      >
+        <SectionCard title="Symptom Packs" right={<Badge text={selectedPack.label} />}>
+          <SmallHint>Choose a symptom pack to load a tech-style flowchart.</SmallHint>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10 }}>
+            {SYMPTOM_PACKS.map((pack) => (
+              <PillButton
+                key={pack.id}
+                text={pack.label}
+                active={pack.id === selectedPackId}
+                onClick={() => selectPack(pack.id)}
+              />
+            ))}
+          </div>
+        </SectionCard>
+
+        </div>
+
           {/* top-complaint-evidence-block-v1 */}
           <div style={{ gridColumn: "1 / -1", marginTop: 12 }}>
             <div
@@ -17774,30 +17798,6 @@ return (
             )}
           </div>
         </SectionCard>
-      </div>
-
-      <div
-        style={{
-          marginTop: 16,
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: 12,
-        }}
-      >
-        <SectionCard title="Symptom Packs" right={<Badge text={selectedPack.label} />}>
-          <SmallHint>Choose a symptom pack to load a tech-style flowchart.</SmallHint>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10 }}>
-            {SYMPTOM_PACKS.map((pack) => (
-              <PillButton
-                key={pack.id}
-                text={pack.label}
-                active={pack.id === selectedPackId}
-                onClick={() => selectPack(pack.id)}
-              />
-            ))}
-          </div>
-        </SectionCard>
-
       </div>
 
         <SectionCard title="Real Flowchart Engine">
