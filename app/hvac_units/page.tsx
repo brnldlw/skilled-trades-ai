@@ -12112,6 +12112,113 @@ return (
         </SectionCard>
       </div>
 
+        <div
+        style={{
+          marginTop: 16,
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 12,
+        }}
+      >
+
+        <div style={{ marginTop: 16 }}>
+  <SectionCard title="Defrost Intelligence">
+    <SmallHint>
+      Uses defrost timer state, heater amps, termination state, box temp, and coil temp
+      to spot refrigeration defrost problems.
+    </SmallHint>
+
+    <div
+      style={{
+        marginTop: 12,
+        border: "1px solid #eee",
+        borderRadius: 10,
+        padding: 10,
+        background: "#fafafa",
+      }}
+    >
+      <div style={{ fontWeight: 900 }}>Defrost Summary</div>
+      <div style={{ fontSize: 16, fontWeight: 900, marginTop: 6 }}>
+        {defrostAnalysis.summary}
+      </div>
+
+      {defrostAnalysis.findings.length ? (
+        <ul style={{ marginTop: 8, paddingLeft: 18 }}>
+          {defrostAnalysis.findings.map((f, i) => (
+            <li key={i}>
+              <SmallHint>{f}</SmallHint>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <SmallHint style={{ marginTop: 8 }}>
+          Add defrost timer state, heater amps, termination stat state, box temp,
+          and evap coil temp for tighter refrigeration diagnosis.
+        </SmallHint>
+      )}
+    </div>
+  </SectionCard>
+</div>
+
+<div style={{ marginTop: 16 }}>
+  <SectionCard title="Defrost Repair Guidance">
+    <SmallHint>
+      Shows likely failed parts, why they are suspect, and the next field check to perform.
+    </SmallHint>
+
+    {defrostRepairGuidance.length ? (
+      <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
+        {defrostRepairGuidance.map((item, idx) => (
+          <div
+            key={`${item.part}-${idx}`}
+            style={{
+              border: "1px solid #eee",
+              borderRadius: 10,
+              padding: 10,
+              background: "#fafafa",
+            }}
+          >
+            <div style={{ fontWeight: 900 }}>
+              {item.part}
+              <Badge text={item.priority} />
+            </div>
+
+            <div style={{ marginTop: 8 }}>
+              <div style={{ fontWeight: 900 }}>Why it is suspect</div>
+              <SmallHint style={{ marginTop: 4 }}>{item.why}</SmallHint>
+            </div>
+
+            <div style={{ marginTop: 8 }}>
+              <div style={{ fontWeight: 900 }}>Next test</div>
+              <SmallHint style={{ marginTop: 4 }}>{item.nextTest}</SmallHint>
+            </div>
+
+            <div style={{ marginTop: 8 }}>
+              <div style={{ fontWeight: 900 }}>Quick field check</div>
+              <SmallHint style={{ marginTop: 4 }}>{item.quickCheck}</SmallHint>
+            </div>
+          </div>
+        ))}
+      </div>
+    ) : (
+      <div
+        style={{
+          marginTop: 12,
+          border: "1px solid #eee",
+          borderRadius: 10,
+          padding: 10,
+          background: "#fafafa",
+        }}
+      >
+        <SmallHint>
+          Add defrost-related measurements or enter a refrigeration icing / defrost complaint
+          to generate repair guidance.
+        </SmallHint>
+      </div>
+    )}
+  </SectionCard>
+</div>
+
 {/* step-wrappers-page-reflow-v1-step-3 */}
       <div style={{ marginTop: 16 }}>
         <div
@@ -17618,113 +17725,6 @@ return (
           )}
         </SectionCard>
       </div>
-
-      <div
-        style={{
-          marginTop: 16,
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: 12,
-        }}
-      >
-
-        <div style={{ marginTop: 16 }}>
-  <SectionCard title="Defrost Intelligence">
-    <SmallHint>
-      Uses defrost timer state, heater amps, termination state, box temp, and coil temp
-      to spot refrigeration defrost problems.
-    </SmallHint>
-
-    <div
-      style={{
-        marginTop: 12,
-        border: "1px solid #eee",
-        borderRadius: 10,
-        padding: 10,
-        background: "#fafafa",
-      }}
-    >
-      <div style={{ fontWeight: 900 }}>Defrost Summary</div>
-      <div style={{ fontSize: 16, fontWeight: 900, marginTop: 6 }}>
-        {defrostAnalysis.summary}
-      </div>
-
-      {defrostAnalysis.findings.length ? (
-        <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-          {defrostAnalysis.findings.map((f, i) => (
-            <li key={i}>
-              <SmallHint>{f}</SmallHint>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <SmallHint style={{ marginTop: 8 }}>
-          Add defrost timer state, heater amps, termination stat state, box temp,
-          and evap coil temp for tighter refrigeration diagnosis.
-        </SmallHint>
-      )}
-    </div>
-  </SectionCard>
-</div>
-
-<div style={{ marginTop: 16 }}>
-  <SectionCard title="Defrost Repair Guidance">
-    <SmallHint>
-      Shows likely failed parts, why they are suspect, and the next field check to perform.
-    </SmallHint>
-
-    {defrostRepairGuidance.length ? (
-      <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
-        {defrostRepairGuidance.map((item, idx) => (
-          <div
-            key={`${item.part}-${idx}`}
-            style={{
-              border: "1px solid #eee",
-              borderRadius: 10,
-              padding: 10,
-              background: "#fafafa",
-            }}
-          >
-            <div style={{ fontWeight: 900 }}>
-              {item.part}
-              <Badge text={item.priority} />
-            </div>
-
-            <div style={{ marginTop: 8 }}>
-              <div style={{ fontWeight: 900 }}>Why it is suspect</div>
-              <SmallHint style={{ marginTop: 4 }}>{item.why}</SmallHint>
-            </div>
-
-            <div style={{ marginTop: 8 }}>
-              <div style={{ fontWeight: 900 }}>Next test</div>
-              <SmallHint style={{ marginTop: 4 }}>{item.nextTest}</SmallHint>
-            </div>
-
-            <div style={{ marginTop: 8 }}>
-              <div style={{ fontWeight: 900 }}>Quick field check</div>
-              <SmallHint style={{ marginTop: 4 }}>{item.quickCheck}</SmallHint>
-            </div>
-          </div>
-        ))}
-      </div>
-    ) : (
-      <div
-        style={{
-          marginTop: 12,
-          border: "1px solid #eee",
-          borderRadius: 10,
-          padding: 10,
-          background: "#fafafa",
-        }}
-      >
-        <SmallHint>
-          Add defrost-related measurements or enter a refrigeration icing / defrost complaint
-          to generate repair guidance.
-        </SmallHint>
-      </div>
-    )}
-  </SectionCard>
-</div>
 
         <SectionCard
           title="Photo Diagnosis"
