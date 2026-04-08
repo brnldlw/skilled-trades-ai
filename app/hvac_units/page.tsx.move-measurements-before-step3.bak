@@ -1,3 +1,18 @@
+/* top-measurements-observations-block-v1 */
+/* deemphasize-lower-legacy-context-area-v1 */
+/* top-site-units-block-v1 */
+/* stop-floating-current-loaded-unit-v1 */
+/* top-evidence-quick-entry-v1 */
+/* top-affected-component-selector-v1 */
+/* top-complaint-evidence-block-v1 */
+/* deemphasize-lower-legacy-equipment-entry-v2 */
+/* top-equipment-details-block-v1 */
+/* top-identify-equipment-block-v1 */
+/* loadunit-cleanup-no-fail-v1 */
+/* top-surface-simplification-no-fail-v1 */
+/* safe-cleanup-pass-current-file-v1 */
+/* circuit-persistence-safe-patch-v1 */
+/* repair-execution-assist-visibility-cleanup-v1 */
 /* circuit-wiring-cleanup-pass1-v3 */
 /* replace-old-loaded-unit-banner-v1 */
 "use client";
@@ -7703,6 +7718,41 @@ function browserSupportsSmartReadingsDictation() {
         return [circuitLabel ? `Circuit: ${circuitLabel}` : "", clean].filter(Boolean).join("\n");
       }
 
+      function hydrateCircuitFromNotes(text: string) {
+        const raw = String(text || "");
+        const lines = raw.split("\n");
+        const circuitLine = lines.find((line) => line.trim().toLowerCase().startsWith("circuit:"));
+
+        if (!circuitLine) {
+          setSelectedCircuit("Circuit 1");
+          setCustomCircuitLabel("");
+          return stripCircuitLineFromNotes(raw);
+        }
+
+        const value = circuitLine.split(":").slice(1).join(":").trim();
+        const match = /^Circuit\s+(\d+)$/i.exec(value);
+
+        if (match) {
+          const num = Number.parseInt(match[1], 10);
+          if (Number.isFinite(num) && num > 0) {
+            setCircuitCount(String(Math.max(num, Number.parseInt(String(circuitCount || "1"), 10) || 1)));
+            setSelectedCircuit(`Circuit ${num}`);
+            setCustomCircuitLabel("");
+          } else {
+            setSelectedCircuit("Circuit 1");
+            setCustomCircuitLabel("");
+          }
+        } else if (value) {
+          setSelectedCircuit("Custom");
+          setCustomCircuitLabel(value);
+        } else {
+          setSelectedCircuit("Circuit 1");
+          setCustomCircuitLabel("");
+        }
+
+        return stripCircuitLineFromNotes(raw);
+      }
+
 const [showBulkImportTools, setShowBulkImportTools] = useState(false);
 
   const [workOrderImportText, setWorkOrderImportText] = useState("");
@@ -10596,12 +10646,9 @@ return (
         <div
           style={{
             marginTop: 16,
-            position: "sticky",
-            top: 12,
-            zIndex: 20,
           }}
         >
-          <SectionCard title="Current Loaded Unit (hidden)">
+          <SectionCard title="Current Loaded Unit">
             <div
               style={{
                 border: "1px solid #e5e5e5",
@@ -10774,8 +10821,76 @@ return (
 
             if (!payload.selectedPart) {
               return (
-                <div style={{ marginTop: 12 }}>
-                  <SmallHint>Select a part in Part Verification Checklist first.</SmallHint>
+                <div style={{ marginTop: 12, display: "grid", gap: 12 }}>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                      gap: 10,
+                    }}
+                  >
+                    <div
+                      style={{
+                        border: "1px solid #eee",
+                        borderRadius: 10,
+                        padding: 10,
+                        background: "#fafafa",
+                      }}
+                    >
+                      <div style={{ fontWeight: 900, fontSize: 12, color: "#666", textTransform: "uppercase" }}>
+                        Current Part Focus
+                      </div>
+                      <div style={{ marginTop: 4, fontWeight: 700 }}>
+                        None selected yet
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        border: "1px solid #eee",
+                        borderRadius: 10,
+                        padding: 10,
+                        background: "#fafafa",
+                      }}
+                    >
+                      <div style={{ fontWeight: 900, fontSize: 12, color: "#666", textTransform: "uppercase" }}>
+                        What Unlocks This
+                      </div>
+                      <div style={{ marginTop: 4, fontWeight: 700 }}>
+                        Select a part in Part Verification Checklist
+                      </div>
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      border: "1px solid #e5e5e5",
+                      borderRadius: 12,
+                      padding: 12,
+                      background: "#fffaf0",
+                      display: "grid",
+                      gap: 8,
+                    }}
+                  >
+                    <div style={{ fontWeight: 900 }}>
+                      Repair help is ready once a part is selected.
+                    </div>
+
+                    <SmallHint>This section will show:</SmallHint>
+
+                    <ul style={{ marginTop: 0, paddingLeft: 18 }}>
+                      <li><SmallHint>Verify First</SmallHint></li>
+                      <li><SmallHint>Replace Steps</SmallHint></li>
+                      <li><SmallHint>Safety / Shutdown</SmallHint></li>
+                      <li><SmallHint>Common Mistakes</SmallHint></li>
+                      <li><SmallHint>Watch After Repair</SmallHint></li>
+                      <li><SmallHint>YouTube / Web repair search links</SmallHint></li>
+                    </ul>
+
+                    <SmallHint>
+                      Pick a likely part in <b>Part Verification Checklist</b> and this section will automatically fill in.
+                    </SmallHint>
+                  </div>
                 </div>
               );
             }
@@ -11399,42 +11514,30 @@ return (
         </SectionCard>
       </div>
 
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            {(
 
-  equipmentType.toLowerCase().includes("ice machine")
-    ? iceMachinePresets
-    : equipmentType.toLowerCase().includes("cooler") ||
-      equipmentType.toLowerCase().includes("freezer") ||
-      equipmentType.toLowerCase().includes("merchandiser")
-    ? refrigerationPresets
-    : equipmentType.toLowerCase().includes("mini-split")
-    ? miniSplitPresets
-    : symptom.toLowerCase().includes("heat")
-    ? heatingPresets
-    : coolingPresets<SectionCard title="Legacy Measurements / Observations">
-).map((p) => (
-              <PillButton
-                key={p.label}
-                text={p.label}
-                onClick={() => applyPreset(p.label, p.unit)}
-              />
-            ))}
-            {measurementOptions.map((m) => (
-              <PillButton
-                key={m}
-                text={m}
-                onClick={() => applyPreset(m, guessDefaultUnit(m))}
-              />
-            ))}
-          </div>
+      
+      {/* top-measurements-observations-block-v1 */}
+      <div style={{ marginTop: 16 }}>
+        <div
+          style={{
+            border: "1px solid #dfe7f3",
+            borderRadius: 12,
+            padding: 12,
+            background: "#f8fbff",
+            display: "grid",
+            gap: 12,
+          }}
+        >
+          <div style={{ fontWeight: 900, fontSize: 16 }}>Step 2B — Quick Measurements / Observations</div>
+          <SmallHint>
+            Add the first key reading(s) here before going deeper into diagnosis.
+          </SmallHint>
 
           <div
             style={{
               display: "grid",
               gridTemplateColumns: "2fr 1fr 1fr",
               gap: 10,
-              marginTop: 12,
             }}
           >
             <div>
@@ -11469,7 +11572,7 @@ return (
             </div>
           </div>
 
-          <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
+          <div style={{ display: "grid", gap: 10 }}>
             <div>
               <label style={{ fontWeight: 900 }}>Note (optional)</label>
               <input
@@ -11496,70 +11599,43 @@ return (
             </label>
 
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <button onClick={addMeasurement} style={{
-              padding: "10px 14px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}>
-                Add measurement
-              </button>
               <button
-                onClick={() => setObservations([])}
+                type="button"
+                onClick={addMeasurement}
                 style={{
-              padding: "10px 14px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
+                  padding: "10px 14px",
+                  fontWeight: 900,
+                  border: "1px solid #cfcfcf",
+                  borderRadius: 10,
+                  background: "#ffffff",
+                  color: "#111",
+                  cursor: "pointer",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+                }}
               >
-                Clear all
+                Add Measurement
               </button>
-            </div>
 
-            {observations.length ? (
-              <div style={{ display: "grid", gap: 8 }}>
-                {observations.map((o, idx) => (
-                  <div
-                    key={idx}
-                    style={{
-                      border: "1px solid #eee",
-                      borderRadius: 10,
-                      padding: 10,
-                      display: "flex",
-                      justifyContent: "space-between",
-                      gap: 10,
-                    }}
-                  >
-                    <div>
-                      <div style={{ fontWeight: 900 }}>
-                        {o.label}
-                        <Badge text={`${o.value} ${o.unit}`} />
-                      </div>
-                      {o.note ? <SmallHint>{o.note}</SmallHint> : null}
-                    </div>
-                    <button onClick={() => removeObservation(idx)} style={{ fontWeight: 900 }}>
-                      Remove
-                    </button>
-                  </div>
-                ))}
+              <div
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  padding: "8px 10px",
+                  borderRadius: 999,
+                  border: "1px solid #cfcfcf",
+                  background: "#fafafa",
+                  fontSize: 12,
+                  fontWeight: 900,
+                }}
+              >
+                Observations Entered: {Array.isArray(observations) ? observations.length : 0}
               </div>
-            ) : (
-              <SmallHint>No measurements added yet.</SmallHint>
-            )}
+            </div>
           </div>
-        </SectionCard>
+        </div>
       </div>
 
-      {/* step-wrappers-page-reflow-v1-step-3 */}
+{/* step-wrappers-page-reflow-v1-step-3 */}
       <div style={{ marginTop: 16 }}>
         <div
           style={{
@@ -12812,7 +12888,431 @@ return (
             </select>
           </div>
 
-          {/* restore-error-code-top-section-v1 */}
+          
+          {/* top-identify-equipment-block-v1 */}
+          <div style={{ gridColumn: "1 / -1", marginTop: 16 }}>
+            <div
+              style={{
+                border: "1px solid #dfe7f3",
+                borderRadius: 12,
+                padding: 12,
+                background: "#f8fbff",
+                display: "grid",
+                gap: 12,
+              }}
+            >
+              <div style={{ fontWeight: 900, fontSize: 18 }}>Step 1 — Identify Equipment</div>
+              <SmallHint>
+                Fill out the site, unit tag, property type, and equipment type first so the rest of the call stays tied to the right machine.
+              </SmallHint>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                  gap: 12,
+                }}
+              >
+                <div>
+                  <label style={{ fontWeight: 900 }}>Customer Name</label>
+                  <input
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    style={{ width: "100%", padding: 8 }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontWeight: 900 }}>Site Name</label>
+                  <input
+                    value={siteName}
+                    onChange={(e) => setSiteName(e.target.value)}
+                    style={{ width: "100%", padding: 8 }}
+                  />
+                </div>
+
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <label style={{ fontWeight: 900 }}>Site Address</label>
+                  <input
+                    value={siteAddress}
+                    onChange={(e) => setSiteAddress(e.target.value)}
+                    style={{ width: "100%", padding: 8 }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontWeight: 900 }}>Unit Nickname / Tag</label>
+                  <input
+                    value={unitNickname}
+                    onChange={(e) => setUnitNickname(e.target.value)}
+                    placeholder="RTU-1, WIC-1, AHU-2, Circuit A"
+                    style={{ width: "100%", padding: 8 }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontWeight: 900 }}>Property Type</label>
+                  <select
+                    value={propertyType}
+                    onChange={(e) => setPropertyType(e.target.value)}
+                    style={{ width: "100%", padding: 8 }}
+                  >
+                    <option value="Commercial">Commercial</option>
+                    <option value="Residential">Residential</option>
+                    <option value="Industrial">Industrial</option>
+                    <option value="Institutional">Institutional</option>
+                    <option value="Mixed Use">Mixed Use</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ fontWeight: 900 }}>Equipment Type</label>
+                  <select
+                    value={equipmentType}
+                    onChange={(e) => setEquipmentType(e.target.value)}
+                    style={{ width: "100%", padding: 8 }}
+                  >
+                    {unitOptions.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+          
+          {/* top-site-units-block-v1 */}
+          <div style={{ gridColumn: "1 / -1", marginTop: 12 }}>
+            <SectionCard title="Site Units at This Location">
+              {!customerName.trim() || !siteName.trim() ? (
+                <SmallHint>
+                  Enter customer and site to see other units already saved at this location.
+                </SmallHint>
+              ) : !siteUnitsAtLocation.length ? (
+                <SmallHint>
+                  No saved units found yet for this customer/site.
+                </SmallHint>
+              ) : (
+                <div style={{ display: "grid", gap: 8 }}>
+                  <SmallHint>
+                    Saved units already at this site: <b>{siteUnitsAtLocation.length}</b>
+                  </SmallHint>
+
+                  {siteUnitsAtLocation.map((unit) => (
+                    <div
+                      key={unit.id}
+                      style={{
+                        border: "1px solid #e5e5e5",
+                        borderRadius: 10,
+                        padding: 10,
+                        background:
+                          currentLoadedUnitId && currentLoadedUnitId === unit.id
+                            ? "#f7fbff"
+                            : "#fafafa",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: 8,
+                          flexWrap: "wrap",
+                          alignItems: "center",
+                        }}
+                      >
+                        <div style={{ fontWeight: 900 }}>
+                          {unit.unitNickname || "No Unit Tag"}
+                        </div>
+
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            padding: "4px 8px",
+                            borderRadius: 999,
+                            border: "1px solid #cfcfcf",
+                            background: "#f7f7f7",
+                            fontSize: 12,
+                            fontWeight: 900,
+                          }}
+                        >
+                          {unit.equipmentType || "Unknown Type"}
+                        </span>
+
+                        {currentLoadedUnitId && currentLoadedUnitId === unit.id ? (
+                          <span
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              padding: "4px 8px",
+                              borderRadius: 999,
+                              border: "1px solid #cfcfcf",
+                              background: "#eefaf0",
+                              fontSize: 12,
+                              fontWeight: 900,
+                            }}
+                          >
+                            CURRENTLY LOADED
+                          </span>
+                        ) : null}
+                      </div>
+
+                      <SmallHint style={{ marginTop: 6 }}>
+                        {unit.manufacturer || "-"} {unit.model || "-"} • Serial: {unit.serialNumber || "-"}
+                      </SmallHint>
+
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
+                        <PillButton text="Load This Unit" onClick={() => loadUnit(unit)} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </SectionCard>
+          </div>
+
+{/* top-equipment-details-block-v1 */}
+          <div style={{ gridColumn: "1 / -1", marginTop: 12 }}>
+            <div
+              style={{
+                border: "1px solid #dfe7f3",
+                borderRadius: 12,
+                padding: 12,
+                background: "#f8fbff",
+                display: "grid",
+                gap: 12,
+              }}
+            >
+              <div style={{ fontWeight: 900, fontSize: 16 }}>Step 1B — Equipment Details</div>
+              <SmallHint>
+                Fill in the make, model, serial, and refrigerant early so diagnosis, manuals, and parts guidance stay tied to the correct equipment.
+              </SmallHint>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                  gap: 12,
+                }}
+              >
+                <div>
+                  <label style={{ fontWeight: 900 }}>Manufacturer</label>
+                  <input
+                    value={manufacturer}
+                    onChange={(e) => setManufacturer(e.target.value)}
+                    style={{ width: "100%", padding: 8 }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontWeight: 900 }}>Model</label>
+                  <input
+                    value={model}
+                    onChange={(e) => setModel(e.target.value)}
+                    style={{ width: "100%", padding: 8 }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontWeight: 900 }}>Serial Number</label>
+                  <input
+                    value={serialNumber}
+                    onChange={(e) => setSerialNumber(e.target.value)}
+                    style={{ width: "100%", padding: 8 }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontWeight: 900 }}>Refrigerant Type</label>
+                  <select
+                    value={refrigerantType}
+                    onChange={(e) => setRefrigerantType(e.target.value)}
+                    style={{ width: "100%", padding: 8 }}
+                  >
+                    {refrigerantOptions.map((r) => (
+                      <option key={r} value={r}>
+                        {r}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+          {/* top-complaint-evidence-block-v1 */}
+          <div style={{ gridColumn: "1 / -1", marginTop: 12 }}>
+            <div
+              style={{
+                border: "1px solid #dfe7f3",
+                borderRadius: 12,
+                padding: 12,
+                background: "#f8fbff",
+                display: "grid",
+                gap: 12,
+              }}
+            >
+              <div style={{ fontWeight: 900, fontSize: 16 }}>Step 2 — Complaint + Evidence</div>
+              <SmallHint>
+                Enter the service date and complaint here first. Use the lower troubleshooting sections for deeper guidance.
+              </SmallHint>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                  gap: 12,
+                }}
+              >
+                <div>
+                  <label style={{ fontWeight: 900 }}>Service Date</label>
+                  <input
+                    type="date"
+                    value={serviceDate}
+                    onChange={(e) => setServiceDate(e.target.value)}
+                    style={{ width: "100%", padding: 8 }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontWeight: 900 }}>Affected Component</label>
+                  {(() => {
+                    const options = getAffectedComponentOptions();
+                    return (
+                      <div style={{ display: "grid", gap: 8 }}>
+                        <select
+                          value={affectedComponentId}
+                          onChange={(e) => {
+                            const nextId = e.target.value;
+                            const selected = options.find((option) => option.id === nextId);
+                            setAffectedComponentId(nextId);
+                            setAffectedComponentLabel(selected?.label || "");
+                          }}
+                          style={{ width: "100%", padding: 8 }}
+                        >
+                          <option value="">Select affected component</option>
+                          {options.map((option) => (
+                            <option key={option.id} value={option.id}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+
+                        <div
+                          style={{
+                            width: "100%",
+                            padding: 8,
+                            border: "1px solid #ddd",
+                            borderRadius: 8,
+                            background: "#fff",
+                            minHeight: 38,
+                          }}
+                        >
+                          {getCurrentAffectedComponentLabelForAssist() || "Select the exact component for this call"}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <label style={{ fontWeight: 900 }}>Symptom / Complaint</label>
+                  <textarea
+                    value={symptom}
+                    onChange={(e) => setSymptom(e.target.value)}
+                    rows={4}
+                    placeholder="Example: not cooling, high head pressure, circuit 2 freezing, repeated defrost issue"
+                    style={{ width: "100%", padding: 8 }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+          {/* top-evidence-quick-entry-v1 */}
+          <div style={{ gridColumn: "1 / -1", marginTop: 10 }}>
+            <div
+              style={{
+                border: "1px solid #dfe7f3",
+                borderRadius: 12,
+                padding: 12,
+                background: "#f8fbff",
+                display: "grid",
+                gap: 12,
+              }}
+            >
+              <div style={{ fontWeight: 900, fontSize: 16 }}>Step 2A — Quick Evidence</div>
+              <SmallHint>
+                Set the photo subject early and quickly confirm whether photos and observations have been added for this call.
+              </SmallHint>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                  gap: 12,
+                }}
+              >
+                <div>
+                  <label style={{ fontWeight: 900 }}>Photo Subject</label>
+                  <select
+                    value={photoAssistSubject}
+                    onChange={(e) => setPhotoAssistSubject(e.target.value)}
+                    style={{ width: "100%", padding: 8 }}
+                  >
+                    <option value="iced_coil">Iced Coil</option>
+                    <option value="contactor_capacitor">Contactor / Capacitor</option>
+                    <option value="control_board">Control Board</option>
+                    <option value="wiring">Wiring</option>
+                    <option value="nameplate_tag">Nameplate / Tag</option>
+                    <option value="drain_defrost">Drain / Defrost</option>
+                    <option value="dirty_coil_airflow">Dirty Coil / Airflow</option>
+                    <option value="compressor_section">Compressor Section</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ fontWeight: 900 }}>Photos Attached</label>
+                  <div
+                    style={{
+                      width: "100%",
+                      padding: 8,
+                      border: "1px solid #ddd",
+                      borderRadius: 8,
+                      background: "#fff",
+                      minHeight: 38,
+                    }}
+                  >
+                    {Array.isArray(serviceEventPhotoUrls) ? serviceEventPhotoUrls.length : 0}
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ fontWeight: 900 }}>Observations Entered</label>
+                  <div
+                    style={{
+                      width: "100%",
+                      padding: 8,
+                      border: "1px solid #ddd",
+                      borderRadius: 8,
+                      background: "#fff",
+                      minHeight: 38,
+                    }}
+                  >
+                    {Array.isArray(observations) ? observations.length : 0}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+{/* restore-error-code-top-section-v1 */}
           <div style={{ gridColumn: "1 / -1", marginTop: 12 }}>
             <div
               style={{
@@ -12840,13 +13340,17 @@ return (
                 }}
               >
                 <div>
-                  <label style={{ fontWeight: 900 }}>Error Code</label>
-                  <input
+                  <label style={{ fontWeight: 900 }}>Error Code(s)</label>
+                  <textarea
                     value={errorCode}
                     onChange={(e) => setErrorCode(e.target.value)}
-                    placeholder="Example: E1, HPS, 3 Flash, LP Lockout"
+                    placeholder={"Enter one or more codes. Example:\nE1\nHPS\n3 Flash"}
+                    rows={4}
                     style={{ width: "100%", padding: 8 }}
                   />
+                  <SmallHint>
+                    Enter multiple active codes one per line. The app will store them together in the current Error Code field.
+                  </SmallHint>
                 </div>
 
                 <div>
@@ -12876,7 +13380,7 @@ return (
               >
                 {errorCode.trim() ? (
                   <SmallHint>
-                    <b>Current Error Code:</b> {errorCode.trim()} • <b>Source:</b> {errorCodeSource || "Unknown"}
+                    <b>Current Error Code(s):</b> {errorCode.trim()} • <b>Source:</b> {errorCodeSource || "Unknown"}
                   </SmallHint>
                 ) : (
                   <SmallHint>No error code entered yet.</SmallHint>
@@ -12981,6 +13485,22 @@ return (
           </div>
 
 
+
+          <div style={{ gridColumn: "1 / -1", marginTop: 10 }}>
+            <div
+              style={{
+                border: "1px dashed #d6d6d6",
+                borderRadius: 10,
+                padding: 10,
+                background: "#f7f7f7",
+              }}
+            >
+              <SmallHint>
+                <b>Legacy lower equipment entry area:</b> Use <b>Step 1 — Identify Equipment</b> and <b>Step 1B — Equipment Details</b> at the top of the page as the main place to enter equipment information. These older lower fields remain for continuity while the page is being cleaned up.
+              </SmallHint>
+            </div>
+          </div>
+
                               {/* sticky-mini-summary-banner-v1 */}
           <div style={{ gridColumn: "1 / -1", marginTop: 12 }}>
             <div
@@ -13060,6 +13580,20 @@ return (
                 >
                   <SmallHint>
                     <b>Symptom:</b> {symptom || "-"}
+                  </SmallHint>
+                </div>
+
+                
+                <div
+                  style={{
+                    border: "1px solid #eee",
+                    borderRadius: 999,
+                    padding: "6px 10px",
+                    background: "#fff",
+                  }}
+                >
+                  <SmallHint>
+                    <b>Circuit:</b> {getSelectedCircuitDisplay() || "-"}
                   </SmallHint>
                 </div>
 
@@ -14061,6 +14595,22 @@ return (
             )}
           </SectionCard>
         </div>
+
+
+<div style={{ marginTop: 12 }}>
+  <div
+    style={{
+      border: "1px dashed #d6d6d6",
+      borderRadius: 10,
+      padding: 10,
+      background: "#f7f7f7",
+    }}
+  >
+    <SmallHint>
+      <b>Legacy lower context area:</b> The primary equipment identity and site-unit workflow now lives higher on the page. Use the top <b>Customer / Site / Unit</b>, <b>Site Units at This Location</b>, <b>Step 1 — Identify Equipment</b>, and <b>Step 1B — Equipment Details</b> sections first.
+    </SmallHint>
+  </div>
+</div>
 
 <SectionCard title="Parts & Manuals Assist">
             {(() => {
