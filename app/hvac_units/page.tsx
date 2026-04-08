@@ -11795,6 +11795,323 @@ return (
           </div>
         </SectionCard>
 
+             <div
+        style={{
+          marginTop: 16,
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 12,
+        }}
+      >
+        <SectionCard
+          title="Gauge Photo Reader"
+          right={<PillButton text="Choose gauge photo" onClick={() => gaugeInputRef.current?.click()} />}
+        >
+          <input
+            ref={gaugeInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            style={{ display: "none" }}
+            onChange={async (e) => {
+              const f = e.target.files?.[0];
+              if (!f) return;
+              const dataUrl = await readFileAsDataUrl(f);
+              setGaugeImage(dataUrl);
+              setGaugeErr("");
+              setGaugeRead(null);
+            }}
+          />
+
+          {gaugeImage ? (
+            <div style={{ display: "grid", gap: 10 }}>
+              <img
+                src={gaugeImage}
+                alt="Gauge photo"
+                style={{
+                  width: "100%",
+                  maxHeight: 280,
+                  objectFit: "contain",
+                  border: "1px solid #eee",
+                  borderRadius: 10,
+                }}
+              />
+
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <PillButton
+                  text={gaugeBusy ? "Reading..." : "Read Gauges"}
+                  onClick={analyzeGaugePhoto}
+                  disabled={gaugeBusy}
+                />
+                <PillButton
+                  text="Clear"
+                  onClick={() => {
+                    setGaugeImage("");
+                    setGaugeErr("");
+                    setGaugeRead(null);
+                  }}
+                />
+              </div>
+
+              {gaugeErr ? (
+                <div style={{ color: "crimson", fontWeight: 800 }}>{gaugeErr}</div>
+              ) : null}
+
+              {gaugeRead ? (
+                <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
+                  <div style={{ fontWeight: 900 }}>
+                    Gauge Read
+                    <Badge text={gaugeRead.confidence} />
+                  </div>
+
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: 10,
+                      marginTop: 10,
+                    }}
+                  >
+                    <div>
+                      <b>Suction:</b>{" "}
+                      {gaugeRead.suction_psi !== null ? `${gaugeRead.suction_psi} psi` : "—"}
+                    </div>
+                    <div>
+                      <b>Head:</b>{" "}
+                      {gaugeRead.head_psi !== null ? `${gaugeRead.head_psi} psi` : "—"}
+                    </div>
+                    <div>
+                      <b>Low Sat:</b>{" "}
+                      {gaugeRead.low_sat_f !== null ? `${gaugeRead.low_sat_f} °F` : "—"}
+                    </div>
+                    <div>
+                      <b>High Sat:</b>{" "}
+                      {gaugeRead.high_sat_f !== null ? `${gaugeRead.high_sat_f} °F` : "—"}
+                    </div>
+                  </div>
+
+                  <div style={{ marginTop: 10 }}>
+                    <div style={{ fontWeight: 900 }}>Quick diagnosis</div>
+                    <SmallHint style={{ marginTop: 4 }}>{gaugeRead.quick_diagnosis}</SmallHint>
+                  </div>
+
+                  <div style={{ marginTop: 10 }}>
+                    <div style={{ fontWeight: 900 }}>Notes</div>
+                    <SmallHint style={{ marginTop: 4 }}>{gaugeRead.notes}</SmallHint>
+                  </div>
+
+                  <div style={{ marginTop: 10 }}>
+                    <PillButton
+                      text="Add these readings to measurements"
+                      onClick={addGaugeReadingsToMeasurements}
+                    />
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          ) : (
+            <SmallHint>
+              Upload a clear photo of the gauge set. The app will try to read low side,
+              high side, and saturation temps.
+            </SmallHint>
+          )}
+        </SectionCard>
+
+        <SectionCard title="PT Chart Intelligence + Charge Diagnosis">
+          <SmallHint>
+            If saturation temps are not entered, the app will estimate them from pressure
+            and refrigerant type using a PT chart approximation.
+          </SmallHint>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr 1fr",
+              gap: 10,
+              marginTop: 12,
+            }}
+          >
+            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
+              <div style={{ fontWeight: 900 }}>Delta-T</div>
+              <div style={{ fontSize: 22, fontWeight: 900, marginTop: 6 }}>
+                {chargeAnalysis.deltaT !== null ? `${chargeAnalysis.deltaT}°F` : "—"}
+              </div>
+            </div>
+
+            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
+              <div style={{ fontWeight: 900 }}>Superheat</div>
+              <div style={{ fontSize: 22, fontWeight: 900, marginTop: 6 }}>
+                {chargeAnalysis.superheat !== null ? `${chargeAnalysis.superheat}°F` : "—"}
+              </div>
+            </div>
+
+            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
+              <div style={{ fontWeight: 900 }}>Subcool</div>
+              <div style={{ fontSize: 22, fontWeight: 900, marginTop: 6 }}>
+                {chargeAnalysis.subcool !== null ? `${chargeAnalysis.subcool}°F` : "—"}
+              </div>
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: 10,
+              marginTop: 10,
+            }}
+          >
+            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
+              <div style={{ fontWeight: 900 }}>
+                Evap Saturation
+                <Badge text={chargeAnalysis.evapSatSource} />
+              </div>
+              <div style={{ marginTop: 6 }}>
+                {chargeAnalysis.evapSat !== null ? `${chargeAnalysis.evapSat}°F` : "—"}
+              </div>
+            </div>
+
+            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
+              <div style={{ fontWeight: 900 }}>
+                Condensing Saturation
+                <Badge text={chargeAnalysis.condSatSource} />
+              </div>
+              <div style={{ marginTop: 6 }}>
+                {chargeAnalysis.condSat !== null ? `${chargeAnalysis.condSat}°F` : "—"}
+              </div>
+            </div>
+          </div>
+
+          <div
+            style={{
+              marginTop: 12,
+              border: "1px solid #eee",
+              borderRadius: 10,
+              padding: 10,
+              background: "#fafafa",
+            }}
+          >
+            <div style={{ fontWeight: 900 }}>Charge Condition</div>
+            <div style={{ fontSize: 16, fontWeight: 900, marginTop: 6 }}>
+              {chargeAnalysis.summary}
+            </div>
+            {chargeAnalysis.findings.length ? (
+              <ul style={{ marginTop: 8, paddingLeft: 18 }}>
+                {chargeAnalysis.findings.map((f, i) => (
+                  <li key={i}>
+                    <SmallHint>{f}</SmallHint>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <SmallHint style={{ marginTop: 8 }}>
+                Add more refrigeration readings to tighten the diagnosis.
+              </SmallHint>
+            )}
+          </div>
+        </SectionCard>
+      </div>
+
+           <div style={{ marginTop: 16 }}>
+        <SectionCard title="Airflow Intelligence">
+          <SmallHint>
+            Add return static, supply static, filter pressure drop, and coil pressure drop
+            to diagnose airflow restrictions.
+          </SmallHint>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr 1fr",
+              gap: 10,
+              marginTop: 12,
+            }}
+          >
+            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
+              <div style={{ fontWeight: 900 }}>Total External Static</div>
+              <div style={{ fontSize: 22, fontWeight: 900, marginTop: 6 }}>
+                {airflowAnalysis.totalExternalStatic !== null
+                  ? `${airflowAnalysis.totalExternalStatic} inWC`
+                  : "—"}
+              </div>
+            </div>
+
+            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
+              <div style={{ fontWeight: 900 }}>Return Static</div>
+              <div style={{ fontSize: 22, fontWeight: 900, marginTop: 6 }}>
+                {airflowAnalysis.returnStatic !== null
+                  ? `${airflowAnalysis.returnStatic} inWC`
+                  : "—"}
+              </div>
+            </div>
+
+            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
+              <div style={{ fontWeight: 900 }}>Supply Static</div>
+              <div style={{ fontSize: 22, fontWeight: 900, marginTop: 6 }}>
+                {airflowAnalysis.supplyStatic !== null
+                  ? `${airflowAnalysis.supplyStatic} inWC`
+                  : "—"}
+              </div>
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: 10,
+              marginTop: 10,
+            }}
+          >
+            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
+              <div style={{ fontWeight: 900 }}>Filter Drop</div>
+              <div style={{ marginTop: 6 }}>
+                {airflowAnalysis.filterDrop !== null
+                  ? `${airflowAnalysis.filterDrop} inWC`
+                  : "—"}
+              </div>
+            </div>
+
+            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
+              <div style={{ fontWeight: 900 }}>Coil Drop</div>
+              <div style={{ marginTop: 6 }}>
+                {airflowAnalysis.coilDrop !== null
+                  ? `${airflowAnalysis.coilDrop} inWC`
+                  : "—"}
+              </div>
+            </div>
+          </div>
+
+          <div
+            style={{
+              marginTop: 12,
+              border: "1px solid #eee",
+              borderRadius: 10,
+              padding: 10,
+              background: "#fafafa",
+            }}
+          >
+            <div style={{ fontWeight: 900 }}>Airflow Summary</div>
+            <div style={{ fontSize: 16, fontWeight: 900, marginTop: 6 }}>
+              {airflowAnalysis.summary}
+            </div>
+            {airflowAnalysis.findings.length ? (
+              <ul style={{ marginTop: 8, paddingLeft: 18 }}>
+                {airflowAnalysis.findings.map((f, i) => (
+                  <li key={i}>
+                    <SmallHint>{f}</SmallHint>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <SmallHint style={{ marginTop: 8 }}>
+                Add static readings to identify filter, coil, blower, or duct restrictions.
+              </SmallHint>
+            )}
+          </div>
+        </SectionCard>
+      </div>
+
 {/* step-wrappers-page-reflow-v1-step-3 */}
       <div style={{ marginTop: 16 }}>
         <div
@@ -17299,323 +17616,6 @@ return (
               Upload a clear nameplate photo to extract manufacturer/model/serial/refrigerant.
             </SmallHint>
           )}
-        </SectionCard>
-      </div>
-
-      <div
-        style={{
-          marginTop: 16,
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: 12,
-        }}
-      >
-        <SectionCard
-          title="Gauge Photo Reader"
-          right={<PillButton text="Choose gauge photo" onClick={() => gaugeInputRef.current?.click()} />}
-        >
-          <input
-            ref={gaugeInputRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            style={{ display: "none" }}
-            onChange={async (e) => {
-              const f = e.target.files?.[0];
-              if (!f) return;
-              const dataUrl = await readFileAsDataUrl(f);
-              setGaugeImage(dataUrl);
-              setGaugeErr("");
-              setGaugeRead(null);
-            }}
-          />
-
-          {gaugeImage ? (
-            <div style={{ display: "grid", gap: 10 }}>
-              <img
-                src={gaugeImage}
-                alt="Gauge photo"
-                style={{
-                  width: "100%",
-                  maxHeight: 280,
-                  objectFit: "contain",
-                  border: "1px solid #eee",
-                  borderRadius: 10,
-                }}
-              />
-
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <PillButton
-                  text={gaugeBusy ? "Reading..." : "Read Gauges"}
-                  onClick={analyzeGaugePhoto}
-                  disabled={gaugeBusy}
-                />
-                <PillButton
-                  text="Clear"
-                  onClick={() => {
-                    setGaugeImage("");
-                    setGaugeErr("");
-                    setGaugeRead(null);
-                  }}
-                />
-              </div>
-
-              {gaugeErr ? (
-                <div style={{ color: "crimson", fontWeight: 800 }}>{gaugeErr}</div>
-              ) : null}
-
-              {gaugeRead ? (
-                <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-                  <div style={{ fontWeight: 900 }}>
-                    Gauge Read
-                    <Badge text={gaugeRead.confidence} />
-                  </div>
-
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "1fr 1fr",
-                      gap: 10,
-                      marginTop: 10,
-                    }}
-                  >
-                    <div>
-                      <b>Suction:</b>{" "}
-                      {gaugeRead.suction_psi !== null ? `${gaugeRead.suction_psi} psi` : "—"}
-                    </div>
-                    <div>
-                      <b>Head:</b>{" "}
-                      {gaugeRead.head_psi !== null ? `${gaugeRead.head_psi} psi` : "—"}
-                    </div>
-                    <div>
-                      <b>Low Sat:</b>{" "}
-                      {gaugeRead.low_sat_f !== null ? `${gaugeRead.low_sat_f} °F` : "—"}
-                    </div>
-                    <div>
-                      <b>High Sat:</b>{" "}
-                      {gaugeRead.high_sat_f !== null ? `${gaugeRead.high_sat_f} °F` : "—"}
-                    </div>
-                  </div>
-
-                  <div style={{ marginTop: 10 }}>
-                    <div style={{ fontWeight: 900 }}>Quick diagnosis</div>
-                    <SmallHint style={{ marginTop: 4 }}>{gaugeRead.quick_diagnosis}</SmallHint>
-                  </div>
-
-                  <div style={{ marginTop: 10 }}>
-                    <div style={{ fontWeight: 900 }}>Notes</div>
-                    <SmallHint style={{ marginTop: 4 }}>{gaugeRead.notes}</SmallHint>
-                  </div>
-
-                  <div style={{ marginTop: 10 }}>
-                    <PillButton
-                      text="Add these readings to measurements"
-                      onClick={addGaugeReadingsToMeasurements}
-                    />
-                  </div>
-                </div>
-              ) : null}
-            </div>
-          ) : (
-            <SmallHint>
-              Upload a clear photo of the gauge set. The app will try to read low side,
-              high side, and saturation temps.
-            </SmallHint>
-          )}
-        </SectionCard>
-
-        <SectionCard title="PT Chart Intelligence + Charge Diagnosis">
-          <SmallHint>
-            If saturation temps are not entered, the app will estimate them from pressure
-            and refrigerant type using a PT chart approximation.
-          </SmallHint>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr 1fr",
-              gap: 10,
-              marginTop: 12,
-            }}
-          >
-            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-              <div style={{ fontWeight: 900 }}>Delta-T</div>
-              <div style={{ fontSize: 22, fontWeight: 900, marginTop: 6 }}>
-                {chargeAnalysis.deltaT !== null ? `${chargeAnalysis.deltaT}°F` : "—"}
-              </div>
-            </div>
-
-            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-              <div style={{ fontWeight: 900 }}>Superheat</div>
-              <div style={{ fontSize: 22, fontWeight: 900, marginTop: 6 }}>
-                {chargeAnalysis.superheat !== null ? `${chargeAnalysis.superheat}°F` : "—"}
-              </div>
-            </div>
-
-            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-              <div style={{ fontWeight: 900 }}>Subcool</div>
-              <div style={{ fontSize: 22, fontWeight: 900, marginTop: 6 }}>
-                {chargeAnalysis.subcool !== null ? `${chargeAnalysis.subcool}°F` : "—"}
-              </div>
-            </div>
-          </div>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: 10,
-              marginTop: 10,
-            }}
-          >
-            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-              <div style={{ fontWeight: 900 }}>
-                Evap Saturation
-                <Badge text={chargeAnalysis.evapSatSource} />
-              </div>
-              <div style={{ marginTop: 6 }}>
-                {chargeAnalysis.evapSat !== null ? `${chargeAnalysis.evapSat}°F` : "—"}
-              </div>
-            </div>
-
-            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-              <div style={{ fontWeight: 900 }}>
-                Condensing Saturation
-                <Badge text={chargeAnalysis.condSatSource} />
-              </div>
-              <div style={{ marginTop: 6 }}>
-                {chargeAnalysis.condSat !== null ? `${chargeAnalysis.condSat}°F` : "—"}
-              </div>
-            </div>
-          </div>
-
-          <div
-            style={{
-              marginTop: 12,
-              border: "1px solid #eee",
-              borderRadius: 10,
-              padding: 10,
-              background: "#fafafa",
-            }}
-          >
-            <div style={{ fontWeight: 900 }}>Charge Condition</div>
-            <div style={{ fontSize: 16, fontWeight: 900, marginTop: 6 }}>
-              {chargeAnalysis.summary}
-            </div>
-            {chargeAnalysis.findings.length ? (
-              <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                {chargeAnalysis.findings.map((f, i) => (
-                  <li key={i}>
-                    <SmallHint>{f}</SmallHint>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <SmallHint style={{ marginTop: 8 }}>
-                Add more refrigeration readings to tighten the diagnosis.
-              </SmallHint>
-            )}
-          </div>
-        </SectionCard>
-      </div>
-
-      <div style={{ marginTop: 16 }}>
-        <SectionCard title="Airflow Intelligence">
-          <SmallHint>
-            Add return static, supply static, filter pressure drop, and coil pressure drop
-            to diagnose airflow restrictions.
-          </SmallHint>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr 1fr",
-              gap: 10,
-              marginTop: 12,
-            }}
-          >
-            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-              <div style={{ fontWeight: 900 }}>Total External Static</div>
-              <div style={{ fontSize: 22, fontWeight: 900, marginTop: 6 }}>
-                {airflowAnalysis.totalExternalStatic !== null
-                  ? `${airflowAnalysis.totalExternalStatic} inWC`
-                  : "—"}
-              </div>
-            </div>
-
-            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-              <div style={{ fontWeight: 900 }}>Return Static</div>
-              <div style={{ fontSize: 22, fontWeight: 900, marginTop: 6 }}>
-                {airflowAnalysis.returnStatic !== null
-                  ? `${airflowAnalysis.returnStatic} inWC`
-                  : "—"}
-              </div>
-            </div>
-
-            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-              <div style={{ fontWeight: 900 }}>Supply Static</div>
-              <div style={{ fontSize: 22, fontWeight: 900, marginTop: 6 }}>
-                {airflowAnalysis.supplyStatic !== null
-                  ? `${airflowAnalysis.supplyStatic} inWC`
-                  : "—"}
-              </div>
-            </div>
-          </div>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: 10,
-              marginTop: 10,
-            }}
-          >
-            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-              <div style={{ fontWeight: 900 }}>Filter Drop</div>
-              <div style={{ marginTop: 6 }}>
-                {airflowAnalysis.filterDrop !== null
-                  ? `${airflowAnalysis.filterDrop} inWC`
-                  : "—"}
-              </div>
-            </div>
-
-            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-              <div style={{ fontWeight: 900 }}>Coil Drop</div>
-              <div style={{ marginTop: 6 }}>
-                {airflowAnalysis.coilDrop !== null
-                  ? `${airflowAnalysis.coilDrop} inWC`
-                  : "—"}
-              </div>
-            </div>
-          </div>
-
-          <div
-            style={{
-              marginTop: 12,
-              border: "1px solid #eee",
-              borderRadius: 10,
-              padding: 10,
-              background: "#fafafa",
-            }}
-          >
-            <div style={{ fontWeight: 900 }}>Airflow Summary</div>
-            <div style={{ fontSize: 16, fontWeight: 900, marginTop: 6 }}>
-              {airflowAnalysis.summary}
-            </div>
-            {airflowAnalysis.findings.length ? (
-              <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                {airflowAnalysis.findings.map((f, i) => (
-                  <li key={i}>
-                    <SmallHint>{f}</SmallHint>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <SmallHint style={{ marginTop: 8 }}>
-                Add static readings to identify filter, coil, blower, or duct restrictions.
-              </SmallHint>
-            )}
-          </div>
         </SectionCard>
       </div>
 
