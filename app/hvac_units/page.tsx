@@ -62,6 +62,21 @@ import {
 } from "./data/presets";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
+
+// Hash-based scroll on page load
+if (typeof window !== "undefined") {
+  window.addEventListener("load", () => {
+    const hash = window.location.hash.replace("#", "");
+    if (hash) {
+      setTimeout(() => {
+        const el = document.getElementById(hash);
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 800);
+    }
+  });
+}
+
+
 import {
   deleteUnit,
   listUnits,
