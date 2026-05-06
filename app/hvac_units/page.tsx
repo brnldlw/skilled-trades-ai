@@ -43,6 +43,11 @@ import { HvacCalculators } from "./components/HvacCalculators";
 
 import { NavMenu } from "../components/NavMenu";
 
+import { CustomerReport } from "./components/CustomerReport";
+
+import { SmartReadingsVoice, VoiceTextArea, VoiceInputButton } from "./components/VoiceInput";
+import type { ParsedReading } from "./components/VoiceInput";
+
 import { readFileAsDataUrl, makeId } from "./lib/fileHelpers";
 
 import { convertToStandard, guessDefaultUnit } from "./lib/unitHelpers";
@@ -63,20 +68,22 @@ import {
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
-// Hash-based scroll on page load
 if (typeof window !== "undefined") {
-  window.addEventListener("load", () => {
+  const _hvacScrollOnLoad = () => {
     const hash = window.location.hash.replace("#", "");
     if (hash) {
       setTimeout(() => {
         const el = document.getElementById(hash);
         if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 800);
+      }, 900);
     }
-  });
+  };
+  if (document.readyState === "complete") {
+    _hvacScrollOnLoad();
+  } else {
+    window.addEventListener("load", _hvacScrollOnLoad, { once: true });
+  }
 }
-
-
 import {
   deleteUnit,
   listUnits,
@@ -11185,6 +11192,35 @@ return (
         </div>
       </div>
 
+{/* customer-report-v1 */}
+      <div style={{ marginTop: 16 }}>
+        <SectionCard title="📄 Customer Service Report" id="customer-report">
+          <SmallHint>
+            Generate a professional, plain-English service report to share with the customer. One tap — no jargon.
+          </SmallHint>
+          <div style={{ marginTop: 12 }}>
+            <CustomerReport
+              customerName={customerName}
+              siteName={siteName}
+              siteAddress={siteAddress}
+              serviceDate={serviceDate}
+              equipmentType={equipmentType}
+              manufacturer={manufacturer}
+              model={model}
+              serialNumber={serialNumber}
+              refrigerantType={refrigerantType}
+              symptom={symptom}
+              finalConfirmedCause={finalConfirmedCause}
+              actualFixPerformed={actualFixPerformed}
+              partsReplaced={partsReplaced}
+              outcomeStatus={outcomeStatus}
+              techCloseoutNotes={techCloseoutNotes}
+              observations={observations}
+            />
+          </div>
+        </SectionCard>
+      </div>
+
 {/* suggested-follow-up-watchlist-v1 */}
       <div style={{ marginTop: 16 }}>
         <SectionCard title="Suggested Follow-Up Watchlist">
@@ -11538,7 +11574,31 @@ return (
         </div>
       </div>
 
-              <SectionCard title="Measurements / Observations" id="measurements">
+              <div style={{ marginTop: 16 }}>
+        <SmartReadingsVoice
+          onReadings={(readings: ParsedReading[]) => {
+            readings.forEach((r) => {
+              setObservations((prev: Observation[]) => {
+                const exists = prev.some(
+                  (o) => o.label.toLowerCase() === r.label.toLowerCase()
+                );
+                if (exists) {
+                  return prev.map((o) =>
+                    o.label.toLowerCase() === r.label.toLowerCase()
+                      ? { ...o, value: r.value, unit: r.unit }
+                      : o
+                  );
+                }
+                return [
+                  ...prev,
+                  { id: String(Date.now()), label: r.label, value: r.value, unit: r.unit, note: "" },
+                ];
+              });
+            });
+          }}
+        />
+      </div>
+      <SectionCard title="Measurements / Observations" id="measurements">
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             {(
 
@@ -13459,7 +13519,7 @@ return (
         </div>
 
         {showFailureDashboard ? (
-          <SectionCard title="Failure Intelligence Dashboard" id="dashboard">
+          <SectionCard title="Failure Intelligence Dashboard">
             <SmallHint>
               Company-wide pattern view across saved service history. Shows callback hotspots, repeat symptoms,
               common cause/fix combinations, and the components getting hit most often.
@@ -13601,7 +13661,7 @@ return (
       </div>
 
 <div style={{ marginTop: 16, display: showSavedUnitHistory ? "block" : "none" }}>
-  <SectionCard title="Unit Service Timeline" id="service-timeline">
+  <SectionCard title="Unit Service Timeline">
     <SmallHint>
       Shows prior service events for the currently loaded unit.
     </SmallHint>
@@ -18404,7 +18464,7 @@ return (
           )}
       </div>
 
-      <SectionCard title="Admin / Work Tools" id="admin-tools">
+      <SectionCard title="Admin / Work Tools">
     <button
       onClick={() => setShowBulkImportTools((v) => !v)}
       style={{
