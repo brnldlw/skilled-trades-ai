@@ -46,6 +46,8 @@ import { NavMenu } from "../components/NavMenu";
 import { CustomerReport } from "./components/CustomerReport";
 
 import { SmartReadingsVoice, VoiceTextArea, VoiceInputButton } from "./components/VoiceInput";
+
+import { RefrigerantLog } from "./components/RefrigerantLog";
 import type { ParsedReading } from "./components/VoiceInput";
 
 import { readFileAsDataUrl, makeId } from "./lib/fileHelpers";
@@ -11173,7 +11175,29 @@ return (
       </div>
 
             
-      {/* step-wrappers-page-reflow-v1-step-5 */}
+      {/* refrigerant-log-v1 */}
+      <div style={{ marginTop: 16 }}>
+        <SectionCard title="🧪 Refrigerant Log" id="refrigerant-log">
+          <SmallHint>
+            EPA 608 compliant refrigerant tracking. Log every pound added or recovered.
+            Export a compliance CSV at any time. A2L safety warnings included.
+          </SmallHint>
+          <div style={{ marginTop: 12 }}>
+            <RefrigerantLog
+              refrigerantType={refrigerantType}
+              equipmentType={equipmentType}
+              manufacturer={manufacturer}
+              model={model}
+              customerName={customerName}
+              siteName={siteName}
+              serviceDate={serviceDate}
+              unitId={loadedUnit?.id || ""}
+            />
+          </div>
+        </SectionCard>
+      </div>
+
+{/* step-wrappers-page-reflow-v1-step-5 */}
       <div style={{ marginTop: 16 }}>
         <div
           style={{
@@ -12001,11 +12025,7 @@ return (
       >
         <SectionCard
           title="Gauge Photo Reader"
-          right={
-            <div style={{ display: "flex", gap: 6 }}>
-              <PillButton text="📷 Camera / Photo" onClick={() => gaugeInputRef.current?.click()} />
-            </div>
-          }
+          right={<PillButton text="Choose gauge photo" onClick={() => gaugeInputRef.current?.click()} />}
         >
           <input
             ref={gaugeInputRef}
@@ -12421,11 +12441,7 @@ return (
 
    <SectionCard
           title="Photo Diagnosis"
-          right={
-            <div style={{ display: "flex", gap: 6 }}>
-              <PillButton text="📷 Camera / Photo" onClick={() => photoInputRef.current?.click()} />
-            </div>
-          }
+          right={<PillButton text="Choose photo" onClick={() => photoInputRef.current?.click()} />}
         >
           <input
             ref={photoInputRef}
@@ -14214,11 +14230,7 @@ return (
 
       <SectionCard
           title="Nameplate Photo Reader"
-          right={
-            <div style={{ display: "flex", gap: 6 }}>
-              <PillButton text="📷 Camera / Photo" onClick={() => fileInputRef.current?.click()} />
-            </div>
-          }
+          right={<PillButton text="Choose photo" onClick={() => fileInputRef.current?.click()} />}
         >
           <input
             ref={fileInputRef}
@@ -15802,35 +15814,18 @@ return (
 
         <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
           <div>
-            <label style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
-              padding: "12px 16px",
-              background: "#0f1f3d",
-              color: "#fff",
-              borderRadius: 10,
-              fontWeight: 800,
-              fontSize: 14,
-              cursor: "pointer",
-              width: "100%",
-              boxSizing: "border-box",
-            }}>
-              📷 Take Photo or Choose from Library
-              <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                multiple
-                onChange={(e) => {
-                  const files = e.target.files ? Array.from(e.target.files) : [];
-                  e.currentTarget.value = "";
-                  handleUploadServiceEventPhotos(files);
-                }}
-                style={{ display: "none" }}
-              />
-            </label>
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              multiple
+              onChange={(e) => {
+                const files = e.target.files ? Array.from(e.target.files) : [];
+                e.currentTarget.value = "";
+                handleUploadServiceEventPhotos(files);
+              }}
+              style={{ width: "100%" }}
+            />
           </div>
 
           {serviceEventPhotoMessage ? (
