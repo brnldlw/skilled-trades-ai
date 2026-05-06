@@ -48,6 +48,10 @@ import { CustomerReport } from "./components/CustomerReport";
 import { SmartReadingsVoice, VoiceTextArea, VoiceInputButton } from "./components/VoiceInput";
 
 import { RefrigerantLog } from "./components/RefrigerantLog";
+
+import { SystemHealthScore } from "./components/SystemHealthScore";
+
+import { calcSystemHealthScore } from "./lib/systemHealthScore";
 import type { ParsedReading } from "./components/VoiceInput";
 
 import { readFileAsDataUrl, makeId } from "./lib/fileHelpers";
@@ -11191,7 +11195,7 @@ return (
               customerName={customerName}
               siteName={siteName}
               serviceDate={serviceDate}
-              unitId={""}
+              unitId={loadedUnit?.id || ""}
             />
           </div>
         </SectionCard>
@@ -13685,7 +13689,19 @@ return (
       </div>
 
 <div style={{ marginTop: 16, display: showSavedUnitHistory ? "block" : "none" }}>
-  <SectionCard title="Unit Service Timeline">
+  {/* system-health-score-v1 */}
+{unitServiceTimeline.length > 0 && (() => {
+  const __healthResult = calcSystemHealthScore(unitServiceTimeline);
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <SystemHealthScore
+        result={__healthResult}
+        unitName={loadedUnitLabel || undefined}
+      />
+    </div>
+  );
+})()}
+<SectionCard title="Unit Service Timeline">
     <SmallHint>
       Shows prior service events for the currently loaded unit.
     </SmallHint>
