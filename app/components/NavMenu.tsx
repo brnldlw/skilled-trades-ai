@@ -10,10 +10,10 @@ type NavMenuProps = {
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/", icon: "🏠" },
   { label: "New Job / Diagnose", href: "/hvac_units", icon: "🔧" },
-  { label: "Unit Library", href: "/hvac_units#library", icon: "📋" },
+  { label: "Unit Library", href: "/hvac_units#unit-library", icon: "📋" },
   { label: "AI Assistant", href: "/hvac_units#ai-chat", icon: "🤖" },
   { label: "Calculators", href: "/hvac_units#calculators", icon: "🧮" },
-  { label: "Refrigerant Log", href: "/hvac_units#reflog", icon: "🧪" },
+  { label: "Refrigerant Log", href: "/hvac_units#refrigerant-log", icon: "🧪" },
 ];
 
 const TOOL_SHORTCUTS = [

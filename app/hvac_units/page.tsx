@@ -12435,7 +12435,7 @@ return (
 
       {/* AI Diagnosis Assistant */}
       <div style={{ marginTop: 16 }}>
-        <SectionCard title="🤖 AI Diagnosis Assistant">
+        <SectionCard title="🤖 AI Diagnosis Assistant" id="ai-chat">
           <SmallHint>
             Chat with a Claude-powered master technician. Describe symptoms, share readings, and get
             step-by-step guidance tailored to this exact job. Your field readings are automatically included.
@@ -12475,7 +12475,7 @@ return (
 
       {/* HVAC Calculators */}
       <div style={{ marginTop: 16 }}>
-        <SectionCard title="🧮 HVAC Calculators">
+        <SectionCard title="🧮 HVAC Calculators" id="calculators">
           <SmallHint>
             Offline-capable calculators: PT chart lookup, superheat/subcooling, delta-T, CFM, Ohm's law,
             capacitor MFD check, and gas heat rise. Works without internet.
