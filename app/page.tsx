@@ -186,9 +186,9 @@ export default function DashboardPage() {
             <div style={{ fontSize: 12, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>Quick Actions</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               <QuickAction icon="🔧" label="Start a New Job" sub="Open a fresh diagnosis workflow" href="/hvac_units" color="#2563eb" />
-              <QuickAction icon="🤖" label="Ask the AI Assistant" sub="Talk to a Claude-powered master tech" href="/hvac_units" color="#7c3aed" />
-              <QuickAction icon="🧮" label="Open Calculators" sub="PT chart, SH/SC, CFM, Ohm's law" href="/hvac_units" color="#16a34a" />
-              <QuickAction icon="📋" label="Unit Library" sub={`Browse all ${units.length} tracked units`} href="/hvac_units" color="#d97706" />
+              <QuickAction icon="🤖" label="Ask the AI Assistant" sub="Talk to a Claude-powered master tech" href="/hvac_units#ai-chat" color="#7c3aed" />
+              <QuickAction icon="🧮" label="Open Calculators" sub="PT chart, SH/SC, CFM, Ohm's law" href="/hvac_units#calculators" color="#16a34a" />
+              <QuickAction icon="📋" label="Unit Library" sub={`Browse all ${units.length} tracked units`} href="/hvac_units#unit-library" color="#d97706" />
             </div>
           </div>
 

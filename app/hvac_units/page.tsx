@@ -10181,7 +10181,7 @@ return (
           </SectionCard>
         </div>
 
-        <SectionCard title="Customer / Site / Unit">
+        <SectionCard title="Customer / Site / Unit" id="new-job">
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             <div>
               <label style={{ fontWeight: 900 }}>Customer Name</label>
@@ -11523,7 +11523,7 @@ return (
         </div>
       </div>
 
-              <SectionCard title="Measurements / Observations">
+              <SectionCard title="Measurements / Observations" id="measurements">
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             {(
 
@@ -11683,7 +11683,7 @@ return (
           </div>
         </SectionCard>
 
-<SectionCard title="Parts & Manuals Assist">
+<SectionCard title="Parts & Manuals Assist" id="parts-manuals">
             {(() => {
               const baseUnitQuery = [manufacturer, model, equipmentType]
                 .filter(Boolean)
@@ -12522,7 +12522,7 @@ return (
 
 {/* repair-decision-panel-v2 */}
       <div style={{ marginTop: 16 }}>
-        <SectionCard title="Repair Decision Panel">
+        <SectionCard title="Repair Decision Panel" id="repair">
           <SmallHint>
             Helps move from diagnosis into a smarter repair decision by showing likely parts to verify,
             why they are in play, what to prove first, and the callback risk if replaced blindly.
@@ -13444,7 +13444,7 @@ return (
         </div>
 
         {showFailureDashboard ? (
-          <SectionCard title="Failure Intelligence Dashboard">
+          <SectionCard title="Failure Intelligence Dashboard" id="dashboard">
             <SmallHint>
               Company-wide pattern view across saved service history. Shows callback hotspots, repeat symptoms,
               common cause/fix combinations, and the components getting hit most often.
@@ -13586,7 +13586,7 @@ return (
       </div>
 
 <div style={{ marginTop: 16, display: showSavedUnitHistory ? "block" : "none" }}>
-  <SectionCard title="Unit Service Timeline">
+  <SectionCard title="Unit Service Timeline" id="service-timeline">
     <SmallHint>
       Shows prior service events for the currently loaded unit.
     </SmallHint>
@@ -13727,7 +13727,7 @@ return (
 </div>
       <div style={{ marginTop: 16, display: showSavedUnitHistory ? "block" : "none" }}>
 
-        <SectionCard title="Saved Unit History" right={<Badge text={`${savedUnits.length} saved`} />}>
+        <SectionCard title="Saved Unit History" id="unit-library" right={<Badge text={`${savedUnits.length} saved`} />}>
           <input
             value={historyFilter}
             onChange={(e) => setHistoryFilter(e.target.value)}
@@ -18389,7 +18389,7 @@ return (
           )}
       </div>
 
-      <SectionCard title="Admin / Work Tools">
+      <SectionCard title="Admin / Work Tools" id="admin-tools">
     <button
       onClick={() => setShowBulkImportTools((v) => !v)}
       style={{
