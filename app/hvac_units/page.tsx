@@ -12001,7 +12001,11 @@ return (
       >
         <SectionCard
           title="Gauge Photo Reader"
-          right={<PillButton text="Choose gauge photo" onClick={() => gaugeInputRef.current?.click()} />}
+          right={
+            <div style={{ display: "flex", gap: 6 }}>
+              <PillButton text="📷 Camera / Photo" onClick={() => gaugeInputRef.current?.click()} />
+            </div>
+          }
         >
           <input
             ref={gaugeInputRef}
@@ -12417,7 +12421,11 @@ return (
 
    <SectionCard
           title="Photo Diagnosis"
-          right={<PillButton text="Choose photo" onClick={() => photoInputRef.current?.click()} />}
+          right={
+            <div style={{ display: "flex", gap: 6 }}>
+              <PillButton text="📷 Camera / Photo" onClick={() => photoInputRef.current?.click()} />
+            </div>
+          }
         >
           <input
             ref={photoInputRef}
@@ -14206,7 +14214,11 @@ return (
 
       <SectionCard
           title="Nameplate Photo Reader"
-          right={<PillButton text="Choose photo" onClick={() => fileInputRef.current?.click()} />}
+          right={
+            <div style={{ display: "flex", gap: 6 }}>
+              <PillButton text="📷 Camera / Photo" onClick={() => fileInputRef.current?.click()} />
+            </div>
+          }
         >
           <input
             ref={fileInputRef}
@@ -15790,18 +15802,35 @@ return (
 
         <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
           <div>
-            <input
-              type="file"
-              accept="image/*"
-              capture="environment"
-              multiple
-              onChange={(e) => {
-                const files = e.target.files ? Array.from(e.target.files) : [];
-                e.currentTarget.value = "";
-                handleUploadServiceEventPhotos(files);
-              }}
-              style={{ width: "100%" }}
-            />
+            <label style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              padding: "12px 16px",
+              background: "#0f1f3d",
+              color: "#fff",
+              borderRadius: 10,
+              fontWeight: 800,
+              fontSize: 14,
+              cursor: "pointer",
+              width: "100%",
+              boxSizing: "border-box",
+            }}>
+              📷 Take Photo or Choose from Library
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                multiple
+                onChange={(e) => {
+                  const files = e.target.files ? Array.from(e.target.files) : [];
+                  e.currentTarget.value = "";
+                  handleUploadServiceEventPhotos(files);
+                }}
+                style={{ display: "none" }}
+              />
+            </label>
           </div>
 
           {serviceEventPhotoMessage ? (
