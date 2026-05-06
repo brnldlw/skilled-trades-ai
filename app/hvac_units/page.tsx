@@ -41,6 +41,8 @@ import { AiChatBot } from "./components/AiChatBot";
 
 import { HvacCalculators } from "./components/HvacCalculators";
 
+import { NavMenu } from "../components/NavMenu";
+
 import { readFileAsDataUrl, makeId } from "./lib/fileHelpers";
 
 import { convertToStandard, guessDefaultUnit } from "./lib/unitHelpers";
@@ -9609,7 +9611,9 @@ if (needsCompanyOnboarding) {
 
 
 return (
-  <div style={{ padding: 20, maxWidth: 1380, margin: "0 auto" }}>
+  <div style={{ paddingTop: 52 }}>
+    <NavMenu currentPath="/hvac_units" />
+  <div style={{ padding: 20, maxWidth: 1380, margin: "0 auto" }}></div>
       <h1 style={{ fontSize: 26, fontWeight: 900 }}>
         Skilled Trades AI — HVAC Diagnose
       </h1>
@@ -19336,6 +19340,7 @@ const __options = getTimelineComponentFilterOptions(unitProfileTimeline);
   </div>
 ) : null}
 
-    </div>
+     </div>
+  </div>
   );
 }
