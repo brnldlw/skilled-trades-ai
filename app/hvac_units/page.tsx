@@ -37,6 +37,10 @@ import { SmallHint } from "./components/SmallHint";
 
 import { Badge } from "./components/Badge";
 
+import { AiChatBot } from "./components/AiChatBot";
+
+import { HvacCalculators } from "./components/HvacCalculators";
+
 import { readFileAsDataUrl, makeId } from "./lib/fileHelpers";
 
 import { convertToStandard, guessDefaultUnit } from "./lib/unitHelpers";
@@ -7804,11 +7808,11 @@ const siteUnitsAtLocation = savedUnits.filter((u) => {
   return Boolean(customerName.trim() && siteName.trim() && sameCustomer && sameSite);
 });
 
+ const [showAdvancedAiOutput, setShowAdvancedAiOutput] = useState(false);
 
+  const [showAiChatBot, setShowAiChatBot] = useState(false);
 
-
-
-  const [showAdvancedAiOutput, setShowAdvancedAiOutput] = useState(false);
+  const [showHvacCalculators, setShowHvacCalculators] = useState(false);
 
   useEffect(() => {
   listUnitsForCurrentUser()
@@ -12422,6 +12426,93 @@ return (
           <SmallHint>
             Use these sections to decide what to test next, which parts are really in play, and what still needs to be proven before replacement.
           </SmallHint>
+        </div>
+      </div>
+
+      {/* AI Diagnosis Assistant */}
+      <div style={{ marginTop: 16 }}>
+        <SectionCard title="🤖 AI Diagnosis Assistant">
+          <SmallHint>
+            Chat with a Claude-powered master technician. Describe symptoms, share readings, and get
+            step-by-step guidance tailored to this exact job. Your field readings are automatically included.
+          </SmallHint>
+          <div style={{ marginTop: 10 }}>
+            <button
+              onClick={() => setShowAiChatBot((v) => !v)}
+              style={{
+                padding: "10px 16px",
+                fontWeight: 900,
+                fontSize: 14,
+                border: "2px solid #1e3a5f",
+                borderRadius: 10,
+                background: showAiChatBot ? "#1e3a5f" : "#fff",
+                color: showAiChatBot ? "#fff" : "#1e3a5f",
+                cursor: "pointer",
+              }}
+            >
+              {showAiChatBot ? "▲ Hide AI Assistant" : "▼ Open AI Assistant"}
+            </button>
+            {showAiChatBot && (
+              <div style={{ marginTop: 12 }}>
+                <AiChatBot
+                  equipmentType={equipmentType}
+                  manufacturer={manufacturer}
+                  model={model}
+                  refrigerantType={refrigerantType}
+                  symptom={symptom}
+                  propertyType={propertyType}
+                  observations={observations}
+                />
+              </div>
+            )}
+          </div>
+        </SectionCard>
+      </div>
+
+      {/* HVAC Calculators */}
+      <div style={{ marginTop: 16 }}>
+        <SectionCard title="🧮 HVAC Calculators">
+          <SmallHint>
+            Offline-capable calculators: PT chart lookup, superheat/subcooling, delta-T, CFM, Ohm's law,
+            capacitor MFD check, and gas heat rise. Works without internet.
+          </SmallHint>
+          <div style={{ marginTop: 10 }}>
+            <button
+              onClick={() => setShowHvacCalculators((v) => !v)}
+              style={{
+                padding: "10px 16px",
+                fontWeight: 900,
+                fontSize: 14,
+                border: "2px solid #16a34a",
+                borderRadius: 10,
+                background: showHvacCalculators ? "#16a34a" : "#fff",
+                color: showHvacCalculators ? "#fff" : "#16a34a",
+                cursor: "pointer",
+              }}
+            >
+              {showHvacCalculators ? "▲ Hide Calculators" : "▼ Open Calculators"}
+            </button>
+            {showHvacCalculators && (
+              <div style={{ marginTop: 12 }}>
+                <HvacCalculators />
+              </div>
+            )}
+          </div>
+        </SectionCard>
+      </div>
+
+      <div style={{ marginTop: 16 }}>
+        <div
+          style={{
+            border: "1px solid #dfe7f3",
+            borderRadius: 12,
+            padding: 12,
+            background: "#f8fbff",
+            display: "grid",
+            gap: 6,
+          }}
+        >
+          <div style={{ fontWeight: 900, fontSize: 16, color: "#555" }}>Diagnostic Tools</div>
         </div>
       </div>
 
