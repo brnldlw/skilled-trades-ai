@@ -41,6 +41,14 @@ import { AiChatBot } from "./components/AiChatBot";
 
 import { HvacCalculators } from "./components/HvacCalculators";
 
+import { NavMenu } from "../components/NavMenu";
+
+import { CustomerReport } from "./components/CustomerReport";
+
+import { SmartReadingsVoice, VoiceTextArea, VoiceInputButton } from "./components/VoiceInput";
+
+import { RefrigerantLog } from "./components/RefrigerantLog";
+import type { ParsedReading } from "./components/VoiceInput";
 
 import { readFileAsDataUrl, makeId } from "./lib/fileHelpers";
 
@@ -61,6 +69,23 @@ import {
 } from "./data/presets";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
+
+if (typeof window !== "undefined") {
+  const _hvacScrollOnLoad = () => {
+    const hash = window.location.hash.replace("#", "");
+    if (hash) {
+      setTimeout(() => {
+        const el = document.getElementById(hash);
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 900);
+    }
+  };
+  if (document.readyState === "complete") {
+    _hvacScrollOnLoad();
+  } else {
+    window.addEventListener("load", _hvacScrollOnLoad, { once: true });
+  }
+}
 import {
   deleteUnit,
   listUnits,
@@ -9608,9 +9633,11 @@ if (needsCompanyOnboarding) {
 }
 
 
+
 return (
+  <div style={{ paddingTop: 52 }}>
+    <NavMenu currentPath="/hvac_units" />
   <div style={{ padding: 20, maxWidth: 1380, margin: "0 auto" }}>
-</div>
       <h1 style={{ fontSize: 26, fontWeight: 900 }}>
         Skilled Trades AI — HVAC Diagnose
       </h1>
@@ -10178,7 +10205,7 @@ return (
           </SectionCard>
         </div>
 
-        <SectionCard title="Customer / Site / Unit">
+        <SectionCard title="Customer / Site / Unit" id="new-job">
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             <div>
               <label style={{ fontWeight: 900 }}>Customer Name</label>
@@ -11148,7 +11175,29 @@ return (
       </div>
 
             
-      {/* step-wrappers-page-reflow-v1-step-5 */}
+      {/* refrigerant-log-v1 */}
+      <div style={{ marginTop: 16 }}>
+        <SectionCard title="🧪 Refrigerant Log" id="refrigerant-log">
+          <SmallHint>
+            EPA 608 compliant refrigerant tracking. Log every pound added or recovered.
+            Export a compliance CSV at any time. A2L safety warnings included.
+          </SmallHint>
+          <div style={{ marginTop: 12 }}>
+            <RefrigerantLog
+              refrigerantType={refrigerantType}
+              equipmentType={equipmentType}
+              manufacturer={manufacturer}
+              model={model}
+              customerName={customerName}
+              siteName={siteName}
+              serviceDate={serviceDate}
+              unitId={loadedUnit?.id || ""}
+            />
+          </div>
+        </SectionCard>
+      </div>
+
+{/* step-wrappers-page-reflow-v1-step-5 */}
       <div style={{ marginTop: 16 }}>
         <div
           style={{
@@ -11165,6 +11214,35 @@ return (
             Commit what was verified or replaced, generate the closeout, and leave with a follow-up watchlist that lowers callback risk.
           </SmallHint>
         </div>
+      </div>
+
+{/* customer-report-v1 */}
+      <div style={{ marginTop: 16 }}>
+        <SectionCard title="📄 Customer Service Report" id="customer-report">
+          <SmallHint>
+            Generate a professional, plain-English service report to share with the customer. One tap — no jargon.
+          </SmallHint>
+          <div style={{ marginTop: 12 }}>
+            <CustomerReport
+              customerName={customerName}
+              siteName={siteName}
+              siteAddress={siteAddress}
+              serviceDate={serviceDate}
+              equipmentType={equipmentType}
+              manufacturer={manufacturer}
+              model={model}
+              serialNumber={serialNumber}
+              refrigerantType={refrigerantType}
+              symptom={symptom}
+              finalConfirmedCause={finalConfirmedCause}
+              actualFixPerformed={actualFixPerformed}
+              partsReplaced={partsReplaced}
+              outcomeStatus={outcomeStatus}
+              techCloseoutNotes={techCloseoutNotes}
+              observations={observations}
+            />
+          </div>
+        </SectionCard>
       </div>
 
 {/* suggested-follow-up-watchlist-v1 */}
@@ -11520,7 +11598,31 @@ return (
         </div>
       </div>
 
-              <SectionCard title="Measurements / Observations">
+              <div style={{ marginTop: 16 }}>
+        <SmartReadingsVoice
+          onReadings={(readings: ParsedReading[]) => {
+            readings.forEach((r) => {
+              setObservations((prev: Observation[]) => {
+                const exists = prev.some(
+                  (o) => o.label.toLowerCase() === r.label.toLowerCase()
+                );
+                if (exists) {
+                  return prev.map((o) =>
+                    o.label.toLowerCase() === r.label.toLowerCase()
+                      ? { ...o, value: r.value, unit: r.unit }
+                      : o
+                  );
+                }
+                return [
+                  ...prev,
+                  { id: String(Date.now()), label: r.label, value: r.value, unit: r.unit, note: "" },
+                ];
+              });
+            });
+          }}
+        />
+      </div>
+      <SectionCard title="Measurements / Observations" id="measurements">
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             {(
 
@@ -11680,7 +11782,7 @@ return (
           </div>
         </SectionCard>
 
-<SectionCard title="Parts & Manuals Assist">
+<SectionCard title="Parts & Manuals Assist" id="parts-manuals">
             {(() => {
               const baseUnitQuery = [manufacturer, model, equipmentType]
                 .filter(Boolean)
@@ -12432,7 +12534,7 @@ return (
 
       {/* AI Diagnosis Assistant */}
       <div style={{ marginTop: 16 }}>
-        <SectionCard title="🤖 AI Diagnosis Assistant">
+        <SectionCard title="🤖 AI Diagnosis Assistant" id="ai-chat">
           <SmallHint>
             Chat with a Claude-powered master technician. Describe symptoms, share readings, and get
             step-by-step guidance tailored to this exact job. Your field readings are automatically included.
@@ -12472,7 +12574,7 @@ return (
 
       {/* HVAC Calculators */}
       <div style={{ marginTop: 16 }}>
-        <SectionCard title="🧮 HVAC Calculators">
+        <SectionCard title="🧮 HVAC Calculators" id="calculators">
           <SmallHint>
             Offline-capable calculators: PT chart lookup, superheat/subcooling, delta-T, CFM, Ohm's law,
             capacitor MFD check, and gas heat rise. Works without internet.
@@ -12519,7 +12621,7 @@ return (
 
 {/* repair-decision-panel-v2 */}
       <div style={{ marginTop: 16 }}>
-        <SectionCard title="Repair Decision Panel">
+        <SectionCard title="Repair Decision Panel" id="repair">
           <SmallHint>
             Helps move from diagnosis into a smarter repair decision by showing likely parts to verify,
             why they are in play, what to prove first, and the callback risk if replaced blindly.
@@ -13724,7 +13826,7 @@ return (
 </div>
       <div style={{ marginTop: 16, display: showSavedUnitHistory ? "block" : "none" }}>
 
-        <SectionCard title="Saved Unit History" right={<Badge text={`${savedUnits.length} saved`} />}>
+        <SectionCard title="Saved Unit History" id="unit-library" right={<Badge text={`${savedUnits.length} saved`} />}>
           <input
             value={historyFilter}
             onChange={(e) => setHistoryFilter(e.target.value)}
@@ -19337,7 +19439,7 @@ const __options = getTimelineComponentFilterOptions(unitProfileTimeline);
   </div>
 ) : null}
 
-   </div>
+  </div>
   </div>
   );
 }
