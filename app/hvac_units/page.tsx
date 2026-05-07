@@ -50,6 +50,7 @@ import { SmartReadingsVoice, VoiceTextArea, VoiceInputButton } from "./component
 import { RefrigerantLog } from "./components/RefrigerantLog";
 
 import { SystemHealthScore } from "./components/SystemHealthScore";
+import { UnitProfilePanel } from "./components/UnitProfilePanel";
 
 import { StepProgressBar } from "./components/StepProgressBar";
 
