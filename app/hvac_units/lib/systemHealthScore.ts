@@ -10,7 +10,7 @@
  * - Score bands: 90-100 Excellent, 75-89 Good, 55-74 Fair, 35-54 Poor, 0-34 Critical
  */
 
-import type { ServiceEventRow } from "../lib/supabase/work-orders";
+import type { ServiceEventRow } from "../../lib/supabase/work-orders";
 
 export type HealthScoreBand = "excellent" | "good" | "fair" | "poor" | "critical";
 
