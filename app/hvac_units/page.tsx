@@ -11198,7 +11198,7 @@ return (
               customerName={customerName}
               siteName={siteName}
               serviceDate={serviceDate}
-              unitId={loadedUnit?.id || ""}
+              unitId={""}
             />
           </div>
         </SectionCard>
@@ -13699,7 +13699,7 @@ return (
     <div style={{ marginBottom: 16 }}>
       <SystemHealthScore
         result={__healthResult}
-        unitName={loadedUnitLabel || undefined}
+        unitName={undefined}
       />
     </div>
   );
