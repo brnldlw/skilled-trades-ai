@@ -87,7 +87,7 @@ export default function DashboardPage() {
     return (
       <div style={{ minHeight: "100vh", background: "#0f1f3d", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24, fontFamily: "system-ui, sans-serif" }}>
         <div style={{ fontSize: 48, marginBottom: 16 }}>🔧</div>
-        <h1 style={{ fontSize: 28, fontWeight: 800, color: "#fff", marginBottom: 8, textAlign: "center" }}>HVAC/R Pro</h1>
+        <h1 style={{ fontSize: 28, fontWeight: 800, color: "#fff", marginBottom: 8, textAlign: "center" }}>My HVACR Tool</h1>
         <p style={{ fontSize: 15, color: "rgba(255,255,255,0.55)", marginBottom: 32, textAlign: "center", maxWidth: 340 }}>The diagnostic platform built for field technicians.</p>
         <a href="/auth" style={{ padding: "13px 32px", background: "#2563eb", color: "#fff", borderRadius: 10, textDecoration: "none", fontWeight: 800, fontSize: 16 }}>Sign In</a>
         <div style={{ marginTop: 48, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12, maxWidth: 560, width: "100%" }}>

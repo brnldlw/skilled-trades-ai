@@ -101,7 +101,7 @@ export function NavMenu({ currentPath = "" }: NavMenuProps) {
           </button>
           <a href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontSize: 18 }}>🔧</span>
-            <span style={{ fontWeight: 800, fontSize: 15, color: "#fff", letterSpacing: "-0.3px" }}>HVAC/R Pro</span>
+            <span style={{ fontWeight: 800, fontSize: 15, color: "#fff", letterSpacing: "-0.3px" }}>My HVACR Tool</span>
           </a>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -185,7 +185,7 @@ export function NavMenu({ currentPath = "" }: NavMenuProps) {
 
         <div style={{ padding: "12px 16px 20px", borderTop: "1px solid rgba(255,255,255,0.08)", flexShrink: 0 }}>
           <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 10, textAlign: "center" }}>
-            HVAC/R Pro · v1.0
+            My HVACR Tool · v1.0
           </div>
           <button
             onClick={handleSignOut}

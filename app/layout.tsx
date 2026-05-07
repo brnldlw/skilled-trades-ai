@@ -14,13 +14,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "HVAC/R Pro — Field Diagnostic Platform",
-  description: "AI-powered diagnostic platform for HVAC/R field technicians.",
+  title: "My HVACR Tool — Field Diagnostic Platform",
+  description: "My HVACR Tool — AI-powered diagnostic platform for HVAC/R field technicians.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "HVAC/R Pro",
+    title: "My HVACR Tool",
   },
 };
 

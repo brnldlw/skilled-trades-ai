@@ -1,6 +1,6 @@
 {
-  "name": "HVAC/R Pro",
-  "short_name": "HVAC/R Pro",
+  "name": "My HVACR Tool",
+  "short_name": "MyHVACR",
   "description": "AI-powered diagnostic platform for HVAC/R field technicians",
   "start_url": "/",
   "display": "standalone",
