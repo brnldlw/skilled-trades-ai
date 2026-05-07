@@ -49,8 +49,11 @@ import { SmartReadingsVoice, VoiceTextArea, VoiceInputButton } from "./component
 
 import { RefrigerantLog } from "./components/RefrigerantLog";
 
+import { UpgradePrompt, AiLimitWarning } from "./components/UpgradePrompt";
+
+import { useSubscription } from "./hooks/useSubscription";
+
 import { SystemHealthScore } from "./components/SystemHealthScore";
-import { UnitProfilePanel } from "./components/UnitProfilePanel";
 
 import { StepProgressBar } from "./components/StepProgressBar";
 
@@ -11191,6 +11194,12 @@ return (
             Export a compliance CSV at any time. A2L safety warnings included.
           </SmallHint>
           <div style={{ marginTop: 12 }}>
+            {!can("refrigerant_log") ? (
+              <UpgradePrompt
+                feature="Refrigerant Compliance Log"
+                reason="EPA 608 refrigerant tracking is a Solo and Shop plan feature. Upgrade to log refrigerant, generate compliance CSVs, and avoid $44,000 fines."
+              />
+            ) : (
             <RefrigerantLog
               refrigerantType={refrigerantType}
               equipmentType={equipmentType}
@@ -11201,6 +11210,7 @@ return (
               serviceDate={serviceDate}
               unitId={""}
             />
+            )}
           </div>
         </SectionCard>
       </div>
@@ -11231,6 +11241,12 @@ return (
             Generate a professional, plain-English service report to share with the customer. One tap — no jargon.
           </SmallHint>
           <div style={{ marginTop: 12 }}>
+            {!can("customer_reports") ? (
+              <UpgradePrompt
+                feature="Customer Service Reports"
+                reason="AI-written customer reports are a Solo and Shop plan feature. Upgrade to generate professional plain-English reports in one tap."
+              />
+            ) : (
             <CustomerReport
               customerName={customerName}
               siteName={siteName}
@@ -11249,6 +11265,7 @@ return (
               techCloseoutNotes={techCloseoutNotes}
               observations={observations}
             />
+            )}
           </div>
         </SectionCard>
       </div>
@@ -12565,6 +12582,12 @@ return (
             </button>
             {showAiChatBot && (
               <div style={{ marginTop: 12 }}>
+                {!can("ai_queries_per_day") ? (
+                  <UpgradePrompt
+                    feature="Unlimited AI Diagnosis"
+                    reason="Free plan is limited to 3 AI queries per day. Upgrade to Solo for unlimited diagnosis assistance."
+                  />
+                ) : (
                 <AiChatBot
                   equipmentType={equipmentType}
                   manufacturer={manufacturer}
@@ -12574,6 +12597,7 @@ return (
                   propertyType={propertyType}
                   observations={observations}
                 />
+                )}
               </div>
             )}
           </div>
@@ -12605,7 +12629,14 @@ return (
             </button>
             {showHvacCalculators && (
               <div style={{ marginTop: 12 }}>
-                <HvacCalculators />
+                {!can("sh_sc_calculator") ? (
+                  <UpgradePrompt
+                    feature="Full Calculator Suite"
+                    reason="Free plan includes Delta-T and Ohm's Law only. Upgrade to Solo for superheat, subcooling, CFM, capacitor MFD, and gas heat rise calculators."
+                  />
+                ) : (
+                  <HvacCalculators />
+                )}
               </div>
             )}
           </div>
