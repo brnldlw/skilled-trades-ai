@@ -9539,107 +9539,125 @@ async function handleSignOut() {
 
 if (!isLoggedIn) {
   return (
-    <div style={{ padding: 20 }}>
-      <h1 style={{ fontSize: 26, fontWeight: 900 }}>My HVACR Tool</h1>
-      <p>You need to log in first.</p>
-      <a
-  href="/auth"
-  style={{
-    display: "inline-block",
-    marginTop: 12,
-    padding: "10px 14px",
-    fontWeight: 900,
-    border: "1px solid #ddd",
-    borderRadius: 10,
-    textDecoration: "none",
-    color: "#111",
-    background: "#fafafa",
-  }}
->
-  Let&apos;s Diagnose
-</a>
+    <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #0c1a2e 0%, #0f2440 50%, #0c1a2e 100%)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px 16px", fontFamily: "system-ui, sans-serif" }}>
+      <div style={{ textAlign: "center", maxWidth: 400 }}>
+        <div style={{ fontSize: 30, fontWeight: 800, letterSpacing: 3, color: "#f97316", marginBottom: 16 }}>MY HVAC/R TOOL</div>
+        <div style={{ fontSize: 18, fontWeight: 700, color: "#f8fafc", marginBottom: 8 }}>Sign in to access your tools</div>
+        <div style={{ fontSize: 14, color: "#64748b", marginBottom: 28 }}>AI diagnosis, PT charts, calculators, and more — all in one place.</div>
+        <a href="/auth" style={{ display: "inline-block", padding: "14px 32px", background: "#f97316", color: "#fff", borderRadius: 10, fontWeight: 800, fontSize: 16, textDecoration: "none", boxShadow: "0 4px 20px rgba(249,115,22,0.4)" }}>
+          🔧 Sign In
+        </a>
+        <div style={{ marginTop: 16 }}>
+          <a href="/auth" style={{ fontSize: 13, color: "#475569", textDecoration: "none" }}>Don&apos;t have an account? Sign up free</a>
+        </div>
+      </div>
+    </div>
     </div>
   );
 }
 
 if (needsCompanyOnboarding) {
   return (
-    <div style={{ padding: "16px", maxWidth: 720, margin: "0 auto" }}>
-      <h1 style={{ fontSize: 26, fontWeight: 900 }}>Set Up Your Company</h1>
-      <p style={{ marginTop: 8 }}>
-        Before using the HVAC tool, create your company workspace.
-      </p>
+    <div style={{
+      minHeight: "100vh",
+      background: "linear-gradient(135deg, #0c1a2e 0%, #0f2440 50%, #0c1a2e 100%)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      padding: "24px 16px", fontFamily: "system-ui, sans-serif",
+      position: "relative", overflow: "hidden",
+    }}>
+      {/* Background glow */}
+      <div style={{ position: "absolute", top: "20%", left: "50%", transform: "translate(-50%,-50%)", width: 600, height: 400, background: "radial-gradient(ellipse, rgba(249,115,22,0.08) 0%, transparent 70%)", pointerEvents: "none" }} />
 
-      <div
-        style={{
-          marginTop: 16,
-          border: "1px solid #e5e5e5",
-          borderRadius: 12,
-          padding: 16,
-          background: "#fafafa",
-          display: "grid",
-          gap: 12,
-        }}
-      >
-        <div>
-          <label style={{ fontWeight: 900 }}>Company Name</label>
-          <br />
-          <input
-            value={onboardingCompanyName}
-            onChange={(e) => setOnboardingCompanyName(e.target.value)}
-            placeholder="Example: Caplinger Company"
-            style={{ width: "100%", padding: 10 }}
-          />
+      <div style={{ width: "100%", maxWidth: 480, position: "relative", zIndex: 1 }}>
+
+        {/* Brand header */}
+        <div style={{ textAlign: "center", marginBottom: 32 }}>
+          <div style={{ fontSize: 30, fontWeight: 800, letterSpacing: 3, color: "#f97316", marginBottom: 6 }}>
+            MY HVAC/R TOOL
+          </div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: "#f8fafc", marginBottom: 8 }}>
+            Welcome aboard! 👋
+          </div>
+          <div style={{ fontSize: 14, color: "#64748b", lineHeight: 1.6 }}>
+            Let&apos;s get your account set up in 30 seconds.<br />
+            Signed in as <span style={{ color: "#94a3b8", fontWeight: 600 }}>{userEmail}</span>
+          </div>
         </div>
 
-        {userEmail ? (
-          <SmallHint>
-            Signed in as: <b>{userEmail}</b>
-          </SmallHint>
-        ) : null}
+        {/* Steps indicator */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 28 }}>
+          {[
+            { num: 1, label: "Company" },
+            { num: 2, label: "Ready" },
+          ].map((s, i) => (
+            <div key={s.num} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ display: "flex", flexDirection: "column" as const, alignItems: "center", gap: 3 }}>
+                <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#f97316", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: "#fff" }}>
+                  {s.num}
+                </div>
+                <div style={{ fontSize: 10, color: "#64748b", fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase" as const }}>{s.label}</div>
+              </div>
+              {i < 1 && <div style={{ width: 40, height: 1, background: "rgba(255,255,255,0.1)", marginBottom: 16 }} />}
+            </div>
+          ))}
+        </div>
 
-        {onboardingMessage ? (
-          <SmallHint>{onboardingMessage}</SmallHint>
-        ) : (
-          <SmallHint>
-            This will create your company and attach your account as the company admin.
-          </SmallHint>
-        )}
+        {/* Card */}
+        <div style={{ background: "rgba(15,36,64,0.8)", border: "1px solid rgba(249,115,22,0.15)", borderRadius: 16, padding: "28px 24px", backdropFilter: "blur(12px)", boxShadow: "0 24px 64px rgba(0,0,0,0.3)" }}>
 
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <button
-            onClick={handleCreateCompanyOnboarding}
-            disabled={onboardingBusy}
-            style={{
-              padding: "10px 14px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
-          >
-            {onboardingBusy ? "Creating Company..." : "Create Company"}
-          </button>
+          <div style={{ fontSize: 16, fontWeight: 700, color: "#f8fafc", marginBottom: 6 }}>
+            What&apos;s the name of your company or shop?
+          </div>
+          <div style={{ fontSize: 13, color: "#64748b", marginBottom: 20, lineHeight: 1.5 }}>
+            This appears on your service reports and helps organize your unit history. Solo techs can use your own name.
+          </div>
 
-          <button
-            onClick={handleSignOut}
-            style={{
-              padding: "10px 14px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
-          >
+          <div style={{ display: "flex", flexDirection: "column" as const, gap: 14 }}>
+            <input
+              value={onboardingCompanyName}
+              onChange={(e) => setOnboardingCompanyName(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && !onboardingBusy) handleCreateCompanyOnboarding(); }}
+              placeholder="e.g. ABC HVAC Services or John Smith HVAC"
+              style={{ width: "100%", padding: "13px 14px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, color: "#f8fafc", fontSize: 15, fontFamily: "inherit", outline: "none" }}
+            />
+
+            {onboardingMessage && (
+              <div style={{ padding: "10px 14px", borderRadius: 8, fontSize: 13, background: "rgba(220,38,38,0.1)", border: "1px solid rgba(220,38,38,0.3)", color: "#fca5a5" }}>
+                {onboardingMessage}
+              </div>
+            )}
+
+            <button
+              onClick={handleCreateCompanyOnboarding}
+              disabled={onboardingBusy}
+              style={{ width: "100%", padding: "14px", background: onboardingBusy ? "rgba(249,115,22,0.5)" : "#f97316", color: "#fff", border: "none", borderRadius: 10, fontWeight: 800, fontSize: 16, cursor: onboardingBusy ? "not-allowed" : "pointer", fontFamily: "inherit", boxShadow: onboardingBusy ? "none" : "0 4px 20px rgba(249,115,22,0.4)" }}
+            >
+              {onboardingBusy ? "Setting up..." : "🔧 Let's Go"}
+            </button>
+
+            {/* What to expect bullets */}
+            <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 16, display: "flex", flexDirection: "column" as const, gap: 8 }}>
+              {[
+                { icon: "🤖", text: "AI diagnosis — describe symptoms, get answers" },
+                { icon: "📊", text: "PT charts + 7 calculators — all offline capable" },
+                { icon: "📋", text: "Unit history — every job, every reading, forever" },
+              ].map(f => (
+                <div key={f.icon} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: "#64748b" }}>
+                  <span style={{ fontSize: 16 }}>{f.icon}</span>
+                  <span>{f.text}</span>
+                </div>
+              ))}
+            </div>
+
+          </div>
+        </div>
+
+        <div style={{ textAlign: "center", marginTop: 20 }}>
+          <button onClick={handleSignOut} style={{ background: "none", border: "none", color: "#334155", cursor: "pointer", fontSize: 13, fontFamily: "inherit" }}>
             Sign out
           </button>
         </div>
+
       </div>
     </div>
   );
