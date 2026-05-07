@@ -51,6 +51,8 @@ import { RefrigerantLog } from "./components/RefrigerantLog";
 
 import { SystemHealthScore } from "./components/SystemHealthScore";
 
+import { StepProgressBar } from "./components/StepProgressBar";
+
 import { calcSystemHealthScore } from "./lib/systemHealthScore";
 import type { ParsedReading } from "./components/VoiceInput";
 
@@ -9555,7 +9557,7 @@ if (!isLoggedIn) {
 
 if (needsCompanyOnboarding) {
   return (
-    <div style={{ padding: 20, maxWidth: 720, margin: "0 auto" }}>
+    <div style={{ padding: "16px", maxWidth: 720, margin: "0 auto" }}>
       <h1 style={{ fontSize: 26, fontWeight: 900 }}>Set Up Your Company</h1>
       <p style={{ marginTop: 8 }}>
         Before using the HVAC tool, create your company workspace.
@@ -9639,11 +9641,12 @@ if (needsCompanyOnboarding) {
 
 
 return (
-  <div style={{ paddingTop: 52 }}>
+  <div style={{ paddingTop: 96 }}>
     <NavMenu currentPath="/hvac_units" />
-  <div style={{ padding: 20, maxWidth: 1380, margin: "0 auto" }}>
-      <h1 style={{ fontSize: 26, fontWeight: 900 }}>
-        Skilled Trades AI — HVAC Diagnose
+    <StepProgressBar />
+  <div style={{ padding: "16px 16px 40px", maxWidth: 800, margin: "0 auto" }}>
+      <h1 style={{ fontSize: 22, fontWeight: 900, color: "#0f1f3d", marginBottom: 4 }}>
+        HVAC/R Pro — Diagnose
       </h1>
 
       <div
@@ -11195,7 +11198,7 @@ return (
               customerName={customerName}
               siteName={siteName}
               serviceDate={serviceDate}
-              unitId={""}
+              unitId={loadedUnit?.id || ""}
             />
           </div>
         </SectionCard>
@@ -13696,7 +13699,7 @@ return (
     <div style={{ marginBottom: 16 }}>
       <SystemHealthScore
         result={__healthResult}
-        unitName={undefined}
+        unitName={loadedUnitLabel || undefined}
       />
     </div>
   );

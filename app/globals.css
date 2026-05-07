@@ -3,6 +3,7 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --nav-height: 52px;
 }
 
 @theme inline {
@@ -19,8 +20,139 @@
   }
 }
 
+/* ── Base ─────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: none;
+}
+
+/* ── Touch targets ────────────────────────────────────────── */
+/* All buttons and interactive elements get minimum 44px touch target */
+button, [role="button"], input[type="submit"], input[type="button"] {
+  min-height: 44px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Checkboxes get larger touch area */
+input[type="checkbox"] {
+  min-width: 20px;
+  min-height: 20px;
+  cursor: pointer;
+}
+
+/* All inputs comfortable to tap */
+input[type="text"],
+input[type="number"],
+input[type="date"],
+input[type="email"],
+select,
+textarea {
+  min-height: 44px;
+  font-size: 16px; /* Prevents iOS zoom on focus */
+  -webkit-appearance: none;
+  border-radius: 8px;
+}
+
+/* ── Typography scale ─────────────────────────────────────── */
+h1 { font-size: clamp(20px, 5vw, 28px); }
+h2 { font-size: clamp(17px, 4vw, 22px); }
+h3 { font-size: clamp(15px, 3vw, 18px); }
+
+/* ── Scrolling ────────────────────────────────────────────── */
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Mobile-specific overrides ────────────────────────────── */
+@media (max-width: 640px) {
+
+  /* Page padding on mobile */
+  .hvac-page-wrapper {
+    padding: 12px !important;
+  }
+
+  /* SectionCard titles bigger and easier to read */
+  .section-card-title {
+    font-size: 16px !important;
+  }
+
+  /* Pill buttons easier to tap */
+  .pill-btn {
+    padding: 10px 16px !important;
+    font-size: 14px !important;
+    min-height: 44px !important;
+  }
+
+  /* Step headers */
+  .step-header {
+    font-size: 17px !important;
+  }
+
+  /* Inputs full width on mobile */
+  select, input[type="text"], input[type="number"], input[type="date"] {
+    width: 100%;
+    font-size: 16px !important;
+  }
+
+  /* Hide verbose labels on mobile */
+  .mobile-hide {
+    display: none !important;
+  }
+
+  /* Stack flex rows on mobile */
+  .mobile-stack {
+    flex-direction: column !important;
+  }
+}
+
+/* ── Smooth scroll for anchor links ───────────────────────── */
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--nav-height) + 12px);
+}
+
+/* ── Focus styles for accessibility ──────────────────────── */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+/* ── Print styles ─────────────────────────────────────────── */
+@media print {
+  .no-print { display: none !important; }
+  body { background: #fff; }
+}
+
+/* ── Animations ──────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.2s ease forwards;
+}
+
+/* ── PWA safe areas (notch phones) ───────────────────────── */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .nav-bottom-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 }
