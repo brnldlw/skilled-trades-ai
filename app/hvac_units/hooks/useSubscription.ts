@@ -8,7 +8,7 @@ import {
   type UserProfile,
   type SubscriptionTier,
   type FeatureKey,
-} from "../lib/supabase/subscription";
+} from "../../lib/supabase/subscription";
 
 export type UseSubscriptionResult = {
   profile: UserProfile | null;

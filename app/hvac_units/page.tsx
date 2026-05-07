@@ -54,6 +54,7 @@ import { UpgradePrompt, AiLimitWarning } from "./components/UpgradePrompt";
 import { useSubscription } from "./hooks/useSubscription";
 
 import { SystemHealthScore } from "./components/SystemHealthScore";
+import { UnitProfilePanel } from "./components/UnitProfilePanel";
 
 import { StepProgressBar } from "./components/StepProgressBar";
 
@@ -7847,6 +7848,8 @@ const siteUnitsAtLocation = savedUnits.filter((u) => {
  const [showAdvancedAiOutput, setShowAdvancedAiOutput] = useState(false);
 
   const [showAiChatBot, setShowAiChatBot] = useState(false);
+
+  const { tier, isPaid, isAdmin, can, loading: subLoading } = useSubscription();
 
   const [showHvacCalculators, setShowHvacCalculators] = useState(false);
 
