@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sendWelcomeEmail } from "../../lib/emailService";
+import { sendWelcomeEmail } from "../../../lib/emailService";
 
 export const runtime = "nodejs";
 
