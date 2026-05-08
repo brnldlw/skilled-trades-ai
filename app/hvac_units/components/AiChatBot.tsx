@@ -137,22 +137,6 @@ function renderMarkdown(text: string): React.ReactNode {
 // ─── Message Bubble ───────────────────────────────────────────
 function Bubble({ msg }: { msg: ChatMessage }) {
   const isUser = msg.role === "user";
-  function startVoice() {
-    const w = window as any;
-    const Ctor = w.SpeechRecognition || w.webkitSpeechRecognition;
-    if (!Ctor) return;
-    const r = new Ctor();
-    r.lang = "en-US";
-    r.interimResults = false;
-    r.onstart = () => setListening(true);
-    r.onend = () => setListening(false);
-    r.onerror = () => setListening(false);
-    r.onresult = (e: any) => {
-      const text = e.results[e.resultIndex][0].transcript.trim();
-      if (text) setInput((prev) => prev ? prev + " " + text : text);
-    };
-    r.start();
-  }
 
   return (
     <div style={{
@@ -253,6 +237,24 @@ export function AiChatBot({
   const [showQuickStarts, setShowQuickStarts] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  function startVoice() {
+    const w = window as any;
+    const Ctor = w.SpeechRecognition || w.webkitSpeechRecognition;
+    if (!Ctor) return;
+    const r = new Ctor();
+    r.lang = "en-US";
+    r.interimResults = false;
+    r.onstart = () => setListening(true);
+    r.onend = () => setListening(false);
+    r.onerror = () => setListening(false);
+    r.onresult = (e: any) => {
+      const text = e.results[e.resultIndex][0].transcript.trim();
+      if (text) setInput((prev: string) => prev ? prev + " " + text : text);
+    };
+    r.start();
+  }
+
 
   // Auto-scroll on new messages
   useEffect(() => {
