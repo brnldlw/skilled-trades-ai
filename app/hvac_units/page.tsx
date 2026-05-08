@@ -56,6 +56,8 @@ import { useSubscription } from "./hooks/useSubscription";
 import { SystemHealthScore } from "./components/SystemHealthScore";
 import { UnitProfilePanel } from "./components/UnitProfilePanel";
 
+import { LearningHub } from "./components/LearningHub";
+
 import { StepProgressBar } from "./components/StepProgressBar";
 
 import { calcSystemHealthScore } from "./lib/systemHealthScore";
@@ -11206,7 +11208,24 @@ return (
       </div>
 
             
-      {/* refrigerant-log-v1 */}
+      {/* learning-hub-v1 */}
+      <div style={{ marginTop: 10 }}>
+        <SectionCard title="📚 Learning Hub" id="learning-hub">
+          <SmallHint>
+            Curated training resources for HVAC/R techs — videos, forums, manuals, and courses.
+            Resources are highlighted based on your current job context.
+          </SmallHint>
+          <div style={{ marginTop: 12 }}>
+            <LearningHub
+              currentSymptom={symptom}
+              currentCause={finalConfirmedCause}
+              equipmentType={equipmentType}
+            />
+          </div>
+        </SectionCard>
+      </div>
+
+{/* refrigerant-log-v1 */}
       <div style={{ marginTop: 10 }}>
         <SectionCard title="🧪 Refrigerant Log" id="refrigerant-log">
           <SmallHint>
@@ -12616,6 +12635,7 @@ return (
                   symptom={symptom}
                   propertyType={propertyType}
                   observations={observations}
+                  serviceHistory={unitServiceTimeline}
                 />
                 )}
               </div>

@@ -10,6 +10,16 @@ type ChatMessage = {
   timestamp: Date;
 };
 
+type ServiceEvent = {
+  service_date?: string | null;
+  symptom?: string | null;
+  final_confirmed_cause?: string | null;
+  actual_fix_performed?: string | null;
+  parts_replaced?: string | null;
+  outcome_status?: string | null;
+  callback_occurred?: string | null;
+};
+
 type AiChatBotProps = {
   equipmentType?: string;
   manufacturer?: string;
@@ -18,6 +28,7 @@ type AiChatBotProps = {
   symptom?: string;
   propertyType?: string;
   observations?: { label: string; value: string; unit: string; note?: string }[];
+  serviceHistory?: ServiceEvent[];
 };
 
 // ─── helpers ─────────────────────────────────────────────────
@@ -126,6 +137,23 @@ function renderMarkdown(text: string): React.ReactNode {
 // ─── Message Bubble ───────────────────────────────────────────
 function Bubble({ msg }: { msg: ChatMessage }) {
   const isUser = msg.role === "user";
+  function startVoice() {
+    const w = window as any;
+    const Ctor = w.SpeechRecognition || w.webkitSpeechRecognition;
+    if (!Ctor) return;
+    const r = new Ctor();
+    r.lang = "en-US";
+    r.interimResults = false;
+    r.onstart = () => setListening(true);
+    r.onend = () => setListening(false);
+    r.onerror = () => setListening(false);
+    r.onresult = (e: any) => {
+      const text = e.results[e.resultIndex][0].transcript.trim();
+      if (text) setInput((prev) => prev ? prev + " " + text : text);
+    };
+    r.start();
+  }
+
   return (
     <div style={{
       display: "flex",
@@ -215,9 +243,11 @@ const QUICK_STARTS = [
 export function AiChatBot({
   equipmentType, manufacturer, model,
   refrigerantType, symptom, propertyType, observations,
+  serviceHistory,
 }: AiChatBotProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
+  const [listening, setListening] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showQuickStarts, setShowQuickStarts] = useState(true);
@@ -274,6 +304,7 @@ export function AiChatBot({
           symptom,
           propertyType,
           observations,
+          serviceHistory,
         }),
       });
 
@@ -440,19 +471,27 @@ export function AiChatBot({
         )}
       </div>
 
-      {/* Observations count badge */}
-      {Array.isArray(observations) && observations.length > 0 && (
+      {/* Context badges */}
+      {(Array.isArray(observations) && observations.length > 0) || (Array.isArray(serviceHistory) && serviceHistory.length > 0) ? (
         <div style={{
-          padding: "4px 14px",
+          padding: "5px 14px",
           background: "#eff6ff",
           borderTop: "1px solid #dbeafe",
           fontSize: 11,
           color: "#3b82f6",
           flexShrink: 0,
+          display: "flex",
+          gap: 10,
+          flexWrap: "wrap" as const,
         }}>
-          📊 {observations.length} field reading{observations.length !== 1 ? "s" : ""} auto-included in context
+          {Array.isArray(observations) && observations.length > 0 && (
+            <span>📊 {observations.length} field reading{observations.length !== 1 ? "s" : ""} in context</span>
+          )}
+          {Array.isArray(serviceHistory) && serviceHistory.length > 0 && (
+            <span>📋 {serviceHistory.length} prior service visit{serviceHistory.length !== 1 ? "s" : ""} in context</span>
+          )}
         </div>
-      )}
+      ) : null}
 
       {/* Input area */}
       <div style={{
@@ -487,6 +526,31 @@ export function AiChatBot({
             minHeight: 38,
           }}
         />
+        {/* Mic button */}
+        {typeof window !== "undefined" && ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition) && (
+          <button
+            type="button"
+            onClick={startVoice}
+            disabled={loading || listening}
+            title="Speak your question"
+            style={{
+              width: 38, height: 38,
+              borderRadius: 10,
+              border: listening ? "2px solid #dc2626" : "1px solid #e2e8f0",
+              background: listening ? "#fef2f2" : "#f8fafc",
+              color: listening ? "#dc2626" : "#64748b",
+              cursor: loading ? "not-allowed" : "pointer",
+              flexShrink: 0,
+              fontSize: 16,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              animation: listening ? "mic-pulse 1s ease-in-out infinite" : "none",
+            }}
+          >
+            {listening ? "⏹" : "🎤"}
+          </button>
+        )}
         <button
           onClick={() => sendMessage(input)}
           disabled={loading || !input.trim()}
@@ -506,6 +570,7 @@ export function AiChatBot({
         >
           {loading ? "…" : "Send"}
         </button>
+        <style>{`@keyframes mic-pulse { 0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,0.3)} 50%{box-shadow:0 0 0 6px rgba(220,38,38,0)} }`}</style>
       </div>
     </div>
   );

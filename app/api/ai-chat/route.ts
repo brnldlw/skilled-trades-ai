@@ -10,6 +10,16 @@ type ChatMessage = {
   content: string;
 };
 
+type ServiceEventContext = {
+  service_date?: string | null;
+  symptom?: string | null;
+  final_confirmed_cause?: string | null;
+  actual_fix_performed?: string | null;
+  parts_replaced?: string | null;
+  outcome_status?: string | null;
+  callback_occurred?: string | null;
+};
+
 type ChatRequest = {
   messages: ChatMessage[];
   // optional context from the current job
@@ -20,6 +30,7 @@ type ChatRequest = {
   symptom?: string;
   propertyType?: string;
   observations?: { label: string; value: string; unit: string; note?: string }[];
+  serviceHistory?: ServiceEventContext[];
 };
 
 // ─────────────────────────────────────────────
@@ -46,11 +57,32 @@ function buildSystemPrompt(ctx: Omit<ChatRequest, "messages">): string {
     .filter(Boolean)
     .join("\n");
 
+  // Build service history block
+  const historyBlock = Array.isArray(ctx.serviceHistory) && ctx.serviceHistory.length > 0
+    ? "\n## Unit Service History (" + ctx.serviceHistory.length + " prior visit" + (ctx.serviceHistory.length !== 1 ? "s" : "") + ")\n" +
+      "IMPORTANT: Review this history before diagnosing. Look for patterns, recurring causes, and callback history.\n" +
+      ctx.serviceHistory
+        .slice(0, 10) // last 10 visits max
+        .map((e, i) => {
+          const parts = [
+            e.service_date ? `Visit ${i + 1} (${e.service_date})` : `Visit ${i + 1}`,
+            e.symptom ? `Symptom: ${e.symptom}` : null,
+            e.final_confirmed_cause ? `Cause: ${e.final_confirmed_cause}` : null,
+            e.actual_fix_performed ? `Fix: ${e.actual_fix_performed}` : null,
+            e.parts_replaced ? `Parts: ${e.parts_replaced}` : null,
+            e.outcome_status ? `Outcome: ${e.outcome_status}` : null,
+            e.callback_occurred === "Yes" ? "⚠️ CALLBACK occurred" : null,
+          ].filter(Boolean);
+          return parts.join(" | ");
+        })
+        .join("\n")
+    : "";
+
   return `You are an expert HVAC/R field service diagnostic assistant — the equivalent of a 25-year master technician who has seen every failure mode on every brand of equipment.
 
 Your job is to help field technicians diagnose and fix HVAC/R systems quickly and correctly. You are talking directly to the tech standing in front of the equipment.
 
-${contextBlock ? `## Current Job Context\n${contextBlock}\n` : ""}
+${contextBlock ? `## Current Job Context\n${contextBlock}\n` : ""}${historyBlock}
 
 ## How You Work
 
