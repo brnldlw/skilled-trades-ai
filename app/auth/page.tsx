@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -48,6 +49,13 @@ export default function AuthPage() {
             body: JSON.stringify({ userId: data.user.id, email: cleanEmail, companyName: companyName.trim() || `${fullName.trim()}'s Account` }),
           }).catch(() => null);
         }
+        // Fire welcome email (non-blocking)
+        fetch("/api/email/welcome", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: cleanEmail, firstName: fullName.split(" ")[0] }),
+        }).catch(() => null);
+
         setMsg("Account created! You can now sign in.");
         setMode("login");
       } else {

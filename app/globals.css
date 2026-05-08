@@ -4,6 +4,8 @@
   --background: #ffffff;
   --foreground: #171717;
   --nav-height: 52px;
+  --step-bar-height: 44px;
+  --content-top: calc(var(--nav-height) + var(--step-bar-height));
 }
 
 @theme inline {
@@ -13,21 +15,14 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-/* ── Base ─────────────────────────────────────────────────── */
-*, *::before, *::after {
-  box-sizing: border-box;
-}
+/* ── Reset ──────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
 
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--content-top) + 8px);
 }
 
 body {
@@ -38,8 +33,7 @@ body {
   overscroll-behavior-y: none;
 }
 
-/* ── Touch targets ────────────────────────────────────────── */
-/* All buttons and interactive elements get minimum 44px touch target */
+/* ── Touch targets ───────────────────────────────────────────── */
 button, [role="button"], input[type="submit"], input[type="button"] {
   min-height: 44px;
   cursor: pointer;
@@ -47,85 +41,105 @@ button, [role="button"], input[type="submit"], input[type="button"] {
   touch-action: manipulation;
 }
 
-/* Checkboxes get larger touch area */
-input[type="checkbox"] {
+input[type="checkbox"], input[type="radio"] {
   min-width: 20px;
   min-height: 20px;
   cursor: pointer;
 }
 
-/* All inputs comfortable to tap */
 input[type="text"],
 input[type="number"],
 input[type="date"],
 input[type="email"],
+input[type="tel"],
 select,
 textarea {
   min-height: 44px;
-  font-size: 16px; /* Prevents iOS zoom on focus */
+  font-size: 16px;
   -webkit-appearance: none;
   border-radius: 8px;
 }
 
-/* ── Typography scale ─────────────────────────────────────── */
-h1 { font-size: clamp(20px, 5vw, 28px); }
-h2 { font-size: clamp(17px, 4vw, 22px); }
-h3 { font-size: clamp(15px, 3vw, 18px); }
-
-/* ── Scrolling ────────────────────────────────────────────── */
-* {
-  -webkit-overflow-scrolling: touch;
+/* ── Section card spacing ────────────────────────────────────── */
+/* Tighten the gap between SectionCards on mobile */
+.section-gap {
+  margin-top: 10px !important;
 }
 
-/* ── Mobile-specific overrides ────────────────────────────── */
+/* ── Step headers ────────────────────────────────────────────── */
+.step-header-block {
+  padding: 12px 0 6px !important;
+}
+
+/* ── Pill buttons ────────────────────────────────────────────── */
+.pill-btn {
+  padding: 10px 16px !important;
+  font-size: 14px !important;
+  min-height: 44px !important;
+  border-radius: 999px !important;
+}
+
+/* ── Card titles ─────────────────────────────────────────────── */
+.section-card-title {
+  font-size: 16px !important;
+  font-weight: 900 !important;
+}
+
+/* ── Mobile overrides ────────────────────────────────────────── */
 @media (max-width: 640px) {
 
-  /* Page padding on mobile */
+  /* Tighter page padding */
   .hvac-page-wrapper {
-    padding: 12px !important;
+    padding: 10px !important;
   }
 
-  /* SectionCard titles bigger and easier to read */
-  .section-card-title {
-    font-size: 16px !important;
+  /* Stack flex rows */
+  .mobile-stack {
+    flex-direction: column !important;
   }
 
-  /* Pill buttons easier to tap */
-  .pill-btn {
-    padding: 10px 16px !important;
-    font-size: 14px !important;
-    min-height: 44px !important;
-  }
-
-  /* Step headers */
-  .step-header {
-    font-size: 17px !important;
-  }
-
-  /* Inputs full width on mobile */
-  select, input[type="text"], input[type="number"], input[type="date"] {
-    width: 100%;
-    font-size: 16px !important;
-  }
-
-  /* Hide verbose labels on mobile */
+  /* Hide verbose labels */
   .mobile-hide {
     display: none !important;
   }
 
-  /* Stack flex rows on mobile */
-  .mobile-stack {
-    flex-direction: column !important;
+  /* Full width inputs */
+  select,
+  input[type="text"],
+  input[type="number"],
+  input[type="date"],
+  input[type="tel"] {
+    width: 100%;
+    font-size: 16px !important;
+  }
+
+  /* Reduce section spacing on mobile */
+  [style*="marginTop: 16"] {
+    margin-top: 10px !important;
+  }
+
+  /* Tighter card padding */
+  [style*="padding: 14"] {
+    padding: 10px !important;
+  }
+
+  /* Tables scroll horizontally */
+  table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }
 
-/* ── Smooth scroll for anchor links ───────────────────────── */
-html {
-  scroll-behavior: smooth;
-  scroll-padding-top: calc(var(--nav-height) + 12px);
-}
+/* ── Typography ─────────────────────────────────────────────── */
+h1 { font-size: clamp(20px, 5vw, 28px); }
+h2 { font-size: clamp(17px, 4vw, 22px); }
+h3 { font-size: clamp(15px, 3vw, 18px); }
 
-/* ── Focus styles for accessibility ──────────────────────── */
+/* ── Scrolling ───────────────────────────────────────────────── */
+* { -webkit-overflow-scrolling: touch; }
+
+/* ── Focus styles ────────────────────────────────────────────── */
 button:focus-visible,
 input:focus-visible,
 select:focus-visible,
@@ -134,25 +148,59 @@ textarea:focus-visible {
   outline-offset: 2px;
 }
 
-/* ── Print styles ─────────────────────────────────────────── */
-@media print {
-  .no-print { display: none !important; }
-  body { background: #fff; }
-}
-
-/* ── Animations ──────────────────────────────────────────── */
+/* ── Animations ─────────────────────────────────────────────── */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(4px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-.fade-in {
-  animation: fadeIn 0.2s ease forwards;
-}
+.fade-in { animation: fadeIn 0.2s ease forwards; }
 
-/* ── PWA safe areas (notch phones) ───────────────────────── */
+/* ── PWA safe areas ──────────────────────────────────────────── */
 @supports (padding: env(safe-area-inset-bottom)) {
   .nav-bottom-safe {
     padding-bottom: env(safe-area-inset-bottom);
   }
+}
+
+/* ── Print ───────────────────────────────────────────────────── */
+@media print {
+  .no-print { display: none !important; }
+  body { background: #fff; }
+}
+
+/* ── SectionCard consistent spacing ─────────────────────────── */
+/* Remove double-spacing between consecutive section wrappers */
+.section-wrapper + .section-wrapper {
+  margin-top: 10px !important;
+}
+
+/* ── Upgrade prompt polish ───────────────────────────────────── */
+.upgrade-lock-screen {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* ── Health score gauge animation ───────────────────────────── */
+@keyframes gauge-fill {
+  from { stroke-dasharray: 0 339.29; }
+}
+
+/* ── Offline banner ──────────────────────────────────────────── */
+.offline-banner {
+  position: fixed;
+  top: var(--nav-height);
+  left: 0;
+  right: 0;
+  z-index: 800;
+}
+
+/* ── Step progress bar ───────────────────────────────────────── */
+.step-progress-bar {
+  position: fixed;
+  top: var(--nav-height);
+  left: 0;
+  right: 0;
+  height: var(--step-bar-height);
+  z-index: 850;
 }

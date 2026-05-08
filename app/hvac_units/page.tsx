@@ -9665,12 +9665,12 @@ if (needsCompanyOnboarding) {
 
 
 return (
-  <div style={{ paddingTop: 96 }}>
+  <div style={{ paddingTop: 98 }}>
     <NavMenu currentPath="/hvac_units" />
     <StepProgressBar />
-  <div style={{ padding: "16px 16px 40px", maxWidth: 800, margin: "0 auto" }}>
+  <div style={{ padding: "12px 14px 48px", maxWidth: 820, margin: "0 auto" }}>
       <h1 style={{ fontSize: 22, fontWeight: 900, color: "#0f1f3d", marginBottom: 4 }}>
-        My HVACR Tool — Diagnose
+        My HVAC/R Tool
       </h1>
 
       <div
@@ -10004,7 +10004,7 @@ return (
   );
 })()}
 {!historicalEntryMode ? (
-      <div style={{ marginTop: 16 }}>
+      <div style={{ marginTop: 10 }}>
         <SectionCard title="Company Admin / Add Tech">
           <button
             onClick={() => setShowAddTechTools((v) => !v)}
@@ -10080,7 +10080,7 @@ return (
       ) : null}
 
 {!historicalEntryMode ? (
-      <div style={{ marginTop: 16 }}>
+      <div style={{ marginTop: 10 }}>
         <SectionCard title="Company Team">
           <button
             onClick={() => setShowCompanyTeam((v) => !v)}
@@ -10146,7 +10146,7 @@ return (
           gap: 12,
         }}
       >
-      <div style={{ marginTop: 16 }}>
+      <div style={{ marginTop: 10 }}>
         <SectionCard title="Historical Entry Mode">
           <button
             onClick={() => setHistoricalEntryMode((v) => !v)}
@@ -10173,7 +10173,7 @@ return (
       </div>
 
         
-        <div style={{ marginTop: 16 }}>
+        <div style={{ marginTop: 10 }}>
           <SectionCard title="Help / Quick Start">
             <button
               onClick={() => setShowQuickStartInline((v) => !v)}
@@ -10804,7 +10804,7 @@ return (
         </div>
 
       {/* affected-component-ui-v1 */}
-      <div style={{ marginTop: 16 }}>
+      <div style={{ marginTop: 10 }}>
         <SectionCard title="Affected Component for This Call">
           <SmallHint>
             Select the exact piece of equipment this call is about. This is required for split systems,
@@ -10873,7 +10873,7 @@ return (
       </div>
 
 {/* repair-execution-assist-v1 */}
-      <div style={{ marginTop: 16 }}>
+      <div style={{ marginTop: 10 }}>
         <SectionCard title="Repair Execution Assist">
           <SmallHint>
             For the selected part, shows what to verify first, how to approach replacement, safety/watch-outs, common mistakes, and quick video/search links.
@@ -11099,7 +11099,7 @@ return (
       </div>
 
 {/* part-verification-checklist-v1 */}
-      <div style={{ marginTop: 16 }}>
+      <div style={{ marginTop: 10 }}>
         <SectionCard title="Part Verification Checklist">
           <SmallHint>
             Pick a likely part and the app gives the exact checks to perform before replacing it.
@@ -11207,7 +11207,7 @@ return (
 
             
       {/* refrigerant-log-v1 */}
-      <div style={{ marginTop: 16 }}>
+      <div style={{ marginTop: 10 }}>
         <SectionCard title="🧪 Refrigerant Log" id="refrigerant-log">
           <SmallHint>
             EPA 608 compliant refrigerant tracking. Log every pound added or recovered.
@@ -11255,7 +11255,7 @@ return (
       </div>
 
 {/* customer-report-v1 */}
-      <div style={{ marginTop: 16 }}>
+      <div style={{ marginTop: 10 }}>
         <SectionCard title="📄 Customer Service Report" id="customer-report">
           <SmallHint>
             Generate a professional, plain-English service report to share with the customer. One tap — no jargon.
@@ -11291,7 +11291,7 @@ return (
       </div>
 
 {/* suggested-follow-up-watchlist-v1 */}
-      <div style={{ marginTop: 16 }}>
+      <div style={{ marginTop: 10 }}>
         <SectionCard title="Suggested Follow-Up Watchlist">
           <SmallHint>
             Builds a watchlist from the verified repair path so the tech knows what to monitor next and what may still trigger a callback.
@@ -11411,7 +11411,7 @@ return (
       </div>
 
 {/* verification-outcome-repair-commit-v1 */}
-      <div style={{ marginTop: 16 }}>
+      <div style={{ marginTop: 10 }}>
         <SectionCard title="Verification Outcome + Repair Commit">
           <SmallHint>
             Mark what happened after you checked the part so the app can document the decision path and commit the repair more cleanly.
@@ -12277,7 +12277,7 @@ return (
         </SectionCard>
       </div>
 
-           <div style={{ marginTop: 16 }}>
+           <div style={{ marginTop: 10 }}>
         <SectionCard title="Airflow Intelligence">
           <SmallHint>
             Add return static, supply static, filter pressure drop, and coil pressure drop
@@ -12386,7 +12386,7 @@ return (
         }}
       >
 
-        <div style={{ marginTop: 16 }}>
+        <div style={{ marginTop: 10 }}>
   <SectionCard title="Defrost Intelligence">
     <SmallHint>
       Uses defrost timer state, heater amps, termination state, box temp, and coil temp
@@ -12425,7 +12425,7 @@ return (
   </SectionCard>
 </div>
 
-<div style={{ marginTop: 16 }}>
+<div style={{ marginTop: 10 }}>
   <SectionCard title="Defrost Repair Guidance">
     <SmallHint>
       Shows likely failed parts, why they are suspect, and the next field check to perform.
@@ -12578,7 +12578,7 @@ return (
       </div>
 
       {/* AI Diagnosis Assistant */}
-      <div style={{ marginTop: 16 }}>
+      <div style={{ marginTop: 10 }}>
         <SectionCard title="🤖 AI Diagnosis Assistant" id="ai-chat">
           <SmallHint>
             Chat with a Claude-powered master technician. Describe symptoms, share readings, and get
@@ -12625,7 +12625,7 @@ return (
       </div>
 
       {/* HVAC Calculators */}
-      <div style={{ marginTop: 16 }}>
+      <div style={{ marginTop: 10 }}>
         <SectionCard title="🧮 HVAC Calculators" id="calculators">
           <SmallHint>
             Offline-capable calculators: PT chart lookup, superheat/subcooling, delta-T, CFM, Ohm's law,
@@ -12666,7 +12666,7 @@ return (
       
 
 {/* repair-decision-panel-v2 */}
-      <div style={{ marginTop: 16 }}>
+      <div style={{ marginTop: 10 }}>
         <SectionCard title="Repair Decision Panel" id="repair">
           <SmallHint>
             Helps move from diagnosis into a smarter repair decision by showing likely parts to verify,
@@ -12770,7 +12770,7 @@ return (
       </div>
 
 {/* guided-next-test-engine-v2 */}
-      <div style={{ marginTop: 16 }}>
+      <div style={{ marginTop: 10 }}>
         <SectionCard title="Guided Next-Test Engine">
           <SmallHint>
             Uses the selected affected component, current symptom, and same-component history to suggest
@@ -12863,7 +12863,7 @@ return (
         </SectionCard>
       </div>
 
-        <div style={{ marginTop: 16 }}>
+        <div style={{ marginTop: 10 }}>
         <SectionCard title="Suggested Parts to Verify Before Replacing">
           <SmallHint>
             Ranks suggested parts by confidence so the tech can verify the strongest repair path before making a blind swap.
@@ -12983,7 +12983,7 @@ return (
       </div>
 
                   {/* selected-part-manuals-focus-assist-v1 */}
-      <div style={{ marginTop: 16 }}>
+      <div style={{ marginTop: 10 }}>
         <SectionCard title="Selected Part → Manual / Parts Focus Assist">
           <SmallHint>
             Uses the selected part to point the tech toward the right manual section, parts category, and side of the system.
@@ -13092,7 +13092,7 @@ return (
       </div>
 
 {/* tighter-parts-manuals-assist-v3 */}
-      <div style={{ marginTop: 16 }}>
+      <div style={{ marginTop: 10 }}>
         <SectionCard title="Tighter Parts & Manuals Assist">
           <SmallHint>
             Uses the selected component, equipment type, symptom, and photo subject to keep manuals and parts lookup on the right side of the system.
@@ -13196,7 +13196,7 @@ return (
       </div>
 
 {/* targeted-parts-manuals-assist-v2 */}
-      <div style={{ marginTop: 16 }}>
+      <div style={{ marginTop: 10 }}>
         <SectionCard title="Targeted Parts & Manuals Assist v2">
           <SmallHint>
             Focuses the tech on the exact component, the right make/model context, likely part bucket,
@@ -13323,7 +13323,7 @@ return (
       </div>
 
 {/* component-aware-troubleshooting-hints-v1 */}
-      <div style={{ marginTop: 16 }}>
+      <div style={{ marginTop: 10 }}>
         <SectionCard title="Component-Aware Troubleshooting Hints">
           <SmallHint>
             Uses the selected affected component, same-component history, callbacks, and current symptom
@@ -13418,7 +13418,7 @@ return (
       </div>
 
 {/* component-aware-parts-manuals-v1 */}
-      <div style={{ marginTop: 16 }}>
+      <div style={{ marginTop: 10 }}>
         <SectionCard title="Component-Aware Parts & Manuals Target">
           <SmallHint>
             Uses the selected affected component, system structure, symptom, and same-component history
@@ -15671,7 +15671,7 @@ return (
         </div>
       </div>
 
-      <div style={{ marginTop: 16 }}>
+      <div style={{ marginTop: 10 }}>
         <SectionCard
           title="Service Report Generator"
           right={<PillButton text="Open printable report" onClick={openPrintableReport} />}
@@ -15745,7 +15745,7 @@ return (
   
         <div style={{ marginTop: 16 }}>
           
-        <div style={{ marginTop: 16 }}>
+        <div style={{ marginTop: 10 }}>
           <SectionCard title="Site Units at This Location">
             {!customerName.trim() || !siteName.trim() ? (
               <SmallHint>
@@ -17970,7 +17970,7 @@ return (
         </SectionCard>
       </div>
 
-      <div style={{ marginTop: 16 }}>
+      <div style={{ marginTop: 10 }}>
         <SectionCard
           title="Equipment Memory AI"
           right={<Badge text={`${equipmentMemory.relatedCount} prior matches`} />}
