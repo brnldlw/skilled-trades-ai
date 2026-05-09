@@ -333,24 +333,12 @@ export function PMFormFiller({
   // ── View: Upload form ─────────────────────────────────────
   if (view === "upload") {
     return (
-      <div>
-        <button onClick={() => setView("list")} style={{ marginBottom: 14, padding: "7px 14px", background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit", color: "#374151" }}>
-          ← Back
-        </button>
-
-        <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, padding: "20px 24px" }}>
-          <div style={{ fontSize: 16, fontWeight: 800, color: "#0f1f3d", marginBottom: 6 }}>Upload Company PM Form</div>
-          <div style={{ fontSize: 13, color: "#64748b", marginBottom: 20, lineHeight: 1.6 }}>
-            Upload your company's PM or asset tracking form as a PDF. The AI will read it and automatically identify every field that needs to be filled in.
-          </div>
-
-          <UploadForm
-            onUpload={handleUpload}
-            uploading={uploading}
-            message={uploadMsg}
-          />
-        </div>
-      </div>
+      <UploadView
+        onBack={() => setView("list")}
+        onUpload={handleUpload}
+        uploading={uploading}
+        message={uploadMsg}
+      />
     );
   }
 
@@ -544,75 +532,121 @@ function FieldInput({
   );
 }
 
-// ── Upload Form sub-component ─────────────────────────────────
-function UploadForm({ onUpload, uploading, message }: {
+// ── Upload View — self-contained with its own state ───────────
+function UploadView({ onBack, onUpload, uploading, message }: {
+  onBack: () => void;
   onUpload: (file: File, name: string) => void;
   uploading: boolean;
   message: string;
 }) {
   const [formName, setFormName] = useState("");
-  const [file, setFile] = useState<File | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  function handleSubmit() {
-    if (!file || !formName.trim()) return;
-    onUpload(file, formName.trim());
-  }
+  const canSubmit = !!selectedFile && formName.trim().length > 0 && !uploading;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column" as const, gap: 14 }}>
-      <div>
-        <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 6, textTransform: "uppercase" as const, letterSpacing: "0.04em" }}>
-          Form Name
-        </label>
-        <input
-          value={formName}
-          onChange={e => setFormName(e.target.value)}
-          placeholder="e.g. Carrier PM Checklist, Customer Asset Sheet, Annual PM Form"
-          style={{ width: "100%", padding: "10px 14px", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: 14, fontFamily: "inherit", background: "#fafafa" }}
-        />
-      </div>
-
-      <div>
-        <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 6, textTransform: "uppercase" as const, letterSpacing: "0.04em" }}>
-          PDF File
-        </label>
-        <div
-          onClick={() => fileRef.current?.click()}
-          style={{ border: "2px dashed #e2e8f0", borderRadius: 10, padding: "24px", textAlign: "center" as const, cursor: "pointer", background: file ? "#f0fdf4" : "#fafafa", transition: "all 0.2s" }}>
-          {file ? (
-            <div>
-              <div style={{ fontSize: 24, marginBottom: 6 }}>✅</div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: "#166534" }}>{file.name}</div>
-              <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>{(file.size / 1024).toFixed(0)} KB</div>
-            </div>
-          ) : (
-            <div>
-              <div style={{ fontSize: 32, marginBottom: 8 }}>📄</div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: "#374151", marginBottom: 4 }}>Tap to select PDF</div>
-              <div style={{ fontSize: 12, color: "#94a3b8" }}>Max 10MB — PDF only</div>
-            </div>
-          )}
-        </div>
-        <input ref={fileRef} type="file" accept=".pdf" style={{ display: "none" }}
-          onChange={e => e.target.files?.[0] && setFile(e.target.files[0])} />
-      </div>
-
-      {message && (
-        <div style={{ padding: "10px 14px", borderRadius: 8, fontSize: 13, background: message.startsWith("✅") ? "#f0fdf4" : message.startsWith("Error") ? "#fef2f2" : "#eff6ff", border: `1px solid ${message.startsWith("✅") ? "#bbf7d0" : message.startsWith("Error") ? "#fecaca" : "#bae6fd"}`, color: message.startsWith("✅") ? "#166534" : message.startsWith("Error") ? "#dc2626" : "#1d4ed8" }}>
-          {message}
-        </div>
-      )}
-
-      <button
-        onClick={handleSubmit}
-        disabled={!file || !formName.trim() || uploading}
-        style={{ padding: "12px", background: (!file || !formName.trim() || uploading) ? "#e2e8f0" : "#f97316", color: (!file || !formName.trim() || uploading) ? "#94a3b8" : "#fff", border: "none", borderRadius: 10, fontWeight: 800, fontSize: 15, cursor: (!file || !formName.trim() || uploading) ? "not-allowed" : "pointer", fontFamily: "inherit", boxShadow: (!file || !formName.trim() || uploading) ? "none" : "0 4px 16px rgba(249,115,22,0.35)" }}>
-        {uploading ? "🤖 AI is reading your form..." : "🤖 Upload & Analyze Form"}
+    <div>
+      <button onClick={onBack}
+        style={{ marginBottom: 14, padding: "7px 14px", background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit", color: "#374151" }}>
+        ← Back
       </button>
 
-      <div style={{ fontSize: 11, color: "#94a3b8", lineHeight: 1.6 }}>
-        Your form is stored securely in your account. The AI reads the field labels to understand what information goes where — it does not store the blank form permanently after analysis.
+      <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, padding: "20px 24px", display: "flex", flexDirection: "column" as const, gap: 16 }}>
+        <div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: "#0f1f3d", marginBottom: 4 }}>Upload Company PM Form</div>
+          <div style={{ fontSize: 13, color: "#64748b", lineHeight: 1.6 }}>
+            Upload your company PM or asset sheet as a PDF. AI reads it and identifies every field automatically.
+            <strong> PDF must have selectable text</strong> — scanned image PDFs won't work.
+          </div>
+        </div>
+
+        {/* Step 1: Name */}
+        <div>
+          <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 6, textTransform: "uppercase" as const, letterSpacing: "0.04em" }}>
+            Step 1 — Give this form a name
+          </label>
+          <input
+            value={formName}
+            onChange={e => setFormName(e.target.value)}
+            placeholder="e.g. Annual PM Checklist, Customer Asset Sheet"
+            style={{ width: "100%", padding: "11px 14px", border: `2px solid ${formName.trim() ? "#16a34a" : "#e2e8f0"}`, borderRadius: 8, fontSize: 14, fontFamily: "inherit", background: "#fafafa" }}
+          />
+          {formName.trim() && <div style={{ fontSize: 11, color: "#16a34a", marginTop: 4 }}>✓ Name entered</div>}
+        </div>
+
+        {/* Step 2: File */}
+        <div>
+          <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 6, textTransform: "uppercase" as const, letterSpacing: "0.04em" }}>
+            Step 2 — Select your PDF
+          </label>
+          <div
+            onClick={() => fileRef.current?.click()}
+            style={{ border: `2px dashed ${selectedFile ? "#16a34a" : "#e2e8f0"}`, borderRadius: 10, padding: "20px", textAlign: "center" as const, cursor: "pointer", background: selectedFile ? "#f0fdf4" : "#f8fafc" }}>
+            {selectedFile ? (
+              <div>
+                <div style={{ fontSize: 28, marginBottom: 6 }}>✅</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "#166534" }}>{selectedFile.name}</div>
+                <div style={{ fontSize: 12, color: "#16a34a", marginTop: 2 }}>{(selectedFile.size / 1024).toFixed(0)} KB — tap to change</div>
+              </div>
+            ) : (
+              <div>
+                <div style={{ fontSize: 32, marginBottom: 8 }}>📄</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "#374151", marginBottom: 4 }}>Tap to select PDF</div>
+                <div style={{ fontSize: 12, color: "#94a3b8" }}>Max 10MB · PDF files only</div>
+              </div>
+            )}
+          </div>
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".pdf,application/pdf"
+            style={{ display: "none" }}
+            onChange={e => {
+              const f = e.target.files?.[0];
+              if (f) setSelectedFile(f);
+            }}
+          />
+        </div>
+
+        {/* Status message */}
+        {message && (
+          <div style={{ padding: "10px 14px", borderRadius: 8, fontSize: 13, lineHeight: 1.5,
+            background: message.startsWith("✅") ? "#f0fdf4" : message.startsWith("⚠️") ? "#fffbeb" : "#fef2f2",
+            border: `1px solid ${message.startsWith("✅") ? "#bbf7d0" : message.startsWith("⚠️") ? "#fde68a" : "#fecaca"}`,
+            color: message.startsWith("✅") ? "#166534" : message.startsWith("⚠️") ? "#854d0e" : "#dc2626" }}>
+            {message}
+          </div>
+        )}
+
+        {/* Submit button — always visible, shows state */}
+        <button
+          onClick={() => canSubmit && onUpload(selectedFile!, formName.trim())}
+          style={{
+            padding: "14px",
+            background: uploading ? "#dbeafe" : canSubmit ? "#f97316" : "#e2e8f0",
+            color: uploading ? "#1d4ed8" : canSubmit ? "#fff" : "#94a3b8",
+            border: "none", borderRadius: 10, fontWeight: 800, fontSize: 15,
+            cursor: canSubmit ? "pointer" : "default",
+            fontFamily: "inherit",
+            boxShadow: canSubmit ? "0 4px 16px rgba(249,115,22,0.35)" : "none",
+            transition: "all 0.2s",
+          }}
+        >
+          {uploading
+            ? "🤖 AI is reading your form — please wait..."
+            : !formName.trim() && !selectedFile
+            ? "Enter a name and select a PDF to continue"
+            : !formName.trim()
+            ? "Enter a name for this form first"
+            : !selectedFile
+            ? "Select a PDF file to continue"
+            : "🤖 Upload & Analyze Form"}
+        </button>
+
+        <div style={{ fontSize: 11, color: "#94a3b8", lineHeight: 1.6 }}>
+          The AI reads the PDF and identifies every blank field. Works best with editable/fillable PDFs or PDFs with real text (not scanned images). Processing takes 15-30 seconds.
+        </div>
       </div>
     </div>
   );
