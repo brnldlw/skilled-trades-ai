@@ -33,38 +33,23 @@ async function getPdfFieldsInOrder(pdfBytes: ArrayBuffer) {
 
   const fieldsWithPos: { name: string; type: string; page: number; y: number; x: number }[] = [];
 
+  const pageHeight = pages[0]?.getHeight() || 792;
+
   for (const field of fields) {
     try {
       const widgets = field.acroField.getWidgets();
       for (const widget of widgets) {
         const rect = widget.getRectangle();
-        // Find which page this widget is on
-        let pageIndex = 0;
-        for (let i = 0; i < pages.length; i++) {
-          const pageRef = pages[i].ref;
-          // Check if widget belongs to this page
-          try {
-            const annots = pages[i].node.Annots();
-            if (annots) {
-              const annotsArray = annots.asArray();
-              for (const annot of annotsArray) {
-                if (annot === widget.ref) { pageIndex = i; break; }
-              }
-            }
-          } catch {}
-        }
-
         fieldsWithPos.push({
           name: field.getName(),
           type: field instanceof PDFTextField ? "text" : field instanceof PDFCheckBox ? "checkbox" : "other",
-          page: pageIndex,
-          // PDF y-coordinates are bottom-up, so invert for top-down reading order
-          y: pages[pageIndex] ? (pages[pageIndex].getHeight() - rect.y) : rect.y,
+          page: 0,
+          // Invert y so top of page = low number (reading order)
+          y: pageHeight - rect.y,
           x: rect.x,
         });
       }
-    } catch (e) {
-      // If we can't get position, add with default
+    } catch {
       fieldsWithPos.push({ name: field.getName(), type: "text", page: 0, y: 0, x: 0 });
     }
   }
