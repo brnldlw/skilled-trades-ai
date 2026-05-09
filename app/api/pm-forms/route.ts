@@ -51,7 +51,7 @@ async function analyzeFormWithClaude(base64Pdf: string): Promise<{ fields: any[]
           },
           {
             type: "text",
-            text: `List every single field label you can see in this form that requires information to be filled in. Just list the labels, one per line. Include things like: customer name, address, unit model, serial number, date, technician name, any readings or measurements, checkboxes, etc. List ALL of them.`,
+            text: `List every single blank field in this form that requires information to be filled in. List them IN ORDER from top to bottom, left to right, exactly as they appear on the form. One field per line. Include ALL fields: customer name, site address, unit make, model, serial number, date, technician name, any readings or measurements, checkboxes, signatures, etc. ORDER IS CRITICAL.`,
           },
         ],
       }],
