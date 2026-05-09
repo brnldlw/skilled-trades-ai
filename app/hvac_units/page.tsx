@@ -61,6 +61,8 @@ import { CallbackPreventionChecklist } from "./components/CallbackPreventionChec
 import { PartsLookup } from "./components/PartsLookup";
 import { BeltReference } from "./components/BeltReference";
 import { PartsReferenceHub } from "./components/PartsReferenceHub";
+import { FilterReference } from "./components/FilterReference";
+import { RefrigerantReference } from "./components/RefrigerantReference";
 
 import { FailurePredictionDashboard } from "../components/FailurePredictionDashboard";
 
@@ -12770,6 +12772,32 @@ return (
           </SmallHint>
           <div style={{ marginTop: 12 }}>
             <PartsReferenceHub />
+          </div>
+        </SectionCard>
+      </div>
+
+{/* filter-reference-v1 */}
+      <div style={{ marginTop: 10 }}>
+        <SectionCard title="🌬️ Filter Cross-Reference" id="filter-reference">
+          <SmallHint>
+            Find filters by dimensions or part number. Covers residential and commercial sizes.
+            MERV guide included so you always select the right filtration level.
+          </SmallHint>
+          <div style={{ marginTop: 12 }}>
+            <FilterReference />
+          </div>
+        </SectionCard>
+      </div>
+
+{/* refrigerant-reference-v1 */}
+      <div style={{ marginTop: 10 }}>
+        <SectionCard title="❄️ Refrigerant Quick-Reference" id="refrigerant-reference">
+          <SmallHint>
+            GWP, safety class, oil type, what it replaces, and A2L handling notes for every major refrigerant.
+            Critical as the industry transitions away from R-410A and R-404A.
+          </SmallHint>
+          <div style={{ marginTop: 12 }}>
+            <RefrigerantReference />
           </div>
         </SectionCard>
       </div>
