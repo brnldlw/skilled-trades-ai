@@ -403,6 +403,22 @@ export function AiChatBot({
         )}
       </div>
 
+      {/* GIGO Warning Banner */}
+      <div style={{
+        background: "#fffbeb",
+        borderBottom: "1px solid #fde68a",
+        padding: "6px 14px",
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        flexShrink: 0,
+      }}>
+        <span style={{ fontSize: 13, flexShrink: 0 }}>⚠️</span>
+        <span style={{ fontSize: 11, color: "#92400e", lineHeight: 1.4 }}>
+          <strong>Garbage in, garbage out.</strong> Accurate readings = accurate diagnosis. Verify your pressures and temps before you ask.
+        </span>
+      </div>
+
       {/* Messages area */}
       <div ref={scrollRef} style={{
         flex: 1,

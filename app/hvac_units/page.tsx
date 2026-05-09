@@ -58,6 +58,7 @@ import { UnitProfilePanel } from "./components/UnitProfilePanel";
 
 import { LearningHub } from "./components/LearningHub";
 import { CallbackPreventionChecklist } from "./components/CallbackPreventionChecklist";
+import { PartsLookup } from "./components/PartsLookup";
 
 import { FailurePredictionDashboard } from "../components/FailurePredictionDashboard";
 
@@ -11344,6 +11345,25 @@ return (
         </SectionCard>
       </div>
 
+{/* parts-lookup-v1 */}
+      <div style={{ marginTop: 10 }}>
+        <SectionCard title="🔍 Parts Lookup" id="parts-lookup">
+          <SmallHint>
+            Search for parts across Johnstone Supply, Grainger, PartsTown, Winsupply, and more — in one tap.
+            Part names and your equipment info are pre-filled automatically.
+          </SmallHint>
+          <div style={{ marginTop: 12 }}>
+            <PartsLookup
+              manufacturer={manufacturer}
+              model={model}
+              equipmentType={equipmentType}
+              finalConfirmedCause={finalConfirmedCause}
+              partsReplaced={partsReplaced}
+            />
+          </div>
+        </SectionCard>
+      </div>
+
 {/* suggested-follow-up-watchlist-v1 */}
       <div style={{ marginTop: 10 }}>
         <SectionCard title="Suggested Follow-Up Watchlist">
@@ -12638,6 +12658,12 @@ return (
             Chat with a Claude-powered master technician. Describe symptoms, share readings, and get
             step-by-step guidance tailored to this exact job. Your field readings are automatically included.
           </SmallHint>
+          <div style={{ marginTop: 8, padding: "8px 12px", background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 8, display: "flex", alignItems: "flex-start", gap: 8 }}>
+            <span style={{ fontSize: 14, flexShrink: 0 }}>⚠️</span>
+            <span style={{ fontSize: 12, color: "#92400e", lineHeight: 1.5 }}>
+              <strong>Garbage in, garbage out.</strong> The AI is only as accurate as the information you give it. Verify your readings before you ask — wrong pressures lead to wrong diagnosis.
+            </span>
+          </div>
           <div style={{ marginTop: 10 }}>
             <button
               onClick={() => setShowAiChatBot((v) => !v)}
