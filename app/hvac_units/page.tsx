@@ -58,6 +58,8 @@ import { UnitProfilePanel } from "./components/UnitProfilePanel";
 
 import { LearningHub } from "./components/LearningHub";
 
+import { FailurePredictionDashboard } from "../components/FailurePredictionDashboard";
+
 import { StepProgressBar } from "./components/StepProgressBar";
 
 import { calcSystemHealthScore } from "./lib/systemHealthScore";
@@ -11208,7 +11210,19 @@ return (
       </div>
 
             
-      {/* learning-hub-v1 */}
+      {/* failure-prediction-v1 */}
+      <div style={{ marginTop: 10 }}>
+        <SectionCard title="🔮 Fleet Failure Prediction" id="failure-prediction">
+          <SmallHint>
+            All your tracked units ranked by failure risk. Units scoring below 75 need attention before the next callback.
+          </SmallHint>
+          <div style={{ marginTop: 12 }}>
+            <FailurePredictionDashboard maxItems={10} />
+          </div>
+        </SectionCard>
+      </div>
+
+{/* learning-hub-v1 */}
       <div style={{ marginTop: 10 }}>
         <SectionCard title="📚 Learning Hub" id="learning-hub">
           <SmallHint>
