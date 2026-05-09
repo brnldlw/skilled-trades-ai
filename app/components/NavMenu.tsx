@@ -7,25 +7,65 @@ type NavMenuProps = {
   currentPath?: string;
 };
 
-const NAV_ITEMS = [
-  { label: "Dashboard", href: "/", icon: "🏠" },
-  { label: "New Job", href: "/hvac_units#new-job", icon: "🔧" },
-  { label: "Unit Library", href: "/hvac_units#unit-library", icon: "📋" },
-  { label: "AI Assistant", href: "/hvac_units#ai-chat", icon: "🤖" },
-  { label: "Calculators", href: "/hvac_units#calculators", icon: "🧮" },
-  { label: "Parts & Manuals", href: "/hvac_units#parts-manuals", icon: "🔩" },
-  { label: "Repair Panel", href: "/hvac_units#repair", icon: "🛠️" },
-  { label: "Measurements", href: "/hvac_units#measurements", icon: "📊" },
+const NAV_SECTIONS = [
+  {
+    heading: "Main",
+    items: [
+      { label: "Dashboard", href: "/", icon: "🏠" },
+      { label: "New Job", href: "/hvac_units", icon: "🔧" },
+      { label: "Unit Library", href: "/hvac_units#unit-library", icon: "📋" },
+      { label: "Fleet Health", href: "/hvac_units#failure-prediction", icon: "🔮" },
+      { label: "Admin Panel", href: "/admin", icon: "⚙️", adminOnly: true },
+    ],
+  },
+  {
+    heading: "Diagnosis Tools",
+    items: [
+      { label: "AI Diagnosis Assistant", href: "/hvac_units#ai-chat", icon: "🤖" },
+      { label: "Guided Flowcharts", href: "/hvac_units#guided-diagnosis", icon: "🗺️" },
+      { label: "Error Code Lookup", href: "/hvac_units#error-codes", icon: "🔍" },
+      { label: "Measurements & Coaching", href: "/hvac_units#measurements", icon: "📊" },
+      { label: "Repair Decision Panel", href: "/hvac_units#repair", icon: "🛠️" },
+      { label: "Callback Prevention", href: "/hvac_units#callback-checklist", icon: "✅" },
+    ],
+  },
+  {
+    heading: "Calculators",
+    items: [
+      { label: "PT Chart Lookup", href: "/hvac_units#calculators", icon: "📊" },
+      { label: "Superheat / Subcooling", href: "/hvac_units#calculators", icon: "❄️" },
+      { label: "Delta-T Calculator", href: "/hvac_units#calculators", icon: "🌡️" },
+      { label: "CFM Calculator", href: "/hvac_units#calculators", icon: "💨" },
+      { label: "Capacitor MFD Check", href: "/hvac_units#calculators", icon: "⚡" },
+      { label: "Ohm's Law", href: "/hvac_units#calculators", icon: "🔌" },
+      { label: "Gas Heat Rise", href: "/hvac_units#calculators", icon: "🔥" },
+    ],
+  },
+  {
+    heading: "Reference Library",
+    items: [
+      { label: "Belt Cross-Reference", href: "/hvac_units#belt-reference", icon: "🔄" },
+      { label: "Parts Cross-Reference", href: "/hvac_units#parts-reference", icon: "🧰" },
+      { label: "Filter Reference", href: "/hvac_units#filter-reference", icon: "🌬️" },
+      { label: "Refrigerant Quick-Ref", href: "/hvac_units#refrigerant-reference", icon: "❄️" },
+      { label: "Wiring Reference", href: "/hvac_units#wiring-reference", icon: "⚡" },
+      { label: "Parts Lookup", href: "/hvac_units#parts-lookup", icon: "🔍" },
+      { label: "Learning Hub", href: "/hvac_units#learning-hub", icon: "📚" },
+    ],
+  },
+  {
+    heading: "Closeout & Compliance",
+    items: [
+      { label: "Refrigerant Log", href: "/hvac_units#refrigerant-log", icon: "📋" },
+      { label: "Customer Report", href: "/hvac_units#customer-report", icon: "📄" },
+      { label: "Parts Lookup", href: "/hvac_units#parts-lookup", icon: "🔍" },
+    ],
+  },
 ];
 
-const TOOL_SHORTCUTS = [
-  { label: "PT Chart Lookup", href: "/hvac_units#calculators", icon: "📊" },
-  { label: "Superheat / Subcooling", href: "/hvac_units#calculators", icon: "❄️" },
-  { label: "Delta-T Check", href: "/hvac_units#calculators", icon: "🌡️" },
-  { label: "CFM Calculator", href: "/hvac_units#calculators", icon: "💨" },
-  { label: "Capacitor MFD", href: "/hvac_units#calculators", icon: "⚡" },
-  { label: "Gas Heat Rise", href: "/hvac_units#calculators", icon: "🔥" },
-];
+// Keep for backward compat
+const NAV_ITEMS = NAV_SECTIONS[0].items;
+const TOOL_SHORTCUTS = NAV_SECTIONS[2].items;
 
 export function NavMenu({ currentPath = "" }: NavMenuProps) {
   const [open, setOpen] = useState(false);
@@ -143,41 +183,26 @@ export function NavMenu({ currentPath = "" }: NavMenuProps) {
           </button>
         </div>
 
-        <div style={{ padding: "12px 8px 4px", flexShrink: 0 }}>
-          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", padding: "0 8px 6px" }}>
-            Navigation
-          </div>
-          {NAV_ITEMS.map((item) => (
-            <a
-              key={item.href}
-              href={item.href}
-              onClick={(e) => handleNavClick(e, item.href)}
-              style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 10px", borderRadius: 8, textDecoration: "none", color: "rgba(255,255,255,0.72)", fontSize: 14, marginBottom: 2 }}
-              onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.08)"}
-              onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}
-            >
-              <span style={{ fontSize: 16, flexShrink: 0 }}>{item.icon}</span>
-              {item.label}
-            </a>
-          ))}
-        </div>
-
-        <div style={{ padding: "8px 8px 4px", flexShrink: 0 }}>
-          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", padding: "0 8px 6px", marginTop: 6 }}>
-            Quick Tools
-          </div>
-          {TOOL_SHORTCUTS.map((item, i) => (
-            <a
-              key={i}
-              href={item.href}
-              onClick={(e) => handleNavClick(e, item.href)}
-              style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 8, textDecoration: "none", color: "rgba(255,255,255,0.6)", fontSize: 13, marginBottom: 2 }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.08)"; (e.currentTarget as HTMLElement).style.color = "#fff"; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.6)"; }}
-            >
-              <span style={{ fontSize: 14, flexShrink: 0 }}>{item.icon}</span>
-              {item.label}
-            </a>
+        <div style={{ padding: "8px 8px 4px", flex: 1, overflowY: "auto" }}>
+          {NAV_SECTIONS.map((section) => (
+            <div key={section.heading} style={{ marginBottom: 4 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase" as const, padding: "8px 10px 4px" }}>
+                {section.heading}
+              </div>
+              {section.items.map((item: any) => (
+                <a
+                  key={item.href + item.label}
+                  href={item.href}
+                  onClick={(e) => handleNavClick(e, item.href)}
+                  style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 8, textDecoration: "none", color: "rgba(255,255,255,0.72)", fontSize: 13, marginBottom: 1 }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.08)"; (e.currentTarget as HTMLElement).style.color = "#fff"; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.72)"; }}
+                >
+                  <span style={{ fontSize: 15, flexShrink: 0, width: 22, textAlign: "center" as const }}>{item.icon}</span>
+                  {item.label}
+                </a>
+              ))}
+            </div>
           ))}
         </div>
 

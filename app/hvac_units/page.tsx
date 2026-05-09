@@ -10364,12 +10364,14 @@ return (
         }}
         style={{ width: "100%", padding: 8 }}
       >
-        <option value="single">Single piece of equipment</option>
-        <option value="split_system">Split system</option>
-        <option value="furnace_ac">Furnace + AC</option>
+        <option value="single">Single piece of equipment (RTU, package unit, window AC, etc.)</option>
+        <option value="split_system">Split system — outdoor condensing unit + indoor air handler/coil</option>
+        <option value="furnace_ac">Furnace + AC — gas furnace + condensing unit + coil</option>
         <option value="heat_pump_air_handler">Heat pump + air handler</option>
-        <option value="walk_in">Walk-in condensing unit + evaporator(s)</option>
-        <option value="mini_split">Mini-split outdoor + indoor head(s)</option>
+        <option value="walk_in">Walk-in — remote condensing unit + evaporator(s)</option>
+        <option value="mini_split">Mini-split — outdoor + one or more indoor heads</option>
+        <option value="ice_machine_remote">Ice machine head + remote condenser</option>
+        <option value="reach_in_remote">Reach-in / display case + remote condensing unit</option>
         <option value="other_multi">Other multi-component system</option>
       </select>
     </label>
@@ -14117,20 +14119,53 @@ return (
               onChange={(e) => setEquipmentType(e.target.value)}
               style={{ width: "100%", padding: 8 }}
             >
-              <option>RTU</option>
-              <option>Split System</option>
-              <option>Heat Pump</option>
-              <option>Furnace</option>
-              <option>Mini-Split</option>
-              <option>Boiler</option>
-              <option>Chiller</option>
-              <option>Make-Up Air Unit</option>
-              <option>Ice Machine</option>
-              <option>Walk-In Cooler</option>
-              <option>Walk-In Freezer</option>
-              <option>Reach-In Cooler</option>
-              <option>Reach-In Freezer</option>
-              <option>Merchandiser</option>
+              <optgroup label="── Cooling / Heating ──">
+                <option>RTU</option>
+                <option>Split System</option>
+                <option>Heat Pump</option>
+                <option>Packaged Heat Pump</option>
+                <option>Mini-Split</option>
+                <option>Multi-Zone Mini-Split</option>
+                <option>VRF System</option>
+                <option>Furnace</option>
+                <option>Air Handler</option>
+                <option>Boiler</option>
+                <option>Chiller — Air Cooled</option>
+                <option>Chiller — Water Cooled</option>
+                <option>Make-Up Air Unit</option>
+                <option>Energy Recovery Unit</option>
+                <option>Fan Coil Unit</option>
+                <option>Unit Heater</option>
+                <option>PTAC / PTHP</option>
+                <option>Ceiling Cassette</option>
+                <option>Computer Room AC (CRAC)</option>
+              </optgroup>
+              <optgroup label="── Commercial Refrigeration ──">
+                <option>Walk-In Cooler</option>
+                <option>Walk-In Freezer</option>
+                <option>Reach-In Cooler</option>
+                <option>Reach-In Freezer</option>
+                <option>Merchandiser / Display Case</option>
+                <option>Ice Machine — Cuber</option>
+                <option>Ice Machine — Flaker</option>
+                <option>Ice Machine — Nugget</option>
+                <option>Ice Machine — Tube</option>
+                <option>Remote Condensing Unit</option>
+                <option>Remote Evaporator</option>
+                <option>Beverage Cooler</option>
+                <option>Prep Table / Cold Table</option>
+                <option>Blast Chiller / Freezer</option>
+                <option>Refrigerated Trailer</option>
+                <option>Process Cooling Unit</option>
+                <option>Server Room Cooling</option>
+              </optgroup>
+              <optgroup label="── Other ──">
+                <option>Dehumidifier — Commercial</option>
+                <option>Dehumidifier — Residential</option>
+                <option>Humidifier</option>
+                <option>ERV / HRV</option>
+                <option>Other</option>
+              </optgroup>
             </select>
           </div>
 
