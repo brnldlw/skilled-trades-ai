@@ -70,13 +70,18 @@ const TOOL_SHORTCUTS = NAV_SECTIONS[2].items;
 export function NavMenu({ currentPath = "" }: NavMenuProps) {
   const [open, setOpen] = useState(false);
   const [userEmail, setUserEmail] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const supabase = createClient();
     if (!supabase) return;
-    supabase.auth.getUser().then((res: any) => {
+    supabase.auth.getUser().then(async (res: any) => {
       if (res?.data?.user?.email) setUserEmail(res.data.user.email);
+      if (res?.data?.user?.id) {
+        const { data } = await supabase.from("profiles").select("is_admin").eq("id", res.data.user.id).single();
+        if (data?.is_admin) setIsAdmin(true);
+      }
     });
   }, []);
 
@@ -189,7 +194,7 @@ export function NavMenu({ currentPath = "" }: NavMenuProps) {
               <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase" as const, padding: "8px 10px 4px" }}>
                 {section.heading}
               </div>
-              {section.items.map((item: any) => (
+              {section.items.filter((item: any) => !item.adminOnly || isAdmin).map((item: any) => (
                 <a
                   key={item.href + item.label}
                   href={item.href}
