@@ -127,7 +127,7 @@ export async function POST(req: NextRequest) {
     const filledPdfBytes = await pdfDoc.save();
 
     // Return the filled PDF as a download
-    return new NextResponse(filledPdfBytes, {
+    return new NextResponse(Buffer.from(filledPdfBytes), {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
