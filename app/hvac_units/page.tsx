@@ -57,6 +57,7 @@ import { SystemHealthScore } from "./components/SystemHealthScore";
 import { UnitProfilePanel } from "./components/UnitProfilePanel";
 
 import { LearningHub } from "./components/LearningHub";
+import { CallbackPreventionChecklist } from "./components/CallbackPreventionChecklist";
 
 import { FailurePredictionDashboard } from "../components/FailurePredictionDashboard";
 
@@ -11319,6 +11320,26 @@ return (
               observations={observations}
             />
             )}
+          </div>
+        </SectionCard>
+      </div>
+
+{/* callback-prevention-checklist-v1 */}
+      <div style={{ marginTop: 10 }}>
+        <SectionCard title="✅ Callback Prevention Checklist" id="callback-checklist">
+          <SmallHint>
+            Verify these items before you leave. Generated automatically based on what you fixed.
+            Critical items must be completed — standard items are strongly recommended.
+          </SmallHint>
+          <div style={{ marginTop: 12 }}>
+            <CallbackPreventionChecklist
+              finalConfirmedCause={finalConfirmedCause}
+              actualFixPerformed={actualFixPerformed}
+              partsReplaced={partsReplaced}
+              equipmentType={equipmentType}
+              refrigerantType={refrigerantType}
+              symptom={symptom}
+            />
           </div>
         </SectionCard>
       </div>
