@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import Anthropic from "@anthropic-ai/sdk";
+
 
 export const runtime = "nodejs";
 
@@ -68,58 +68,32 @@ export async function POST(req: NextRequest) {
       }
 
       // Use Claude to analyze the PDF and identify fields
-      const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
+      
 
-      const analysis = await anthropic.messages.create({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 2000,
-        messages: [{
-          role: "user",
-          content: [
-            {
-              type: "document",
-              source: {
-                type: "base64",
-                media_type: "application/pdf",
-                data: base64,
+      const analysisRes = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": process.env.ANTHROPIC_API_KEY!,
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 2000,
+          messages: [{
+            role: "user",
+            content: [
+              {
+                type: "document",
+                source: { type: "base64", media_type: "application/pdf", data: base64 },
               },
-            },
-            {
-              type: "text",
-              text: `You are analyzing an HVAC/R PM (preventive maintenance) or asset tracking form.
-
-Identify every field that needs to be filled out in this form. For each field, determine:
-1. The field label/name as it appears on the form
-2. The type of information needed
-3. Whether it can be auto-filled from a unit nameplate photo
-
-Return ONLY valid JSON with this exact structure:
-{
-  "formTitle": "string - title of the form",
-  "fields": [
-    {
-      "id": "unique_snake_case_id",
-      "label": "Exact label from form",
-      "type": "text|date|number|checkbox|signature",
-      "category": "equipment|customer|tech|readings|date|other",
-      "nameplateField": "manufacturer|model|serial|refrigerant|voltage|tonnage|mca|mop|rla|fla|null",
-      "placeholder": "Example value or hint",
-      "required": true|false
-    }
-  ],
-  "estimatedPageCount": number
-}
-
-Categories:
-- equipment: unit make, model, serial, refrigerant, voltage, etc.
-- customer: customer name, address, contact, site
-- tech: technician name, company, date, signature
-- readings: pressures, temps, amps, voltages measured on job
-- date: dates (service date, next PM date, etc.)
-- other: anything else`,
-            },
-          ],
-        }],
+              {
+                type: "text",
+                text: `You are analyzing an HVAC/R PM (preventive maintenance) or asset tracking form. Identify every field that needs to be filled out. Return ONLY valid JSON with this structure: {"formTitle":"string","estimatedPageCount":1,"fields":[{"id":"snake_case_id","label":"Exact label","type":"text|date|number|checkbox","category":"equipment|customer|tech|readings|date|other","nameplateField":"manufacturer|model|serial|refrigerant|voltage|tonnage|mca|mop|rla|fla|null","placeholder":"hint","required":true}]}. Categories: equipment=unit make/model/serial/refrigerant/voltage, customer=name/address/contact, tech=technician name/company/signature, readings=pressures/temps/amps, date=service dates, other=anything else.`,
+              },
+            ],
+          }],
+        }),
       });
 
       let fields: any[] = [];
@@ -127,7 +101,8 @@ Categories:
       let estimatedPageCount = 1;
 
       try {
-        const text = analysis.content[0].type === "text" ? analysis.content[0].text : "";
+        const analysisData = await analysisRes.json();
+        const text = analysisData.content?.[0]?.text || "";
         const clean = text.replace(/```json|```/g, "").trim();
         const parsed = JSON.parse(clean);
         fields = parsed.fields || [];

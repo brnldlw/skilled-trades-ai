@@ -12831,7 +12831,7 @@ return (
             <PMFormFiller
               manufacturer={manufacturer}
               model={model}
-              serial={serial}
+              serial={serialNumber}
               refrigerantType={refrigerantType}
               equipmentType={equipmentType}
             />
