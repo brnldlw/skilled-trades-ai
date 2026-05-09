@@ -152,7 +152,11 @@ export function AdminPanel() {
   async function load() {
     setLoading(true);
     try {
-      const data = await adminListUsers();
+      const res = await fetch("/api/admin/users");
+      if (!res.ok) { setError("Failed to load users"); return; }
+      const data = await res.json();
+      setUsers(data.users || []);
+      return;
       setUsers(data);
     } catch (e: any) {
       setError(e?.message || "Failed to load users");
