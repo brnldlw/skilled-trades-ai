@@ -51,62 +51,60 @@ export async function POST(req: NextRequest) {
     const pdfCheckOrder: string[] = Array.isArray(form.pdf_check_order) ? form.pdf_check_order : [];
 
     let filledCount = 0;
-
-    // Fill text fields using stored positional order
     const ourTextFields = ourFields.filter(f => f.type !== "checkbox");
     const ourCheckFields = ourFields.filter(f => f.type === "checkbox");
 
-    if (pdfFieldOrder.length > 0) {
-      // Use the pre-computed visual order
-      for (let i = 0; i < ourTextFields.length; i++) {
-        const ourField = ourTextFields[i];
+    // PRIORITY 1: Use explicit fieldMappings from the UI (most accurate)
+    if (fieldMappings && Object.keys(fieldMappings).length > 0) {
+      console.log("Using explicit field mappings from UI");
+      for (const ourField of ourTextFields) {
         const val = values[ourField.id];
-        if (!val) continue;
-
-        // Use stored pdfFieldName if available, otherwise use order index
-        const pdfName = ourField.pdfFieldName || pdfFieldOrder[i];
-        if (!pdfName) continue;
-
+        const pdfName = fieldMappings[ourField.id];
+        if (!val || !pdfName) continue;
         try {
-          const pdfField = pdfForm.getTextField(pdfName);
-          pdfField.setText(String(val));
+          pdfForm.getTextField(pdfName).setText(String(val));
           filledCount++;
           console.log(`✓ "${ourField.label}" → "${pdfName}" = "${String(val).substring(0, 40)}"`);
         } catch (e) {
-          console.warn(`✗ Could not fill "${pdfName}":`, (e as Error).message);
+          console.warn(`✗ Could not fill "${pdfName}"`);
         }
       }
-
-      // Fill checkboxes
-      for (let i = 0; i < ourCheckFields.length; i++) {
-        const ourField = ourCheckFields[i];
-        const val = values[ourField.id];
-        const pdfName = ourField.pdfFieldName || pdfCheckOrder[i];
-        if (!pdfName || !val) continue;
-        try {
-          const cb = pdfForm.getCheckBox(pdfName);
-          if (val === true || val === "true" || val === "yes") { cb.check(); filledCount++; }
-        } catch {}
-      }
-
-    } else {
-      // Fallback: sort all PDF text fields by number and match positionally
-      const allFields = pdfForm.getFields();
-      const textFields = allFields.filter(f => f instanceof PDFTextField) as PDFTextField[];
-      textFields.sort((a, b) => {
-        const na = parseInt(a.getName().replace(/\D/g, "") || "0");
-        const nb = parseInt(b.getName().replace(/\D/g, "") || "0");
-        return na - nb;
-      });
-
-      for (let i = 0; i < ourTextFields.length && i < textFields.length; i++) {
+    }
+    // PRIORITY 2: Use stored positional order from coordinate analysis
+    else if (pdfFieldOrder.length > 0) {
+      console.log("Using stored positional order");
+      for (let i = 0; i < ourTextFields.length; i++) {
         const val = values[ourTextFields[i].id];
-        if (!val) continue;
+        const pdfName = ourTextFields[i].pdfFieldName || pdfFieldOrder[i];
+        if (!val || !pdfName) continue;
         try {
-          textFields[i].setText(String(val));
+          pdfForm.getTextField(pdfName).setText(String(val));
           filledCount++;
         } catch {}
       }
+    }
+    // PRIORITY 3: Numeric sort fallback
+    else {
+      console.log("Using numeric sort fallback");
+      const textFields = (pdfForm.getFields().filter(f => f instanceof PDFTextField) as PDFTextField[])
+        .sort((a, b) => parseInt(a.getName().replace(/\D/g,"")) - parseInt(b.getName().replace(/\D/g,"")));
+      for (let i = 0; i < ourTextFields.length && i < textFields.length; i++) {
+        const val = values[ourTextFields[i].id];
+        if (!val) continue;
+        try { textFields[i].setText(String(val)); filledCount++; } catch {}
+      }
+    }
+
+    // Checkboxes — use mappings if available
+    for (let i = 0; i < ourCheckFields.length; i++) {
+      const ourField = ourCheckFields[i];
+      const val = values[ourField.id];
+      const pdfName = (fieldMappings && fieldMappings[ourField.id]) || ourField.pdfFieldName || pdfCheckOrder[i];
+      if (!pdfName || !val) continue;
+      try {
+        const cb = pdfForm.getCheckBox(pdfName);
+        if (val === true || val === "true" || val === "yes") { cb.check(); filledCount++; }
+      } catch {}
     }
 
     console.log(`Filled ${filledCount} of ${ourTextFields.length} fields`);

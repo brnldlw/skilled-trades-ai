@@ -85,7 +85,9 @@ export function PMFormFiller({
   const [activeVoiceField, setActiveVoiceField] = useState<string | null>(null);
   const [listeningField, setListeningField] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
-  const [view, setView] = useState<"list" | "fill" | "upload">("list");
+  const [view, setView] = useState<"list" | "fill" | "upload" | "map">("list");
+  const [pdfFieldNames, setPdfFieldNames] = useState<string[]>([]);
+  const [fieldMappings, setFieldMappings] = useState<Record<string, string>>({});
   const [loadingForms, setLoadingForms] = useState(true);
   const [pdfFieldCount, setPdfFieldCount] = useState(0);
   const [downloadStatus, setDownloadStatus] = useState("");
@@ -174,7 +176,16 @@ export function PMFormFiller({
       setSelectedForm(returnedForm);
       setValues({});
       await loadForms();
-      setTimeout(() => setView("fill"), 800);
+      // Load PDF field names for mapping
+      if (returnedForm.id) {
+        fetch(`/api/pm-forms-fill?formId=${returnedForm.id}`)
+          .then(r => r.json())
+          .then(d => {
+            const names = (d.pdfFields || []).filter((f: any) => f.type === "text").map((f: any) => f.name);
+            setPdfFieldNames(names);
+          }).catch(() => {});
+      }
+      setTimeout(() => setView("map"), 800);
     } catch (e: any) {
       setUploadMsg("Error: " + e?.message);
     } finally {
@@ -293,7 +304,7 @@ export function PMFormFiller({
       const res = await fetch("/api/pm-forms-fill", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ formId: selectedForm.id, values: filledValues }),
+        body: JSON.stringify({ formId: selectedForm.id, values: filledValues, fieldMappings }),
       });
 
       if (!res.ok) {
@@ -386,7 +397,23 @@ export function PMFormFiller({
                 </div>
               </div>
               <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-                <button onClick={() => { setSelectedForm(form); setValues({}); setView("fill"); }}
+                <button onClick={() => {
+                  setSelectedForm(form);
+                  setValues({});
+                  // Load pdf field names
+                  if (form.id) {
+                    fetch(`/api/pm-forms-fill?formId=${form.id}`)
+                      .then(r => r.json())
+                      .then(d => {
+                        const names = (d.pdfFields || []).filter((f: any) => f.type === "text").map((f: any) => f.name);
+                        setPdfFieldNames(names);
+                        // Load saved mappings if any
+                        const saved = localStorage.getItem(`fm_${form.id}`);
+                        if (saved) { setFieldMappings(JSON.parse(saved)); setView("fill"); }
+                        else setView("map");
+                      }).catch(() => setView("fill"));
+                  } else setView("fill");
+                }}
                   style={{ padding: "8px 16px", background: "#2563eb", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>
                   Fill Form →
                 </button>
@@ -421,6 +448,25 @@ export function PMFormFiller({
         onUpload={handleUpload}
         uploading={uploading}
         message={uploadMsg}
+      />
+    );
+  }
+
+  // ── View: Map fields ─────────────────────────────────────
+  if (view === "map" && selectedForm) {
+    return (
+      <MapView
+        form={selectedForm}
+        pdfFieldNames={pdfFieldNames}
+        onSave={(mappings) => {
+          setFieldMappings(mappings);
+          if (selectedForm.id) {
+            try { localStorage.setItem(`fm_${selectedForm.id}`, JSON.stringify(mappings)); } catch {}
+          }
+          setView("fill");
+        }}
+        onSkip={() => setView("fill")}
+        onBack={() => setView("list")}
       />
     );
   }
@@ -737,6 +783,85 @@ function UploadView({ onBack, onUpload, uploading, message }: {
         <div style={{ fontSize: 11, color: "#94a3b8", lineHeight: 1.6 }}>
           The AI reads the PDF and identifies every blank field. Works best with editable/fillable PDFs or PDFs with real text (not scanned images). Processing takes 15-30 seconds.
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ── MapView — one-time field mapping screen ───────────────────
+function MapView({ form, pdfFieldNames, onSave, onSkip, onBack }: {
+  form: any;
+  pdfFieldNames: string[];
+  onSave: (mappings: Record<string, string>) => void;
+  onSkip: () => void;
+  onBack: () => void;
+}) {
+  const fields: any[] = Array.isArray(form.fields) ? form.fields.filter((f: any) => f.type !== "checkbox") : [];
+  const [mappings, setMappings] = useState<Record<string, string>>(() => {
+    // Pre-fill with positional guesses
+    const m: Record<string, string> = {};
+    fields.forEach((f: any, i: number) => {
+      if (pdfFieldNames[i]) m[f.id] = pdfFieldNames[i];
+    });
+    return m;
+  });
+
+  return (
+    <div>
+      <button onClick={onBack} style={{ marginBottom: 14, padding: "7px 14px", background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit", color: "#374151" }}>
+        ← Back
+      </button>
+
+      <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 10, padding: "12px 16px", marginBottom: 16 }}>
+        <div style={{ fontSize: 14, fontWeight: 800, color: "#92400e", marginBottom: 4 }}>📋 One-time field mapping</div>
+        <div style={{ fontSize: 12, color: "#92400e", lineHeight: 1.6 }}>
+          Your PDF uses generic field names (Text Field 1, Text Field 2...). Match each field label on the left to the correct PDF field slot on the right. This only needs to be done once — it saves automatically.
+        </div>
+      </div>
+
+      <div style={{ marginBottom: 10, display: "flex", gap: 8 }}>
+        <div style={{ flex: 1, fontSize: 12, fontWeight: 700, color: "#374151", padding: "6px 10px", background: "#f1f5f9", borderRadius: 6 }}>Your Field Label</div>
+        <div style={{ flex: 1, fontSize: 12, fontWeight: 700, color: "#374151", padding: "6px 10px", background: "#f1f5f9", borderRadius: 6 }}>PDF Field Slot</div>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column" as const, gap: 6, maxHeight: 420, overflowY: "auto" as const }}>
+        {fields.map((field: any) => (
+          <div key={field.id} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <div style={{ flex: 1, fontSize: 13, color: "#1e293b", padding: "8px 10px", background: "#fff", border: "1px solid #e2e8f0", borderRadius: 6 }}>
+              {field.label}
+            </div>
+            <div style={{ fontSize: 16, color: "#94a3b8" }}>→</div>
+            <select
+              value={mappings[field.id] || ""}
+              onChange={e => setMappings(prev => ({ ...prev, [field.id]: e.target.value }))}
+              style={{ flex: 1, padding: "8px 10px", border: "1px solid #e2e8f0", borderRadius: 6, fontSize: 13, fontFamily: "inherit", background: "#fafafa" }}
+            >
+              <option value="">-- not mapped --</option>
+              {pdfFieldNames.map(name => (
+                <option key={name} value={name}>{name}</option>
+              ))}
+            </select>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
+        <button
+          onClick={() => onSave(mappings)}
+          style={{ flex: 1, padding: "12px", background: "#16a34a", color: "#fff", border: "none", borderRadius: 8, fontWeight: 800, fontSize: 15, cursor: "pointer", fontFamily: "inherit" }}
+        >
+          ✅ Save Mapping & Fill Form
+        </button>
+        <button
+          onClick={onSkip}
+          style={{ padding: "12px 16px", background: "#fff", color: "#64748b", border: "1px solid #e2e8f0", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}
+        >
+          Skip
+        </button>
+      </div>
+
+      <div style={{ marginTop: 8, fontSize: 11, color: "#94a3b8", lineHeight: 1.5 }}>
+        Tip: Open the original PDF on your computer and Tab through the fields — they highlight in the same order as the PDF field list on the right.
       </div>
     </div>
   );
