@@ -60,6 +60,7 @@ import { LearningHub } from "./components/LearningHub";
 import { CallbackPreventionChecklist } from "./components/CallbackPreventionChecklist";
 import { PartsLookup } from "./components/PartsLookup";
 import { BeltReference } from "./components/BeltReference";
+import { PartsReferenceHub } from "./components/PartsReferenceHub";
 
 import { FailurePredictionDashboard } from "../components/FailurePredictionDashboard";
 
@@ -12756,6 +12757,19 @@ return (
           </SmallHint>
           <div style={{ marginTop: 12 }}>
             <BeltReference />
+          </div>
+        </SectionCard>
+      </div>
+
+{/* parts-reference-hub-v1 */}
+      <div style={{ marginTop: 10 }}>
+        <SectionCard title="🧰 Parts Cross-Reference" id="parts-reference">
+          <SmallHint>
+            Find replacement capacitors, motors, and contactors by specs.
+            Enter what's on the nameplate and get cross-reference options and supplier links.
+          </SmallHint>
+          <div style={{ marginTop: 12 }}>
+            <PartsReferenceHub />
           </div>
         </SectionCard>
       </div>
