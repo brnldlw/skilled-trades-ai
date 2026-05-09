@@ -59,6 +59,7 @@ import { UnitProfilePanel } from "./components/UnitProfilePanel";
 import { LearningHub } from "./components/LearningHub";
 import { CallbackPreventionChecklist } from "./components/CallbackPreventionChecklist";
 import { PartsLookup } from "./components/PartsLookup";
+import { BeltReference } from "./components/BeltReference";
 
 import { FailurePredictionDashboard } from "../components/FailurePredictionDashboard";
 
@@ -12745,6 +12746,19 @@ return (
       </div>
 
       
+
+{/* belt-reference-v1 */}
+      <div style={{ marginTop: 10 }}>
+        <SectionCard title="🔄 Belt Cross-Reference" id="belt-reference">
+          <SmallHint>
+            Search by belt part number or dimensions to find cross-references across Gates, Dayco, and Browning.
+            Works offline.
+          </SmallHint>
+          <div style={{ marginTop: 12 }}>
+            <BeltReference />
+          </div>
+        </SectionCard>
+      </div>
 
 {/* repair-decision-panel-v2 */}
       <div style={{ marginTop: 10 }}>
