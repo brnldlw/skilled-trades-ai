@@ -175,25 +175,68 @@ export function PMFormFiller({
     if (!selectedForm) return;
     setAnalyzingPhoto(true);
     try {
-      const fd = new FormData();
-      fd.append("image", file);
-      const res = await fetch("/api/nameplate-parse", { method: "POST", body: fd });
+      // Convert image to base64
+      const reader = new FileReader();
+      const base64 = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve((reader.result as string).split(",")[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      // Call nameplate parse API
+      const res = await fetch("/api/nameplate-parse", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageBase64: base64, mimeType: file.type }),
+      });
       const data = await res.json();
 
       if (data && !data.error) {
         const fills: FieldValues = {};
-        const nameplate: Record<string, any> = data;
+        // Map nameplate fields to form fields
+        const nameplateMap: Record<string, string | null> = {
+          manufacturer: data.manufacturer,
+          model: data.model,
+          serial: data.serial,
+          refrigerant: data.refrigerant,
+          voltage: data.voltage,
+          tonnage: data.tonnage,
+          mca: data.mca,
+          mop: data.mop,
+          rla: data.rla,
+          fla: data.fla,
+        };
 
         selectedForm.fields.forEach(field => {
-          if (field.nameplateField && nameplate[field.nameplateField]) {
-            fills[field.id] = nameplate[field.nameplateField];
+          // Match by nameplateField property
+          if (field.nameplateField && nameplateMap[field.nameplateField]) {
+            fills[field.id] = nameplateMap[field.nameplateField] as string;
+          }
+          // Also try fuzzy match by label
+          const label = field.label.toLowerCase();
+          if (!fills[field.id]) {
+            if (/manufacturer|make/.test(label) && data.manufacturer) fills[field.id] = data.manufacturer;
+            else if (/model/.test(label) && data.model) fills[field.id] = data.model;
+            else if (/serial/.test(label) && data.serial) fills[field.id] = data.serial;
+            else if (/refrigerant/.test(label) && data.refrigerant) fills[field.id] = data.refrigerant;
+            else if (/voltage/.test(label) && data.voltage) fills[field.id] = data.voltage;
+            else if (/tonnage|tons/.test(label) && data.tonnage) fills[field.id] = data.tonnage;
+            else if (/mca/.test(label) && data.mca) fills[field.id] = data.mca;
+            else if (/mop/.test(label) && data.mop) fills[field.id] = data.mop;
+            else if (/rla/.test(label) && data.rla) fills[field.id] = data.rla;
+            else if (/fla/.test(label) && data.fla) fills[field.id] = data.fla;
           }
         });
 
+        const count = Object.keys(fills).length;
         setValues(prev => ({ ...prev, ...fills }));
+        if (count === 0) alert("Nameplate read but no matching form fields found. Fields may need different labels.");
+      } else {
+        alert("Could not read nameplate. Make sure the photo is clear and shows the unit data plate.");
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error("Photo analysis failed:", e);
+      alert("Photo analysis failed: " + e?.message);
     } finally {
       setAnalyzingPhoto(false);
     }
@@ -239,7 +282,44 @@ export function PMFormFiller({
     return lines.join("\n");
   }
 
-  function downloadForm() {
+  async function downloadFilledPDF() {
+    if (!selectedForm?.id) {
+      // Form not saved to DB — download text fallback
+      downloadTextFallback();
+      return;
+    }
+    setSaved(false);
+    try {
+      const res = await fetch("/api/pm-forms-fill", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ formId: selectedForm.id, values }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        console.error("PDF fill error:", err);
+        // Fall back to text download
+        downloadTextFallback();
+        return;
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${selectedForm.name.replace(/[^a-z0-9]/gi, "-")}-filled.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (e: any) {
+      console.error("Download failed:", e);
+      downloadTextFallback();
+    }
+  }
+
+  function downloadTextFallback() {
     const text = generateFilledFormText();
     const blob = new Blob([text], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
@@ -418,9 +498,9 @@ export function PMFormFiller({
             {pct === 100 ? "✅ Form complete — ready to save" : `Form ${pct}% complete — save anytime`}
           </div>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" as const }}>
-            <button onClick={downloadForm}
+            <button onClick={downloadFilledPDF}
               style={{ padding: "10px 18px", background: "#16a34a", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}>
-              {saved ? "✅ Saved!" : "⬇️ Download Form"}
+              {saved ? "✅ Downloaded!" : "⬇️ Download Filled PDF"}
             </button>
             <button onClick={copyToClipboard}
               style={{ padding: "10px 18px", background: "#fff", color: "#374151", border: "1px solid #e2e8f0", borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}>

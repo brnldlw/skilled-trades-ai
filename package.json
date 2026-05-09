@@ -15,7 +15,8 @@
     "openai": "^6.25.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "stripe": "^22.1.1"
+    "stripe": "^22.1.1",
+    "pdf-lib": "^1.17.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
