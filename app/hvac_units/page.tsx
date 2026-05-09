@@ -63,6 +63,7 @@ import { BeltReference } from "./components/BeltReference";
 import { PartsReferenceHub } from "./components/PartsReferenceHub";
 import { FilterReference } from "./components/FilterReference";
 import { RefrigerantReference } from "./components/RefrigerantReference";
+import { WiringReference } from "./components/WiringReference";
 
 import { FailurePredictionDashboard } from "../components/FailurePredictionDashboard";
 
@@ -12798,6 +12799,19 @@ return (
           </SmallHint>
           <div style={{ marginTop: 12 }}>
             <RefrigerantReference />
+          </div>
+        </SectionCard>
+      </div>
+
+{/* wiring-reference-v1 */}
+      <div style={{ marginTop: 10 }}>
+        <SectionCard title="⚡ Wiring Reference Library" id="wiring-reference">
+          <SmallHint>
+            Common HVAC/R control circuit logic — operation sequences, common faults, and tech tips.
+            Covers single stage cooling, heat pump, gas furnace, walk-in refrigeration, and 24V troubleshooting.
+          </SmallHint>
+          <div style={{ marginTop: 12 }}>
+            <WiringReference equipmentType={equipmentType} />
           </div>
         </SectionCard>
       </div>
