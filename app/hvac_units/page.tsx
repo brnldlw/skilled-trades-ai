@@ -64,6 +64,7 @@ import { PartsReferenceHub } from "./components/PartsReferenceHub";
 import { FilterReference } from "./components/FilterReference";
 import { RefrigerantReference } from "./components/RefrigerantReference";
 import { WiringReference } from "./components/WiringReference";
+import { PMFormFiller } from "./components/PMFormFiller";
 
 import { FailurePredictionDashboard } from "../components/FailurePredictionDashboard";
 
@@ -12814,6 +12815,26 @@ return (
           </SmallHint>
           <div style={{ marginTop: 12 }}>
             <WiringReference equipmentType={equipmentType} />
+          </div>
+        </SectionCard>
+      </div>
+
+{/* pm-form-filler-v1 */}
+      <div style={{ marginTop: 10 }}>
+        <SectionCard title="📋 PM Form Filler" id="pm-forms">
+          <SmallHint>
+            Upload your company PM or asset tracking form. The AI reads it and identifies every field.
+            Photograph the unit nameplate to auto-fill equipment info. Talk-to-text for customer details.
+            Download the completed form to send anywhere.
+          </SmallHint>
+          <div style={{ marginTop: 12 }}>
+            <PMFormFiller
+              manufacturer={manufacturer}
+              model={model}
+              serial={serial}
+              refrigerantType={refrigerantType}
+              equipmentType={equipmentType}
+            />
           </div>
         </SectionCard>
       </div>
