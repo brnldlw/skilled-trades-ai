@@ -146,13 +146,24 @@ export function PMFormFiller({
       const data = await res.json();
 
       if (!res.ok || data.error) {
-        setUploadMsg("Error: " + (data.error || "Upload failed"));
+        setUploadMsg("❌ Error: " + (data.error || "Upload failed. Check that your PDF has readable text (not a scanned image)."));
         return;
       }
 
-      setUploadMsg(`✅ Found ${data.fields?.length || 0} fields in "${formName}". Ready to use.`);
+      const fieldCount = data.fields?.length || 0;
+      if (fieldCount === 0) {
+        setUploadMsg("⚠️ No fields detected. Make sure the PDF is not a scanned image — it must have readable text. Try a different PDF.");
+        return;
+      }
+      setUploadMsg(`✅ Found ${fieldCount} fields. Opening form...`);
+      // Use the form returned directly from the API — don't wait for DB reload
+      const returnedForm = data.form || { id: null, name: formName, fields: data.fields, file_name: "" };
+      // Ensure fields are set on the form object
+      returnedForm.fields = data.fields;
+      setSelectedForm(returnedForm);
+      setValues({});
       await loadForms();
-      setTimeout(() => setView("list"), 1500);
+      setTimeout(() => setView("fill"), 800);
     } catch (e: any) {
       setUploadMsg("Error: " + e?.message);
     } finally {
@@ -291,10 +302,23 @@ export function PMFormFiller({
                   {form.fields?.length || 0} fields · {form.file_name}
                 </div>
               </div>
-              <button onClick={() => { setSelectedForm(form); setValues({}); setView("fill"); }}
-                style={{ padding: "8px 16px", background: "#2563eb", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}>
-                Fill Form →
-              </button>
+              <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                <button onClick={() => { setSelectedForm(form); setValues({}); setView("fill"); }}
+                  style={{ padding: "8px 16px", background: "#2563eb", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>
+                  Fill Form →
+                </button>
+                <button onClick={async () => {
+                  if (!confirm(`Delete "${form.name}"?`)) return;
+                  const fd = new FormData();
+                  fd.append("action", "delete_form");
+                  fd.append("formId", form.id);
+                  await fetch("/api/pm-forms", { method: "POST", body: fd });
+                  await loadForms();
+                }}
+                  style={{ padding: "8px 12px", background: "#fff", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>
+                  Delete
+                </button>
+              </div>
             </div>
           ))}
         </div>
