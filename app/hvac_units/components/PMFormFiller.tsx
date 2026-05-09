@@ -124,8 +124,8 @@ export function PMFormFiller({
       const fd = new FormData();
       fd.append("action", "list_forms");
       const res = await fetch("/api/pm-forms", { method: "POST", body: fd });
-      const data = await res.json();
-      setForms(data.forms || []);
+      const json = await res.json();
+      setForms(json.forms || []);
     } catch (e) {
       console.error("Failed to load forms:", e);
     } finally {
@@ -143,23 +143,23 @@ export function PMFormFiller({
       fd.append("formName", formName);
 
       const res = await fetch("/api/pm-forms", { method: "POST", body: fd });
-      const data = await res.json();
+      const json = await res.json();
 
-      if (!res.ok || data.error) {
-        setUploadMsg("❌ Error: " + (data.error || "Upload failed. Check that your PDF has readable text (not a scanned image)."));
+      if (!res.ok || json.error) {
+        setUploadMsg("❌ Error: " + (json.error || "Upload failed. Check that your PDF has readable text (not a scanned image)."));
         return;
       }
 
-      const fieldCount = data.fields?.length || 0;
+      const fieldCount = json?.fields?.length || 0;
       if (fieldCount === 0) {
         setUploadMsg("⚠️ No fields detected. Make sure the PDF is not a scanned image — it must have readable text. Try a different PDF.");
         return;
       }
       setUploadMsg(`✅ Found ${fieldCount} fields. Opening form...`);
       // Use the form returned directly from the API — don't wait for DB reload
-      const returnedForm = data.form || { id: null, name: formName, fields: data.fields, file_name: "" };
+      const returnedForm = json.form || { id: null, name: formName, fields: json.fields, file_name: "" };
       // Ensure fields are set on the form object
-      returnedForm.fields = data.fields;
+      returnedForm.fields = json.fields;
       setSelectedForm(returnedForm);
       setValues({});
       await loadForms();
@@ -177,8 +177,8 @@ export function PMFormFiller({
     try {
       // Convert image to base64
       const reader = new FileReader();
-      const base64 = await new Promise<string>((resolve, reject) => {
-        reader.onload = () => resolve((reader.result as string).split(",")[1]);
+      const imageDataUrl = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string);
         reader.onerror = reject;
         reader.readAsDataURL(file);
       });
@@ -187,52 +187,37 @@ export function PMFormFiller({
       const res = await fetch("/api/nameplate-parse", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageBase64: base64, mimeType: file.type }),
+        body: JSON.stringify({ imageDataUrl }),
       });
-      const data = await res.json();
+      const json = await res.json();
 
-      if (data && !data.error) {
+      if (json.ok && json.data) {
+        const np = json.data;
         const fills: FieldValues = {};
-        // Map nameplate fields to form fields
-        const nameplateMap: Record<string, string | null> = {
-          manufacturer: data.manufacturer,
-          model: data.model,
-          serial: data.serial,
-          refrigerant: data.refrigerant,
-          voltage: data.voltage,
-          tonnage: data.tonnage,
-          mca: data.mca,
-          mop: data.mop,
-          rla: data.rla,
-          fla: data.fla,
-        };
-
-        selectedForm.fields.forEach(field => {
-          // Match by nameplateField property
-          if (field.nameplateField && nameplateMap[field.nameplateField]) {
-            fills[field.id] = nameplateMap[field.nameplateField] as string;
-          }
-          // Also try fuzzy match by label
+        selectedForm.fields.forEach((field: any) => {
           const label = field.label.toLowerCase();
-          if (!fills[field.id]) {
-            if (/manufacturer|make/.test(label) && data.manufacturer) fills[field.id] = data.manufacturer;
-            else if (/model/.test(label) && data.model) fills[field.id] = data.model;
-            else if (/serial/.test(label) && data.serial) fills[field.id] = data.serial;
-            else if (/refrigerant/.test(label) && data.refrigerant) fills[field.id] = data.refrigerant;
-            else if (/voltage/.test(label) && data.voltage) fills[field.id] = data.voltage;
-            else if (/tonnage|tons/.test(label) && data.tonnage) fills[field.id] = data.tonnage;
-            else if (/mca/.test(label) && data.mca) fills[field.id] = data.mca;
-            else if (/mop/.test(label) && data.mop) fills[field.id] = data.mop;
-            else if (/rla/.test(label) && data.rla) fills[field.id] = data.rla;
-            else if (/fla/.test(label) && data.fla) fills[field.id] = data.fla;
+          if (field.nameplateField && np[field.nameplateField]) {
+            fills[field.id] = np[field.nameplateField]; return;
           }
+          if (/manufacturer|make/.test(label) && np.manufacturer) fills[field.id] = np.manufacturer;
+          else if (/model/.test(label) && np.model) fills[field.id] = np.model;
+          else if (/serial/.test(label) && np.serial) fills[field.id] = np.serial;
+          else if (/refrigerant/.test(label) && np.refrigerant) fills[field.id] = np.refrigerant;
+          else if (/voltage/.test(label) && np.voltage) fills[field.id] = np.voltage;
+          else if (/tonnage|tons/.test(label) && np.tonnage) fills[field.id] = np.tonnage;
+          else if (/mca/.test(label) && np.mca) fills[field.id] = np.mca;
+          else if (/mop/.test(label) && np.mop) fills[field.id] = np.mop;
+          else if (/rla/.test(label) && np.rla) fills[field.id] = np.rla;
+          else if (/fla/.test(label) && np.fla) fills[field.id] = np.fla;
+          else if (/phase/.test(label) && np.phase) fills[field.id] = np.phase;
+          else if (/hz|hertz|freq/.test(label) && np.hz) fills[field.id] = np.hz;
         });
 
         const count = Object.keys(fills).length;
         setValues(prev => ({ ...prev, ...fills }));
         if (count === 0) alert("Nameplate read but no matching form fields found. Fields may need different labels.");
       } else {
-        alert("Could not read nameplate. Make sure the photo is clear and shows the unit data plate.");
+        alert("Could not read nameplate: " + (json?.error || "Make sure the photo clearly shows the unit data plate."));
       }
     } catch (e: any) {
       console.error("Photo analysis failed:", e);
