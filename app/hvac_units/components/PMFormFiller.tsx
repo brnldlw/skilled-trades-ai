@@ -87,6 +87,8 @@ export function PMFormFiller({
   const [saved, setSaved] = useState(false);
   const [view, setView] = useState<"list" | "fill" | "upload">("list");
   const [loadingForms, setLoadingForms] = useState(true);
+  const [pdfFieldCount, setPdfFieldCount] = useState(0);
+  const [downloadStatus, setDownloadStatus] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
 
@@ -94,6 +96,15 @@ export function PMFormFiller({
   useEffect(() => {
     loadForms();
   }, []);
+
+  // Load PDF field count when form is selected
+  useEffect(() => {
+    if (!selectedForm?.id) return;
+    fetch(`/api/pm-forms-fill?formId=${selectedForm.id}`)
+      .then(r => r.json())
+      .then(d => setPdfFieldCount(d.pdfFields?.length || 0))
+      .catch(() => {});
+  }, [selectedForm?.id]);
 
   // Auto-fill nameplate fields when form is selected
   useEffect(() => {
@@ -269,26 +280,31 @@ export function PMFormFiller({
 
   async function downloadFilledPDF() {
     if (!selectedForm?.id) {
-      // Form not saved to DB — download text fallback
       downloadTextFallback();
       return;
     }
     setSaved(false);
+    setDownloadStatus("Filling PDF fields...");
     try {
+      const filledValues = Object.fromEntries(
+        Object.entries(values).filter(([_, v]) => v !== "" && v !== false && v !== undefined)
+      );
+
       const res = await fetch("/api/pm-forms-fill", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ formId: selectedForm.id, values }),
+        body: JSON.stringify({ formId: selectedForm.id, values: filledValues }),
       });
 
       if (!res.ok) {
-        const err = await res.json();
+        const err = await res.json().catch(() => ({}));
         console.error("PDF fill error:", err);
-        // Fall back to text download
+        setDownloadStatus("PDF fill failed — downloading as text instead.");
         downloadTextFallback();
         return;
       }
 
+      const filledCount = res.headers.get("X-Fields-Filled") || "?";
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -297,9 +313,11 @@ export function PMFormFiller({
       a.click();
       URL.revokeObjectURL(url);
       setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
+      setDownloadStatus(`✅ PDF downloaded with ${filledCount} fields filled.`);
+      setTimeout(() => { setSaved(false); setDownloadStatus(""); }, 4000);
     } catch (e: any) {
       console.error("Download failed:", e);
+      setDownloadStatus("Error — downloading as text instead.");
       downloadTextFallback();
     }
   }
@@ -479,9 +497,19 @@ export function PMFormFiller({
 
         {/* Download / Save actions */}
         <div style={{ marginTop: 20, padding: "16px", background: "#f8fafc", borderRadius: 10, border: "1px solid #e2e8f0" }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 12 }}>
-            {pct === 100 ? "✅ Form complete — ready to save" : `Form ${pct}% complete — save anytime`}
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 4 }}>
+            {pct === 100 ? "✅ Form complete — ready to download" : `Form ${pct}% complete`}
           </div>
+          {pdfFieldCount > 0 && (
+            <div style={{ fontSize: 12, color: "#64748b", marginBottom: 12 }}>
+              PDF has {pdfFieldCount} fillable fields — values will be written directly into the PDF.
+            </div>
+          )}
+          {downloadStatus && (
+            <div style={{ marginBottom: 10, padding: "8px 12px", background: "#eff6ff", borderRadius: 8, fontSize: 12, color: "#1d4ed8" }}>
+              {downloadStatus}
+            </div>
+          )}
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" as const }}>
             <button onClick={downloadFilledPDF}
               style={{ padding: "10px 18px", background: "#16a34a", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}>
@@ -489,11 +517,8 @@ export function PMFormFiller({
             </button>
             <button onClick={copyToClipboard}
               style={{ padding: "10px 18px", background: "#fff", color: "#374151", border: "1px solid #e2e8f0", borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}>
-              📋 Copy to Clipboard
+              📋 Copy as Text
             </button>
-          </div>
-          <div style={{ marginTop: 8, fontSize: 11, color: "#94a3b8" }}>
-            Download as a text file to attach to an email, work order, or your service management software.
           </div>
         </div>
       </div>
