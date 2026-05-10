@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (Object.keys(updateData).length > 0) {
-      await supabase.from("profiles").update(updateData).eq("id", userId);
+      await supabaseAdmin.from("profiles").update(updateData).eq("id", userId);
     }
 
 
