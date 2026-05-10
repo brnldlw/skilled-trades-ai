@@ -64,12 +64,21 @@ function OverrideForm({ user, onSave, onCancel }: OverrideFormProps) {
     setSaving(true);
     setError("");
     try {
-      await adminSetOverride(
-        user.id,
-        tier,
-        hasExpiry ? new Date(expiry).toISOString() : null,
-        note || null
-      );
+      const res = await fetch("/api/admin/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user.id,
+          overrideTier: tier,
+          overrideExpiresAt: hasExpiry ? new Date(expiry).toISOString() : null,
+          overrideNote: note || null,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        setError(err?.error || "Save failed");
+        return;
+      }
       onSave();
     } catch (e: any) {
       setError(e?.message || "Save failed");
@@ -133,6 +142,63 @@ function OverrideForm({ user, onSave, onCancel }: OverrideFormProps) {
           Cancel
         </button>
       </div>
+
+      <div style={{ borderTop: "1px solid #e2e8f0", marginTop: 16, paddingTop: 14 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 10 }}>
+          💰 Estimator Add-on Override
+        </div>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" as const }}>
+          {[
+            { label: "1 Free Quote", tier: "single", credits: 1 },
+            { label: "3 Free Quotes", tier: "single", credits: 3 },
+            { label: "Monthly 20", tier: "monthly_20", credits: 0 },
+            { label: "Unlimited", tier: "monthly_unlimited", credits: 0 },
+          ].map(opt => (
+            <button
+              key={opt.label}
+              onClick={async () => {
+                setSaving(true);
+                try {
+                  await fetch("/api/admin/users", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      userId: user.id,
+                      estimatorTier: opt.tier,
+                      estimatorCredits: opt.credits,
+                    }),
+                  });
+                  onSave();
+                } catch(e) {}
+                setSaving(false);
+              }}
+              style={{ padding: "7px 14px", background: "#f97316", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
+            >
+              Grant: {opt.label}
+            </button>
+          ))}
+          <button
+            onClick={async () => {
+              setSaving(true);
+              try {
+                await fetch("/api/admin/users", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ userId: user.id, estimatorTier: "none", estimatorCredits: 0 }),
+                });
+                onSave();
+              } catch(e) {}
+              setSaving(false);
+            }}
+            style={{ padding: "7px 14px", background: "#fff", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
+          >
+            Revoke Estimator
+          </button>
+        </div>
+        <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 8 }}>
+          Grant a free trial — tech gets the estimator unlocked instantly. Perfect for converting fence-sitters.
+        </div>
+      </div>
     </div>
   );
 }
@@ -153,11 +219,13 @@ export function AdminPanel() {
     setLoading(true);
     try {
       const res = await fetch("/api/admin/users");
-      if (!res.ok) { setError("Failed to load users"); return; }
+      if (!res.ok) {
+        const err = await res.json();
+        setError(err?.error || "Failed to load users");
+        return;
+      }
       const data = await res.json();
       setUsers(data.users || []);
-      return;
-      setUsers(data);
     } catch (e: any) {
       setError(e?.message || "Failed to load users");
     } finally {
@@ -171,7 +239,12 @@ export function AdminPanel() {
     if (!confirm("Revoke override access? User will revert to their paid plan or free tier.")) return;
     setRevoking(userId);
     try {
-      await adminRevokeOverride(userId);
+      const res = await fetch("/api/admin/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, overrideTier: null, overrideExpiresAt: null, overrideNote: null }),
+      });
+      if (!res.ok) throw new Error("Revoke failed");
       setMessage("Override revoked.");
       await load();
     } catch (e: any) {
