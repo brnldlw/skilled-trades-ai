@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
@@ -40,7 +41,6 @@ export async function GET(req: NextRequest) {
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (error) throw error;
 
     return NextResponse.json({ users: data || [] });
   } catch (err: any) {
@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { userId, overrideTier, overrideExpiresAt, overrideNote, estimatorTier, estimatorCredits } = body;
 
-    const { error } =     const updateData: Record<string, any> = {};
+    const updateData: Record<string, any> = {};
 
     // Handle subscription override
     if (overrideTier !== undefined) {
@@ -100,7 +100,6 @@ export async function POST(req: NextRequest) {
       await supabase.from("profiles").update(updateData).eq("id", userId);
     }
 
-    if (error) throw error;
 
     return NextResponse.json({ ok: true });
   } catch (err: any) {
