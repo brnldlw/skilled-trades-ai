@@ -2,6 +2,15 @@ import { createClient } from "./client";
 
 // ─── Types ────────────────────────────────────────────────────
 export type SubscriptionTier = "free" | "solo" | "shop_5" | "shop_10";
+export type EstimatorTier = "none" | "single" | "monthly_20" | "monthly_unlimited";
+
+export type EstimatorAccess = {
+  tier: EstimatorTier;
+  credits: number; // for single-use
+  quotesUsedThisMonth: number;
+  monthlyLimit: number; // 20 for monthly_20, Infinity for unlimited
+  canCreate: boolean;
+};
 
 export type UserProfile = {
   id: string;
@@ -180,6 +189,24 @@ export async function adminSetOverride(
 // ─── Admin: revoke override ───────────────────────────────────
 export async function adminRevokeOverride(userId: string): Promise<void> {
   return adminSetOverride(userId, null, null, null);
+}
+
+// ─── Estimator access check ───────────────────────────────────
+export function getEstimatorAccess(profile: any): EstimatorAccess {
+  const tier: EstimatorTier = profile?.estimator_tier || "none";
+  const credits: number = profile?.estimator_credits || 0;
+  const quotesUsedThisMonth: number = profile?.estimator_quotes_this_month || 0;
+
+  if (tier === "monthly_unlimited") {
+    return { tier, credits, quotesUsedThisMonth, monthlyLimit: Infinity, canCreate: true };
+  }
+  if (tier === "monthly_20") {
+    return { tier, credits, quotesUsedThisMonth, monthlyLimit: 20, canCreate: quotesUsedThisMonth < 20 };
+  }
+  if (tier === "single" && credits > 0) {
+    return { tier, credits, quotesUsedThisMonth, monthlyLimit: credits, canCreate: true };
+  }
+  return { tier: "none", credits: 0, quotesUsedThisMonth: 0, monthlyLimit: 0, canCreate: false };
 }
 
 // ─── Track AI query usage (daily limit for free tier) ─────────

@@ -65,6 +65,7 @@ import { FilterReference } from "./components/FilterReference";
 import { RefrigerantReference } from "./components/RefrigerantReference";
 import { WiringReference } from "./components/WiringReference";
 import { PMFormFiller } from "./components/PMFormFiller";
+import { EstimatorSection } from "./components/EstimatorSection";
 
 import { FailurePredictionDashboard } from "../components/FailurePredictionDashboard";
 
@@ -12831,8 +12832,25 @@ return (
             <PMFormFiller
               manufacturer={manufacturer}
               model={model}
-              serial={serialNumber}
+              serial={serial}
               refrigerantType={refrigerantType}
+              equipmentType={equipmentType}
+            />
+          </div>
+        </SectionCard>
+      </div>
+
+{/* estimator-section-v1 */}
+      <div style={{ marginTop: 10 }}>
+        <SectionCard title="📋 Replacement Quote Estimator" id="estimator">
+          <SmallHint>
+            AI-powered replacement quote tool. Photo the job site, answer a few questions,
+            and get a complete scope of work, equipment options, crane requirements, and pricing estimate.
+          </SmallHint>
+          <div style={{ marginTop: 12 }}>
+            <EstimatorSection
+              manufacturer={manufacturer}
+              model={model}
               equipmentType={equipmentType}
             />
           </div>

@@ -6,13 +6,20 @@ export const runtime = "nodejs";
 
 // YOUR STRIPE PRICE IDs - update these after creating products in Stripe dashboard
 const PRICES = {
-  solo_monthly:   process.env.STRIPE_PRICE_SOLO_MONTHLY   || "price_solo_monthly",
-  solo_annual:    process.env.STRIPE_PRICE_SOLO_ANNUAL     || "price_solo_annual",
-  shop5_monthly:  process.env.STRIPE_PRICE_SHOP5_MONTHLY  || "price_shop5_monthly",
-  shop5_annual:   process.env.STRIPE_PRICE_SHOP5_ANNUAL   || "price_shop5_annual",
-  shop10_monthly: process.env.STRIPE_PRICE_SHOP10_MONTHLY || "price_shop10_monthly",
-  shop10_annual:  process.env.STRIPE_PRICE_SHOP10_ANNUAL  || "price_shop10_annual",
+  solo_monthly:              process.env.STRIPE_PRICE_SOLO_MONTHLY              || "price_solo_monthly",
+  solo_annual:               process.env.STRIPE_PRICE_SOLO_ANNUAL               || "price_solo_annual",
+  shop5_monthly:             process.env.STRIPE_PRICE_SHOP5_MONTHLY             || "price_shop5_monthly",
+  shop5_annual:              process.env.STRIPE_PRICE_SHOP5_ANNUAL              || "price_shop5_annual",
+  shop10_monthly:            process.env.STRIPE_PRICE_SHOP10_MONTHLY            || "price_shop10_monthly",
+  shop10_annual:             process.env.STRIPE_PRICE_SHOP10_ANNUAL             || "price_shop10_annual",
+  // Estimator add-on prices
+  estimator_single:          process.env.STRIPE_PRICE_ESTIMATOR_SINGLE          || "price_estimator_single",
+  estimator_monthly_20:      process.env.STRIPE_PRICE_ESTIMATOR_MONTHLY_20      || "price_estimator_monthly_20",
+  estimator_monthly_unlimited: process.env.STRIPE_PRICE_ESTIMATOR_MONTHLY_UNLIMITED || "price_estimator_monthly_unlimited",
 };
+
+// Estimator plans use payment_intent (one-time) or subscription mode
+const ESTIMATOR_PLANS = ["estimator_single", "estimator_monthly_20", "estimator_monthly_unlimited"];
 
 export async function POST(req: NextRequest) {
   try {
@@ -40,13 +47,21 @@ export async function POST(req: NextRequest) {
     }
 
     // Pick price ID
-    const priceKey = `${plan.replace("_", "")}_${billing}` as keyof typeof PRICES;
-    const priceId = PRICES[priceKey];
+    let priceId: string;
+    let mode: "payment" | "subscription" = "subscription";
+
+    if (ESTIMATOR_PLANS.includes(plan)) {
+      priceId = PRICES[plan as keyof typeof PRICES];
+      mode = plan === "estimator_single" ? "payment" : "subscription";
+    } else {
+      const priceKey = `${plan.replace("_", "")}_${billing}` as keyof typeof PRICES;
+      priceId = PRICES[priceKey];
+    }
 
     const stripe = require("stripe")(stripeKey);
 
     const session = await stripe.checkout.sessions.create({
-      mode: "subscription",
+      mode,
       payment_method_types: ["card"],
       customer_email: user.email,
       line_items: [{ price: priceId, quantity: 1 }],

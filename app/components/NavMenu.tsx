@@ -57,6 +57,7 @@ const NAV_SECTIONS = [
     heading: "Closeout & Compliance",
     items: [
       { label: "PM Form Filler", href: "/hvac_units#pm-forms", icon: "📋" },
+      { label: "Quote Estimator", href: "/hvac_units#estimator", icon: "💰" },
       { label: "Refrigerant Log", href: "/hvac_units#refrigerant-log", icon: "🧪" },
       { label: "Customer Report", href: "/hvac_units#customer-report", icon: "📄" },
       { label: "Parts Lookup", href: "/hvac_units#parts-lookup", icon: "🔍" },

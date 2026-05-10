@@ -14,6 +14,9 @@ const PRICE_TO_TIER: Record<string, string> = {
   "price_solo_annual":      "solo",
   "price_shop5_annual":     "shop_5",
   "price_shop10_annual":    "shop_10",
+  // Estimator add-ons (env var price IDs)
+  [process.env.STRIPE_PRICE_ESTIMATOR_MONTHLY_20 || "price_estimator_monthly_20"]: "estimator_monthly_20",
+  [process.env.STRIPE_PRICE_ESTIMATOR_MONTHLY_UNLIMITED || "price_estimator_monthly_unlimited"]: "estimator_monthly_unlimited",
 };
 
 function getSupabaseAdmin() {
@@ -46,12 +49,16 @@ async function updateUserSubscription(
   await supabase
     .from("profiles")
     .update({
-      subscription_tier: tier,
-      subscription_status: status,
-      stripe_subscription_id: subscriptionId,
-      current_period_end: periodEnd
-        ? new Date(periodEnd * 1000).toISOString()
-        : null,
+      ...(isEstimatorTier ? {
+        estimator_tier: tier.replace("estimator_", ""),
+        estimator_subscription_id: subscriptionId,
+        estimator_period_end: periodEnd ? new Date(periodEnd * 1000).toISOString() : null,
+      } : {
+        subscription_tier: tier,
+        subscription_status: status,
+        stripe_subscription_id: subscriptionId,
+        current_period_end: periodEnd ? new Date(periodEnd * 1000).toISOString() : null,
+      }),
     })
     .eq("id", profiles[0].id);
 }
@@ -81,11 +88,27 @@ export async function POST(req: NextRequest) {
 
       case "checkout.session.completed": {
         const session = event.data.object;
+        // Handle one-time estimator purchase
+        if (session.mode === "payment") {
+          const supabase = getSupabaseAdmin();
+          const userId = session.metadata?.user_id;
+          if (userId) {
+            const { data: profile } = await supabase.from("profiles").select("estimator_credits").eq("id", userId).single();
+            const currentCredits = (profile as any)?.estimator_credits || 0;
+            await supabase.from("profiles").update({
+              estimator_tier: "single",
+              estimator_credits: currentCredits + 1,
+            }).eq("id", userId);
+          }
+          break;
+        }
+
         if (session.mode === "subscription") {
           const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
           const subscription = await stripe.subscriptions.retrieve(session.subscription);
           const priceId = subscription.items.data[0]?.price?.id;
           const tier = PRICE_TO_TIER[priceId] || "solo";
+          const isEstimatorTier = tier.startsWith("estimator_");
 
           // Link Stripe customer to Supabase user via email
           const supabase = getSupabaseAdmin();
