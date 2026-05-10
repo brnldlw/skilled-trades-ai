@@ -31,10 +31,18 @@ export async function POST(req: Request) {
     const normalizedName = companyName.toLowerCase().replace(/\s+/g, " ").trim();
     const companyId = crypto.randomUUID();
 
+    // Set 14-day free trial on signup — Solo tier, expires in 14 days
+    const trialExpiry = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+
     const { error: profileError } = await supabase.from("profiles").upsert(
       {
         id: userId,
         email: email || null,
+        override_tier: "solo",
+        override_expires_at: trialExpiry,
+        override_note: "14-day free trial — auto-granted on signup",
+        subscription_tier: "free",
+        subscription_status: "trial",
       },
       { onConflict: "id" }
     );

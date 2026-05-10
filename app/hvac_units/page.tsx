@@ -71,6 +71,69 @@ import { FailurePredictionDashboard } from "../components/FailurePredictionDashb
 
 import { StepProgressBar } from "./components/StepProgressBar";
 
+// ── Trial Banner (inline component) ──────────────────────────
+function TrialBanner() {
+  const [profile, setProfile] = React.useState<any>(null);
+  React.useEffect(() => {
+    import("../lib/supabase/subscription").then(m => m.getUserProfile()).then(p => setProfile(p));
+  }, []);
+
+  if (!profile?.override_tier || profile.override_tier === "free") return null;
+  if (!profile.override_expires_at) return null;
+
+  const expiry = new Date(profile.override_expires_at);
+  const now = new Date();
+  const daysLeft = Math.ceil((expiry.getTime() - now.getTime()) / 86400000);
+
+  if (daysLeft <= 0) return null;
+
+  const isLastDay = daysLeft <= 3;
+
+  return (
+    <div style={{
+      background: isLastDay ? "#fef2f2" : "#eff6ff",
+      border: `1px solid ${isLastDay ? "#fecaca" : "#bae6fd"}`,
+      borderRadius: 10,
+      padding: "10px 16px",
+      marginBottom: 12,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 12,
+      flexWrap: "wrap" as const,
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <span style={{ fontSize: 20 }}>{isLastDay ? "⏰" : "🎉"}</span>
+        <div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: isLastDay ? "#dc2626" : "#1d4ed8" }}>
+            {isLastDay
+              ? `Your free trial ends in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}`
+              : `Free trial — ${daysLeft} day${daysLeft !== 1 ? "s" : ""} remaining`}
+          </div>
+          <div style={{ fontSize: 11, color: "#64748b", marginTop: 1 }}>
+            {isLastDay
+              ? "Subscribe to keep full access to all features."
+              : "Full access to all features — no card needed. Subscribe anytime to keep it."}
+          </div>
+        </div>
+      </div>
+      <a href="/checkout" style={{
+        padding: "7px 16px",
+        background: isLastDay ? "#dc2626" : "#f97316",
+        color: "#fff",
+        borderRadius: 8,
+        fontWeight: 700,
+        fontSize: 12,
+        textDecoration: "none",
+        flexShrink: 0,
+        whiteSpace: "nowrap" as const,
+      }}>
+        {isLastDay ? "Subscribe Now" : "See Plans"}
+      </a>
+    </div>
+  );
+}
+
 import { calcSystemHealthScore } from "./lib/systemHealthScore";
 import type { ParsedReading } from "./components/VoiceInput";
 
@@ -9680,6 +9743,7 @@ if (needsCompanyOnboarding) {
 return (
   <div style={{ paddingTop: 98 }}>
     <NavMenu currentPath="/hvac_units" />
+    <TrialBanner />
     <StepProgressBar />
   <div style={{ padding: "12px 14px 48px", maxWidth: 820, margin: "0 auto" }}>
       <h1 style={{ fontSize: 22, fontWeight: 900, color: "#0f1f3d", marginBottom: 4 }}>
@@ -12832,7 +12896,7 @@ return (
             <PMFormFiller
               manufacturer={manufacturer}
               model={model}
-              serial={serialNumber}
+              serial={serial}
               refrigerantType={refrigerantType}
               equipmentType={equipmentType}
             />
