@@ -112,8 +112,23 @@ export function LearningHub({ currentSymptom, currentCause, equipmentType }: Lea
     return aMatch - bMatch;
   });
 
+  function replayTour() {
+    try { localStorage.removeItem("mhvacr_tour_v1_complete"); } catch {}
+    window.location.reload();
+  }
+
   return (
     <div>
+      <div style={{ marginBottom: 14, padding: "12px 14px", background: "#eff6ff", border: "1px solid #bae6fd", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+        <div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#1d4ed8" }}>📱 App Tour</div>
+          <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>Replay the guided intro to see all features</div>
+        </div>
+        <button onClick={replayTour}
+          style={{ padding: "7px 16px", background: "#2563eb", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}>
+          Replay Tour
+        </button>
+      </div>
       {/* Job context suggestion */}
       {suggestedTags.length > 0 && (
         <div style={{ marginBottom: 12, padding: "10px 14px", background: "#eff6ff", border: "1px solid #bae6fd", borderRadius: 10, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" as const }}>

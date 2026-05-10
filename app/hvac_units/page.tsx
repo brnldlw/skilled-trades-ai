@@ -70,6 +70,7 @@ import { EstimatorSection } from "./components/EstimatorSection";
 import { FailurePredictionDashboard } from "../components/FailurePredictionDashboard";
 
 import { StepProgressBar } from "./components/StepProgressBar";
+import { OnboardingTour } from "./components/OnboardingTour";
 
 // ── Trial Banner (inline component) ──────────────────────────
 function TrialBanner() {
@@ -9743,6 +9744,7 @@ if (needsCompanyOnboarding) {
 return (
   <div style={{ paddingTop: 98 }}>
     <NavMenu currentPath="/hvac_units" />
+    <OnboardingTour />
     <TrialBanner />
     <StepProgressBar />
   <div style={{ padding: "12px 14px 48px", maxWidth: 820, margin: "0 auto" }}>
