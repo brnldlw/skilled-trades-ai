@@ -168,31 +168,31 @@ export function PMFormFiller({
         setUploadMsg("⚠️ No fields detected. Make sure the PDF is not a scanned image — it must have readable text. Try a different PDF.");
         return;
       }
-      setUploadMsg(`✅ Found ${fieldCount} fields. Opening form...`);
-      // Use the form returned directly from the API — don't wait for DB reload
+      const autoMapped = json.autoMapped || 0;
+      setUploadMsg(`✅ Found ${fieldCount} fields. ${autoMapped > 0 ? `AI auto-mapped ${autoMapped} fields. ` : ""}Opening form...`);
       const returnedForm = json.form || { id: null, name: formName, fields: json.fields, file_name: "" };
-      // Ensure fields are set on the form object
       returnedForm.fields = json.fields;
       setSelectedForm(returnedForm);
       setValues({});
       await loadForms();
-      // Load PDF field names for mapping
-      if (returnedForm.id) {
-        fetch(`/api/pm-forms-fill?formId=${returnedForm.id}`)
-          .then(r => r.json())
-          .then(d => {
-            // Get ALL fields sorted numerically - this gives the complete list
-            const allNames = (d.pdfFields || [])
-              .sort((a: any, b: any) => {
-                const na = parseInt(a.name.replace(/\D/g, "") || "0");
-                const nb = parseInt(b.name.replace(/\D/g, "") || "0");
-                return na - nb;
-              })
-              .map((f: any) => ({ name: f.name, type: f.type }));
-            setPdfFieldNames(allNames.map((f: any) => f.name));
-          }).catch(() => {});
+      // If AI vision mapped most fields, go straight to fill
+      if (autoMapped >= Math.max(fieldCount * 0.5, 3)) {
+        setTimeout(() => setView("fill"), 1000);
+      } else {
+        // Load PDF fields for manual mapping screen
+        if (returnedForm.id) {
+          fetch(`/api/pm-forms-fill?formId=${returnedForm.id}`)
+            .then(r => r.json())
+            .then(d => {
+              const allNames = (d.pdfFields || [])
+                .filter((f: any) => f.type === "text")
+                .sort((a: any, b: any) => parseInt(a.name.replace(/[^0-9]/g, "")) - parseInt(b.name.replace(/[^0-9]/g, "")))
+                .map((f: any) => f.name);
+              setPdfFieldNames(allNames);
+            }).catch(() => {});
+        }
+        setTimeout(() => setView("map"), 1000);
       }
-      setTimeout(() => setView("map"), 800);
     } catch (e: any) {
       setUploadMsg("Error: " + e?.message);
     } finally {

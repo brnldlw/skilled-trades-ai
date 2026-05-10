@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     if (!user) return NextResponse.json({ error: "Not logged in" }, { status: 401 });
 
     const body = await req.json();
-    const { formId, values, fieldMappings } = body;
+    const { formId, values } = body;
     if (!formId || !values) return NextResponse.json({ error: "formId and values required" }, { status: 400 });
 
     const supabase = createClient(
@@ -54,7 +54,26 @@ export async function POST(req: NextRequest) {
     const ourTextFields = ourFields.filter(f => f.type !== "checkbox");
     const ourCheckFields = ourFields.filter(f => f.type === "checkbox");
 
+    // PRIORITY 0: Use pdfFieldName stored directly on field objects (from vision auto-mapping)
+    const hasStoredNames = ourTextFields.some((f: any) => f.pdfFieldName);
+    if (hasStoredNames && (!fieldMappings || Object.keys(fieldMappings).length === 0)) {
+      console.log("Using stored pdfFieldName from vision analysis");
+      for (const ourField of ourTextFields) {
+        const val = values[ourField.id];
+        const pdfName = ourField.pdfFieldName;
+        if (!val || !pdfName) continue;
+        try {
+          pdfForm.getTextField(pdfName).setText(String(val));
+          filledCount++;
+          console.log(`✓ "${ourField.label}" → "${pdfName}"`);
+        } catch (e) {
+          console.warn(`✗ Could not fill "${pdfName}"`);
+        }
+      }
+    }
+
     // PRIORITY 1: Use explicit fieldMappings from the UI (most accurate)
+    if (!hasStoredNames || (fieldMappings && Object.keys(fieldMappings).length > 0)) {
     if (fieldMappings && Object.keys(fieldMappings).length > 0) {
       console.log("Using explicit field mappings from UI");
       for (const ourField of ourTextFields) {
@@ -94,6 +113,8 @@ export async function POST(req: NextRequest) {
         try { textFields[i].setText(String(val)); filledCount++; } catch {}
       }
     }
+
+    } // end priority check
 
     // Checkboxes — use mappings if available
     for (let i = 0; i < ourCheckFields.length; i++) {
