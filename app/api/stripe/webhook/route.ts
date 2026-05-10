@@ -28,6 +28,7 @@ function getSupabaseAdmin() {
 async function updateUserSubscription(
   customerId: string,
   tier: string,
+  isEstimatorTier: boolean = false,
   status: string,
   subscriptionId: string,
   periodEnd: number | null
@@ -46,19 +47,18 @@ async function updateUserSubscription(
     return;
   }
 
+  const isEst = isEstimatorTier || tier.startsWith("estimator_");
   await supabase
     .from("profiles")
-    .update({
-      ...(isEstimatorTier ? {
-        estimator_tier: tier.replace("estimator_", ""),
-        estimator_subscription_id: subscriptionId,
-        estimator_period_end: periodEnd ? new Date(periodEnd * 1000).toISOString() : null,
-      } : {
-        subscription_tier: tier,
-        subscription_status: status,
-        stripe_subscription_id: subscriptionId,
-        current_period_end: periodEnd ? new Date(periodEnd * 1000).toISOString() : null,
-      }),
+    .update(isEst ? {
+      estimator_tier: tier.replace("estimator_", ""),
+      estimator_subscription_id: subscriptionId,
+      estimator_period_end: periodEnd ? new Date(periodEnd * 1000).toISOString() : null,
+    } : {
+      subscription_tier: tier,
+      subscription_status: status,
+      stripe_subscription_id: subscriptionId,
+      current_period_end: periodEnd ? new Date(periodEnd * 1000).toISOString() : null,
     })
     .eq("id", profiles[0].id);
 }
@@ -119,18 +119,23 @@ export async function POST(req: NextRequest) {
             .limit(1);
 
           if (profiles && profiles.length > 0) {
-            await supabase
-              .from("profiles")
-              .update({
-                stripe_customer_id: session.customer,
-                subscription_tier: tier,
-                subscription_status: "active",
-                stripe_subscription_id: session.subscription,
-                current_period_end: subscription.current_period_end
-                  ? new Date(subscription.current_period_end * 1000).toISOString()
-                  : null,
-              })
-              .eq("id", profiles[0].id);
+            const updateData = isEstimatorTier ? {
+              stripe_customer_id: session.customer,
+              estimator_tier: tier.replace("estimator_", ""),
+              estimator_subscription_id: session.subscription,
+              estimator_period_end: subscription.current_period_end
+                ? new Date(subscription.current_period_end * 1000).toISOString()
+                : null,
+            } : {
+              stripe_customer_id: session.customer,
+              subscription_tier: tier,
+              subscription_status: "active",
+              stripe_subscription_id: session.subscription,
+              current_period_end: subscription.current_period_end
+                ? new Date(subscription.current_period_end * 1000).toISOString()
+                : null,
+            };
+            await supabase.from("profiles").update(updateData).eq("id", profiles[0].id);
           }
         }
         break;
