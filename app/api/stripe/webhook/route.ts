@@ -28,10 +28,10 @@ function getSupabaseAdmin() {
 async function updateUserSubscription(
   customerId: string,
   tier: string,
-  isEstimatorTier: boolean = false,
   status: string,
   subscriptionId: string,
-  periodEnd: number | null
+  periodEnd: number | null,
+  isEstimatorTier: boolean = false
 ) {
   const supabase = getSupabaseAdmin();
 
@@ -150,7 +150,8 @@ export async function POST(req: NextRequest) {
           tier,
           sub.status === "active" ? "active" : sub.status,
           sub.id,
-          sub.current_period_end
+          sub.current_period_end,
+          tier.startsWith("estimator_")
         );
         break;
       }
@@ -162,7 +163,8 @@ export async function POST(req: NextRequest) {
           "free",
           "cancelled",
           sub.id,
-          null
+          null,
+          false
         );
         break;
       }
