@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     if (!user) return NextResponse.json({ error: "Not logged in" }, { status: 401 });
 
     const body = await req.json();
-    const { formId, values } = body;
+    const { formId, values, fieldMappings } = body as any;
     if (!formId || !values) return NextResponse.json({ error: "formId and values required" }, { status: 400 });
 
     const supabase = createClient(
