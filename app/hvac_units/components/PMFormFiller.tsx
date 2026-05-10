@@ -181,8 +181,15 @@ export function PMFormFiller({
         fetch(`/api/pm-forms-fill?formId=${returnedForm.id}`)
           .then(r => r.json())
           .then(d => {
-            const names = (d.pdfFields || []).filter((f: any) => f.type === "text").map((f: any) => f.name);
-            setPdfFieldNames(names);
+            // Get ALL fields sorted numerically - this gives the complete list
+            const allNames = (d.pdfFields || [])
+              .sort((a: any, b: any) => {
+                const na = parseInt(a.name.replace(/\D/g, "") || "0");
+                const nb = parseInt(b.name.replace(/\D/g, "") || "0");
+                return na - nb;
+              })
+              .map((f: any) => ({ name: f.name, type: f.type }));
+            setPdfFieldNames(allNames.map((f: any) => f.name));
           }).catch(() => {});
       }
       setTimeout(() => setView("map"), 800);
@@ -405,8 +412,14 @@ export function PMFormFiller({
                     fetch(`/api/pm-forms-fill?formId=${form.id}`)
                       .then(r => r.json())
                       .then(d => {
-                        const names = (d.pdfFields || []).filter((f: any) => f.type === "text").map((f: any) => f.name);
-                        setPdfFieldNames(names);
+                        const allNames = (d.pdfFields || [])
+                          .sort((a: any, b: any) => {
+                            const na = parseInt(a.name.replace(/\D/g, "") || "0");
+                            const nb = parseInt(b.name.replace(/\D/g, "") || "0");
+                            return na - nb;
+                          })
+                          .map((f: any) => f.name);
+                        setPdfFieldNames(allNames);
                         // Load saved mappings if any
                         const saved = localStorage.getItem(`fm_${form.id}`);
                         if (saved) { setFieldMappings(JSON.parse(saved)); setView("fill"); }
@@ -796,15 +809,25 @@ function MapView({ form, pdfFieldNames, onSave, onSkip, onBack }: {
   onSkip: () => void;
   onBack: () => void;
 }) {
-  const fields: any[] = Array.isArray(form.fields) ? form.fields.filter((f: any) => f.type !== "checkbox") : [];
+  const fields: any[] = Array.isArray(form.fields) ? form.fields : [];
+
+  // Sort PDF field names numerically so 1,2,3...10,11 not 1,10,11,2,3
+  const sortedPdfFields = [...pdfFieldNames].sort((a, b) => {
+    const na = parseInt(a.replace(/\D/g, "") || "0");
+    const nb = parseInt(b.replace(/\D/g, "") || "0");
+    return na - nb;
+  });
+
   const [mappings, setMappings] = useState<Record<string, string>>(() => {
-    // Pre-fill with positional guesses
+    // Pre-fill sequentially using sorted order
     const m: Record<string, string> = {};
     fields.forEach((f: any, i: number) => {
-      if (pdfFieldNames[i]) m[f.id] = pdfFieldNames[i];
+      if (sortedPdfFields[i]) m[f.id] = sortedPdfFields[i];
     });
     return m;
   });
+
+  const mappedCount = Object.values(mappings).filter(v => v).length;
 
   return (
     <div>
@@ -812,32 +835,37 @@ function MapView({ form, pdfFieldNames, onSave, onSkip, onBack }: {
         ← Back
       </button>
 
-      <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 10, padding: "12px 16px", marginBottom: 16 }}>
-        <div style={{ fontSize: 14, fontWeight: 800, color: "#92400e", marginBottom: 4 }}>📋 One-time field mapping</div>
+      <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 10, padding: "12px 16px", marginBottom: 12 }}>
+        <div style={{ fontSize: 14, fontWeight: 800, color: "#92400e", marginBottom: 4 }}>📋 Map fields once — works forever after</div>
         <div style={{ fontSize: 12, color: "#92400e", lineHeight: 1.6 }}>
-          Your PDF uses generic field names (Text Field 1, Text Field 2...). Match each field label on the left to the correct PDF field slot on the right. This only needs to be done once — it saves automatically.
+          Open your PDF and press <strong>Tab</strong> to move through each field in order. The field that highlights = the PDF slot number. Match your field label on the left to the correct slot on the right.
+          {sortedPdfFields.length > 0 && <span> PDF has <strong>{sortedPdfFields.length}</strong> slots (Text Field 1–{sortedPdfFields[sortedPdfFields.length - 1]}).</span>}
         </div>
       </div>
 
-      <div style={{ marginBottom: 10, display: "flex", gap: 8 }}>
-        <div style={{ flex: 1, fontSize: 12, fontWeight: 700, color: "#374151", padding: "6px 10px", background: "#f1f5f9", borderRadius: 6 }}>Your Field Label</div>
-        <div style={{ flex: 1, fontSize: 12, fontWeight: 700, color: "#374151", padding: "6px 10px", background: "#f1f5f9", borderRadius: 6 }}>PDF Field Slot</div>
+      <div style={{ marginBottom: 8, padding: "8px 12px", background: "#f0fdf4", borderRadius: 8, fontSize: 12, color: "#16a34a" }}>
+        {mappedCount} of {fields.length} fields mapped
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column" as const, gap: 6, maxHeight: 420, overflowY: "auto" as const }}>
-        {fields.map((field: any) => (
+      <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+        <div style={{ flex: 2, fontSize: 11, fontWeight: 700, color: "#64748b", padding: "4px 8px" }}>FIELD LABEL</div>
+        <div style={{ flex: 3, fontSize: 11, fontWeight: 700, color: "#64748b", padding: "4px 8px" }}>PDF SLOT (select from list)</div>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column" as const, gap: 5, maxHeight: 450, overflowY: "auto" as const, paddingRight: 4 }}>
+        {fields.map((field: any, idx: number) => (
           <div key={field.id} style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <div style={{ flex: 1, fontSize: 13, color: "#1e293b", padding: "8px 10px", background: "#fff", border: "1px solid #e2e8f0", borderRadius: 6 }}>
+            <div style={{ flex: 2, fontSize: 12, color: "#1e293b", padding: "7px 10px", background: "#fff", border: "1px solid #e2e8f0", borderRadius: 6, lineHeight: 1.3 }}>
+              <span style={{ fontSize: 10, color: "#94a3b8", display: "block" }}>#{idx + 1}</span>
               {field.label}
             </div>
-            <div style={{ fontSize: 16, color: "#94a3b8" }}>→</div>
             <select
               value={mappings[field.id] || ""}
               onChange={e => setMappings(prev => ({ ...prev, [field.id]: e.target.value }))}
-              style={{ flex: 1, padding: "8px 10px", border: "1px solid #e2e8f0", borderRadius: 6, fontSize: 13, fontFamily: "inherit", background: "#fafafa" }}
+              style={{ flex: 3, padding: "7px 8px", border: `1px solid ${mappings[field.id] ? "#16a34a" : "#e2e8f0"}`, borderRadius: 6, fontSize: 12, fontFamily: "inherit", background: mappings[field.id] ? "#f0fdf4" : "#fafafa" }}
             >
-              <option value="">-- not mapped --</option>
-              {pdfFieldNames.map(name => (
+              <option value="">-- select PDF slot --</option>
+              {sortedPdfFields.map(name => (
                 <option key={name} value={name}>{name}</option>
               ))}
             </select>
@@ -845,23 +873,22 @@ function MapView({ form, pdfFieldNames, onSave, onSkip, onBack }: {
         ))}
       </div>
 
-      <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
+      <div style={{ marginTop: 14, display: "flex", gap: 8 }}>
         <button
           onClick={() => onSave(mappings)}
-          style={{ flex: 1, padding: "12px", background: "#16a34a", color: "#fff", border: "none", borderRadius: 8, fontWeight: 800, fontSize: 15, cursor: "pointer", fontFamily: "inherit" }}
+          style={{ flex: 1, padding: "12px", background: "#16a34a", color: "#fff", border: "none", borderRadius: 8, fontWeight: 800, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}
         >
-          ✅ Save Mapping & Fill Form
+          ✅ Save & Fill Form ({mappedCount} fields mapped)
         </button>
         <button
           onClick={onSkip}
-          style={{ padding: "12px 16px", background: "#fff", color: "#64748b", border: "1px solid #e2e8f0", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}
+          style={{ padding: "10px 14px", background: "#fff", color: "#64748b", border: "1px solid #e2e8f0", borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}
         >
           Skip
         </button>
       </div>
-
-      <div style={{ marginTop: 8, fontSize: 11, color: "#94a3b8", lineHeight: 1.5 }}>
-        Tip: Open the original PDF on your computer and Tab through the fields — they highlight in the same order as the PDF field list on the right.
+      <div style={{ marginTop: 8, fontSize: 11, color: "#94a3b8" }}>
+        Mapping saves to this device. Re-upload the form if field slots change.
       </div>
     </div>
   );
