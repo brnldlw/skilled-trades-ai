@@ -272,6 +272,7 @@ function NewQuoteFlow({
       {step === "site_access" && (
         <div style={{ display: "flex", flexDirection: "column" as const, gap: 12 }}>
           <div style={{ fontSize: 16, fontWeight: 800, color: "#0f1f3d", marginBottom: 4 }}>Site Access</div>
+
           <div><label style={lbl}>Roof/Site Access Method</label>
             <select style={sel} value={survey.roof_access} onChange={e => updateSurvey("roof_access", e.target.value)}>
               <option value="">Select...</option>
@@ -280,8 +281,10 @@ function NewQuoteFlow({
               <option>Mechanical lift / scissor lift needed</option>
               <option>Ground level — no roof access needed</option>
               <option>Basement / crawlspace</option>
+              <option>Elevator available</option>
             </select>
           </div>
+
           <div><label style={lbl}>Walk Distance to Unit (approximate feet)</label>
             <input style={inp} type="number" value={survey.walk_distance} onChange={e => updateSurvey("walk_distance", e.target.value)} placeholder="e.g. 150" />
             {parseInt(survey.walk_distance) > 100 && (
@@ -290,17 +293,71 @@ function NewQuoteFlow({
               </div>
             )}
           </div>
+
+          {/* Scheduling section */}
+          <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 10, padding: "14px", display: "flex", flexDirection: "column" as const, gap: 10 }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: "#0f1f3d" }}>📅 Scheduling & Restrictions</div>
+
+            <div><label style={lbl}>Does this job need to be scheduled with anyone?</label>
+              <select style={sel} value={survey.schedule_required || ""} onChange={e => updateSurvey("schedule_required", e.target.value)}>
+                <option value="">Select...</option>
+                <option>No — we can show up anytime</option>
+                <option>Yes — must call facility manager ahead</option>
+                <option>Yes — must coordinate with property management</option>
+                <option>Yes — tenant notification required</option>
+                <option>Yes — multiple parties must be coordinated</option>
+              </select>
+            </div>
+
+            {survey.schedule_required && survey.schedule_required !== "No — we can show up anytime" && (
+              <div><label style={lbl}>Scheduling Contact Name & Phone</label>
+                <input style={inp} value={survey.schedule_contact || ""} onChange={e => updateSurvey("schedule_contact", e.target.value)} placeholder="e.g. Mike Johnson — (317) 555-0100" />
+              </div>
+            )}
+
+            <div><label style={lbl}>Any work hour restrictions?</label>
+              <select style={sel} value={survey.work_hours || ""} onChange={e => updateSurvey("work_hours", e.target.value)}>
+                <option value="">Select...</option>
+                <option>No restrictions — work anytime</option>
+                <option>Weekdays only, normal business hours</option>
+                <option>After hours only — weekday evenings</option>
+                <option>Weekends only</option>
+                <option>Specific window — see notes</option>
+              </select>
+            </div>
+
+            <div><label style={lbl}>Crane time restrictions? (in/out by a certain time)</label>
+              <select style={sel} value={survey.crane_time_restriction || ""} onChange={e => updateSurvey("crane_time_restriction", e.target.value)}>
+                <option value="">Select...</option>
+                <option>No restrictions</option>
+                <option>Yes — must be out before business hours</option>
+                <option>Yes — street closure window limited</option>
+                <option>Yes — utility hold window is limited</option>
+                <option>Yes — see notes</option>
+              </select>
+            </div>
+
+            <div><label style={lbl}>Any other work restrictions or special conditions?</label>
+              <textarea value={survey.work_restrictions || ""} onChange={e => updateSurvey("work_restrictions", e.target.value)}
+                placeholder="e.g. No drilling on Sundays, hospital quiet hours 10pm-6am, food prep area nearby..."
+                rows={2} style={{ ...inp, resize: "vertical" as const }} />
+            </div>
+          </div>
+
           <div><label style={lbl}>Security / Escort Required?</label>
             <select style={sel} value={survey.security_escort} onChange={e => updateSurvey("security_escort", e.target.value)}>
               <option value="">Select...</option>
               <option>No — free access</option>
               <option>Yes — call ahead required</option>
               <option>Yes — escort required at all times</option>
+              <option>Yes — badge / key fob needed</option>
             </select>
           </div>
+
           <div><label style={lbl}>Access Notes</label>
-            <input style={inp} value={survey.access_notes || ""} onChange={e => updateSurvey("access_notes", e.target.value)} placeholder="Any special instructions..." />
+            <input style={inp} value={survey.access_notes || ""} onChange={e => updateSurvey("access_notes", e.target.value)} placeholder="Gate codes, parking instructions, check-in procedures..." />
           </div>
+
           <div style={{ display: "flex", gap: 8 }}>
             <button onClick={() => setStep("job_setup")} style={{ flex: 1, padding: "10px", background: "#f1f5f9", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "inherit", color: "#374151" }}>← Back</button>
             <button onClick={() => setStep("logistics")} style={{ flex: 2, padding: "10px", background: "#0f1f3d", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}>Next: Logistics →</button>
@@ -357,27 +414,14 @@ function NewQuoteFlow({
         </div>
       )}
 
-      {/* Step 4: Photos */}
+      {/* Step 4: Photos + Video */}
       {step === "photos" && (
-        <div style={{ display: "flex", flexDirection: "column" as const, gap: 12 }}>
-          <div style={{ fontSize: 16, fontWeight: 800, color: "#0f1f3d", marginBottom: 4 }}>Site Photos</div>
-          <div style={{ fontSize: 13, color: "#64748b", marginBottom: 4, lineHeight: 1.5 }}>
-            Photos help AI identify obstacles and provide a more accurate quote. Tap each category to capture.
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-            {["Full unit — front", "Full unit — rear", "Nameplate / data tag", "Crane staging area", "Overhead lines", "Electrical disconnect", "Ductwork connection", "Access path"].map(cat => (
-              <label key={cat} style={{ display: "flex", flexDirection: "column" as const, alignItems: "center", justifyContent: "center", padding: "14px 10px", background: "#f8fafc", border: "1px dashed #e2e8f0", borderRadius: 10, cursor: "pointer", textAlign: "center" as const, fontSize: 12, color: "#374151", fontWeight: 600, gap: 6 }}>
-                <span style={{ fontSize: 24 }}>📷</span>
-                {cat}
-                <input type="file" accept="image/*" capture="environment" style={{ display: "none" }} />
-              </label>
-            ))}
-          </div>
-          <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-            <button onClick={() => setStep("logistics")} style={{ flex: 1, padding: "10px", background: "#f1f5f9", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "inherit", color: "#374151" }}>← Back</button>
-            <button onClick={() => setStep("generate")} style={{ flex: 2, padding: "10px", background: "#0f1f3d", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}>Review & Generate →</button>
-          </div>
-        </div>
+        <PhotoVideoStep
+          survey={survey}
+          updateSurvey={updateSurvey}
+          onBack={() => setStep("logistics")}
+          onNext={() => setStep("generate")}
+        />
       )}
 
       {/* Step 5: Generate */}
@@ -578,6 +622,197 @@ function QuoteResultView({ quote, onBack }: { quote: any; onBack: () => void }) 
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// ── Photo + Video Step ────────────────────────────────────────
+function PhotoVideoStep({ survey, updateSurvey, onBack, onNext }: {
+  survey: Record<string, any>;
+  updateSurvey: (key: string, val: any) => void;
+  onBack: () => void;
+  onNext: () => void;
+}) {
+  const [videoAnalyzing, setVideoAnalyzing] = useState(false);
+  const [videoFindings, setVideoFindings] = useState<any[]>([]);
+  const [videoError, setVideoError] = useState("");
+  const videoRef = useRef<HTMLInputElement>(null);
+
+  async function handleVideoUpload(file: File) {
+    if (!file) return;
+    setVideoAnalyzing(true);
+    setVideoError("");
+    setVideoFindings([]);
+
+    try {
+      // Extract frames from video by converting to base64
+      // We'll send the video file and let the API extract key frames
+      const reader = new FileReader();
+      const base64 = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve((reader.result as string).split(",")[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const mimeType = file.type || "video/mp4";
+
+      const res = await fetch("/api/video-analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          videoBase64: base64,
+          mimeType,
+          context: {
+            equipment_type: survey.equipment_type,
+            urgency: survey.urgency,
+            location: survey.customer_name,
+          },
+        }),
+      });
+
+      const data = await res.json();
+      if (data.ok && data.findings) {
+        setVideoFindings(data.findings);
+        updateSurvey("video_findings", data.findings);
+        updateSurvey("video_analyzed", true);
+      } else {
+        setVideoError(data.error || "Video analysis failed. Try a shorter clip or different format.");
+      }
+    } catch (e: any) {
+      setVideoError("Analysis failed: " + e?.message);
+    } finally {
+      setVideoAnalyzing(false);
+    }
+  }
+
+  const severityConfig: Record<string, { bg: string; color: string; border: string; icon: string }> = {
+    blocker: { bg: "#fef2f2", color: "#dc2626", border: "#fecaca", icon: "🚫" },
+    warning: { bg: "#fffbeb", color: "#92400e", border: "#fde68a", icon: "⚠️" },
+    info:    { bg: "#eff6ff", color: "#1d4ed8", border: "#bae6fd", icon: "ℹ️" },
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column" as const, gap: 14 }}>
+      <div style={{ fontSize: 16, fontWeight: 800, color: "#0f1f3d", marginBottom: 4 }}>Photos & Video</div>
+
+      {/* Video walkthrough section */}
+      <div style={{ background: "#0f1f3d", borderRadius: 12, padding: "16px", color: "#fff" }}>
+        <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 6 }}>🎥 AI Video Walkthrough Analysis</div>
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.75)", lineHeight: 1.6, marginBottom: 14 }}>
+          Shoot a 30-60 second walkthrough showing: how the unit comes out, the path it travels, any tight spots, doorways, stairwells, hallways, gas lines, conduit, obstacles. AI will flag everything it sees that could affect the job.
+        </div>
+
+        {!videoAnalyzing && videoFindings.length === 0 && (
+          <label style={{ display: "flex", flexDirection: "column" as const, alignItems: "center", justifyContent: "center", padding: "20px", background: "rgba(255,255,255,0.08)", border: "2px dashed rgba(255,255,255,0.3)", borderRadius: 10, cursor: "pointer", gap: 8 }}>
+            <span style={{ fontSize: 36 }}>🎬</span>
+            <div style={{ fontSize: 14, fontWeight: 700 }}>Tap to record or upload walkthrough video</div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)" }}>MP4, MOV, or HEVC — up to 50MB</div>
+            <input
+              ref={videoRef}
+              type="file"
+              accept="video/*"
+              capture="environment"
+              style={{ display: "none" }}
+              onChange={e => e.target.files?.[0] && handleVideoUpload(e.target.files[0])}
+            />
+          </label>
+        )}
+
+        {videoAnalyzing && (
+          <div style={{ padding: "20px", textAlign: "center" as const, background: "rgba(255,255,255,0.08)", borderRadius: 10 }}>
+            <div style={{ fontSize: 24, marginBottom: 8 }}>🤖</div>
+            <div style={{ fontSize: 14, fontWeight: 700 }}>AI is analyzing your walkthrough...</div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", marginTop: 4 }}>
+              Identifying obstacles, clearances, hazards, and anything that could affect the job. 20-30 seconds.
+            </div>
+          </div>
+        )}
+
+        {videoError && (
+          <div style={{ padding: "10px 14px", background: "rgba(220,38,38,0.2)", borderRadius: 8, fontSize: 13, color: "#fca5a5" }}>
+            {videoError}
+            <button onClick={() => videoRef.current?.click()} style={{ marginLeft: 10, background: "none", border: "1px solid #fca5a5", color: "#fca5a5", borderRadius: 6, padding: "3px 10px", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}>Try again</button>
+          </div>
+        )}
+
+        {videoFindings.length > 0 && (
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10, color: "#f97316" }}>
+              🔍 AI found {videoFindings.length} item{videoFindings.length !== 1 ? "s" : ""} to flag
+            </div>
+            <div style={{ display: "flex", flexDirection: "column" as const, gap: 8 }}>
+              {videoFindings.map((f: any, i: number) => {
+                const cfg = severityConfig[f.severity] || severityConfig.info;
+                return (
+                  <div key={i} style={{ background: cfg.bg, border: `1px solid ${cfg.border}`, borderLeft: `3px solid ${cfg.color}`, borderRadius: 8, padding: "10px 12px" }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: cfg.color, marginBottom: 3 }}>
+                      {cfg.icon} {f.title}
+                    </div>
+                    <div style={{ fontSize: 12, color: "#374151", marginBottom: 3 }}>{f.description}</div>
+                    {f.question && (
+                      <div style={{ fontSize: 12, color: "#2563eb", fontStyle: "italic" as const }}>
+                        💬 {f.question}
+                      </div>
+                    )}
+                    {f.answer !== undefined && (
+                      <input
+                        style={{ marginTop: 6, width: "100%", padding: "6px 10px", border: "1px solid #e2e8f0", borderRadius: 6, fontSize: 13, fontFamily: "inherit" }}
+                        placeholder="Your answer..."
+                        value={f.answer || ""}
+                        onChange={e => {
+                          const updated = [...videoFindings];
+                          updated[i] = { ...f, answer: e.target.value };
+                          setVideoFindings(updated);
+                          updateSurvey("video_findings", updated);
+                        }}
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <button
+              onClick={() => { setVideoFindings([]); updateSurvey("video_analyzed", false); }}
+              style={{ marginTop: 10, background: "none", border: "1px solid rgba(255,255,255,0.3)", color: "rgba(255,255,255,0.7)", borderRadius: 6, padding: "5px 12px", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
+            >
+              Re-analyze different video
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Photo categories */}
+      <div>
+        <div style={{ fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 8 }}>📷 Site Photos</div>
+        <div style={{ fontSize: 12, color: "#64748b", marginBottom: 10, lineHeight: 1.5 }}>
+          Capture key photos for the quote. Each one helps AI provide more accurate obstacle detection and equipment recommendations.
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          {[
+            { cat: "Full unit — front", icon: "🏗️" },
+            { cat: "Full unit — rear", icon: "🔧" },
+            { cat: "Nameplate / data tag", icon: "🏷️" },
+            { cat: "Crane staging area", icon: "🚛" },
+            { cat: "Overhead lines", icon: "⚡" },
+            { cat: "Electrical disconnect", icon: "🔌" },
+            { cat: "Ductwork / curb", icon: "💨" },
+            { cat: "Access path / hallway", icon: "🚪" },
+          ].map(({ cat, icon }) => (
+            <label key={cat} style={{ display: "flex", flexDirection: "column" as const, alignItems: "center", justifyContent: "center", padding: "12px 8px", background: "#f8fafc", border: "1px dashed #e2e8f0", borderRadius: 10, cursor: "pointer", textAlign: "center" as const, fontSize: 11, color: "#374151", fontWeight: 600, gap: 5 }}>
+              <span style={{ fontSize: 22 }}>{icon}</span>
+              {cat}
+              <input type="file" accept="image/*" capture="environment" style={{ display: "none" }} />
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ display: "flex", gap: 8 }}>
+        <button onClick={onBack} style={{ flex: 1, padding: "10px", background: "#f1f5f9", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "inherit", color: "#374151" }}>← Back</button>
+        <button onClick={onNext} style={{ flex: 2, padding: "10px", background: "#0f1f3d", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}>
+          {videoFindings.length > 0 ? `Review & Generate (${videoFindings.length} AI flags) →` : "Review & Generate →"}
+        </button>
+      </div>
     </div>
   );
 }
