@@ -90,6 +90,153 @@ type Props = {
   initialQuery?: string;
 };
 
+// ── Supply House Locator ─────────────────────────────────────
+const SUPPLY_CHAINS = [
+  { name: "Johnstone Supply",    search: "Johnstone Supply HVAC",    color: "#1d4ed8", icon: "🔵" },
+  { name: "Winsupply",           search: "Winsupply HVAC",           color: "#ea580c", icon: "🟠" },
+  { name: "Ferguson HVAC",       search: "Ferguson HVAC supply",     color: "#dc2626", icon: "🔴" },
+  { name: "Carrier Enterprise",  search: "Carrier Enterprise HVAC",  color: "#2563eb", icon: "🔵" },
+  { name: "Lennox PRO",          search: "Lennox PRO supply",        color: "#16a34a", icon: "🟢" },
+  { name: "Trane Supply",        search: "Trane Supply HVAC",        color: "#7c3aed", icon: "🟣" },
+  { name: "Any HVAC Supply",     search: "HVAC supply store",        color: "#374151", icon: "🔧" },
+];
+
+function SupplyHouseFinder() {
+  const [mode, setMode] = useState<"idle" | "locating" | "done" | "error">("idle");
+  const [zip, setZip] = useState("");
+  const [locationStr, setLocationStr] = useState("");
+  const [selectedChain, setSelectedChain] = useState("Any HVAC Supply");
+
+  function getGpsLocation() {
+    if (!navigator.geolocation) {
+      setMode("error");
+      return;
+    }
+    setMode("locating");
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        setLocationStr(`${pos.coords.latitude},${pos.coords.longitude}`);
+        setMode("done");
+      },
+      () => {
+        setMode("error");
+      },
+      { timeout: 10000, enableHighAccuracy: false }
+    );
+  }
+
+  function useZip() {
+    if (!zip.trim()) return;
+    setLocationStr(zip.trim());
+    setMode("done");
+  }
+
+  function openMaps(chain: typeof SUPPLY_CHAINS[0]) {
+    const loc = locationStr;
+    const query = encodeURIComponent(chain.search);
+    // Google Maps nearby search
+    const url = loc.includes(",")
+      ? `https://www.google.com/maps/search/${query}/@${loc},14z`
+      : `https://www.google.com/maps/search/${query}+near+${encodeURIComponent(loc)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+
+  function openAllNearby() {
+    const chain = SUPPLY_CHAINS.find(c => c.name === selectedChain) || SUPPLY_CHAINS[SUPPLY_CHAINS.length - 1];
+    openMaps(chain);
+  }
+
+  return (
+    <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 12, padding: "16px" }}>
+      <div style={{ fontSize: 14, fontWeight: 800, color: "#0f1f3d", marginBottom: 4 }}>
+        📍 Find Nearest Supply House
+      </div>
+      <div style={{ fontSize: 12, color: "#64748b", marginBottom: 14, lineHeight: 1.5 }}>
+        Use your GPS location or enter a zip code to find the closest HVAC/R supply houses.
+      </div>
+
+      {/* Chain selector */}
+      <div style={{ marginBottom: 12 }}>
+        <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#374151", marginBottom: 5, textTransform: "uppercase" as const, letterSpacing: "0.04em" }}>
+          Which supplier?
+        </label>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" as const }}>
+          {SUPPLY_CHAINS.map(chain => (
+            <button key={chain.name} onClick={() => setSelectedChain(chain.name)}
+              style={{ padding: "5px 12px", borderRadius: 20, border: `1px solid ${selectedChain === chain.name ? chain.color : "#e2e8f0"}`, background: selectedChain === chain.name ? chain.color : "#fff", color: selectedChain === chain.name ? "#fff" : "#374151", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+              {chain.icon} {chain.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Location buttons */}
+      {mode === "idle" || mode === "error" ? (
+        <div style={{ display: "flex", flexDirection: "column" as const, gap: 10 }}>
+          <button onClick={getGpsLocation}
+            style={{ padding: "12px", background: "#0f1f3d", color: "#fff", border: "none", borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+            📍 Use My Current Location
+          </button>
+
+          <div style={{ display: "flex", gap: 8 }}>
+            <input value={zip} onChange={e => setZip(e.target.value.replace(/\D/g, "").slice(0, 5))}
+              onKeyDown={e => e.key === "Enter" && useZip()}
+              placeholder="Or enter zip code..."
+              style={{ flex: 1, padding: "10px 12px", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: 14, fontFamily: "inherit", background: "#fff" }} />
+            <button onClick={useZip} disabled={zip.length < 5}
+              style={{ padding: "10px 16px", background: zip.length >= 5 ? "#2563eb" : "#e2e8f0", color: zip.length >= 5 ? "#fff" : "#94a3b8", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: zip.length >= 5 ? "pointer" : "not-allowed", fontFamily: "inherit" }}>
+              Search
+            </button>
+          </div>
+
+          {mode === "error" && (
+            <div style={{ fontSize: 12, color: "#dc2626", padding: "8px 12px", background: "#fef2f2", borderRadius: 8 }}>
+              Could not get GPS location. Enter your zip code instead.
+            </div>
+          )}
+        </div>
+      ) : mode === "locating" ? (
+        <div style={{ padding: "16px", textAlign: "center" as const, color: "#64748b", fontSize: 14 }}>
+          📍 Getting your location...
+        </div>
+      ) : (
+        <div>
+          <div style={{ fontSize: 12, color: "#16a34a", fontWeight: 700, marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>
+            ✓ Location set — {locationStr.includes(",") ? "using GPS" : `zip: ${locationStr}`}
+            <button onClick={() => { setMode("idle"); setLocationStr(""); setZip(""); }}
+              style={{ background: "none", border: "none", color: "#94a3b8", fontSize: 11, cursor: "pointer", fontFamily: "inherit", marginLeft: 4 }}>
+              Change
+            </button>
+          </div>
+
+          {/* Find button */}
+          <button onClick={openAllNearby}
+            style={{ width: "100%", padding: "13px", background: "#f97316", color: "#fff", border: "none", borderRadius: 10, fontWeight: 800, fontSize: 15, cursor: "pointer", fontFamily: "inherit", marginBottom: 10, boxShadow: "0 4px 16px rgba(249,115,22,0.3)" }}>
+            🗺️ Show Nearest {selectedChain}
+          </button>
+
+          {/* All suppliers quick links */}
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: 8 }}>
+            Or find any of these nearby:
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+            {SUPPLY_CHAINS.filter(c => c.name !== "Any HVAC Supply").map(chain => (
+              <button key={chain.name} onClick={() => openMaps(chain)}
+                style={{ padding: "9px 12px", background: "#fff", border: `1px solid ${chain.color}30`, borderRadius: 8, cursor: "pointer", fontFamily: "inherit", textAlign: "left" as const, display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 16 }}>{chain.icon}</span>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: chain.color }}>{chain.name}</div>
+                  <div style={{ fontSize: 10, color: "#94a3b8" }}>Open in Maps →</div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function PartsLookup({ manufacturer, model, equipmentType, finalConfirmedCause, partsReplaced, initialQuery }: Props) {
   const [query, setQuery] = useState(initialQuery || "");
   const [searched, setSearched] = useState(false);
@@ -111,6 +258,10 @@ export function PartsLookup({ manufacturer, model, equipmentType, finalConfirmed
 
   return (
     <div>
+      {/* Supply house finder */}
+      <SupplyHouseFinder />
+      <div style={{ margin: "16px 0", height: 1, background: "#f1f5f9" }} />
+
       {/* Context strip */}
       {hasContext && (
         <div style={{
