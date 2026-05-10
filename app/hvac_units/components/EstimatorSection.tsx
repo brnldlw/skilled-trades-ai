@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { getUserProfile, getEstimatorAccess, type EstimatorAccess } from "../../lib/supabase/subscription";
 import { EstimatorLockedOverlay, EstimatorUpgradePrompt } from "./EstimatorUpgradePrompt";
 
@@ -213,7 +213,7 @@ function NewQuoteFlow({
   };
 
   if (quoteResult) {
-    return <QuoteResultView quote={quoteResult} onBack={() => setQuoteResult(null)} />;
+    return <QuoteResultView quote={quoteResult} survey={survey} onBack={() => setQuoteResult(null)} />;
   }
 
   return (
@@ -474,8 +474,34 @@ function NewQuoteFlow({
 }
 
 // ── Quote result view ─────────────────────────────────────────
-function QuoteResultView({ quote, onBack }: { quote: any; onBack: () => void }) {
+function QuoteResultView({ quote, survey, onBack }: { quote: any; survey?: any; onBack: () => void }) {
   const [activeTab, setActiveTab] = useState<"obstacles" | "scope" | "equipment" | "tools" | "pricing">("obstacles");
+  const [generatingPdf, setGeneratingPdf] = useState(false);
+  const [techNote, setTechNote] = useState(quote.tech_notes_suggested || "");
+
+  async function handlePreviewPdf() {
+    setGeneratingPdf(true);
+    try {
+      const res = await fetch("/api/quote-pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quote: { ...quote, tech_notes_suggested: techNote }, survey }),
+      });
+      if (!res.ok) throw new Error("Failed to generate PDF");
+      const html = await res.text();
+      const win = window.open("", "_blank");
+      if (win) {
+        win.document.write(html);
+        win.document.close();
+        // Trigger print dialog after content loads
+        win.onload = () => setTimeout(() => win.print(), 500);
+      }
+    } catch (e: any) {
+      alert("PDF generation failed: " + e?.message);
+    } finally {
+      setGeneratingPdf(false);
+    }
+  }
 
   const tabs = [
     { key: "obstacles", label: "⚠️ Obstacles" },
@@ -612,13 +638,26 @@ function QuoteResultView({ quote, onBack }: { quote: any; onBack: () => void }) 
               <div style={{ fontSize: 13, color: "#92400e", lineHeight: 1.6 }}>{quote.tech_notes_suggested}</div>
             </div>
           )}
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: 6 }}>Tech Notes (editable before sending)</div>
+            <textarea
+              value={techNote}
+              onChange={e => setTechNote(e.target.value)}
+              rows={3}
+              style={{ width: "100%", padding: "10px 12px", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: 13, fontFamily: "inherit", resize: "vertical" as const, background: "#fafafa" }}
+              placeholder="Add any notes for the customer..."
+            />
+          </div>
           <div style={{ marginTop: 14, display: "flex", gap: 8 }}>
-            <button style={{ flex: 1, padding: "12px", background: "#0f1f3d", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}>
-              📄 Preview PDF
+            <button
+              onClick={handlePreviewPdf}
+              disabled={generatingPdf}
+              style={{ flex: 1, padding: "12px", background: generatingPdf ? "#e2e8f0" : "#0f1f3d", color: generatingPdf ? "#94a3b8" : "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: generatingPdf ? "not-allowed" : "pointer", fontFamily: "inherit" }}>
+              {generatingPdf ? "Generating..." : "📄 Preview & Print PDF"}
             </button>
-            <button style={{ flex: 1, padding: "12px", background: "#16a34a", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}>
-              Send to Customer →
-            </button>
+          </div>
+          <div style={{ marginTop: 8, fontSize: 11, color: "#94a3b8", lineHeight: 1.5 }}>
+            Opens the quote in a new tab formatted for printing. Use your browser's Print → Save as PDF to get a PDF file to email or text to the customer.
           </div>
         </div>
       )}
