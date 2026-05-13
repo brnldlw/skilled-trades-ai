@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useLang } from "../../components/LanguageContext";
+import { t } from "../../lib/translations";
 
 const TOUR_KEY = "mhvacr_tour_v1_complete";
 
@@ -13,7 +15,18 @@ type TourStep = {
   anchor?: string; // section ID to highlight
 };
 
-const TOUR_STEPS: TourStep[] = [
+function getTourSteps(lang: import("../../lib/translations").Language): TourStep[] {
+  if (lang === "es") return [
+    { id: "welcome", icon: "👋", title: "Bienvenido a My HVAC/R Tool", body: "Construida por un técnico de 30 años, esta es tu caja de herramientas digital completa. Todo lo que necesitas en un trabajo — en un solo lugar, en tu teléfono, funciona sin internet.", tip: "Este recorrido dura unos 60 segundos. Puedes saltarlo en cualquier momento." },
+    { id: "job_form", icon: "🔧", title: "Comienza cada trabajo aquí", body: "Completa la información del equipo arriba — fabricante, modelo, tipo de equipo, qué está fallando. Más detalle = respuestas más inteligentes del diagnóstico IA.", tip: "Toca el ícono del micrófono para hablar tus lecturas en lugar de escribirlas.", anchor: "new-job" },
+    { id: "ai_diagnosis", icon: "🤖", title: "Asistente de Diagnóstico IA", body: "Describe el síntoma y obtén orientación experta específica para esta unidad. La IA conoce el historial de servicio de esta unidad, tus lecturas y las especificaciones del equipo.", tip: "Fotografía la placa y la IA la lee automáticamente — sin escribir el número de modelo.", anchor: "ai-chat" },
+    { id: "reference_tools", icon: "🧰", title: "Biblioteca de referencia completa en el menú", body: "Toca el menú ☰ para acceder a tablas PT, referencia de correas, referencia de partes, tamaños de filtros, referencia rápida de refrigerantes, diagramas de cableado y más.", tip: "La referencia de correas funciona por número de parte O por dimensiones." },
+    { id: "unit_history", icon: "📋", title: "Biblioteca de unidades — cada unidad, cada trabajo", body: "Cada unidad en la que trabajas se guarda con su historial completo — cada lectura, cada parte, cada retorno. La próxima vez que estés en esa unidad sabrás exactamente qué se ha hecho.", tip: "La puntuación de salud rastrea cada unidad con el tiempo. Puntuación baja = alto riesgo de falla.", anchor: "unit-library" },
+    { id: "closeout", icon: "✅", title: "Antes de irte — herramientas de cierre", body: "La Lista Anti-Retorno se genera automáticamente de lo que arreglaste. El Llenado de Formularios PM lee la placa y llena tus formularios. El Registro de Refrigerante cumple con EPA 608.", tip: "La lista sabe si reemplazaste un capacitor versus un compresor y te da verificaciones diferentes.", anchor: "callback-checklist" },
+    { id: "estimator", icon: "💰", title: "Estimador de Cotización de Reemplazo", body: "Para trabajos de reemplazo, el estimador te guía por una encuesta de 5 pasos, analiza el video del sitio de trabajo para detectar obstáculos y genera un alcance completo y estimado de precios.", tip: "El análisis de video detecta líneas eléctricas, pasillos estrechos, líneas de gas en la ruta de la grúa.", anchor: "estimator" },
+    { id: "ready", icon: "🚀", title: "¡Estás listo!", body: "Comienza tu primer trabajo, usa la IA en una llamada actual o explora la biblioteca de referencia. La app es gratuita por 14 días — acceso completo, sin tarjeta.", tip: "¿Encontraste algo roto o que falta? El ícono de pulgar abajo envía comentarios directamente. Esta app es construida por un técnico en servicio y mejora con comentarios reales." },
+  ];
+  return [
   {
     id: "welcome",
     icon: "👋",
@@ -76,12 +89,14 @@ const TOUR_STEPS: TourStep[] = [
     tip: "Found something broken or missing? The thumbs-down icon sends feedback directly. This app is built by a working tech and it gets better from real feedback.",
   },
 ];
+}
 
 type Props = {
   onComplete?: () => void;
 };
 
 export function OnboardingTour({ onComplete }: Props) {
+  const { lang } = useLang();
   const [visible, setVisible] = useState(false);
   const [step, setStep] = useState(0);
   const [animating, setAnimating] = useState(false);
@@ -100,13 +115,13 @@ export function OnboardingTour({ onComplete }: Props) {
   }
 
   function nextStep() {
-    if (step < TOUR_STEPS.length - 1) {
+    if (step < getTourSteps(lang).length - 1) {
       setAnimating(true);
       setTimeout(() => {
         setStep(s => s + 1);
         setAnimating(false);
         // Scroll to anchor if present
-        const next = TOUR_STEPS[step + 1];
+        const next = getTourSteps(lang)[step + 1];
         if (next.anchor) {
           const el = document.getElementById(next.anchor);
           if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -129,9 +144,9 @@ export function OnboardingTour({ onComplete }: Props) {
 
   if (!visible) return null;
 
-  const current = TOUR_STEPS[step];
-  const isLast = step === TOUR_STEPS.length - 1;
-  const pct = Math.round(((step + 1) / TOUR_STEPS.length) * 100);
+  const current = getTourSteps(lang)[step];
+  const isLast = step === getTourSteps(lang).length - 1;
+  const pct = Math.round(((step + 1) / getTourSteps(lang).length) * 100);
 
   return (
     <>
@@ -179,7 +194,7 @@ export function OnboardingTour({ onComplete }: Props) {
           {/* Step counter + skip */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <span style={{ fontSize: 12, color: "#94a3b8", fontWeight: 600 }}>
-              {step + 1} of {TOUR_STEPS.length}
+              {step + 1} {t("tour_of", lang)} {getTourSteps(lang).length}
             </span>
             <button
               onClick={completeTour}
@@ -259,13 +274,13 @@ export function OnboardingTour({ onComplete }: Props) {
                 boxShadow: isLast ? "0 4px 16px rgba(22,163,74,0.35)" : "0 4px 16px rgba(15,31,61,0.25)",
               }}
             >
-              {isLast ? "🚀 Start using the app" : "Next →"}
+              {isLast ? t("tour_start", lang) : t("tour_next", lang)}
             </button>
           </div>
 
           {/* Dots */}
           <div style={{ display: "flex", justifyContent: "center", gap: 6, marginTop: 16 }}>
-            {TOUR_STEPS.map((_, i) => (
+            {getTourSteps(lang).map((_, i) => (
               <div
                 key={i}
                 onClick={() => setStep(i)}

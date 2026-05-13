@@ -9,13 +9,13 @@ type NavMenuProps = {
   currentPath?: string;
 };
 
-const NAV_SECTIONS = [
+function getNavSections(lang: import("../lib/translations").Language) { return [
   {
-    heading: "Main",
+    heading: lang === "es" ? "Principal" : "Main",
     items: [
-      { label: "Dashboard", href: "/", icon: "🏠" },
-      { label: "New Job", href: "/hvac_units", icon: "🔧" },
-      { label: "Unit Library", href: "/hvac_units#unit-library", icon: "📋" },
+      { label: lang === "es" ? "Tablero" : "Dashboard", href: "/", icon: "🏠" },
+      { label: lang === "es" ? "Nuevo Trabajo" : "New Job", href: "/hvac_units", icon: "🔧" },
+      { label: lang === "es" ? "Biblioteca de Unidades" : "Unit Library", href: "/hvac_units#unit-library", icon: "📋" },
       { label: "Fleet Health", href: "/hvac_units#failure-prediction", icon: "🔮" },
       { label: "Admin Panel", href: "/admin", icon: "⚙️", adminOnly: true },
     ],
@@ -28,7 +28,7 @@ const NAV_SECTIONS = [
       { label: "Error Code Lookup", href: "/hvac_units#error-codes", icon: "🔍" },
       { label: "Measurements & Coaching", href: "/hvac_units#measurements", icon: "📊" },
       { label: "Repair Decision Panel", href: "/hvac_units#repair", icon: "🛠️" },
-      { label: "Callback Prevention", href: "/hvac_units#callback-checklist", icon: "✅" },
+      { label: lang === "es" ? "Prevención de Retorno" : "Callback Prevention", href: "/hvac_units#callback-checklist", icon: "✅" },
     ],
   },
   {
@@ -51,27 +51,27 @@ const NAV_SECTIONS = [
       { label: "Filter Reference", href: "/hvac_units#filter-reference", icon: "🌬️" },
       { label: "Refrigerant Quick-Ref", href: "/hvac_units#refrigerant-reference", icon: "❄️" },
       { label: "Wiring Reference", href: "/hvac_units#wiring-reference", icon: "⚡" },
-      { label: "Parts Lookup", href: "/hvac_units#parts-lookup", icon: "🔍" },
-      { label: "Learning Hub", href: "/hvac_units#learning-hub", icon: "📚" },
+      { label: lang === "es" ? "Búsqueda de Partes" : "Parts Lookup", href: "/hvac_units#parts-lookup", icon: "🔍" },
+      { label: lang === "es" ? "Centro de Aprendizaje" : "Learning Hub", href: "/hvac_units#learning-hub", icon: "📚" },
     ],
   },
   {
-    heading: "Closeout & Compliance",
+    heading: lang === "es" ? "Cierre y Cumplimiento" : "Closeout & Compliance",
     items: [
-      { label: "PM Form Filler", href: "/hvac_units#pm-forms", icon: "📋" },
-      { label: "Quote Estimator", href: "/hvac_units#estimator", icon: "💰" },
-      { label: "Expert Hotline 🔜", href: "/hvac_units#expert-hotline", icon: "📞" },
-      { label: "Refrigerant Log", href: "/hvac_units#refrigerant-log", icon: "🧪" },
+      { label: lang === "es" ? "Llenado de Formularios PM" : "PM Form Filler", href: "/hvac_units#pm-forms", icon: "📋" },
+      { label: lang === "es" ? "Estimador de Cotización" : "Quote Estimator", href: "/hvac_units#estimator", icon: "💰" },
+      { label: lang === "es" ? "Línea de Expertos 🔜" : "Expert Hotline 🔜", href: "/hvac_units#expert-hotline", icon: "📞" },
+      { label: lang === "es" ? "Registro de Refrigerante" : "Refrigerant Log", href: "/hvac_units#refrigerant-log", icon: "🧪" },
       { label: "Customer Report", href: "/hvac_units#customer-report", icon: "📄" },
-      { label: "Parts Lookup", href: "/hvac_units#parts-lookup", icon: "🔍" },
+      { label: lang === "es" ? "Búsqueda de Partes" : "Parts Lookup", href: "/hvac_units#parts-lookup", icon: "🔍" },
       { label: "Callback Checklist", href: "/hvac_units#callback-checklist", icon: "✅" },
     ],
   },
-];
+]; }
 
 // Keep for backward compat
-const NAV_ITEMS = NAV_SECTIONS[0].items;
-const TOOL_SHORTCUTS = NAV_SECTIONS[2].items;
+// NAV_ITEMS removed - use getNavSections(lang)
+// TOOL_SHORTCUTS removed - use getNavSections(lang)
 
 export function NavMenu({ currentPath = "" }: NavMenuProps) {
   const { lang, setLang } = useLang();
@@ -211,7 +211,7 @@ export function NavMenu({ currentPath = "" }: NavMenuProps) {
         </div>
 
         <div style={{ padding: "8px 8px 4px", flex: 1, overflowY: "auto" }}>
-          {NAV_SECTIONS.map((section) => (
+          {getNavSections(lang).map((section) => (
             <div key={section.heading} style={{ marginBottom: 4 }}>
               <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase" as const, padding: "8px 10px 4px" }}>
                 {section.heading}

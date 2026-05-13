@@ -72,9 +72,12 @@ import { FailurePredictionDashboard } from "../components/FailurePredictionDashb
 
 import { StepProgressBar } from "./components/StepProgressBar";
 import { OnboardingTour } from "./components/OnboardingTour";
+import { useLang } from "../components/LanguageContext";
+import { t } from "../lib/translations";
 
 // ── Trial Banner (inline component) ──────────────────────────
 function TrialBanner() {
+  const { lang } = useLang();
   const [profile, setProfile] = React.useState<any>(null);
   React.useEffect(() => {
     import("../lib/supabase/subscription").then(m => m.getUserProfile()).then(p => setProfile(p));
@@ -90,6 +93,7 @@ function TrialBanner() {
   if (daysLeft <= 0) return null;
 
   const isLastDay = daysLeft <= 3;
+  const dayWord = daysLeft === 1 ? t("trial_day", lang) : t("trial_days", lang);
 
   return (
     <div style={{
@@ -109,13 +113,13 @@ function TrialBanner() {
         <div>
           <div style={{ fontSize: 13, fontWeight: 700, color: isLastDay ? "#dc2626" : "#1d4ed8" }}>
             {isLastDay
-              ? `Your free trial ends in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}`
-              : `Free trial — ${daysLeft} day${daysLeft !== 1 ? "s" : ""} remaining`}
+              ? `${t("trial_ending", lang)} ${daysLeft} ${dayWord}`
+              : `${t("trial_active", lang)} — ${daysLeft} ${dayWord} ${t("trial_days_left", lang)}`}
           </div>
           <div style={{ fontSize: 11, color: "#64748b", marginTop: 1 }}>
             {isLastDay
-              ? "Subscribe to keep full access to all features."
-              : "Full access to all features — no card needed. Subscribe anytime to keep it."}
+              ? lang === "es" ? "Suscríbete para mantener acceso completo." : "Subscribe to keep full access to all features."
+              : lang === "es" ? "Acceso completo — sin tarjeta. Suscríbete cuando quieras." : "Full access to all features — no card needed. Subscribe anytime to keep it."}
           </div>
         </div>
       </div>
@@ -130,7 +134,7 @@ function TrialBanner() {
         flexShrink: 0,
         whiteSpace: "nowrap" as const,
       }}>
-        {isLastDay ? "Subscribe Now" : "See Plans"}
+        {isLastDay ? t("trial_subscribe", lang) : t("trial_see_plans", lang)}
       </a>
     </div>
   );
