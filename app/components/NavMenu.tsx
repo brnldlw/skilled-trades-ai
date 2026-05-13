@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { createClient } from "../lib/supabase/client";
+import { useLang } from "./LanguageContext";
+import { t } from "../lib/translations";
 
 type NavMenuProps = {
   currentPath?: string;
@@ -72,6 +74,7 @@ const NAV_ITEMS = NAV_SECTIONS[0].items;
 const TOOL_SHORTCUTS = NAV_SECTIONS[2].items;
 
 export function NavMenu({ currentPath = "" }: NavMenuProps) {
+  const { lang, setLang } = useLang();
   const [open, setOpen] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
@@ -189,6 +192,21 @@ export function NavMenu({ currentPath = "" }: NavMenuProps) {
           </div>
           <button onClick={() => setOpen(false)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.5)", fontSize: 20, cursor: "pointer", lineHeight: 1, padding: 4 }} aria-label="Close menu">
             ×
+          </button>
+        </div>
+
+        {/* Language toggle */}
+        <div style={{ padding: "10px 12px", background: "rgba(255,255,255,0.05)", borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", gap: 8, alignItems: "center" }}>
+          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: "0.08em", marginRight: 4 }}>
+            {t("lang_toggle_label", lang)}:
+          </span>
+          <button onClick={() => setLang("en")}
+            style={{ flex: 1, padding: "8px", borderRadius: 8, border: "none", fontWeight: 800, fontSize: 13, cursor: "pointer", fontFamily: "inherit", background: lang === "en" ? "#fff" : "rgba(255,255,255,0.1)", color: lang === "en" ? "#0f1f3d" : "rgba(255,255,255,0.6)" }}>
+            🇺🇸 EN
+          </button>
+          <button onClick={() => setLang("es")}
+            style={{ flex: 1, padding: "8px", borderRadius: 8, border: "none", fontWeight: 800, fontSize: 13, cursor: "pointer", fontFamily: "inherit", background: lang === "es" ? "#f97316" : "rgba(255,255,255,0.1)", color: lang === "es" ? "#fff" : "rgba(255,255,255,0.6)" }}>
+            🇲🇽 ES
           </button>
         </div>
 

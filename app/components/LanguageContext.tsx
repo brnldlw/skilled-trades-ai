@@ -91,69 +91,90 @@ export function LanguageToggle() {
   );
 }
 
-// ── Floating language toggle (shows in bottom corner) ─────────
+// ── Floating language toggle ─────────────────────────────────
 export function FloatingLanguageToggle() {
   const { lang, setLang } = useLang();
   const [visible, setVisible] = useState(false);
+  const [flash, setFlash] = useState(false);
 
-  // Show after mount to avoid SSR mismatch
   useEffect(() => { setVisible(true); }, []);
+
+  function handleSwitch(newLang: Language) {
+    setLang(newLang);
+    setFlash(true);
+    setTimeout(() => setFlash(false), 1000);
+  }
 
   if (!visible) return null;
 
   return (
     <div style={{
       position: "fixed" as const,
-      bottom: 80,
-      right: 16,
+      bottom: 24,
+      left: "50%",
+      transform: "translateX(-50%)",
       zIndex: 998,
+      display: "flex",
+      alignItems: "center",
+      gap: 0,
+      background: "#1e293b",
+      borderRadius: 50,
+      padding: "5px",
+      boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
+      border: "1px solid rgba(255,255,255,0.1)",
     }}>
-      {lang === "en" ? (
-        <button
-          onClick={() => setLang("es")}
-          title="Cambiar a Español"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            background: "#0f1f3d",
-            color: "#fff",
-            border: "none",
-            borderRadius: 50,
-            padding: "12px 18px",
-            fontWeight: 800,
-            fontSize: 15,
-            cursor: "pointer",
-            fontFamily: "inherit",
-            boxShadow: "0 4px 20px rgba(0,0,0,0.25)",
-            whiteSpace: "nowrap" as const,
-          }}
-        >
-          🇲🇽 Español
-        </button>
-      ) : (
-        <button
-          onClick={() => setLang("en")}
-          title="Switch to English"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            background: "#f97316",
-            color: "#fff",
-            border: "none",
-            borderRadius: 50,
-            padding: "12px 18px",
-            fontWeight: 800,
-            fontSize: 15,
-            cursor: "pointer",
-            fontFamily: "inherit",
-            boxShadow: "0 4px 20px rgba(249,115,22,0.35)",
-            whiteSpace: "nowrap" as const,
-          }}
-        >
-          🇺🇸 English
-        </button>
+      <button
+        onClick={() => handleSwitch("en")}
+        style={{
+          padding: "10px 20px",
+          borderRadius: 50,
+          border: "none",
+          fontWeight: 800,
+          fontSize: 14,
+          cursor: "pointer",
+          fontFamily: "inherit",
+          transition: "all 0.2s",
+          background: lang === "en" ? "#fff" : "transparent",
+          color: lang === "en" ? "#0f1f3d" : "rgba(255,255,255,0.5)",
+          boxShadow: lang === "en" ? "0 2px 8px rgba(0,0,0,0.2)" : "none",
+        }}
+      >
+        🇺🇸 English
+      </button>
+      <button
+        onClick={() => handleSwitch("es")}
+        style={{
+          padding: "10px 20px",
+          borderRadius: 50,
+          border: "none",
+          fontWeight: 800,
+          fontSize: 14,
+          cursor: "pointer",
+          fontFamily: "inherit",
+          transition: "all 0.2s",
+          background: lang === "es" ? "#f97316" : "transparent",
+          color: lang === "es" ? "#fff" : "rgba(255,255,255,0.5)",
+          boxShadow: lang === "es" ? "0 2px 8px rgba(249,115,22,0.4)" : "none",
+        }}
+      >
+        🇲🇽 Español
+      </button>
+      {flash && (
+        <div style={{
+          position: "absolute" as const,
+          top: -36,
+          left: "50%",
+          transform: "translateX(-50%)",
+          background: "#16a34a",
+          color: "#fff",
+          fontSize: 12,
+          fontWeight: 700,
+          padding: "4px 12px",
+          borderRadius: 20,
+          whiteSpace: "nowrap" as const,
+        }}>
+          {lang === "es" ? "✓ Cambiado a Español" : "✓ Switched to English"}
+        </div>
       )}
     </div>
   );
