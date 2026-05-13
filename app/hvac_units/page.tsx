@@ -1,20 +1,3 @@
-/* top-measurements-observations-block-v1 */
-/* deemphasize-lower-legacy-context-area-v1 */
-/* top-site-units-block-v1 */
-/* stop-floating-current-loaded-unit-v1 */
-/* top-evidence-quick-entry-v1 */
-/* top-affected-component-selector-v1 */
-/* top-complaint-evidence-block-v1 */
-/* deemphasize-lower-legacy-equipment-entry-v2 */
-/* top-equipment-details-block-v1 */
-/* top-identify-equipment-block-v1 */
-/* loadunit-cleanup-no-fail-v1 */
-/* top-surface-simplification-no-fail-v1 */
-/* safe-cleanup-pass-current-file-v1 */
-/* circuit-persistence-safe-patch-v1 */
-/* repair-execution-assist-visibility-cleanup-v1 */
-/* circuit-wiring-cleanup-pass1-v3 */
-/* replace-old-loaded-unit-banner-v1 */
 "use client";
 
 import { createClient as createSupabaseClient } from "../lib/supabase/client";
