@@ -1,8 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
+import { useLang } from "../../components/LanguageContext";
+import { t } from "../../lib/translations";
 
 export function ExpertHotline() {
+  const { lang } = useLang();
   const [modalOpen, setModalOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
@@ -12,9 +15,11 @@ export function ExpertHotline() {
     if (!email || !email.includes("@")) return;
     setSubmitting(true);
     try {
-      // Save to a simple API endpoint — we'll wire this up in Phase 1
-      // For now just show success
-      await new Promise(r => setTimeout(r, 600)); // simulate save
+      await fetch("/api/expert-waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
       setSubmitted(true);
     } catch {
       setSubmitted(true); // show success regardless
@@ -55,7 +60,7 @@ export function ExpertHotline() {
           marginBottom: 14,
         }}>
           <span style={{ fontSize: 11 }}>🔜</span>
-          <span style={{ fontSize: 11, fontWeight: 700, color: "#f97316", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>Coming Soon</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: "#f97316", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>{t("expert_coming_soon", lang)}</span>
         </div>
 
         {/* Headline */}
