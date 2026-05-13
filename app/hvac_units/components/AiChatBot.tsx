@@ -307,6 +307,7 @@ export function AiChatBot({
           propertyType,
           observations,
           serviceHistory,
+          copilotMode: true,
         }),
       });
 
@@ -376,7 +377,7 @@ export function AiChatBot({
       }}>
         <div>
           <div style={{ fontWeight: 900, fontSize: 14, color: "#fff", display: "flex", alignItems: "center", gap: 6 }}>
-            <span style={{ fontSize: 16 }}>🤖</span> AI Diagnosis Assistant
+            <span style={{ fontSize: 16 }}>🤖</span> AI Diagnostic Copilot
           </div>
           {contextParts.length > 0 && (
             <div style={{ fontSize: 11, color: "#93c5fd", marginTop: 2 }}>
