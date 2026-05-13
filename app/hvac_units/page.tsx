@@ -66,6 +66,7 @@ import { RefrigerantReference } from "./components/RefrigerantReference";
 import { WiringReference } from "./components/WiringReference";
 import { PMFormFiller } from "./components/PMFormFiller";
 import { EstimatorSection } from "./components/EstimatorSection";
+import { ExpertHotline } from "./components/ExpertHotline";
 
 import { FailurePredictionDashboard } from "../components/FailurePredictionDashboard";
 
@@ -12919,6 +12920,18 @@ return (
               model={model}
               equipmentType={equipmentType}
             />
+          </div>
+        </SectionCard>
+      </div>
+
+      {/* expert-hotline-v1 */}
+      <div style={{ marginTop: 10 }}>
+        <SectionCard title="📞 Expert Hotline" id="expert-hotline">
+          <SmallHint>
+            Stuck on a tough call? Connect live with a verified master tech. Coming soon — leave your email to get notified and get your first call at half price.
+          </SmallHint>
+          <div style={{ marginTop: 12 }}>
+            <ExpertHotline />
           </div>
         </SectionCard>
       </div>
