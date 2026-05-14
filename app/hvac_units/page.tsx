@@ -9727,12 +9727,12 @@ if (needsCompanyOnboarding) {
 
 
 return (
-  <div key={lang} style={{ paddingTop: 98, width: "100%", maxWidth: "100vw", overflowX: "hidden" }}>
+  <div key={lang} style={{ paddingTop: 98 }}>
     <NavMenu currentPath="/hvac_units" />
     <OnboardingTour />
     <TrialBanner />
     <StepProgressBar />
-  <div style={{ padding: "12px 14px 48px", maxWidth: 640, width: "100%", margin: "0 auto", boxSizing: "border-box" as const }}>
+  <div style={{ padding: "12px 14px 48px", maxWidth: 820, margin: "0 auto" }}>
       <h1 style={{ fontSize: 22, fontWeight: 900, color: "#0f1f3d", marginBottom: 4 }}>
         My HVAC/R Tool
       </h1>
