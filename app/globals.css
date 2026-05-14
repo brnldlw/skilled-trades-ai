@@ -237,9 +237,6 @@ html, body {
 
   /* Fix grid layouts that overflow on mobile */
   div[style*="gridTemplateColumns: "1fr 1fr""],
-  div[style*="grid-template-columns: 1fr 1fr"] {
-    grid-template-columns: 1fr !important;
-  }
 
   /* Floating toggle - move up from bottom nav area */
   div[style*="bottom: 24"][style*="left: 50%"] {
