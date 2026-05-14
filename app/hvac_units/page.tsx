@@ -9727,12 +9727,12 @@ if (needsCompanyOnboarding) {
 
 
 return (
-  <div key={lang} style={{ paddingTop: 98 }}>
+  <div key={lang} style={{ paddingTop: 98, width: "100%", maxWidth: "100vw", overflowX: "hidden" }}>
     <NavMenu currentPath="/hvac_units" />
     <OnboardingTour />
     <TrialBanner />
     <StepProgressBar />
-  <div style={{ padding: "12px 14px 48px", maxWidth: 820, margin: "0 auto" }}>
+  <div style={{ padding: "12px 14px 48px", maxWidth: 640, width: "100%", margin: "0 auto", boxSizing: "border-box" as const }}>
       <h1 style={{ fontSize: 22, fontWeight: 900, color: "#0f1f3d", marginBottom: 4 }}>
         My HVAC/R Tool
       </h1>
@@ -10102,7 +10102,7 @@ return (
                 }}
               >
                 <div>
-                  <label style={{ fontWeight: 900 }}>{"Tech Email"}</label>
+                  <label style={{ fontWeight: 900 }}>{es ? "Correo del Técnico" : "Tech Email"}</label>
                   <br />
                   <input
                     value={addTechEmail}
@@ -10300,10 +10300,10 @@ return (
           </SectionCard>
         </div>
 
-        <SectionCard title="Customer / Site / Unit" id="new-job">
+        <SectionCard title={es ? "Cliente / Sitio / Unidad" : "Customer / Site / Unit"} id="new-job">
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             <div>
-              <label style={{ fontWeight: 900 }}>"Customer Name"</label>
+              <label style={{ fontWeight: 900 }}>{es ? "Nombre del Cliente" : "Customer Name"}</label>
               <input
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
@@ -10311,7 +10311,7 @@ return (
               />
             </div>
             <div>
-              <label style={{ fontWeight: 900 }}>"Company Name"</label>
+              <label style={{ fontWeight: 900 }}>{es ? "Nombre de la Empresa" : "Company Name"}</label>
               <br />
               <input
                 value={companyName}
@@ -10321,7 +10321,7 @@ return (
               />
             </div>
             <div>
-              <label style={{ fontWeight: 900 }}>"Site Name"</label>
+              <label style={{ fontWeight: 900 }}>{es ? "Nombre del Sitio" : "Site Name"}</label>
               <input
                 value={siteName}
                 onChange={(e) => setSiteName(e.target.value)}
@@ -10329,7 +10329,7 @@ return (
               />
             </div>
             <div style={{ gridColumn: "1 / -1" }}>
-              <label style={{ fontWeight: 900 }}>"Site Address"</label>
+              <label style={{ fontWeight: 900 }}>{es ? "Dirección del Sitio" : "Site Address"}</label>
               <input
                 value={siteAddress}
                 onChange={(e) => setSiteAddress(e.target.value)}
@@ -10337,7 +10337,7 @@ return (
               />
             </div>
             <div>
-              <label style={{ fontWeight: 900, fontSize: 16 }}>"Unit Nickname / Tag *"</label>
+              <label style={{ fontWeight: 900, fontSize: 16 }}>{es ? "Etiqueta de Unidad *" : "Unit Nickname / Tag *"}</label>
           <SmallHint>
             Use a clear unit tag like RTU-1, RTU-2, WIC-1, Reach-In 3, or Merchandiser 2.
           </SmallHint>
@@ -12873,7 +12873,7 @@ return (
 
 {/* pm-form-filler-v1 */}
       <div style={{ marginTop: 10 }}>
-        <SectionCard title="📋 PM Form Filler" id="pm-forms">
+        <SectionCard title={es ? "📋 Llenado de Formularios PM" : "📋 PM Form Filler"} id="pm-forms">
           <SmallHint>
             Upload your company PM or asset tracking form. The AI reads it and identifies every field.
             Photograph the unit nameplate to auto-fill equipment info. Talk-to-text for customer details.
@@ -12893,7 +12893,7 @@ return (
 
 {/* estimator-section-v1 */}
       <div style={{ marginTop: 10 }}>
-        <SectionCard title="📋 Replacement Quote Estimator" id="estimator">
+        <SectionCard title={es ? "📋 Estimador de Reemplazo" : "📋 Replacement Quote Estimator"} id="estimator">
           <SmallHint>
             AI-powered replacement quote tool. Photo the job site, answer a few questions,
             and get a complete scope of work, equipment options, crane requirements, and pricing estimate.
@@ -12910,7 +12910,7 @@ return (
 
       {/* expert-hotline-v1 */}
       <div style={{ marginTop: 10 }}>
-        <SectionCard title="📞 Expert Hotline" id="expert-hotline">
+        <SectionCard title={es ? "📞 Línea de Expertos" : "📞 Expert Hotline"} id="expert-hotline">
           <SmallHint>
             Stuck on a tough call? Connect live with a verified master tech. Coming soon — leave your email to get notified and get your first call at half price.
           </SmallHint>
@@ -14201,7 +14201,7 @@ return (
       >
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <div>
-            <label style={{ fontWeight: 900 }}>{"Property Type"}</label>
+            <label style={{ fontWeight: 900 }}>{es ? "Tipo de Propiedad" : "Property Type"}</label>
             <br />
             <select
               value={propertyType}
@@ -14214,7 +14214,7 @@ return (
           </div>
 
           <div>
-            <label style={{ fontWeight: 900 }}>{"Equipment Type"}</label>
+            <label style={{ fontWeight: 900 }}>{es ? "Tipo de Equipo" : "Equipment Type"}</label>
             <br />
             <select
               value={equipmentType}
@@ -14272,7 +14272,7 @@ return (
           </div>
 
           <div>
-            <label style={{ fontWeight: 900 }}>{"Manufacturer"}</label>
+            <label style={{ fontWeight: 900 }}>{es ? "Fabricante" : "Manufacturer"}</label>
             <br />
             <input
               value={manufacturer}
@@ -14282,7 +14282,7 @@ return (
           </div>
 
           <div>
-            <label style={{ fontWeight: 900 }}>{"Model (optional)"}</label>
+            <label style={{ fontWeight: 900 }}>{es ? "Modelo (opcional)" : "Model (optional)"}</label>
             <br />
             <input
               value={model}
@@ -14292,7 +14292,7 @@ return (
           </div>
 
           <div>
-  <label style={{ fontWeight: 900 }}>{"Serial Number"}</label>
+  <label style={{ fontWeight: 900 }}>{es ? "Número de Serie" : "Serial Number"}</label>
   <br />
   <input
     value={serialNumber}
@@ -14303,7 +14303,7 @@ return (
 </div> 
 
           <div>
-            <label style={{ fontWeight: 900 }}>{"Refrigerant Type"}</label>
+            <label style={{ fontWeight: 900 }}>{es ? "Tipo de Refrigerante" : "Refrigerant Type"}</label>
             <br />
             <select
               value={refrigerantType}
@@ -14344,7 +14344,7 @@ return (
                 }}
               >
                 <div>
-                  <label style={{ fontWeight: 900 }}>{"Customer Name"}</label>
+                  <label style={{ fontWeight: 900 }}>{es ? "Nombre del Cliente" : "Customer Name"}</label>
                   <input
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
@@ -14353,7 +14353,7 @@ return (
                 </div>
 
                 <div>
-                  <label style={{ fontWeight: 900 }}>"Site Name"</label>
+                  <label style={{ fontWeight: 900 }}>{es ? "Nombre del Sitio" : "Site Name"}</label>
                   <input
                     value={siteName}
                     onChange={(e) => setSiteName(e.target.value)}
@@ -14362,7 +14362,7 @@ return (
                 </div>
 
                 <div style={{ gridColumn: "1 / -1" }}>
-                  <label style={{ fontWeight: 900 }}>"Site Address"</label>
+                  <label style={{ fontWeight: 900 }}>{es ? "Dirección del Sitio" : "Site Address"}</label>
                   <input
                     value={siteAddress}
                     onChange={(e) => setSiteAddress(e.target.value)}
@@ -14371,7 +14371,7 @@ return (
                 </div>
 
                 <div>
-                  <label style={{ fontWeight: 900 }}>"Unit Nickname / Tag"</label>
+                  <label style={{ fontWeight: 900 }}>{es ? "Etiqueta de Unidad" : "Unit Nickname / Tag"}</label>
                   <input
                     value={unitNickname}
                     onChange={(e) => setUnitNickname(e.target.value)}
@@ -14381,7 +14381,7 @@ return (
                 </div>
 
                 <div>
-                  <label style={{ fontWeight: 900 }}>{"Property Type"}</label>
+                  <label style={{ fontWeight: 900 }}>{es ? "Tipo de Propiedad" : "Property Type"}</label>
                   <select
                     value={propertyType}
                     onChange={(e) => setPropertyType(e.target.value)}
@@ -14397,7 +14397,7 @@ return (
                 </div>
 
                 <div>
-                  <label style={{ fontWeight: 900 }}>{"Equipment Type"}</label>
+                  <label style={{ fontWeight: 900 }}>{es ? "Tipo de Equipo" : "Equipment Type"}</label>
                   <select
                     value={equipmentType}
                     onChange={(e) => setEquipmentType(e.target.value)}
@@ -14530,7 +14530,7 @@ return (
                 }}
               >
                 <div>
-                  <label style={{ fontWeight: 900 }}>{"Manufacturer"}</label>
+                  <label style={{ fontWeight: 900 }}>{es ? "Fabricante" : "Manufacturer"}</label>
                   <input
                     value={manufacturer}
                     onChange={(e) => setManufacturer(e.target.value)}
@@ -14548,7 +14548,7 @@ return (
                 </div>
 
                 <div>
-                  <label style={{ fontWeight: 900 }}>{"Serial Number"}</label>
+                  <label style={{ fontWeight: 900 }}>{es ? "Número de Serie" : "Serial Number"}</label>
                   <input
                     value={serialNumber}
                     onChange={(e) => setSerialNumber(e.target.value)}
@@ -14557,7 +14557,7 @@ return (
                 </div>
 
                 <div>
-                  <label style={{ fontWeight: 900 }}>{"Refrigerant Type"}</label>
+                  <label style={{ fontWeight: 900 }}>{es ? "Tipo de Refrigerante" : "Refrigerant Type"}</label>
                   <select
                     value={refrigerantType}
                     onChange={(e) => setRefrigerantType(e.target.value)}
@@ -14691,7 +14691,7 @@ return (
                 }}
               >
                 <div>
-                  <label style={{ fontWeight: 900 }}>"Service Date"</label>
+                  <label style={{ fontWeight: 900 }}>{es ? "Fecha de Servicio" : "Service Date"}</label>
                   <input
                     type="date"
                     value={serviceDate}
@@ -16295,7 +16295,7 @@ return (
       }}
     >
       <div style={{ gridColumn: "1 / -1" }}>
-        <label style={{ fontWeight: 900 }}>"Final Confirmed Cause"</label>
+        <label style={{ fontWeight: 900 }}>{es ? "Causa Confirmada" : "Final Confirmed Cause"}</label>
         <br />
         <textarea data-auto-grow="true" onInput={autoGrowTextarea}
           rows={6}
@@ -16553,7 +16553,7 @@ return (
       </div>
 
  <div style={{ gridColumn: "1 / -1" }}>
-  <label style={{ fontWeight: 900 }}>"Service Date"</label>
+  <label style={{ fontWeight: 900 }}>{es ? "Fecha de Servicio" : "Service Date"}</label>
   <br />
   <input
     type="date"
@@ -16564,7 +16564,7 @@ return (
 </div>
 
 <div style={{ gridColumn: "1 / -1" }}>
-  <label style={{ fontWeight: 900 }}>"Parts Replaced"</label>
+  <label style={{ fontWeight: 900 }}>{es ? "Partes Reemplazadas" : "Parts Replaced"}</label>
   <br />
   <input
     value={partsReplaced}
@@ -16811,7 +16811,7 @@ return (
 </div>
 
       <div style={{ gridColumn: "1 / -1" }}>
-        <label style={{ fontWeight: 900 }}>"Actual Fix Performed"</label>
+        <label style={{ fontWeight: 900 }}>{es ? "Reparación Realizada" : "Actual Fix Performed"}</label>
         <br />
         <textarea data-auto-grow="true" onInput={autoGrowTextarea}
           rows={6}
@@ -17069,7 +17069,7 @@ return (
       </div>
 
       <div>
-        <label style={{ fontWeight: 900 }}>"Outcome Status"</label>
+        <label style={{ fontWeight: 900 }}>{es ? "Estado del Resultado" : "Outcome Status"}</label>
         <br />
         <select
           value={outcomeStatus}
