@@ -23,7 +23,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   function setLang(l: Language) {
     setLangState(l);
     setStoredLanguage(l);
-    setTimeout(() => window.location.reload(), 100);
+    window.location.href = window.location.href;
   }
 
   return (
