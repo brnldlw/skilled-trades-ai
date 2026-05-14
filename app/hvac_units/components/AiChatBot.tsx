@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import { useLang } from "../../components/LanguageContext";
 
 // ─── Types ────────────────────────────────────────────────────
 type ChatMessage = {
@@ -229,6 +230,8 @@ export function AiChatBot({
   refrigerantType, symptom, propertyType, observations,
   serviceHistory,
 }: AiChatBotProps) {
+  const { lang } = useLang();
+  const es = lang === "es";
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [listening, setListening] = useState(false);
@@ -377,7 +380,7 @@ export function AiChatBot({
       }}>
         <div>
           <div style={{ fontWeight: 900, fontSize: 14, color: "#fff", display: "flex", alignItems: "center", gap: 6 }}>
-            <span style={{ fontSize: 16 }}>🤖</span> AI Diagnostic Copilot
+            <span style={{ fontSize: 16 }}>🤖</span> {es ? "Copiloto de Diagnóstico IA" : "AI Diagnostic Copilot"}
           </div>
           {contextParts.length > 0 && (
             <div style={{ fontSize: 11, color: "#93c5fd", marginTop: 2 }}>
@@ -527,7 +530,7 @@ export function AiChatBot({
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Describe symptoms or ask a question… (Enter to send, Shift+Enter for new line)"
+          placeholder={es ? "Describe el síntoma o haz una pregunta… (Enter para enviar)" : "Describe symptoms or ask a question… (Enter to send, Shift+Enter for new line)"}
           rows={1}
           disabled={loading}
           style={{
