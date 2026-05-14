@@ -2727,7 +2727,6 @@ const SYMPTOM_PACKS: SymptomPack[] = [
 
 export default function HVACUnitsPage() {
   const { lang } = useLang();
-  const es = lang === "es";
   const [customerName, setCustomerName] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [siteName, setSiteName] = useState("");
@@ -10103,7 +10102,7 @@ return (
                 }}
               >
                 <div>
-                  <label style={{ fontWeight: 900 }}>Tech Email</label>
+                  <label style={{ fontWeight: 900 }}>{es ? "Correo del Técnico" : "Tech Email"}</label>
                   <br />
                   <input
                     value={addTechEmail}
@@ -10301,7 +10300,7 @@ return (
           </SectionCard>
         </div>
 
-        <SectionCard title="Customer / Site / Unit" id="new-job">
+        <SectionCard title={es ? "Cliente / Sitio / Unidad" : "Customer / Site / Unit"} id="new-job">
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             <div>
               <label style={{ fontWeight: 900 }}>{es ? "Nombre del Cliente" : "Customer Name"}</label>
@@ -10312,7 +10311,7 @@ return (
               />
             </div>
             <div>
-              <label style={{ fontWeight: 900 }}>Company Name</label>
+              <label style={{ fontWeight: 900 }}>{es ? "Nombre de la Empresa" : "Company Name"}</label>
               <br />
               <input
                 value={companyName}
@@ -10338,7 +10337,7 @@ return (
               />
             </div>
             <div>
-              <label style={{ fontWeight: 900, fontSize: 16 }}>Unit Nickname / Tag *</label>
+              <label style={{ fontWeight: 900, fontSize: 16 }}>{es ? "Etiqueta de Unidad *" : "Unit Nickname / Tag *"}</label>
           <SmallHint>
             Use a clear unit tag like RTU-1, RTU-2, WIC-1, Reach-In 3, or Merchandiser 2.
           </SmallHint>
@@ -14372,7 +14371,7 @@ return (
                 </div>
 
                 <div>
-                  <label style={{ fontWeight: 900 }}>Unit Nickname / Tag</label>
+                  <label style={{ fontWeight: 900 }}>{es ? "Etiqueta de Unidad" : "Unit Nickname / Tag"}</label>
                   <input
                     value={unitNickname}
                     onChange={(e) => setUnitNickname(e.target.value)}
@@ -16296,7 +16295,7 @@ return (
       }}
     >
       <div style={{ gridColumn: "1 / -1" }}>
-        <label style={{ fontWeight: 900 }}>Final Confirmed Cause</label>
+        <label style={{ fontWeight: 900 }}>{es ? "Causa Confirmada" : "Final Confirmed Cause"}</label>
         <br />
         <textarea data-auto-grow="true" onInput={autoGrowTextarea}
           rows={6}
@@ -16565,7 +16564,7 @@ return (
 </div>
 
 <div style={{ gridColumn: "1 / -1" }}>
-  <label style={{ fontWeight: 900 }}>Parts Replaced</label>
+  <label style={{ fontWeight: 900 }}>{es ? "Partes Reemplazadas" : "Parts Replaced"}</label>
   <br />
   <input
     value={partsReplaced}
@@ -16812,7 +16811,7 @@ return (
 </div>
 
       <div style={{ gridColumn: "1 / -1" }}>
-        <label style={{ fontWeight: 900 }}>Actual Fix Performed</label>
+        <label style={{ fontWeight: 900 }}>{es ? "Reparación Realizada" : "Actual Fix Performed"}</label>
         <br />
         <textarea data-auto-grow="true" onInput={autoGrowTextarea}
           rows={6}
@@ -17070,7 +17069,7 @@ return (
       </div>
 
       <div>
-        <label style={{ fontWeight: 900 }}>Outcome Status</label>
+        <label style={{ fontWeight: 900 }}>{es ? "Estado del Resultado" : "Outcome Status"}</label>
         <br />
         <select
           value={outcomeStatus}
