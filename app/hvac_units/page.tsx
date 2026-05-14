@@ -2763,6 +2763,7 @@ const SYMPTOM_PACKS: SymptomPack[] = [
 ];
 
 export default function HVACUnitsPage() {
+  const { lang } = useLang();
   const [customerName, setCustomerName] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [siteName, setSiteName] = useState("");
@@ -9763,7 +9764,7 @@ if (needsCompanyOnboarding) {
 
 
 return (
-  <div style={{ paddingTop: 98 }}>
+  <div key={lang} style={{ paddingTop: 98 }}>
     <NavMenu currentPath="/hvac_units" />
     <OnboardingTour />
     <LanguageTestBanner />
