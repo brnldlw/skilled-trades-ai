@@ -1,3 +1,20 @@
+/* top-measurements-observations-block-v1 */
+/* deemphasize-lower-legacy-context-area-v1 */
+/* top-site-units-block-v1 */
+/* stop-floating-current-loaded-unit-v1 */
+/* top-evidence-quick-entry-v1 */
+/* top-affected-component-selector-v1 */
+/* top-complaint-evidence-block-v1 */
+/* deemphasize-lower-legacy-equipment-entry-v2 */
+/* top-equipment-details-block-v1 */
+/* top-identify-equipment-block-v1 */
+/* loadunit-cleanup-no-fail-v1 */
+/* top-surface-simplification-no-fail-v1 */
+/* safe-cleanup-pass-current-file-v1 */
+/* circuit-persistence-safe-patch-v1 */
+/* repair-execution-assist-visibility-cleanup-v1 */
+/* circuit-wiring-cleanup-pass1-v3 */
+/* replace-old-loaded-unit-banner-v1 */
 "use client";
 
 import { createClient as createSupabaseClient } from "../lib/supabase/client";
@@ -57,6 +74,22 @@ import { StepProgressBar } from "./components/StepProgressBar";
 import { OnboardingTour } from "./components/OnboardingTour";
 import { useLang } from "../components/LanguageContext";
 import { t } from "../lib/translations";
+
+// ── Language Test Banner ─────────────────────────────────────
+function LanguageTestBanner() {
+  const { lang, setLang } = useLang();
+  return (
+    <div style={{ background: lang === "es" ? "#f97316" : "#0f1f3d", color: "#fff", padding: "10px 16px", borderRadius: 10, marginBottom: 10, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <span style={{ fontSize: 14, fontWeight: 700 }}>
+        {lang === "es" ? "🇲🇽 Modo Español activado" : "🇺🇸 English mode active"}
+      </span>
+      <div style={{ display: "flex", gap: 8 }}>
+        <button onClick={() => setLang("en")} style={{ padding: "6px 14px", borderRadius: 8, border: "none", fontWeight: 700, fontSize: 13, cursor: "pointer", background: lang === "en" ? "#fff" : "rgba(255,255,255,0.2)", color: lang === "en" ? "#0f1f3d" : "#fff" }}>EN</button>
+        <button onClick={() => setLang("es")} style={{ padding: "6px 14px", borderRadius: 8, border: "none", fontWeight: 700, fontSize: 13, cursor: "pointer", background: lang === "es" ? "#fff" : "rgba(255,255,255,0.2)", color: lang === "es" ? "#f97316" : "#fff" }}>ES</button>
+      </div>
+    </div>
+  );
+}
 
 // ── Trial Banner (inline component) ──────────────────────────
 function TrialBanner() {
@@ -9733,6 +9766,7 @@ return (
   <div style={{ paddingTop: 98 }}>
     <NavMenu currentPath="/hvac_units" />
     <OnboardingTour />
+    <LanguageTestBanner />
     <TrialBanner />
     <StepProgressBar />
   <div style={{ padding: "12px 14px 48px", maxWidth: 820, margin: "0 auto" }}>
