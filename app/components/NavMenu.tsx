@@ -9,7 +9,6 @@ type NavMenuProps = {
   currentPath?: string;
 };
 
-const es = lang === "es";
 function getNavSections(lang: import("../lib/translations").Language) {
   const es = lang === "es";
   return [
