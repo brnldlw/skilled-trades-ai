@@ -1,14 +1,15 @@
 "use client";
 
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import { Language, setStoredLanguage } from "../lib/translations";
 
-// Read language synchronously — before any render
 function getInitialLanguage(): Language {
   if (typeof window === "undefined") return "en";
   try {
+    // Check HTML attribute set by pre-hydration script
+    if (document.documentElement.getAttribute("data-lang") === "es") return "es";
     const v = window.localStorage.getItem("mhvacr_lang");
-    if (v === "es" || v === "en") return v;
+    if (v === "es") return "es";
   } catch {}
   return "en";
 }
@@ -17,13 +18,19 @@ type LangContextType = { lang: Language; setLang: (l: Language) => void; };
 const LangContext = createContext<LangContextType>({ lang: "en", setLang: () => {} });
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  // Initialize directly from localStorage — no useEffect delay
-  const [lang, setLangState] = useState<Language>(getInitialLanguage);
+  const [lang, setLangState] = useState<Language>("en");
+
+  // Read language after mount — guaranteed client side
+  useEffect(() => {
+    setLangState(getInitialLanguage());
+  }, []);
 
   function setLang(l: Language) {
     setLangState(l);
     setStoredLanguage(l);
-    window.location.href = window.location.href;
+    document.documentElement.setAttribute("data-lang", l);
+    // Small delay then reload
+    setTimeout(() => { window.location.reload(); }, 50);
   }
 
   return (
@@ -49,20 +56,18 @@ export function LanguageToggle() {
 
 export function FloatingLanguageToggle() {
   const { lang, setLang } = useLang();
-
-  // Don't render on server
-  if (typeof window === "undefined") return null;
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+  if (!mounted) return null;
 
   return (
     <div style={{ position: "fixed" as const, bottom: 24, left: "50%", transform: "translateX(-50%)", zIndex: 9990, display: "flex", background: "#1e293b", borderRadius: 50, padding: "5px", boxShadow: "0 4px 24px rgba(0,0,0,0.35)", border: "1px solid rgba(255,255,255,0.12)" }}>
-      <button
-        onClick={() => setLang("en")}
-        style={{ padding: "11px 22px", borderRadius: 50, border: "none", fontWeight: 800, fontSize: 15, cursor: "pointer", fontFamily: "inherit", background: lang === "en" ? "#fff" : "transparent", color: lang === "en" ? "#0f1f3d" : "rgba(255,255,255,0.45)", transition: "all 0.15s" }}
-      >🇺🇸 English</button>
-      <button
-        onClick={() => setLang("es")}
-        style={{ padding: "11px 22px", borderRadius: 50, border: "none", fontWeight: 800, fontSize: 15, cursor: "pointer", fontFamily: "inherit", background: lang === "es" ? "#f97316" : "transparent", color: lang === "es" ? "#fff" : "rgba(255,255,255,0.45)", transition: "all 0.15s" }}
-      >🇲🇽 Español</button>
+      <button onClick={() => setLang("en")} style={{ padding: "11px 22px", borderRadius: 50, border: "none", fontWeight: 800, fontSize: 15, cursor: "pointer", fontFamily: "inherit", background: lang === "en" ? "#fff" : "transparent", color: lang === "en" ? "#0f1f3d" : "rgba(255,255,255,0.45)" }}>
+        🇺🇸 English
+      </button>
+      <button onClick={() => setLang("es")} style={{ padding: "11px 22px", borderRadius: 50, border: "none", fontWeight: 800, fontSize: 15, cursor: "pointer", fontFamily: "inherit", background: lang === "es" ? "#f97316" : "transparent", color: lang === "es" ? "#fff" : "rgba(255,255,255,0.45)" }}>
+        🇲🇽 Español
+      </button>
     </div>
   );
 }

@@ -46,6 +46,13 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="HVAC/R Pro" />
         <meta name="mobile-web-app-capable" content="yes" />
+        {/* Read language before React hydrates */}
+        <script dangerouslySetInnerHTML={{ __html: `
+          try {
+            var l = localStorage.getItem('mhvacr_lang');
+            if (l === 'es') document.documentElement.setAttribute('data-lang', 'es');
+          } catch(e) {}
+        `}} />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ServiceWorkerRegistration />
