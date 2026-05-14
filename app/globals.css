@@ -208,5 +208,4 @@ textarea:focus-visible {
 
 /* ── Safe mobile overflow fix ───────────────────────────────── */
 html, body {
-  overflow-x: hidden;
-}
+  }
