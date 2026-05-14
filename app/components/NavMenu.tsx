@@ -200,11 +200,11 @@ export function NavMenu({ currentPath = "" }: NavMenuProps) {
           <span style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: "0.08em", marginRight: 4 }}>
             {t("lang_toggle_label", lang)}:
           </span>
-          <button onClick={() => setLang("en")}
+          <button onClick={() => { setLang("en"); setTimeout(() => window.location.reload(), 150); }}
             style={{ flex: 1, padding: "8px", borderRadius: 8, border: "none", fontWeight: 800, fontSize: 13, cursor: "pointer", fontFamily: "inherit", background: lang === "en" ? "#fff" : "rgba(255,255,255,0.1)", color: lang === "en" ? "#0f1f3d" : "rgba(255,255,255,0.6)" }}>
             🇺🇸 EN
           </button>
-          <button onClick={() => setLang("es")}
+          <button onClick={() => { setLang("es"); setTimeout(() => window.location.reload(), 150); }}
             style={{ flex: 1, padding: "8px", borderRadius: 8, border: "none", fontWeight: 800, fontSize: 13, cursor: "pointer", fontFamily: "inherit", background: lang === "es" ? "#f97316" : "rgba(255,255,255,0.1)", color: lang === "es" ? "#fff" : "rgba(255,255,255,0.6)" }}>
             🇲🇽 ES
           </button>

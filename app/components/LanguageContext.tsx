@@ -101,8 +101,8 @@ export function FloatingLanguageToggle() {
 
   function handleSwitch(newLang: Language) {
     setLang(newLang);
-    setFlash(true);
-    setTimeout(() => setFlash(false), 1000);
+    // Force full page reload so all components pick up the new language
+    setTimeout(() => window.location.reload(), 150);
   }
 
   if (!visible) return null;
@@ -159,23 +159,7 @@ export function FloatingLanguageToggle() {
       >
         🇲🇽 Español
       </button>
-      {flash && (
-        <div style={{
-          position: "absolute" as const,
-          top: -36,
-          left: "50%",
-          transform: "translateX(-50%)",
-          background: "#16a34a",
-          color: "#fff",
-          fontSize: 12,
-          fontWeight: 700,
-          padding: "4px 12px",
-          borderRadius: 20,
-          whiteSpace: "nowrap" as const,
-        }}>
-          {lang === "es" ? "✓ Cambiado a Español" : "✓ Switched to English"}
-        </div>
-      )}
+
     </div>
   );
 }
