@@ -75,25 +75,10 @@ import { OnboardingTour } from "./components/OnboardingTour";
 import { useLang } from "../components/LanguageContext";
 import { t } from "../lib/translations";
 
-// ── Language Test Banner ─────────────────────────────────────
-function LanguageTestBanner() {
-  const { lang, setLang } = useLang();
-  return (
-    <div style={{ background: lang === "es" ? "#f97316" : "#0f1f3d", color: "#fff", padding: "10px 16px", borderRadius: 10, marginBottom: 10, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-      <span style={{ fontSize: 14, fontWeight: 700 }}>
-        {lang === "es" ? "🇲🇽 Modo Español activado" : "🇺🇸 English mode active"}
-      </span>
-      <div style={{ display: "flex", gap: 8 }}>
-        <button onClick={() => setLang("en")} style={{ padding: "6px 14px", borderRadius: 8, border: "none", fontWeight: 700, fontSize: 13, cursor: "pointer", background: lang === "en" ? "#fff" : "rgba(255,255,255,0.2)", color: lang === "en" ? "#0f1f3d" : "#fff" }}>EN</button>
-        <button onClick={() => setLang("es")} style={{ padding: "6px 14px", borderRadius: 8, border: "none", fontWeight: 700, fontSize: 13, cursor: "pointer", background: lang === "es" ? "#fff" : "rgba(255,255,255,0.2)", color: lang === "es" ? "#f97316" : "#fff" }}>ES</button>
-      </div>
-    </div>
-  );
-}
-
 // ── Trial Banner (inline component) ──────────────────────────
 function TrialBanner() {
   const { lang } = useLang();
+  const es = lang === "es";
   const [profile, setProfile] = React.useState<any>(null);
   React.useEffect(() => {
     import("../lib/supabase/subscription").then(m => m.getUserProfile()).then(p => setProfile(p));
@@ -105,52 +90,30 @@ function TrialBanner() {
   const expiry = new Date(profile.override_expires_at);
   const now = new Date();
   const daysLeft = Math.ceil((expiry.getTime() - now.getTime()) / 86400000);
-
   if (daysLeft <= 0) return null;
 
   const isLastDay = daysLeft <= 3;
-  const dayWord = daysLeft === 1 ? t("trial_day", lang) : t("trial_days", lang);
+  const dayWord = daysLeft === 1 ? (es ? "día" : "day") : (es ? "días" : "days");
 
   return (
-    <div style={{
-      background: isLastDay ? "#fef2f2" : "#eff6ff",
-      border: `1px solid ${isLastDay ? "#fecaca" : "#bae6fd"}`,
-      borderRadius: 10,
-      padding: "10px 16px",
-      marginBottom: 12,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between",
-      gap: 12,
-      flexWrap: "wrap" as const,
-    }}>
+    <div style={{ background: isLastDay ? "#fef2f2" : "#eff6ff", border: `1px solid ${isLastDay ? "#fecaca" : "#bae6fd"}`, borderRadius: 10, padding: "10px 16px", marginBottom: 12, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" as const }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <span style={{ fontSize: 20 }}>{isLastDay ? "⏰" : "🎉"}</span>
         <div>
           <div style={{ fontSize: 13, fontWeight: 700, color: isLastDay ? "#dc2626" : "#1d4ed8" }}>
             {isLastDay
-              ? `${t("trial_ending", lang)} ${daysLeft} ${dayWord}`
-              : `${t("trial_active", lang)} — ${daysLeft} ${dayWord} ${t("trial_days_left", lang)}`}
+              ? (es ? `Tu prueba gratuita termina en ${daysLeft} ${dayWord}` : `Your free trial ends in ${daysLeft} ${dayWord}`)
+              : (es ? `Prueba gratuita — ${daysLeft} ${dayWord} restantes` : `Free trial — ${daysLeft} ${dayWord} remaining`)}
           </div>
           <div style={{ fontSize: 11, color: "#64748b", marginTop: 1 }}>
             {isLastDay
-              ? lang === "es" ? "Suscríbete para mantener acceso completo." : "Subscribe to keep full access to all features."
-              : lang === "es" ? "Acceso completo — sin tarjeta. Suscríbete cuando quieras." : "Full access to all features — no card needed. Subscribe anytime to keep it."}
+              ? (es ? "Suscríbete para mantener acceso completo." : "Subscribe to keep full access to all features.")
+              : (es ? "Acceso completo — sin tarjeta. Suscríbete cuando quieras." : "Full access — no card needed. Subscribe anytime.")}
           </div>
         </div>
       </div>
-      <a href="/checkout" style={{
-        padding: "7px 16px",
-        background: isLastDay ? "#dc2626" : "#f97316",
-        color: "#fff",
-        borderRadius: 8,
-        fontWeight: 700,
-        fontSize: 12,
-        textDecoration: "none",
-        flexShrink: 0,
-        whiteSpace: "nowrap" as const,
-      }}>
-        {isLastDay ? t("trial_subscribe", lang) : t("trial_see_plans", lang)}
+      <a href="/checkout" style={{ padding: "7px 16px", background: isLastDay ? "#dc2626" : "#f97316", color: "#fff", borderRadius: 8, fontWeight: 700, fontSize: 12, textDecoration: "none", flexShrink: 0, whiteSpace: "nowrap" as const }}>
+        {isLastDay ? (es ? "Suscribirse Ahora" : "Subscribe Now") : (es ? "Ver Planes" : "See Plans")}
       </a>
     </div>
   );
@@ -9767,7 +9730,6 @@ return (
   <div key={lang} style={{ paddingTop: 98 }}>
     <NavMenu currentPath="/hvac_units" />
     <OnboardingTour />
-    <LanguageTestBanner />
     <TrialBanner />
     <StepProgressBar />
   <div style={{ padding: "12px 14px 48px", maxWidth: 820, margin: "0 auto" }}>
