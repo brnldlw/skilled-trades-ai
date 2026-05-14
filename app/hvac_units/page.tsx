@@ -2727,6 +2727,7 @@ const SYMPTOM_PACKS: SymptomPack[] = [
 
 export default function HVACUnitsPage() {
   const { lang } = useLang();
+  const es = lang === "es";
   const [customerName, setCustomerName] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [siteName, setSiteName] = useState("");
