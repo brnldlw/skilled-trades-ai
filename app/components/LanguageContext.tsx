@@ -48,7 +48,7 @@ export function FloatingLanguageToggle() {
   if (!mounted) return null;
 
   return (
-    <div style={{ position: "fixed" as const, top: 8, right: 12, zIndex: 9990, display: "flex", background: "#1e293b", borderRadius: 50, padding: "3px", boxShadow: "0 2px 12px rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.12)" }}>
+    <div style={{ position: "fixed" as const, top: 60, right: 12, zIndex: 9990, display: "flex", background: "#1e293b", borderRadius: 50, padding: "3px", boxShadow: "0 2px 12px rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.12)" }}>
       <button onClick={() => setLang("en")} style={{ padding: "5px 11px", borderRadius: 50, border: "none", fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "inherit", background: lang === "en" ? "#fff" : "transparent", color: lang === "en" ? "#0f1f3d" : "rgba(255,255,255,0.5)" }}>🇺🇸 EN</button>
       <button onClick={() => setLang("es")} style={{ padding: "5px 11px", borderRadius: 50, border: "none", fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "inherit", background: lang === "es" ? "#f97316" : "transparent", color: lang === "es" ? "#fff" : "rgba(255,255,255,0.5)" }}>🇲🇽 ES</button>
     </div>
