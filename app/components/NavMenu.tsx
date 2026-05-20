@@ -55,6 +55,7 @@ function getNavSections(lang: import("../lib/translations").Language) {
       { label: es ? "Referencia de Cableado" : "Wiring Reference", href: "/hvac_units#wiring-reference", icon: "⚡" },
       { label: es ? "Búsqueda de Partes" : "Parts Lookup", href: "/hvac_units#parts-lookup", icon: "🔍" },
       { label: es ? "Centro de Aprendizaje" : "Learning Hub", href: "/hvac_units#learning-hub", icon: "📚" },
+      { label: es ? "Contacto / Soporte" : "Contact / Support", href: "mailto:support@myhvacrtool.com", icon: "✉️" },
     ],
   },
   {
