@@ -7874,6 +7874,9 @@ const [showBulkImportTools, setShowBulkImportTools] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userEmail, setUserEmail] = useState("");
 const [needsCompanyOnboarding, setNeedsCompanyOnboarding] = useState(false);
+  const [onboardingMode, setOnboardingMode] = useState<"create" | "join">("create");
+  const [joinCode, setJoinCode] = useState("");
+  const [joinCodeError, setJoinCodeError] = useState("");
 const [onboardingCompanyName, setOnboardingCompanyName] = useState("");
 const [onboardingBusy, setOnboardingBusy] = useState(false);
 const [onboardingMessage, setOnboardingMessage] = useState("");
@@ -9666,21 +9669,56 @@ if (needsCompanyOnboarding) {
         {/* Card */}
         <div style={{ background: "rgba(15,36,64,0.8)", border: "1px solid rgba(249,115,22,0.15)", borderRadius: 16, padding: "28px 24px", backdropFilter: "blur(12px)", boxShadow: "0 24px 64px rgba(0,0,0,0.3)" }}>
 
-          <div style={{ fontSize: 16, fontWeight: 700, color: "#f8fafc", marginBottom: 6 }}>
-            What&apos;s the name of your company or shop?
-          </div>
-          <div style={{ fontSize: 13, color: "#64748b", marginBottom: 20, lineHeight: 1.5 }}>
-            This appears on your service reports and helps organize your unit history. Solo techs can use your own name.
+          {/* Toggle: Create or Join */}
+          <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+            <button onClick={() => setOnboardingMode("create")}
+              style={{ flex: 1, padding: "10px", borderRadius: 8, border: "none", fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "inherit", background: onboardingMode === "create" ? "#f97316" : "rgba(255,255,255,0.08)", color: "#fff" }}>
+              🏢 New Company
+            </button>
+            <button onClick={() => setOnboardingMode("join")}
+              style={{ flex: 1, padding: "10px", borderRadius: 8, border: "none", fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "inherit", background: onboardingMode === "join" ? "#2563eb" : "rgba(255,255,255,0.08)", color: "#fff" }}>
+              🔑 Join with Code
+            </button>
           </div>
 
           <div style={{ display: "flex", flexDirection: "column" as const, gap: 14 }}>
-            <input
-              value={onboardingCompanyName}
-              onChange={(e) => setOnboardingCompanyName(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter" && !onboardingBusy) handleCreateCompanyOnboarding(); }}
-              placeholder="e.g. ABC HVAC Services or John Smith HVAC"
-              style={{ width: "100%", padding: "13px 14px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, color: "#f8fafc", fontSize: 15, fontFamily: "inherit", outline: "none" }}
-            />
+            {onboardingMode === "create" ? (
+              <>
+                <div style={{ fontSize: 15, fontWeight: 700, color: "#f8fafc", marginBottom: 2 }}>
+                  What&apos;s the name of your company or shop?
+                </div>
+                <div style={{ fontSize: 13, color: "#64748b", lineHeight: 1.5 }}>
+                  Solo techs can use your own name. Your company gets a join code to share with your team.
+                </div>
+                <input
+                  value={onboardingCompanyName}
+                  onChange={(e) => setOnboardingCompanyName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter" && !onboardingBusy) handleCreateCompanyOnboarding(); }}
+                  placeholder="e.g. ABC HVAC Services or John Smith HVAC"
+                  style={{ width: "100%", padding: "13px 14px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, color: "#f8fafc", fontSize: 15, fontFamily: "inherit", outline: "none" }}
+                />
+              </>
+            ) : (
+              <>
+                <div style={{ fontSize: 15, fontWeight: 700, color: "#f8fafc", marginBottom: 2 }}>
+                  Your manager gave you a 6-character join code
+                </div>
+                <div style={{ fontSize: 13, color: "#64748b", lineHeight: 1.5 }}>
+                  Enter it below to join your company and see shared unit history.
+                </div>
+                <input
+                  value={joinCode}
+                  onChange={(e) => setJoinCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6))}
+                  placeholder="e.g. ABC123"
+                  style={{ width: "100%", padding: "13px 14px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, color: "#f8fafc", fontSize: 22, fontFamily: "monospace", outline: "none", letterSpacing: "0.3em", textAlign: "center" as const }}
+                />
+                {joinCodeError && (
+                  <div style={{ padding: "10px 14px", borderRadius: 8, fontSize: 13, background: "rgba(220,38,38,0.1)", border: "1px solid rgba(220,38,38,0.3)", color: "#fca5a5" }}>
+                    {joinCodeError}
+                  </div>
+                )}
+              </>
+            )}
 
             {onboardingMessage && (
               <div style={{ padding: "10px 14px", borderRadius: 8, fontSize: 13, background: "rgba(220,38,38,0.1)", border: "1px solid rgba(220,38,38,0.3)", color: "#fca5a5" }}>
@@ -9689,11 +9727,32 @@ if (needsCompanyOnboarding) {
             )}
 
             <button
-              onClick={handleCreateCompanyOnboarding}
+              onClick={onboardingMode === "create" ? handleCreateCompanyOnboarding : async () => {
+                if (joinCode.length !== 6) { setJoinCodeError("Enter the full 6-character code."); return; }
+                setOnboardingBusy(true);
+                setJoinCodeError("");
+                try {
+                  const res = await fetch("/api/onboarding/join-company", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ joinCode, userId: currentUserId, email: userEmail }),
+                  });
+                  const data = await res.json();
+                  if (data.ok) {
+                    setNeedsCompanyOnboarding(false);
+                  } else {
+                    setJoinCodeError(data.error || "Invalid code. Check with your manager.");
+                  }
+                } catch {
+                  setJoinCodeError("Something went wrong. Try again.");
+                } finally {
+                  setOnboardingBusy(false);
+                }
+              }}
               disabled={onboardingBusy}
-              style={{ width: "100%", padding: "14px", background: onboardingBusy ? "rgba(249,115,22,0.5)" : "#f97316", color: "#fff", border: "none", borderRadius: 10, fontWeight: 800, fontSize: 16, cursor: onboardingBusy ? "not-allowed" : "pointer", fontFamily: "inherit", boxShadow: onboardingBusy ? "none" : "0 4px 20px rgba(249,115,22,0.4)" }}
+              style={{ width: "100%", padding: "14px", background: onboardingBusy ? "rgba(249,115,22,0.5)" : onboardingMode === "join" ? "#2563eb" : "#f97316", color: "#fff", border: "none", borderRadius: 10, fontWeight: 800, fontSize: 16, cursor: onboardingBusy ? "not-allowed" : "pointer", fontFamily: "inherit", boxShadow: "0 4px 20px rgba(0,0,0,0.3)" }}
             >
-              {onboardingBusy ? "Setting up..." : "🔧 Let's Go"}
+              {onboardingBusy ? "Setting up..." : onboardingMode === "create" ? "🔧 Create Company" : "🔑 Join Company"}
             </button>
 
             {/* What to expect bullets */}

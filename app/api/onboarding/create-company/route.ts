@@ -30,6 +30,8 @@ export async function POST(req: Request) {
 
     const normalizedName = companyName.toLowerCase().replace(/\s+/g, " ").trim();
     const companyId = crypto.randomUUID();
+    // Generate 6-char alphanumeric join code
+    const joinCode = Math.random().toString(36).substring(2, 8).toUpperCase();
 
     // Set 14-day free trial on signup — Solo tier, expires in 14 days
     const trialExpiry = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
@@ -59,6 +61,7 @@ export async function POST(req: Request) {
       legal_name: companyName,
       display_name: companyName,
       normalized_name: normalizedName,
+      join_code: joinCode,
     });
 
     if (companyError) {
@@ -88,6 +91,7 @@ export async function POST(req: Request) {
         id: companyId,
         display_name: companyName,
         normalized_name: normalizedName,
+        join_code: joinCode,
       },
     });
   } catch (err) {
