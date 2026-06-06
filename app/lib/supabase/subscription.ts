@@ -116,7 +116,8 @@ export function getEffectiveTier(profile: UserProfile): SubscriptionTier {
 
 // ─── Check if a feature is available for a tier ───────────────
 export function canAccess(tier: SubscriptionTier, feature: FeatureKey): boolean {
-  const limits = TIER_LIMITS[tier];
+  // Fall back to solo for unknown tiers (manager, admin, etc)
+  const limits = TIER_LIMITS[tier] || TIER_LIMITS["solo"];
   const val = limits[feature as keyof typeof limits];
   if (typeof val === "boolean") return val;
   if (typeof val === "number") return val > 0;
@@ -221,7 +222,7 @@ export async function checkAndIncrementAiUsage(): Promise<{
 
   const profile = await getUserProfile();
   const tier = getEffectiveTier(profile || { id: user.id, subscription_tier: "free" });
-  const limit = TIER_LIMITS[tier].ai_queries_per_day;
+  const limit = (TIER_LIMITS[tier] || TIER_LIMITS['solo']).ai_queries_per_day;
 
   if (limit === Infinity) return { allowed: true, used: 0, limit: Infinity };
 
