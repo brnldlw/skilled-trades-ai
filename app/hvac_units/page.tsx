@@ -79,11 +79,7 @@ import { t } from "../lib/translations";
 function TrialBanner() {
   const { lang } = useLang();
   const es = lang === "es";
-  // Feature gate function — checks if user tier can access a feature
-  const can = (feature: string): boolean => {
-    // For now return true for all — proper tier gating to be restored
-    return true;
-  };
+
   const [profile, setProfile] = React.useState<any>(null);
   React.useEffect(() => {
     import("../lib/supabase/subscription").then(m => m.getUserProfile()).then(p => setProfile(p));
