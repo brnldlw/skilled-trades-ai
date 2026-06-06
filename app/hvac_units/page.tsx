@@ -9735,7 +9735,7 @@ if (needsCompanyOnboarding) {
                   const res = await fetch("/api/onboarding/join-company", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ joinCode, userId: currentUserId, email: userEmail }),
+                    body: JSON.stringify({ joinCode, userId: (await supabase.auth.getUser()).data.user?.id || "", email: userEmail }),
                   });
                   const data = await res.json();
                   if (data.ok) {
