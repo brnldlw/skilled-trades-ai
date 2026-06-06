@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
@@ -79,7 +78,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { userId, overrideTier, overrideExpiresAt, overrideNote, estimatorTier, estimatorCredits } = body;
+    const { userId, overrideTier, overrideExpiresAt, overrideNote, estimatorTier, estimatorCredits, showTechIdentity } = body as any;
 
     const updateData: Record<string, any> = {};
 
@@ -94,6 +93,11 @@ export async function POST(req: NextRequest) {
     if (estimatorTier !== undefined) {
       updateData.estimator_tier = estimatorTier;
       updateData.estimator_credits = estimatorCredits ?? 0;
+    }
+
+    // Handle tech identity privacy setting
+    if (showTechIdentity !== undefined) {
+      updateData.show_tech_identity = showTechIdentity;
     }
 
     if (Object.keys(updateData).length > 0) {

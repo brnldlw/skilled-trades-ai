@@ -96,7 +96,19 @@ export async function GET(req: NextRequest) {
       jobs = data || [];
     }
 
-    return NextResponse.json({ jobs });
+    // Get company's tech identity setting
+    let showTechIdentity = true;
+    if (membership?.company_id) {
+      const { data: company } = await supabase
+        .from("companies")
+        .select("show_tech_identity")
+        .eq("id", membership.company_id)
+        .single();
+      if (company?.show_tech_identity === false) showTechIdentity = false;
+    }
+
+    // Managers always see full names, but respect setting for the response metadata
+    return NextResponse.json({ jobs, showTechIdentity });
 
   } catch (err: any) {
     console.error("Manager API error:", err.message);

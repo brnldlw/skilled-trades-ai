@@ -244,6 +244,55 @@ function OverrideForm({ user, onSave, onCancel }: OverrideFormProps) {
           Manager can view all team jobs, callback rates, failure patterns, and export CSV. They cannot edit service records.
         </div>
       </div>
+
+      <div style={{ borderTop: "1px solid #e2e8f0", marginTop: 16, paddingTop: 14 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 6 }}>
+          👤 Tech Identity in Job History
+        </div>
+        <div style={{ fontSize: 12, color: "#64748b", marginBottom: 10, lineHeight: 1.5 }}>
+          When ON — tech name is visible to other techs viewing unit history. Enables accountability and knowledge transfer.<br/>
+          When OFF — tech name is hidden from other techs. Managers always see full names.
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button
+            onClick={async () => {
+              setSaving(true);
+              try {
+                await fetch("/api/admin/users", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ userId: user.id, showTechIdentity: true }),
+                });
+                onSave();
+              } catch(e) {}
+              setSaving(false);
+            }}
+            style={{ padding: "7px 14px", background: "#16a34a", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
+          >
+            ✓ Show Tech Names (Default)
+          </button>
+          <button
+            onClick={async () => {
+              setSaving(true);
+              try {
+                await fetch("/api/admin/users", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ userId: user.id, showTechIdentity: false }),
+                });
+                onSave();
+              } catch(e) {}
+              setSaving(false);
+            }}
+            style={{ padding: "7px 14px", background: "#fff", color: "#374151", border: "1px solid #e2e8f0", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
+          >
+            Hide Tech Names
+          </button>
+        </div>
+        <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 8 }}>
+          This setting applies company-wide. Managers always see full tech names regardless of this setting.
+        </div>
+      </div>
     </div>
   );
 }
