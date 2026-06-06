@@ -20,6 +20,7 @@ function getNavSections(lang: import("../lib/translations").Language) {
       { label: es ? "Biblioteca de Unidades" : "Unit Library", href: "/hvac_units#unit-library", icon: "📋" },
       { label: es ? "Salud de Flota" : "Fleet Health", href: "/hvac_units#failure-prediction", icon: "🔮" },
       { label: es ? "Panel Admin" : "Admin Panel", href: "/admin", icon: "⚙️", adminOnly: true },
+      { label: es ? "Panel del Manager" : "Manager Dashboard", href: "/manager", icon: "📊" },
     ],
   },
   {
