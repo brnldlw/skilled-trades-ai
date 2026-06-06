@@ -199,6 +199,51 @@ function OverrideForm({ user, onSave, onCancel }: OverrideFormProps) {
           Grant a free trial — tech gets the estimator unlocked instantly. Perfect for converting fence-sitters.
         </div>
       </div>
+
+      <div style={{ borderTop: "1px solid #e2e8f0", marginTop: 16, paddingTop: 14 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 10 }}>
+          📊 Manager Dashboard Access
+        </div>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" as const }}>
+          <button
+            onClick={async () => {
+              setSaving(true);
+              try {
+                await fetch("/api/admin/users", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ userId: user.id, overrideTier: "manager" }),
+                });
+                onSave();
+              } catch(e) {}
+              setSaving(false);
+            }}
+            style={{ padding: "7px 14px", background: "#2563eb", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
+          >
+            Grant Manager Access
+          </button>
+          <button
+            onClick={async () => {
+              setSaving(true);
+              try {
+                await fetch("/api/admin/users", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ userId: user.id, overrideTier: null }),
+                });
+                onSave();
+              } catch(e) {}
+              setSaving(false);
+            }}
+            style={{ padding: "7px 14px", background: "#fff", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
+          >
+            Revoke Manager Access
+          </button>
+        </div>
+        <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 8 }}>
+          Manager can view all team jobs, callback rates, failure patterns, and export CSV. They cannot edit service records.
+        </div>
+      </div>
     </div>
   );
 }
