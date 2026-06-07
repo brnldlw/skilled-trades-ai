@@ -75,6 +75,65 @@ import { OnboardingTour } from "./components/OnboardingTour";
 import { useLang } from "../components/LanguageContext";
 import { t } from "../lib/translations";
 
+// ── View As Banner (admin impersonation) ─────────────────────
+function ViewAsBanner() {
+  const [viewAs, setViewAs] = React.useState<any>(null);
+  React.useEffect(() => {
+    try {
+      const stored = localStorage.getItem("admin_view_as");
+      if (stored) setViewAs(JSON.parse(stored));
+    } catch {}
+  }, []);
+
+  if (!viewAs) return null;
+
+  function exitViewAs() {
+    localStorage.removeItem("admin_view_as");
+    window.location.href = "/admin";
+  }
+
+  return (
+    <div style={{
+      background: "#7c3aed",
+      color: "#fff",
+      padding: "10px 16px",
+      marginBottom: 12,
+      borderRadius: 10,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 12,
+      flexWrap: "wrap" as const,
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <span style={{ fontSize: 16 }}>👁</span>
+        <div>
+          <div style={{ fontSize: 13, fontWeight: 700 }}>
+            Viewing as: {viewAs.email}
+          </div>
+          <div style={{ fontSize: 11, opacity: 0.8 }}>
+            Tier: {viewAs.tier} — This is how the app looks for this user
+          </div>
+        </div>
+      </div>
+      <button onClick={exitViewAs} style={{
+        padding: "6px 14px",
+        background: "rgba(255,255,255,0.2)",
+        color: "#fff",
+        border: "1px solid rgba(255,255,255,0.4)",
+        borderRadius: 8,
+        fontWeight: 700,
+        fontSize: 12,
+        cursor: "pointer",
+        fontFamily: "inherit",
+        flexShrink: 0,
+      }}>
+        ✕ Exit View As
+      </button>
+    </div>
+  );
+}
+
 // ── Trial Banner (inline component) ──────────────────────────
 function TrialBanner() {
   const { lang } = useLang();
@@ -9790,6 +9849,7 @@ return (
   <div key={lang} style={{ paddingTop: 98 }}>
     <NavMenu currentPath="/hvac_units" />
     <OnboardingTour />
+    <ViewAsBanner />
     <TrialBanner />
     <StepProgressBar />
   <div style={{ padding: "12px 14px 48px", maxWidth: 820, margin: "0 auto" }}>
