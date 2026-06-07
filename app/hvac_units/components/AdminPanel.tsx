@@ -440,21 +440,6 @@ export function AdminPanel() {
 
                 <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
                   <button
-                    onClick={() => {
-                      // Store impersonation in localStorage then reload
-                      localStorage.setItem("admin_view_as", JSON.stringify({
-                        userId: user.id,
-                        email: user.email,
-                        tier: getEffectiveTier(user),
-                      }));
-                      window.location.href = "/hvac_units";
-                    }}
-                    style={{ padding: "6px 12px", background: "#7c3aed", color: "#fff", border: "none", borderRadius: 6, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
-                    title="See the app as this user sees it"
-                  >
-                    👁 View As
-                  </button>
-                  <button
                     onClick={() => setEditingId(isEditing ? null : user.id)}
                     style={{ padding: "6px 12px", background: "#0f1f3d", color: "#fff", border: "none", borderRadius: 6, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
                   >

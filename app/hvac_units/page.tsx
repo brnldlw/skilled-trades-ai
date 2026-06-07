@@ -9849,7 +9849,6 @@ return (
   <div key={lang} style={{ paddingTop: 98 }}>
     <NavMenu currentPath="/hvac_units" />
     <OnboardingTour />
-    <ViewAsBanner />
     <TrialBanner />
     <StepProgressBar />
   <div style={{ padding: "12px 14px 48px", maxWidth: 820, margin: "0 auto" }}>
