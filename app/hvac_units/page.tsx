@@ -8017,8 +8017,14 @@ useEffect(() => {
   supabase.auth.getSession().then(async ({ data }: { data: { session: { user?: { email?: string | null } } | null } }) => {
     setIsLoggedIn(!!data.session);
     setUserEmail(data.session?.user?.email || "");
-    const membership = await getCurrentUserMembership();
-    setNeedsCompanyOnboarding(!membership);
+    try {
+      const membership = await getCurrentUserMembership();
+      const needs = !membership;
+      setNeedsCompanyOnboarding(needs);
+    } catch(e) {
+      console.error('Membership check failed:', e);
+      setNeedsCompanyOnboarding(false);
+    }
     setAuthChecked(true);
   });
 }, [supabase]);
