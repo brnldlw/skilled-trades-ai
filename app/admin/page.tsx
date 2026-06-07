@@ -1,8 +1,30 @@
 "use client";
+import { useEffect, useState } from "react";
 import { AdminPanel } from "../hvac_units/components/AdminPanel";
 import { NavMenu } from "../components/NavMenu";
+import { createClient } from "../lib/supabase/client";
 
 export default function AdminPage() {
+  const [allowed, setAllowed] = useState(false);
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) { window.location.href = "/auth"; return; }
+      const { data } = await supabase.from("profiles").select("is_admin").eq("id", user.id).single();
+      if (data?.is_admin) {
+        setAllowed(true);
+      } else {
+        window.location.href = "/hvac_units";
+      }
+      setChecking(false);
+    });
+  }, []);
+
+  if (checking) return <div style={{ padding: 40, textAlign: "center", color: "#64748b" }}>Checking access...</div>;
+  if (!allowed) return null;
+
   return (
     <div style={{ paddingTop: 52, fontFamily: "system-ui, sans-serif" }}>
       <NavMenu currentPath="/admin" />
