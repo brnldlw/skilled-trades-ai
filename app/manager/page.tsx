@@ -44,7 +44,7 @@ export default function ManagerDashboard() {
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
+    supabase.auth.getUser().then(async ({ data: { user } }: { data: { user: any } }) => {
       if (!user) { window.location.href = "/auth"; return; }
       const { data: profile } = await supabase.from("profiles").select("is_admin, override_tier").eq("id", user.id).single();
       const { data: membership } = await supabase.from("company_memberships").select("role").eq("user_id", user.id).eq("status", "active").single();
