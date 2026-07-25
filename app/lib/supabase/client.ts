@@ -10,4 +10,3 @@ export function createClient() {
 
   return createBrowserClient(url, anon);
 }
-console.log("SUPABASE URL", process.env.NEXT_PUBLIC_SUPABASE_URL);

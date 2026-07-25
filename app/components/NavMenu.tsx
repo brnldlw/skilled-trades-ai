@@ -10,65 +10,66 @@ type NavMenuProps = {
 };
 
 function getNavSections(lang: import("../lib/translations").Language) {
-  const es = lang === "es";
+  const tt = (key: import("../lib/translations").TranslationKey) => t(key, lang);
   return [
   {
-    heading: es ? "Principal" : "Main",
+    heading: tt("nav_section_main"),
     items: [
-      { label: es ? "Tablero" : "Dashboard", href: "/", icon: "🏠" },
-      { label: es ? "Nuevo Trabajo" : "New Job", href: "/hvac_units", icon: "🔧" },
-      { label: es ? "Biblioteca de Unidades" : "Unit Library", href: "/hvac_units#unit-library", icon: "📋" },
-      { label: es ? "Salud de Flota" : "Fleet Health", href: "/hvac_units#failure-prediction", icon: "🔮" },
-      { label: es ? "Panel Admin" : "Admin Panel", href: "/admin", icon: "⚙️", adminOnly: true },
-      { label: es ? "Admin de Empresa" : "Company Admin", href: "/company-admin", icon: "🏢" },
-      { label: es ? "Panel del Manager" : "Manager Dashboard", href: "/manager", icon: "📊" },
+      { label: tt("nav_dashboard"), href: "/", icon: "🏠" },
+      { label: tt("nav_new_job"), href: "/hvac_units", icon: "🔧" },
+      { label: tt("nav_unit_library"), href: "/hvac_units#unit-library", icon: "📋" },
+      { label: tt("nav_fleet_health"), href: "/hvac_units#failure-prediction", icon: "🔮" },
+      { label: tt("nav_admin_panel"), href: "/admin", icon: "⚙️", adminOnly: true },
+      { label: tt("nav_company_admin"), href: "/company-admin", icon: "🏢" },
+      { label: tt("nav_manager_dashboard"), href: "/manager", icon: "📊" },
     ],
   },
   {
-    heading: es ? "Herramientas de Diagnóstico" : "Diagnosis Tools",
+    heading: tt("nav_section_diagnosis"),
     items: [
-      { label: es ? "Copiloto de Diagnóstico IA" : "AI Diagnosis Assistant", href: "/hvac_units#ai-chat", icon: "🤖" },
-      { label: es ? "Diagramas de Flujo" : "Guided Flowcharts", href: "/hvac_units#guided-diagnosis", icon: "🗺️" },
-      { label: es ? "Búsqueda de Códigos de Error" : "Error Code Lookup", href: "/hvac_units#error-codes", icon: "🔍" },
-      { label: es ? "Mediciones y Coaching" : "Measurements & Coaching", href: "/hvac_units#measurements", icon: "📊" },
-      { label: es ? "Panel de Decisión de Reparación" : "Repair Decision Panel", href: "/hvac_units#repair", icon: "🛠️" },
-      { label: es ? "Prevención de Retorno" : "Callback Prevention", href: "/hvac_units#callback-checklist", icon: "✅" },
+      { label: tt("nav_ai_diagnosis_assistant"), href: "/hvac_units#ai-chat", icon: "🤖" },
+      { label: tt("nav_guided_flowcharts"), href: "/hvac_units#guided-diagnosis", icon: "🗺️" },
+      { label: tt("nav_error_code_lookup"), href: "/hvac_units#error-codes", icon: "🔍" },
+      { label: tt("nav_measurements_coaching"), href: "/hvac_units#measurements", icon: "📊" },
+      { label: tt("nav_repair_decision_panel"), href: "/hvac_units#repair", icon: "🛠️" },
+      { label: tt("nav_callback_check"), href: "/hvac_units#callback-checklist", icon: "✅" },
     ],
   },
   {
-    heading: es ? "Calculadoras" : "Calculators",
+    heading: tt("nav_section_calculators"),
     items: [
-      { label: es ? "Tabla PT" : "PT Chart Lookup", href: "/hvac_units#calculators", icon: "📊" },
-      { label: es ? "Sobrecalentamiento / Subenfriamiento" : "Superheat / Subcooling", href: "/hvac_units#calculators", icon: "❄️" },
-      { label: es ? "Calculadora Delta-T" : "Delta-T Calculator", href: "/hvac_units#calculators", icon: "🌡️" },
-      { label: es ? "Calculadora CFM" : "CFM Calculator", href: "/hvac_units#calculators", icon: "💨" },
-      { label: es ? "Verificación MFD de Capacitor" : "Capacitor MFD Check", href: "/hvac_units#calculators", icon: "⚡" },
-      { label: es ? "Ley de Ohm" : "Ohm's Law", href: "/hvac_units#calculators", icon: "🔌" },
-      { label: es ? "Aumento de Calor a Gas" : "Gas Heat Rise", href: "/hvac_units#calculators", icon: "🔥" },
+      { label: tt("nav_pt_chart_lookup"), href: "/hvac_units#calculators", icon: "📊" },
+      { label: tt("nav_superheat_subcooling"), href: "/hvac_units#calculators", icon: "❄️" },
+      { label: tt("nav_delta_t_calc"), href: "/hvac_units#calculators", icon: "🌡️" },
+      { label: tt("nav_cfm_calc"), href: "/hvac_units#calculators", icon: "💨" },
+      { label: tt("nav_capacitor_mfd"), href: "/hvac_units#calculators", icon: "⚡" },
+      { label: tt("nav_ohms_law"), href: "/hvac_units#calculators", icon: "🔌" },
+      { label: tt("nav_gas_heat_rise"), href: "/hvac_units#calculators", icon: "🔥" },
     ],
   },
   {
-    heading: es ? "Biblioteca de Referencia" : "Reference Library",
+    heading: tt("nav_section_reference"),
     items: [
-      { label: es ? "Referencia de Correas" : "Belt Cross-Reference", href: "/hvac_units#belt-reference", icon: "🔄" },
-      { label: es ? "Referencia de Partes" : "Parts Cross-Reference", href: "/hvac_units#parts-reference", icon: "🧰" },
-      { label: es ? "Referencia de Filtros" : "Filter Reference", href: "/hvac_units#filter-reference", icon: "🌬️" },
-      { label: es ? "Referencia de Refrigerantes" : "Refrigerant Quick-Ref", href: "/hvac_units#refrigerant-reference", icon: "❄️" },
-      { label: es ? "Referencia de Cableado" : "Wiring Reference", href: "/hvac_units#wiring-reference", icon: "⚡" },
-      { label: es ? "Búsqueda de Partes" : "Parts Lookup", href: "/hvac_units#parts-lookup", icon: "🔍" },
-      { label: es ? "Centro de Aprendizaje" : "Learning Hub", href: "/hvac_units#learning-hub", icon: "📚" },
-      { label: es ? "Contacto / Soporte" : "Contact / Support", href: "mailto:support@myhvacrtool.com", icon: "✉️" },
+      { label: tt("nav_belt_ref"), href: "/hvac_units#belt-reference", icon: "🔄" },
+      { label: tt("nav_parts_ref"), href: "/hvac_units#parts-reference", icon: "🧰" },
+      { label: tt("nav_filter_ref"), href: "/hvac_units#filter-reference", icon: "🌬️" },
+      { label: tt("nav_refrigerant_ref"), href: "/hvac_units#refrigerant-reference", icon: "❄️" },
+      { label: tt("nav_wiring_ref"), href: "/hvac_units#wiring-reference", icon: "⚡" },
+      { label: tt("nav_parts_lookup"), href: "/hvac_units#parts-lookup", icon: "🔍" },
+      { label: tt("nav_parts_manuals_assist"), href: "/hvac_units#parts-manuals", icon: "📖" },
+      { label: tt("nav_learning"), href: "/hvac_units#learning-hub", icon: "📚" },
+      { label: tt("nav_contact_support"), href: "mailto:support@myhvacrtool.com", icon: "✉️" },
     ],
   },
   {
-    heading: es ? "Cierre y Cumplimiento" : "Closeout & Compliance",
+    heading: tt("nav_section_closeout"),
     items: [
-      { label: es ? "Llenado de Formularios PM" : "PM Form Filler", href: "/hvac_units#pm-forms", icon: "📋" },
-      { label: es ? "Estimador de Cotización" : "Quote Estimator", href: "/hvac_units#estimator", icon: "💰" },
-      { label: es ? "Línea de Expertos 🔜" : "Expert Hotline 🔜", href: "/hvac_units#expert-hotline", icon: "📞" },
-      { label: es ? "Registro de Refrigerante" : "Refrigerant Log", href: "/hvac_units#refrigerant-log", icon: "🧪" },
-      { label: es ? "Reporte al Cliente" : "Customer Report", href: "/hvac_units#customer-report", icon: "📄" },
-      { label: es ? "Lista Anti-Retorno" : "Callback Checklist", href: "/hvac_units#callback-checklist", icon: "✅" },
+      { label: tt("nav_pm_forms"), href: "/hvac_units#pm-forms", icon: "📋" },
+      { label: tt("nav_estimator"), href: "/hvac_units#estimator", icon: "💰" },
+      { label: `${tt("nav_expert")} 🔜`, href: "/hvac_units#expert-hotline", icon: "📞" },
+      { label: tt("nav_refrigerant_log"), href: "/hvac_units#refrigerant-log", icon: "🧪" },
+      { label: tt("nav_customer_report"), href: "/hvac_units#customer-report", icon: "📄" },
+      { label: tt("nav_callback_checklist"), href: "/hvac_units#callback-checklist", icon: "✅" },
     ],
   },
 ]; }
@@ -202,7 +203,7 @@ export function NavMenu({ currentPath = "" }: NavMenuProps) {
         {/* Language toggle */}
         <div style={{ padding: "10px 12px", background: "rgba(255,255,255,0.05)", borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", gap: 8, alignItems: "center" }}>
           <span style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: "0.08em", marginRight: 4 }}>
-            {lang === "es" ? "Idioma" : "Language"}:
+            {t("lang_toggle_label", lang)}:
           </span>
           <button onClick={() => { setLang("en"); setTimeout(() => window.location.reload(), 150); }}
             style={{ flex: 1, padding: "8px", borderRadius: 8, border: "none", fontWeight: 800, fontSize: 13, cursor: "pointer", fontFamily: "inherit", background: lang === "en" ? "#fff" : "rgba(255,255,255,0.1)", color: lang === "en" ? "#0f1f3d" : "rgba(255,255,255,0.6)" }}>
@@ -249,7 +250,7 @@ export function NavMenu({ currentPath = "" }: NavMenuProps) {
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.08)"; (e.currentTarget as HTMLElement).style.color = "#fff"; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.55)"; }}
           >
-            Sign Out
+            {t("btn_sign_out", lang)}
           </button>
         </div>
       </div>

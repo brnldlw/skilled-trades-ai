@@ -13151,7 +13151,7 @@ return (
 
 {/* guided-next-test-engine-v2 */}
       <div style={{ marginTop: 10 }}>
-        <SectionCard title="Guided Next-Test Engine">
+        <SectionCard title="Guided Next-Test Engine" id="guided-diagnosis">
           <SmallHint>
             Uses the selected affected component, current symptom, and same-component history to suggest
             the next field checks instead of making the tech guess.
@@ -14959,7 +14959,7 @@ return (
           </div>
 
 {/* restore-error-code-top-section-v1 */}
-          <div style={{ gridColumn: "1 / -1", marginTop: 12 }}>
+          <div id="error-codes" style={{ gridColumn: "1 / -1", marginTop: 12, scrollMarginTop: 64 }}>
             <div
               style={{
                 border: "1px solid #e5e5e5",

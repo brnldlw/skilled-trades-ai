@@ -10,6 +10,10 @@ import {
 } from "./lib/supabase/work-orders";
 import { NavMenu } from "./components/NavMenu";
 import { FailurePredictionDashboard } from "./components/FailurePredictionDashboard";
+import { useSubscription } from "./hvac_units/hooks/useSubscription";
+import { getCompanyMembershipRole } from "./lib/supabase/roles";
+import { useLang } from "./components/LanguageContext";
+import { t } from "./lib/translations";
 
 function timeAgo(dateStr: string): string {
   const d = new Date(dateStr);
@@ -34,17 +38,21 @@ function StatCard({ value, label, color = "#2563eb" }: { value: string | number;
   );
 }
 
-function QuickAction({ icon, label, sub, href, color = "#2563eb" }: { icon: string; label: string; sub: string; href: string; color?: string }) {
+function HubTile({ icon, label, sub, href, color = "#2563eb", badge }: { icon: string; label: string; sub?: string; href: string; color?: string; badge?: string }) {
   return (
-    <a href={href} style={{ background: "#fff", border: "1px solid #e8edf5", borderRadius: 12, padding: "14px 16px", textDecoration: "none", display: "flex", alignItems: "center", gap: 12, transition: "all 0.15s" }}
+    <a href={href} style={{ background: "#fff", border: "1px solid #e8edf5", borderRadius: 12, padding: "14px 8px", textDecoration: "none", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 8, position: "relative", transition: "all 0.15s" }}
       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = color; (e.currentTarget as HTMLElement).style.boxShadow = `0 0 0 3px ${color}18`; }}
       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "#e8edf5"; (e.currentTarget as HTMLElement).style.boxShadow = "none"; }}>
-      <div style={{ width: 42, height: 42, borderRadius: 10, background: `${color}18`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>{icon}</div>
+      {badge && (
+        <span style={{ position: "absolute", top: 6, right: 6, fontSize: 9, fontWeight: 800, padding: "2px 6px", borderRadius: 20, background: badge === "Pro" ? "#ede9fe" : "#f1f5f9", color: badge === "Pro" ? "#7c3aed" : "#64748b" }}>
+          {badge}
+        </span>
+      )}
+      <div style={{ width: 46, height: 46, borderRadius: 12, background: `${color}18`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>{icon}</div>
       <div>
-        <div style={{ fontSize: 14, fontWeight: 700, color: "#1e293b" }}>{label}</div>
-        <div style={{ fontSize: 12, color: "#64748b", marginTop: 1 }}>{sub}</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: "#1e293b", lineHeight: 1.25 }}>{label}</div>
+        {sub && <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 2 }}>{sub}</div>}
       </div>
-      <div style={{ marginLeft: "auto", fontSize: 18, color: "#cbd5e1" }}>›</div>
     </a>
   );
 }
@@ -68,6 +76,13 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [authed, setAuthed] = useState<boolean | null>(null);
   const [search, setSearch] = useState("");
+  const { isAdmin, can, profile } = useSubscription();
+  const [companyRole, setCompanyRole] = useState<string | null>(null);
+  const { lang } = useLang();
+
+  useEffect(() => {
+    getCompanyMembershipRole().then(setCompanyRole).catch(() => setCompanyRole(null));
+  }, []);
 
   useEffect(() => {
     const supabase = createClient();
@@ -115,6 +130,75 @@ export default function DashboardPage() {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
+  const isManager = isAdmin || ["admin", "manager", "owner"].includes(companyRole || "") || (profile?.override_tier as string | undefined) === "manager";
+
+  const tt = (key: import("./lib/translations").TranslationKey) => t(key, lang);
+
+  const hubCategories: { heading: string; color: string; items: { label: string; sub?: string; href: string; icon: string; badge?: string }[] }[] = [
+    {
+      heading: tt("hub_section_start_here"),
+      color: "#2563eb",
+      items: [
+        { label: tt("nav_new_job"), sub: tt("hub_sub_new_job"), href: "/hvac_units#new-job", icon: "🔧" },
+        { label: tt("nav_unit_library"), sub: `${units.length} ${tt("hub_sub_units_tracked")}`, href: "/hvac_units#unit-library", icon: "📋" },
+        { label: tt("nav_fleet_health"), sub: tt("hub_sub_fleet_health"), href: "/hvac_units#failure-prediction", icon: "🔮" },
+      ],
+    },
+    {
+      heading: tt("nav_section_diagnosis"),
+      color: "#7c3aed",
+      items: [
+        { label: tt("nav_ai_diagnosis_assistant"), sub: tt("hub_sub_ai_chat"), href: "/hvac_units#ai-chat", icon: "🤖" },
+        { label: tt("nav_guided_flowcharts"), sub: tt("hub_sub_guided_flowcharts"), href: "/hvac_units#guided-diagnosis", icon: "🗺️" },
+        { label: tt("nav_error_code_lookup"), sub: tt("hub_sub_error_codes"), href: "/hvac_units#error-codes", icon: "🔍" },
+        { label: tt("nav_measurements_coaching"), sub: tt("hub_sub_measurements"), href: "/hvac_units#measurements", icon: "📊" },
+        { label: tt("nav_repair_decision_panel"), sub: tt("hub_sub_repair"), href: "/hvac_units#repair", icon: "🛠️" },
+        { label: tt("nav_callback_check"), sub: tt("hub_sub_callback"), href: "/hvac_units#callback-checklist", icon: "✅" },
+      ],
+    },
+    {
+      heading: tt("nav_section_calculators"),
+      color: "#16a34a",
+      items: [
+        { label: tt("nav_calculators"), sub: tt("hub_sub_calculators"), href: "/hvac_units#calculators", icon: "🧮" },
+      ],
+    },
+    {
+      heading: tt("nav_section_reference"),
+      color: "#d97706",
+      items: [
+        { label: tt("nav_belt_ref"), href: "/hvac_units#belt-reference", icon: "🔄" },
+        { label: tt("nav_parts_ref"), href: "/hvac_units#parts-reference", icon: "🧰" },
+        { label: tt("nav_filter_ref"), href: "/hvac_units#filter-reference", icon: "🌬️" },
+        { label: tt("nav_refrigerant_ref"), href: "/hvac_units#refrigerant-reference", icon: "❄️" },
+        { label: tt("nav_wiring_ref"), href: "/hvac_units#wiring-reference", icon: "⚡" },
+        { label: tt("nav_parts_lookup"), href: "/hvac_units#parts-lookup", icon: "🔍" },
+        { label: tt("nav_parts_manuals_assist"), href: "/hvac_units#parts-manuals", icon: "📖" },
+        { label: tt("nav_learning"), href: "/hvac_units#learning-hub", icon: "📚" },
+      ],
+    },
+    {
+      heading: tt("nav_section_closeout"),
+      color: "#0d9488",
+      items: [
+        { label: tt("nav_pm_forms"), href: "/hvac_units#pm-forms", icon: "📝" },
+        { label: tt("nav_estimator"), href: "/hvac_units#estimator", icon: "💰" },
+        { label: tt("nav_expert"), href: "/hvac_units#expert-hotline", icon: "📞", badge: tt("badge_soon") },
+        { label: tt("nav_refrigerant_log"), href: "/hvac_units#refrigerant-log", icon: "🧪", badge: can("refrigerant_log") ? undefined : tt("badge_pro") },
+        { label: tt("nav_customer_report"), href: "/hvac_units#customer-report", icon: "📄", badge: can("customer_reports") ? undefined : tt("badge_pro") },
+      ],
+    },
+    {
+      heading: tt("hub_section_management"),
+      color: "#475569",
+      items: [
+        ...(isAdmin ? [{ label: tt("nav_admin_panel"), href: "/admin", icon: "⚙️" }] : []),
+        ...(isAdmin || isManager ? [{ label: tt("nav_manager_dashboard"), href: "/manager", icon: "📊" }] : []),
+        ...(isManager ? [{ label: tt("nav_company_admin"), href: "/company-admin", icon: "🏢" }] : []),
+      ],
+    },
+  ].filter(cat => cat.items.length > 0);
+
   return (
     <div style={{ fontFamily: "system-ui, sans-serif", background: "#f4f7fb", minHeight: "100vh" }}>
       <NavMenu currentPath="/" />
@@ -146,6 +230,19 @@ export default function DashboardPage() {
         </div>
 
         <div style={{ maxWidth: 680, margin: "0 auto", padding: "0 16px 40px" }}>
+          <div style={{ marginTop: 16 }}>
+            {hubCategories.map(cat => (
+              <div key={cat.heading} style={{ marginBottom: 18 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>{cat.heading}</div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))", gap: 10 }}>
+                  {cat.items.map(item => (
+                    <HubTile key={item.href + item.label} icon={item.icon} label={item.label} sub={item.sub} href={item.href} color={cat.color} badge={item.badge} />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
           {!loading && (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginTop: 16 }}>
               <StatCard value={units.length} label="Units tracked" color="#2563eb" />
@@ -188,16 +285,6 @@ export default function DashboardPage() {
             <div style={{ fontSize: 12, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 4 }}>Fleet Health</div>
             <div style={{ fontSize: 11, color: "#94a3b8", marginBottom: 10 }}>Units ranked by failure risk</div>
             <FailurePredictionDashboard compact={true} maxItems={5} />
-          </div>
-
-          <div style={{ marginTop: 20 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>Quick Actions</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <QuickAction icon="🔧" label="Start a New Job" sub="Open a fresh diagnosis workflow" href="/hvac_units" color="#2563eb" />
-              <QuickAction icon="🤖" label="Ask the AI Assistant" sub="Talk to a Claude-powered master tech" href="/hvac_units#ai-chat" color="#7c3aed" />
-              <QuickAction icon="🧮" label="Open Calculators" sub="PT chart, SH/SC, CFM, Ohm's law" href="/hvac_units#calculators" color="#16a34a" />
-              <QuickAction icon="📋" label="Unit Library" sub={`Browse all ${units.length} tracked units`} href="/hvac_units#unit-library" color="#d97706" />
-            </div>
           </div>
 
           {!loading && recentEvents.length > 0 && (
