@@ -28,6 +28,8 @@ function getNavSections(lang: import("../lib/translations").Language) {
     heading: tt("nav_section_diagnosis"),
     items: [
       { label: tt("nav_ai_diagnosis_assistant"), href: "/hvac_units#ai-chat", icon: "🤖" },
+      { label: tt("nav_photo_diagnose"), href: "/hvac_units#photo-diagnose", icon: "📷" },
+      { label: tt("nav_nameplate_reader"), href: "/hvac_units#nameplate-reader", icon: "🏷️" },
       { label: tt("nav_guided_flowcharts"), href: "/hvac_units#guided-diagnosis", icon: "🗺️" },
       { label: tt("nav_error_code_lookup"), href: "/hvac_units#error-codes", icon: "🔍" },
       { label: tt("nav_measurements_coaching"), href: "/hvac_units#measurements", icon: "📊" },

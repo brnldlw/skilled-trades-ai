@@ -53,6 +53,8 @@ export const translations = {
   nav_section_calculators: { en: "Calculators", es: "Calculadoras" },
   nav_section_reference: { en: "Reference Library", es: "Biblioteca de Referencia" },
   nav_section_closeout: { en: "Closeout & Compliance", es: "Cierre y Cumplimiento" },
+  nav_photo_diagnose: { en: "Photo Diagnosis", es: "Diagnóstico por Foto" },
+  nav_nameplate_reader: { en: "Nameplate Reader", es: "Lector de Placa" },
 
   // ── Hub (dashboard icon grid) ─────────────────────────────────
   hub_section_start_here: { en: "Start Here", es: "Empieza Aquí" },
@@ -67,6 +69,8 @@ export const translations = {
   hub_sub_repair: { en: "Confirm the fix", es: "Confirmar la reparación" },
   hub_sub_callback: { en: "Pre-leave checklist", es: "Lista antes de salir" },
   hub_sub_calculators: { en: "PT chart · SH/SC · CFM · Ohm's law", es: "Tabla PT · SH/SC · CFM · Ley de Ohm" },
+  hub_sub_photo_diagnose: { en: "Analyze a photo", es: "Analizar una foto" },
+  hub_sub_nameplate_reader: { en: "Scan equipment tag", es: "Escanear placa del equipo" },
   badge_soon: { en: "Soon", es: "Próximo" },
   badge_pro: { en: "Pro", es: "Pro" },
 

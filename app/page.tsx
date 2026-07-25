@@ -149,6 +149,8 @@ export default function DashboardPage() {
       color: "#7c3aed",
       items: [
         { label: tt("nav_ai_diagnosis_assistant"), sub: tt("hub_sub_ai_chat"), href: "/hvac_units#ai-chat", icon: "🤖" },
+        { label: tt("nav_photo_diagnose"), sub: tt("hub_sub_photo_diagnose"), href: "/hvac_units#photo-diagnose", icon: "📷" },
+        { label: tt("nav_nameplate_reader"), sub: tt("hub_sub_nameplate_reader"), href: "/hvac_units#nameplate-reader", icon: "🏷️" },
         { label: tt("nav_guided_flowcharts"), sub: tt("hub_sub_guided_flowcharts"), href: "/hvac_units#guided-diagnosis", icon: "🗺️" },
         { label: tt("nav_error_code_lookup"), sub: tt("hub_sub_error_codes"), href: "/hvac_units#error-codes", icon: "🔍" },
         { label: tt("nav_measurements_coaching"), sub: tt("hub_sub_measurements"), href: "/hvac_units#measurements", icon: "📊" },

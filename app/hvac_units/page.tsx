@@ -12745,6 +12745,7 @@ return (
 
    <SectionCard
           title="Photo Diagnosis"
+          id="photo-diagnose"
           right={<PillButton text="Choose photo" onClick={() => photoInputRef.current?.click()} />}
         >
           <input
@@ -14701,6 +14702,7 @@ return (
 
       <SectionCard
           title="Nameplate Photo Reader"
+          id="nameplate-reader"
           right={<PillButton text="Choose photo" onClick={() => fileInputRef.current?.click()} />}
         >
           <input
