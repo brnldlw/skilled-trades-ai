@@ -2,7 +2,7 @@
 // Caches the app shell and static tools for offline use
 // API calls (AI, Supabase, photos) always go to network
 
-const CACHE_NAME = "hvacr-pro-v1";
+const CACHE_NAME = "hvacr-pro-v2";
 const OFFLINE_URL = "/offline.html";
 
 // Resources to cache immediately on install
