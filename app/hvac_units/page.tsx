@@ -56,6 +56,13 @@ import { SiteUnitsAtLocation } from "./components/SiteUnitsAtLocation";
 import { NameplateReader } from "./components/NameplateReader";
 import { SymptomPacks } from "./components/SymptomPacks";
 import { ServiceEventPhotos } from "./components/ServiceEventPhotos";
+import { CurrentLoadedUnit } from "./components/CurrentLoadedUnit";
+import { AffectedComponentSelect } from "./components/AffectedComponentSelect";
+import { RepairExecutionAssist } from "./components/RepairExecutionAssist";
+import { PartVerificationChecklist } from "./components/PartVerificationChecklist";
+import { SuggestedFollowUpWatchlist } from "./components/SuggestedFollowUpWatchlist";
+import { VerificationOutcomeRepairCommit } from "./components/VerificationOutcomeRepairCommit";
+import { MeasurementsObservations } from "./components/MeasurementsObservations";
 
 import { CustomerReport } from "./components/CustomerReport";
 
@@ -9705,143 +9712,32 @@ return (
           }}
         >
           <SectionCard title="Current Loaded Unit">
-            <div
-              style={{
-                border: "1px solid #e5e5e5",
-                borderRadius: 12,
-                padding: 12,
-                background: currentLoadedUnitId ? "#f7fbff" : "#fafafa",
-                boxShadow: "0 4px 14px rgba(0,0,0,0.08)",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  gap: 8,
-                  flexWrap: "wrap",
-                  alignItems: "center",
-                  marginBottom: 10,
-                }}
-              >
-                <span
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    padding: "4px 8px",
-                    borderRadius: 999,
-                    border: "1px solid #cfcfcf",
-                    background: currentLoadedUnitId ? "#eefaf0" : "#f7f7f7",
-                    fontSize: 12,
-                    fontWeight: 900,
-                  }}
-                >
-                  {currentLoadedUnitId ? "UNIT LOADED" : "NO UNIT LOADED"}
-                </span>
-
-                {currentLoadedUnitId ? (
-                  <span
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      padding: "4px 8px",
-                      borderRadius: 999,
-                      border: "1px solid #cfcfcf",
-                      background: "#f7f7f7",
-                      fontSize: 12,
-                      fontWeight: 900,
-                    }}
-                  >
-                    ID: {currentLoadedUnitId.slice(0, 8)}
-                  </span>
-                ) : null}
-              </div>
-
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: 10,
-                }}
-              >
-                <div><b>Customer:</b> {customerName || "-"}</div>
-                <div><b>Site:</b> {siteName || "-"}</div>
-                <div><b>Unit Tag:</b> {unitNickname || "-"}</div>
-                <div><b>Manufacturer:</b> {manufacturer || "-"}</div>
-                <div><b>Model:</b> {model || "-"}</div>
-                <div><b>Serial:</b> {serialNumber || "-"}</div>
-                <div><b>System Type:</b> {systemType || "single"}</div>
-                <div><b>Primary Role:</b> {primaryComponentRole || "unit"}</div>
-                <div style={{ gridColumn: "1 / -1" }}>
-                  {/* linked-equipment-summary-v3 */}
-                  <b>Linked Equipment:</b>{" "}
-                  {linkedEquipmentComponents.length
-                    ? linkedEquipmentComponents.map((component, idx) => {
-                        const bits = [
-                          component.role || `component ${idx + 1}`,
-                          component.tag || "",
-                          component.manufacturer || "",
-                          component.model || "",
-                          component.serial || "",
-                        ].filter(Boolean);
-                        return bits.join(" • ");
-                      }).join(" | ")
-                    : "None"}
-                </div>
-              </div>
-
-              <SmallHint style={{ marginTop: 10 }}>
-                Always verify this banner before saving historical calls so they stay attached to the correct unit.
-              </SmallHint>
-            </div>
+            <CurrentLoadedUnit
+              currentLoadedUnitId={currentLoadedUnitId}
+              customerName={customerName}
+              siteName={siteName}
+              unitNickname={unitNickname}
+              serialNumber={serialNumber}
+              systemType={systemType}
+              primaryComponentRole={primaryComponentRole}
+              linkedEquipmentComponents={linkedEquipmentComponents}
+            />
           </SectionCard>
         </div>
 
       {/* affected-component-ui-v1 */}
       <div style={{ marginTop: 10 }}>
         <SectionCard title="Affected Component for This Call">
-          <SmallHint>
-            Select the exact piece of equipment this call is about. This is required for split systems,
-            walk-ins, mini-splits, and any multi-component setup so history stays tied to the right component.
-          </SmallHint>
-
-          {(() => {
-            const options = getAffectedComponentOptions();
-            return (
-              <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
-                <select
-                  value={affectedComponentId}
-                  onChange={(e) => {
-                    const nextId = e.target.value;
-                    const selected = options.find((option) => option.id === nextId);
-                    setAffectedComponentId(nextId);
-                    setAffectedComponentLabel(selected?.label || "");
-                  }}
-                  style={{ width: "100%", padding: 8 }}
-                >
-                  <option value="">Select affected component</option>
-                  {options.map((option) => (
-                    <option key={option.id} value={option.id}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-
-                {affectedComponentId ? (
-                  <SmallHint>
-                    Selected: <b>{affectedComponentLabel || affectedComponentId}</b>
-                  </SmallHint>
-                ) : systemType !== "single" ? (
-                  <SmallHint>
-                    Required for multi-component systems.
-                  </SmallHint>
-                ) : (
-                  <SmallHint>
-                    For single-equipment calls this will default to the primary component if you leave it blank.
-                  </SmallHint>
-                )}
-              </div>
-            );
-          })()}
+          <AffectedComponentSelect
+            options={getAffectedComponentOptions()}
+            affectedComponentId={affectedComponentId}
+            affectedComponentLabel={affectedComponentLabel}
+            systemType={systemType}
+            onSelect={(id, label) => {
+              setAffectedComponentId(id);
+              setAffectedComponentLabel(label);
+            }}
+          />
         </SectionCard>
       </div>
 
@@ -9872,222 +9768,7 @@ return (
             For the selected part, shows what to verify first, how to approach replacement, safety/watch-outs, common mistakes, and quick video/search links.
           </SmallHint>
 
-          {(() => {
-            const payload = buildRepairExecutionAssist();
-
-            if (!payload.selectedPart) {
-              return (
-                <div style={{ marginTop: 12, display: "grid", gap: 12 }}>
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                      gap: 10,
-                    }}
-                  >
-                    <div
-                      style={{
-                        border: "1px solid #eee",
-                        borderRadius: 10,
-                        padding: 10,
-                        background: "#fafafa",
-                      }}
-                    >
-                      <div style={{ fontWeight: 900, fontSize: 12, color: "#666", textTransform: "uppercase" }}>
-                        Current Part Focus
-                      </div>
-                      <div style={{ marginTop: 4, fontWeight: 700 }}>
-                        None selected yet
-                      </div>
-                    </div>
-
-                    <div
-                      style={{
-                        border: "1px solid #eee",
-                        borderRadius: 10,
-                        padding: 10,
-                        background: "#fafafa",
-                      }}
-                    >
-                      <div style={{ fontWeight: 900, fontSize: 12, color: "#666", textTransform: "uppercase" }}>
-                        What Unlocks This
-                      </div>
-                      <div style={{ marginTop: 4, fontWeight: 700 }}>
-                        Select a part in Part Verification Checklist
-                      </div>
-                    </div>
-                  </div>
-
-                  <div
-                    style={{
-                      border: "1px solid #e5e5e5",
-                      borderRadius: 12,
-                      padding: 12,
-                      background: "#fffaf0",
-                      display: "grid",
-                      gap: 8,
-                    }}
-                  >
-                    <div style={{ fontWeight: 900 }}>
-                      Repair help is ready once a part is selected.
-                    </div>
-
-                    <SmallHint>This section will show:</SmallHint>
-
-                    <ul style={{ marginTop: 0, paddingLeft: 18 }}>
-                      <li><SmallHint>Verify First</SmallHint></li>
-                      <li><SmallHint>Replace Steps</SmallHint></li>
-                      <li><SmallHint>Safety / Shutdown</SmallHint></li>
-                      <li><SmallHint>Common Mistakes</SmallHint></li>
-                      <li><SmallHint>Watch After Repair</SmallHint></li>
-                      <li><SmallHint>YouTube / Web repair search links</SmallHint></li>
-                    </ul>
-
-                    <SmallHint>
-                      Pick a likely part in <b>Part Verification Checklist</b> and this section will automatically fill in.
-                    </SmallHint>
-                  </div>
-                </div>
-              );
-            }
-
-            return (
-              <div style={{ marginTop: 12, display: "grid", gap: 12 }}>
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                    gap: 10,
-                  }}
-                >
-                  <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10, background: "#fafafa" }}>
-                    <div style={{ fontWeight: 900, fontSize: 12, color: "#666", textTransform: "uppercase" }}>
-                      Selected Part
-                    </div>
-                    <div style={{ marginTop: 4, fontWeight: 700 }}>
-                      {payload.selectedPart}
-                    </div>
-                  </div>
-
-                  <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10, background: "#fafafa" }}>
-                    <div style={{ fontWeight: 900, fontSize: 12, color: "#666", textTransform: "uppercase" }}>
-                      Search Context
-                    </div>
-                    <div style={{ marginTop: 4, fontWeight: 700 }}>
-                      {payload.searchQuery}
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                  {payload.youtubeSearchUrl ? (
-                    <a
-                      href={payload.youtubeSearchUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      style={{
-                        display: "inline-block",
-                        padding: "8px 12px",
-                        fontWeight: 900,
-                        border: "1px solid #cfcfcf",
-                        borderRadius: 10,
-                        background: "#ffffff",
-                        color: "#111",
-                        textDecoration: "none",
-                        boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                      }}
-                    >
-                      Open YouTube Repair Search
-                    </a>
-                  ) : null}
-
-                  {payload.webSearchUrl ? (
-                    <a
-                      href={payload.webSearchUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      style={{
-                        display: "inline-block",
-                        padding: "8px 12px",
-                        fontWeight: 900,
-                        border: "1px solid #cfcfcf",
-                        borderRadius: 10,
-                        background: "#ffffff",
-                        color: "#111",
-                        textDecoration: "none",
-                        boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                      }}
-                    >
-                      Open Web Search
-                    </a>
-                  ) : null}
-                </div>
-
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-                    gap: 12,
-                  }}
-                >
-                  <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 12, background: "#fafafa" }}>
-                    <div style={{ fontWeight: 900 }}>Verify First</div>
-                    <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                      {payload.verifyFirst.map((item, idx) => (
-                        <li key={idx}>
-                          <SmallHint>{item}</SmallHint>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 12, background: "#fafafa" }}>
-                    <div style={{ fontWeight: 900 }}>Replace Steps</div>
-                    <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                      {payload.replaceSteps.map((item, idx) => (
-                        <li key={idx}>
-                          <SmallHint>{item}</SmallHint>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 12, background: "#fafafa" }}>
-                    <div style={{ fontWeight: 900 }}>Safety / Shutdown</div>
-                    <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                      {payload.safety.map((item, idx) => (
-                        <li key={idx}>
-                          <SmallHint>{item}</SmallHint>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 12, background: "#fafafa" }}>
-                    <div style={{ fontWeight: 900 }}>Common Mistakes</div>
-                    <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                      {payload.mistakes.map((item, idx) => (
-                        <li key={idx}>
-                          <SmallHint>{item}</SmallHint>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 12, background: "#fafafa" }}>
-                    <div style={{ fontWeight: 900 }}>Watch After Repair</div>
-                    <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                      {payload.watchAfterRepair.map((item, idx) => (
-                        <li key={idx}>
-                          <SmallHint>{item}</SmallHint>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            );
-          })()}
+          <RepairExecutionAssist payload={buildRepairExecutionAssist()} />
         </SectionCard>
       </div>
 
@@ -10098,103 +9779,25 @@ return (
             Pick a likely part and the app gives the exact checks to perform before replacing it.
           </SmallHint>
 
-          {(() => {
-            const payload = buildPartVerificationChecklistItems();
+          <PartVerificationChecklist
+            payload={buildPartVerificationChecklistItems()}
+            onSelectPart={setSelectedVerificationPart}
+            onAddPartsReplaced={(part) =>
+              setPartsReplaced((prev) => {
+                const current = String(prev || "").trim();
+                const existing = current
+                  .split(/[;,]/)
+                  .map((entry) => entry.trim().toLowerCase())
+                  .filter(Boolean);
 
-            return (
-              <div style={{ marginTop: 12, display: "grid", gap: 12 }}>
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                    gap: 10,
-                  }}
-                >
-                  <div style={{ display: "grid", gap: 6 }}>
-                    <label style={{ fontWeight: 900 }}>Selected Part To Verify</label>
-                    <select
-                      value={payload.selectedPart}
-                      onChange={(e) => setSelectedVerificationPart(e.target.value)}
-                      style={{ width: "100%", padding: 8 }}
-                    >
-                      <option value="">Choose a part</option>
-                      {payload.availableParts.map((part) => (
-                        <option key={part} value={part}>
-                          {part}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                if (existing.includes(part.trim().toLowerCase())) {
+                  return current;
+                }
 
-                  <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10, background: "#fafafa" }}>
-                    <div style={{ fontWeight: 900, fontSize: 12, color: "#666", textTransform: "uppercase" }}>
-                      Current Part Focus
-                    </div>
-                    <div style={{ marginTop: 4, fontWeight: 700 }}>
-                      {payload.selectedPart || "Choose a part"}
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 12, background: "#fafafa" }}>
-                  <div style={{ fontWeight: 900 }}>Verification Checklist</div>
-                  <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                    {payload.checklist.map((item, idx) => (
-                      <li key={idx}>
-                        <SmallHint>{item}</SmallHint>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 12, background: "#fafafa" }}>
-                  <div style={{ fontWeight: 900 }}>Context Notes</div>
-                  <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                    {payload.notes.map((item, idx) => (
-                      <li key={idx}>
-                        <SmallHint>{item}</SmallHint>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {payload.selectedPart ? (
-                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setPartsReplaced((prev) => {
-                          const current = String(prev || "").trim();
-                          const existing = current
-                            .split(/[;,]/)
-                            .map((entry) => entry.trim().toLowerCase())
-                            .filter(Boolean);
-
-                          if (existing.includes(payload.selectedPart.trim().toLowerCase())) {
-                            return current;
-                          }
-
-                          return [current, payload.selectedPart].filter(Boolean).join(", ");
-                        })
-                      }
-                      style={{
-                        padding: "8px 12px",
-                        fontWeight: 900,
-                        border: "1px solid #cfcfcf",
-                        borderRadius: 10,
-                        background: "#ffffff",
-                        color: "#111",
-                        cursor: "pointer",
-                        boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                      }}
-                    >
-                      Add Selected Part to Parts Replaced
-                    </button>
-                  </div>
-                ) : null}
-              </div>
-            );
-          })()}
+                return [current, part].filter(Boolean).join(", ");
+              })
+            }
+          />
         </SectionCard>
       </div>
 
@@ -10358,116 +9961,11 @@ return (
             Builds a watchlist from the verified repair path so the tech knows what to monitor next and what may still trigger a callback.
           </SmallHint>
 
-          {(() => {
-            const payload = buildSuggestedFollowUpWatchlist();
-
-            return (
-              <div style={{ marginTop: 12, display: "grid", gap: 12 }}>
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                    gap: 10,
-                  }}
-                >
-                  <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10, background: "#fafafa" }}>
-                    <div style={{ fontWeight: 900, fontSize: 12, color: "#666", textTransform: "uppercase" }}>
-                      Selected Part
-                    </div>
-                    <div style={{ marginTop: 4, fontWeight: 700 }}>
-                      {payload.selectedPart || "Choose a part in Part Verification Checklist"}
-                    </div>
-                  </div>
-
-                  <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10, background: "#fafafa" }}>
-                    <div style={{ fontWeight: 900, fontSize: 12, color: "#666", textTransform: "uppercase" }}>
-                      Verification Outcome
-                    </div>
-                    <div style={{ marginTop: 4, fontWeight: 700 }}>
-                      {payload.selectedOutcome || "Choose an outcome in Verification Outcome + Repair Commit"}
-                    </div>
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-                    gap: 12,
-                  }}
-                >
-                  <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 12, background: "#fafafa" }}>
-                    <div style={{ fontWeight: 900 }}>Watch Next</div>
-                    <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                      {payload.watchNext.map((item, idx) => (
-                        <li key={idx}>
-                          <SmallHint>{item}</SmallHint>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 12, background: "#fafafa" }}>
-                    <div style={{ fontWeight: 900 }}>Recheck Items</div>
-                    <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                      {payload.recheckItems.map((item, idx) => (
-                        <li key={idx}>
-                          <SmallHint>{item}</SmallHint>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 12, background: "#fafafa" }}>
-                    <div style={{ fontWeight: 900 }}>Callback Risk</div>
-                    <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                      {payload.callbackRisk.map((item, idx) => (
-                        <li key={idx}>
-                          <SmallHint>{item}</SmallHint>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 12, background: "#fafafa" }}>
-                    <div style={{ fontWeight: 900 }}>Monitoring Notes</div>
-                    <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                      {payload.monitoringNote.map((item, idx) => (
-                        <li key={idx}>
-                          <SmallHint>{item}</SmallHint>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-
-                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                  <button
-                    type="button"
-                    onClick={applySuggestedFollowUpWatchlist}
-                    style={{
-                      padding: "8px 12px",
-                      fontWeight: 900,
-                      border: "1px solid #cfcfcf",
-                      borderRadius: 10,
-                      background: "#ffffff",
-                      color: "#111",
-                      cursor: "pointer",
-                      boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                    }}
-                  >
-                    Add Watchlist to Follow-Up + Tech Notes
-                  </button>
-                </div>
-
-                {followUpWatchlistMessage ? (
-                  <SmallHint>
-                    <b>Watchlist:</b> {followUpWatchlistMessage}
-                  </SmallHint>
-                ) : null}
-              </div>
-            );
-          })()}
+          <SuggestedFollowUpWatchlist
+            payload={buildSuggestedFollowUpWatchlist()}
+            message={followUpWatchlistMessage}
+            onApply={applySuggestedFollowUpWatchlist}
+          />
         </SectionCard>
       </div>
 
@@ -10478,108 +9976,15 @@ return (
             Mark what happened after you checked the part so the app can document the decision path and commit the repair more cleanly.
           </SmallHint>
 
-          {(() => {
-            const payload = buildPartVerificationChecklistItems();
-            const selectedPart = String(payload.selectedPart || "").trim();
-            const outcomes = [
-              "Verified bad",
-              "Tested good",
-              "Needs more testing",
-              "Replaced",
-              "Not the cause",
-            ];
-
-            return (
-              <div style={{ marginTop: 12, display: "grid", gap: 12 }}>
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                    gap: 10,
-                  }}
-                >
-                  <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10, background: "#fafafa" }}>
-                    <div style={{ fontWeight: 900, fontSize: 12, color: "#666", textTransform: "uppercase" }}>
-                      Current Part Focus
-                    </div>
-                    <div style={{ marginTop: 4, fontWeight: 700 }}>
-                      {selectedPart || "Choose a part in Part Verification Checklist"}
-                    </div>
-                  </div>
-
-                  <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10, background: "#fafafa" }}>
-                    <div style={{ fontWeight: 900, fontSize: 12, color: "#666", textTransform: "uppercase" }}>
-                      Current Outcome
-                    </div>
-                    <div style={{ marginTop: 4, fontWeight: 700 }}>
-                      {selectedVerificationOutcome || "Not selected"}
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  {outcomes.map((outcome) => {
-                    const active = selectedVerificationOutcome === outcome;
-                    return (
-                      <button
-                        key={outcome}
-                        type="button"
-                        onClick={() => setSelectedVerificationOutcome(outcome)}
-                        style={{
-                          padding: "8px 12px",
-                          fontWeight: 900,
-                          border: "1px solid #cfcfcf",
-                          borderRadius: 999,
-                          background: active ? "#eef6ff" : "#ffffff",
-                          color: "#111",
-                          cursor: "pointer",
-                          boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                        }}
-                      >
-                        {outcome}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <div style={{ display: "grid", gap: 6 }}>
-                  <label style={{ fontWeight: 900 }}>Verification Note (optional)</label>
-                  <textarea
-                    value={verificationOutcomeNote}
-                    onChange={(e) => setVerificationOutcomeNote(e.target.value)}
-                    rows={4}
-                    style={{ width: "100%", padding: 8 }}
-                    placeholder="Example: coil voltage present, contacts burnt, replaced contactor and rechecked operation"
-                  />
-                </div>
-
-                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                  <button
-                    type="button"
-                    onClick={applyVerificationOutcomeAndRepairCommit}
-                    style={{
-                      padding: "8px 12px",
-                      fontWeight: 900,
-                      border: "1px solid #cfcfcf",
-                      borderRadius: 10,
-                      background: "#ffffff",
-                      color: "#111",
-                      cursor: "pointer",
-                      boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                    }}
-                  >
-                    Apply Verification Outcome
-                  </button>
-                </div>
-
-                {verificationOutcomeMessage ? (
-                  <SmallHint>
-                    <b>Verification Outcome:</b> {verificationOutcomeMessage}
-                  </SmallHint>
-                ) : null}
-              </div>
-            );
-          })()}
+          <VerificationOutcomeRepairCommit
+            selectedPart={buildPartVerificationChecklistItems().selectedPart}
+            selectedOutcome={selectedVerificationOutcome}
+            onSelectOutcome={setSelectedVerificationOutcome}
+            note={verificationOutcomeNote}
+            onNoteChange={setVerificationOutcomeNote}
+            onApply={applyVerificationOutcomeAndRepairCommit}
+            message={verificationOutcomeMessage}
+          />
         </SectionCard>
       </div>
 
@@ -10729,163 +10134,24 @@ return (
         />
       </div>
       <SectionCard title="Measurements / Observations" id="measurements">
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            {(
-
-  equipmentType.toLowerCase().includes("ice machine")
-    ? iceMachinePresets
-    : equipmentType.toLowerCase().includes("cooler") ||
-      equipmentType.toLowerCase().includes("freezer") ||
-      equipmentType.toLowerCase().includes("merchandiser")
-    ? refrigerationPresets
-    : equipmentType.toLowerCase().includes("mini-split")
-    ? miniSplitPresets
-    : symptom.toLowerCase().includes("heat")
-    ? heatingPresets
-    : coolingPresets
-).map((p) => (
-              <PillButton
-                key={p.label}
-                text={p.label}
-                onClick={() => applyPreset(p.label, p.unit)}
-              />
-            ))}
-            {measurementOptions.map((m) => (
-              <PillButton
-                key={m}
-                text={m}
-                onClick={() => applyPreset(m, guessDefaultUnit(m))}
-              />
-            ))}
-          </div>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "2fr 1fr 1fr",
-              gap: 10,
-              marginTop: 12,
-            }}
-          >
-            <div>
-              <label style={{ fontWeight: 900 }}>Label</label>
-              <input
-                value={obsLabel}
-                onChange={(e) => setObsLabel(e.target.value)}
-                style={{ width: "100%", padding: 8 }}
-              />
-            </div>
-            <div>
-              <label style={{ fontWeight: 900 }}>Value</label>
-              <input
-                value={obsValue}
-                onChange={(e) => setObsValue(e.target.value)}
-                style={{ width: "100%", padding: 8 }}
-              />
-            </div>
-            <div>
-              <label style={{ fontWeight: 900 }}>Unit</label>
-              <select
-                value={obsUnit}
-                onChange={(e) => setObsUnit(e.target.value)}
-                style={{ width: "100%", padding: 8 }}
-              >
-                {unitOptions.map((u) => (
-                  <option key={u} value={u}>
-                    {u}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
-            <div>
-              <label style={{ fontWeight: 900 }}>Note (optional)</label>
-              <input
-                value={obsNote}
-                onChange={(e) => setObsNote(e.target.value)}
-                style={{ width: "100%", padding: 8 }}
-              />
-            </div>
-
-            <label
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                userSelect: "none",
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={autoConvert}
-                onChange={(e) => setAutoConvert(e.target.checked)}
-              />
-              Auto-convert (kPa→psi, °C→°F, Pa→inWC)
-            </label>
-
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <button onClick={addMeasurement} style={{
-              padding: "10px 14px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}>
-                Add measurement
-              </button>
-              <button
-                onClick={() => setObservations([])}
-                style={{
-              padding: "10px 14px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
-              >
-                Clear all
-              </button>
-            </div>
-
-            {observations.length ? (
-              <div style={{ display: "grid", gap: 8 }}>
-                {observations.map((o, idx) => (
-                  <div
-                    key={idx}
-                    style={{
-                      border: "1px solid #eee",
-                      borderRadius: 10,
-                      padding: 10,
-                      display: "flex",
-                      justifyContent: "space-between",
-                      gap: 10,
-                    }}
-                  >
-                    <div>
-                      <div style={{ fontWeight: 900 }}>
-                        {o.label}
-                        <Badge text={`${o.value} ${o.unit}`} />
-                      </div>
-                      {o.note ? <SmallHint>{o.note}</SmallHint> : null}
-                    </div>
-                    <button onClick={() => removeObservation(idx)} style={{ fontWeight: 900 }}>
-                      Remove
-                    </button>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <SmallHint>No measurements added yet.</SmallHint>
-            )}
-          </div>
+          <MeasurementsObservations
+            equipmentType={equipmentType}
+            measurementOptions={measurementOptions}
+            obsLabel={obsLabel}
+            onObsLabelChange={setObsLabel}
+            obsValue={obsValue}
+            onObsValueChange={setObsValue}
+            obsUnit={obsUnit}
+            onObsUnitChange={setObsUnit}
+            obsNote={obsNote}
+            onObsNoteChange={setObsNote}
+            autoConvert={autoConvert}
+            onAutoConvertChange={setAutoConvert}
+            onApplyPreset={applyPreset}
+            onAddMeasurement={addMeasurement}
+            onClearAll={() => setObservations([])}
+            onRemoveObservation={removeObservation}
+          />
         </SectionCard>
 
 <SectionCard title="Parts & Manuals Assist" id="parts-manuals">
