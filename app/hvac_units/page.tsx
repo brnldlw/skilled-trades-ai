@@ -63,6 +63,15 @@ import { PartVerificationChecklist } from "./components/PartVerificationChecklis
 import { SuggestedFollowUpWatchlist } from "./components/SuggestedFollowUpWatchlist";
 import { VerificationOutcomeRepairCommit } from "./components/VerificationOutcomeRepairCommit";
 import { MeasurementsObservations } from "./components/MeasurementsObservations";
+import { FinalConfirmedCauseField } from "./components/FinalConfirmedCauseField";
+import { PartsReplacedField } from "./components/PartsReplacedField";
+import { ActualFixPerformedField } from "./components/ActualFixPerformedField";
+import { OutcomeCallbackFields } from "./components/OutcomeCallbackFields";
+import { SimilarPriorCases } from "./components/SimilarPriorCases";
+import { DiagnosticCloseoutBuilder } from "./components/DiagnosticCloseoutBuilder";
+import { PhotoAssistPanel } from "./components/PhotoAssistPanel";
+import { PhotoDrivenDiagnosticAssist } from "./components/PhotoDrivenDiagnosticAssist";
+import { TechCloseoutNotesField } from "./components/TechCloseoutNotesField";
 
 import { CustomerReport } from "./components/CustomerReport";
 
@@ -3631,12 +3640,6 @@ function browserSupportsSmartReadingsDictation() {
       const [techCloseoutListening, setTechCloseoutListening] = useState(false);
       const [techCloseoutDictationMessage, setTechCloseoutDictationMessage] = useState("");
 
-      function browserSupportsTechCloseoutDictation() {
-        if (typeof window === "undefined") return false;
-        const w = window as any;
-        return Boolean(w.SpeechRecognition || w.webkitSpeechRecognition);
-      }
-
       function startTechCloseoutDictation() {
         if (typeof window === "undefined") return;
 
@@ -4993,12 +4996,6 @@ function browserSupportsSmartReadingsDictation() {
       const [partsReplacedListening, setPartsReplacedListening] = useState(false);
       const [partsReplacedDictationMessage, setPartsReplacedDictationMessage] = useState("");
 
-      function browserSupportsPartsReplacedDictation() {
-        if (typeof window === "undefined") return false;
-        const w = window as any;
-        return Boolean(w.SpeechRecognition || w.webkitSpeechRecognition);
-      }
-
       function startPartsReplacedDictation() {
         if (typeof window === "undefined") return;
 
@@ -5212,12 +5209,6 @@ function browserSupportsSmartReadingsDictation() {
                         // follow-up-dictation-only-v1
       const [followUpListening, setFollowUpListening] = useState(false);
       const [followUpDictationMessage, setFollowUpDictationMessage] = useState("");
-
-      function browserSupportsFollowUpDictation() {
-        if (typeof window === "undefined") return false;
-        const w = window as any;
-        return Boolean(w.SpeechRecognition || w.webkitSpeechRecognition);
-      }
 
       function startFollowUpDictation() {
         if (typeof window === "undefined") return;
@@ -5975,6 +5966,79 @@ function browserSupportsSmartReadingsDictation() {
           seen.add(key);
           return true;
         }).slice(0, 6);
+      }
+
+      // quick-parts-chips-v1
+      function buildQuickPartsChips() {
+        const targetComponent = String(getCurrentAffectedComponentLabelForAssist() || "").toLowerCase();
+        const equipment = String(equipmentType || "").toLowerCase();
+        const issue = String(symptom || "").toLowerCase();
+
+        const suggestedFromRepairPanel = buildRepairDecisionPanelItems().map((item) => item.part);
+
+        const chips: string[] = [];
+
+        for (const item of suggestedFromRepairPanel) {
+          if (item && !chips.includes(item)) chips.push(item);
+        }
+
+        const addChip = (label: string) => {
+          if (label && !chips.includes(label)) chips.push(label);
+        };
+
+        if (
+          targetComponent.includes("condensing") ||
+          targetComponent.includes("outdoor") ||
+          targetComponent.includes("condenser")
+        ) {
+          addChip("Contactor");
+          addChip("Run Capacitor");
+          addChip("Condenser Fan Motor");
+        }
+
+        if (targetComponent.includes("evaporator") || targetComponent.includes("indoor head")) {
+          addChip("Evaporator Fan Motor");
+          addChip("Defrost Heater");
+          addChip("TXV");
+        }
+
+        if (targetComponent.includes("furnace")) {
+          addChip("Ignitor");
+          addChip("Flame Sensor");
+          addChip("Pressure Switch");
+        }
+
+        if (targetComponent.includes("air handler") || targetComponent.includes("indoor unit")) {
+          addChip("Blower Motor");
+          addChip("Float Switch");
+          addChip("Relay / Sequencer");
+        }
+
+        if (equipment.includes("walk-in")) {
+          addChip("Defrost Termination");
+          addChip("Defrost Control");
+          addChip("Evaporator Fan Motor");
+        }
+
+        if (equipment.includes("ice machine")) {
+          addChip("Water Valve");
+          addChip("Water Pump");
+          addChip("Sensor");
+        }
+
+        if (issue.includes("icing") || issue.includes("freeze") || issue.includes("ice")) {
+          addChip("Defrost Heater");
+          addChip("Defrost Termination");
+          addChip("Drain Heater");
+        }
+
+        if (issue.includes("not cooling") || issue.includes("no cool")) {
+          addChip("Contactor");
+          addChip("Run Capacitor");
+          addChip("Blower Motor");
+        }
+
+        return chips;
       }
 
       // suggested-parts-to-verify-v1
@@ -13029,204 +13093,14 @@ return (
       }}
     >
       <div style={{ gridColumn: "1 / -1" }}>
-        <label style={{ fontWeight: 900 }}>{"Final Confirmed Cause"}</label>
-        <br />
-        <textarea data-auto-grow="true" onInput={autoGrowTextarea}
-          rows={6}
-                  style={{ width: "100%", padding: 8, minHeight: 160, resize: "vertical" }}
-                  value={finalConfirmedCause}
-          onChange={(e) => setFinalConfirmedCause(e.target.value)}
-        ></textarea>
-
-          {/* core-field-dictation-v1-confirmed-cause */}
-          <div style={{ marginTop: 8, display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <button
-              type="button"
-              onClick={startConfirmedCauseDictation}
-              disabled={!browserSupportsFieldDictation() || confirmedCauseListening}
-              style={{
-                padding: "8px 12px",
-                fontWeight: 900,
-                border: "1px solid #cfcfcf",
-                borderRadius: 10,
-                background: confirmedCauseListening ? "#f7f7f7" : "#ffffff",
-                color: "#111",
-                cursor: !browserSupportsFieldDictation() || confirmedCauseListening ? "not-allowed" : "pointer",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                opacity: !browserSupportsFieldDictation() || confirmedCauseListening ? 0.7 : 1,
-              }}
-            >
-              {confirmedCauseListening ? "Listening..." : "Start Confirmed Cause Dictation"}
-            </button>
-
-            <button
-              type="button"
-              onClick={stopConfirmedCauseDictation}
-              disabled={!confirmedCauseListening}
-              style={{
-                padding: "8px 12px",
-                fontWeight: 900,
-                border: "1px solid #cfcfcf",
-                borderRadius: 10,
-                background: "#ffffff",
-                color: "#111",
-                cursor: confirmedCauseListening ? "pointer" : "not-allowed",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                opacity: confirmedCauseListening ? 1 : 0.7,
-              }}
-            >
-              Stop Dictation
-            </button>
-          </div>
-
-          {!browserSupportsFieldDictation() ? (
-            <SmallHint style={{ marginTop: 6 }}>
-              Dictation is not supported in this browser. Try Chrome or Edge.
-            </SmallHint>
-          ) : null}
-
-          {confirmedCauseDictationMessage ? (
-            <SmallHint style={{ marginTop: 6 }}>
-              <b>Confirmed Cause Dictation:</b> {confirmedCauseDictationMessage}
-            </SmallHint>
-          ) : null}
-
-
-
-
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
-          <button
-            onClick={() => setFinalConfirmedCause("Bad Capacitor")}
-            style={{
-              padding: "8px 12px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
-          >
-            Bad Capacitor
-          </button>
-
-          <button
-            onClick={() => setFinalConfirmedCause("Failed Contactor")}
-            style={{
-              padding: "8px 12px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
-          >
-            Failed Contactor
-          </button>
-
-          <button
-            onClick={() => setFinalConfirmedCause("Failed Motor")}
-            style={{
-              padding: "8px 12px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
-          >
-            Failed Motor
-          </button>
-
-          <button
-            onClick={() => setFinalConfirmedCause("Low Refrigerant")}
-            style={{
-              padding: "8px 12px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
-          >
-            Low Refrigerant
-          </button>
-
-          <button
-            onClick={() => setFinalConfirmedCause("Dirty Condenser")}
-            style={{
-              padding: "8px 12px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
-          >
-            Dirty Condenser
-          </button>
-
-          <button
-            onClick={() => setFinalConfirmedCause("Restricted Filter/Drier")}
-            style={{
-              padding: "8px 12px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
-          >
-            Restricted Filter/Drier
-          </button>
-
-          <button
-            onClick={() => setFinalConfirmedCause("Drain Issue")}
-            style={{
-              padding: "8px 12px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
-          >
-            Drain Issue
-          </button>
-
-          <button
-            onClick={() => setFinalConfirmedCause("Sensor / Control Issue")}
-            style={{
-              padding: "8px 12px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
-          >
-            Sensor / Control Issue
-          </button>
-        </div>
-
-        <input
-          placeholder="Example: failed dual run capacitor, restricted filter-drier, dirty condenser, bad float switch"
-          style={{ width: "100%", padding: 8 }}
+        <FinalConfirmedCauseField
+          value={finalConfirmedCause}
+          onChange={setFinalConfirmedCause}
+          onAutoGrow={autoGrowTextarea}
+          listening={confirmedCauseListening}
+          dictationMessage={confirmedCauseDictationMessage}
+          onStartDictation={startConfirmedCauseDictation}
+          onStopDictation={stopConfirmedCauseDictation}
         />
       </div>
 
@@ -13242,1478 +13116,105 @@ return (
 </div>
 
 <div style={{ gridColumn: "1 / -1" }}>
-  <label style={{ fontWeight: 900 }}>{"Parts Replaced"}</label>
-  <br />
-  <input
-    value={partsReplaced}
-    onChange={(e) => setPartsReplaced(e.target.value)}
-    placeholder="Example: dual run capacitor, condenser fan motor, TXV, contactor"
-    style={{ width: "100%", padding: 8 }}
-  />
+        <PartsReplacedField
+          value={partsReplaced}
+          onChange={setPartsReplaced}
+          listening={partsReplacedListening}
+          dictationMessage={partsReplacedDictationMessage}
+          onStartDictation={startPartsReplacedDictation}
+          onStopDictation={stopPartsReplacedDictation}
+          chips={buildQuickPartsChips()}
+          onAddChip={(chip) =>
+            setPartsReplaced((prev) => {
+              const current = String(prev || "").trim();
+              const existing = current
+                .split(/[;,]/)
+                .map((item) => item.trim().toLowerCase())
+                .filter(Boolean);
 
-          {/* parts-replaced-dictation-only-v1 */}
-          <div style={{ marginTop: 8, display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <button
-              type="button"
-              onClick={startPartsReplacedDictation}
-              disabled={!browserSupportsPartsReplacedDictation() || partsReplacedListening}
-              style={{
-                padding: "8px 12px",
-                fontWeight: 900,
-                border: "1px solid #cfcfcf",
-                borderRadius: 10,
-                background: partsReplacedListening ? "#f7f7f7" : "#ffffff",
-                color: "#111",
-                cursor:
-                  !browserSupportsPartsReplacedDictation() || partsReplacedListening
-                    ? "not-allowed"
-                    : "pointer",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                opacity:
-                  !browserSupportsPartsReplacedDictation() || partsReplacedListening ? 0.7 : 1,
-              }}
-            >
-              {partsReplacedListening ? "Listening..." : "Start Parts Replaced Dictation"}
-            </button>
+              if (existing.includes(chip.trim().toLowerCase())) {
+                return current;
+              }
 
-            <button
-              type="button"
-              onClick={stopPartsReplacedDictation}
-              disabled={!partsReplacedListening}
-              style={{
-                padding: "8px 12px",
-                fontWeight: 900,
-                border: "1px solid #cfcfcf",
-                borderRadius: 10,
-                background: "#ffffff",
-                color: "#111",
-                cursor: partsReplacedListening ? "pointer" : "not-allowed",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                opacity: partsReplacedListening ? 1 : 0.7,
-              }}
-            >
-              Stop Dictation
-            </button>
-          </div>
-
-          {!browserSupportsPartsReplacedDictation() ? (
-            <SmallHint style={{ marginTop: 6 }}>
-              Dictation is not supported in this browser. Try Chrome or Edge.
-            </SmallHint>
-          ) : null}
-
-          {partsReplacedDictationMessage ? (
-            <SmallHint style={{ marginTop: 6 }}>
-              <b>Parts Replaced Dictation:</b> {partsReplacedDictationMessage}
-            </SmallHint>
-          ) : null}
-
-          {/* quick-parts-chips-v1 */}
-          {(() => {
-            const targetComponent = String(getCurrentAffectedComponentLabelForAssist() || "").toLowerCase();
-            const equipment = String(equipmentType || "").toLowerCase();
-            const issue = String(symptom || "").toLowerCase();
-
-            const suggestedFromRepairPanel =
-              typeof buildRepairDecisionPanelItems === "function"
-                ? buildRepairDecisionPanelItems().map((item) => item.part)
-                : [];
-
-            const chips: string[] = [];
-
-            for (const item of suggestedFromRepairPanel) {
-              if (item && !chips.includes(item)) chips.push(item);
-            }
-
-            const addChip = (label: string) => {
-              if (label && !chips.includes(label)) chips.push(label);
-            };
-
-            if (
-              targetComponent.includes("condensing") ||
-              targetComponent.includes("outdoor") ||
-              targetComponent.includes("condenser")
-            ) {
-              addChip("Contactor");
-              addChip("Run Capacitor");
-              addChip("Condenser Fan Motor");
-            }
-
-            if (targetComponent.includes("evaporator") || targetComponent.includes("indoor head")) {
-              addChip("Evaporator Fan Motor");
-              addChip("Defrost Heater");
-              addChip("TXV");
-            }
-
-            if (targetComponent.includes("furnace")) {
-              addChip("Ignitor");
-              addChip("Flame Sensor");
-              addChip("Pressure Switch");
-            }
-
-            if (targetComponent.includes("air handler") || targetComponent.includes("indoor unit")) {
-              addChip("Blower Motor");
-              addChip("Float Switch");
-              addChip("Relay / Sequencer");
-            }
-
-            if (equipment.includes("walk-in")) {
-              addChip("Defrost Termination");
-              addChip("Defrost Control");
-              addChip("Evaporator Fan Motor");
-            }
-
-            if (equipment.includes("ice machine")) {
-              addChip("Water Valve");
-              addChip("Water Pump");
-              addChip("Sensor");
-            }
-
-            if (issue.includes("icing") || issue.includes("freeze") || issue.includes("ice")) {
-              addChip("Defrost Heater");
-              addChip("Defrost Termination");
-              addChip("Drain Heater");
-            }
-
-            if (issue.includes("not cooling") || issue.includes("no cool")) {
-              addChip("Contactor");
-              addChip("Run Capacitor");
-              addChip("Blower Motor");
-            }
-
-            if (!chips.length) return null;
-
-            return (
-              <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
-                <SmallHint>
-                  <b>Quick Parts Chips:</b> Tap to add common replacement parts faster.
-                </SmallHint>
-
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  {chips.slice(0, 10).map((chip) => (
-                    <button
-                      key={chip}
-                      type="button"
-                      onClick={() =>
-                        setPartsReplaced((prev) => {
-                          const current = String(prev || "").trim();
-                          const existing = current
-                            .split(/[;,]/)
-                            .map((item) => item.trim().toLowerCase())
-                            .filter(Boolean);
-
-                          if (existing.includes(chip.trim().toLowerCase())) {
-                            return current;
-                          }
-
-                          return [current, chip].filter(Boolean).join(", ");
-                        })
-                      }
-                      style={{
-                        padding: "6px 10px",
-                        fontWeight: 900,
-                        border: "1px solid #cfcfcf",
-                        borderRadius: 999,
-                        background: "#ffffff",
-                        color: "#111",
-                        cursor: "pointer",
-                        boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                      }}
-                    >
-                      {chip}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            );
-          })()}
-
-
-
-</div>
-
-      <div style={{ gridColumn: "1 / -1" }}>
-        <label style={{ fontWeight: 900 }}>{"Actual Fix Performed"}</label>
-        <br />
-        <textarea data-auto-grow="true" onInput={autoGrowTextarea}
-          rows={6}
-                  style={{ width: "100%", padding: 8, minHeight: 160, resize: "vertical" }}
-                  value={actualFixPerformed}
-          onChange={(e) => setActualFixPerformed(e.target.value)}
-        ></textarea>
-
-          {/* core-field-dictation-v1-actual-fix */}
-          <div style={{ marginTop: 8, display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <button
-              type="button"
-              onClick={startActualFixDictation}
-              disabled={!browserSupportsFieldDictation() || actualFixListening}
-              style={{
-                padding: "8px 12px",
-                fontWeight: 900,
-                border: "1px solid #cfcfcf",
-                borderRadius: 10,
-                background: actualFixListening ? "#f7f7f7" : "#ffffff",
-                color: "#111",
-                cursor: !browserSupportsFieldDictation() || actualFixListening ? "not-allowed" : "pointer",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                opacity: !browserSupportsFieldDictation() || actualFixListening ? 0.7 : 1,
-              }}
-            >
-              {actualFixListening ? "Listening..." : "Start Actual Fix Dictation"}
-            </button>
-
-            <button
-              type="button"
-              onClick={stopActualFixDictation}
-              disabled={!actualFixListening}
-              style={{
-                padding: "8px 12px",
-                fontWeight: 900,
-                border: "1px solid #cfcfcf",
-                borderRadius: 10,
-                background: "#ffffff",
-                color: "#111",
-                cursor: actualFixListening ? "pointer" : "not-allowed",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                opacity: actualFixListening ? 1 : 0.7,
-              }}
-            >
-              Stop Dictation
-            </button>
-          </div>
-
-          {!browserSupportsFieldDictation() ? (
-            <SmallHint style={{ marginTop: 6 }}>
-              Dictation is not supported in this browser. Try Chrome or Edge.
-            </SmallHint>
-          ) : null}
-
-          {actualFixDictationMessage ? (
-            <SmallHint style={{ marginTop: 6 }}>
-              <b>Actual Fix Dictation:</b> {actualFixDictationMessage}
-            </SmallHint>
-          ) : null}
-
-
-
-
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
-          <button
-            onClick={() => setActualFixPerformed("Replaced Capacitor")}
-            style={{
-              padding: "8px 12px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
-          >
-            Replaced Capacitor
-          </button>
-
-          <button
-            onClick={() => setActualFixPerformed("Replaced Contactor")}
-            style={{
-              padding: "8px 12px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
-          >
-            Replaced Contactor
-          </button>
-
-          <button
-            onClick={() => setActualFixPerformed("Replaced Motor")}
-            style={{
-              padding: "8px 12px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
-          >
-            Replaced Motor
-          </button>
-
-          <button
-            onClick={() => setActualFixPerformed("Added Refrigerant")}
-            style={{
-              padding: "8px 12px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
-          >
-            Added Refrigerant
-          </button>
-
-          <button
-            onClick={() => setActualFixPerformed("Cleaned Condenser")}
-            style={{
-              padding: "8px 12px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
-          >
-            Cleaned Condenser
-          </button>
-
-          <button
-            onClick={() => setActualFixPerformed("Replaced Filter/Drier")}
-            style={{
-              padding: "8px 12px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
-          >
-            Replaced Filter/Drier
-          </button>
-
-          <button
-            onClick={() => setActualFixPerformed("Cleared Drain")}
-            style={{
-              padding: "8px 12px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
-          >
-            Cleared Drain
-          </button>
-
-          <button
-            onClick={() => setActualFixPerformed("Replaced Sensor / Control")}
-            style={{
-              padding: "8px 12px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
-          >
-            Replaced Sensor / Control
-          </button>
-        </div>
-
-        <input
-          placeholder="Example: replaced 45/5 capacitor, cleaned condenser, replaced water inlet valve"
-          style={{ width: "100%", padding: 8 }}
+              return [current, chip].filter(Boolean).join(", ");
+            })
+          }
         />
       </div>
 
-      <div>
-        <label style={{ fontWeight: 900 }}>{"Outcome Status"}</label>
-        <br />
-        <select
-          value={outcomeStatus}
-          onChange={(e) => setOutcomeStatus(e.target.value)}
-          style={{ width: "100%", padding: 8 }}
-        >
-          <option>Not Set</option>
-          <option>Fixed</option>
-          <option>Partially Fixed</option>
-          <option>Needs More Work</option>
-          <option>Monitoring</option>
-        </select>
-
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
-            <button
-              onClick={() => setOutcomeStatus("Fixed")}
-              style={{
-                padding: "8px 12px",
-                fontWeight: 900,
-                border: "1px solid #cfcfcf",
-                borderRadius: 10,
-                background: "#ffffff",
-                color: "#111",
-                cursor: "pointer",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-              }}
-            >
-              Fixed
-            </button>
-
-            <button
-              onClick={() => setOutcomeStatus("Needs Follow-Up")}
-              style={{
-                padding: "8px 12px",
-                fontWeight: 900,
-                border: "1px solid #cfcfcf",
-                borderRadius: 10,
-                background: "#ffffff",
-                color: "#111",
-                cursor: "pointer",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-              }}
-            >
-              Needs Follow-Up
-            </button>
-
-            <button
-              onClick={() => setOutcomeStatus("Partial")}
-              style={{
-                padding: "8px 12px",
-                fontWeight: 900,
-                border: "1px solid #cfcfcf",
-                borderRadius: 10,
-                background: "#ffffff",
-                color: "#111",
-                cursor: "pointer",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-              }}
-            >
-              Partial
-            </button>
-
-            <button
-              onClick={() => setOutcomeStatus("Not Set")}
-              style={{
-                padding: "8px 12px",
-                fontWeight: 900,
-                border: "1px solid #cfcfcf",
-                borderRadius: 10,
-                background: "#ffffff",
-                color: "#111",
-                cursor: "pointer",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-              }}
-            >
-              Not Set
-            </button>
-          </div>
+      <div style={{ gridColumn: "1 / -1" }}>
+        <ActualFixPerformedField
+          value={actualFixPerformed}
+          onChange={setActualFixPerformed}
+          onAutoGrow={autoGrowTextarea}
+          listening={actualFixListening}
+          dictationMessage={actualFixDictationMessage}
+          onStartDictation={startActualFixDictation}
+          onStopDictation={stopActualFixDictation}
+        />
       </div>
 
-      <div>
-        <label style={{ fontWeight: 900 }}>Callback Occurred</label>
-        <br />
-        <select
-          value={callbackOccurred}
-          onChange={(e) => setCallbackOccurred(e.target.value)}
-          style={{ width: "100%", padding: 8 }}
-        >
-          <option>No</option>
-          <option>Yes</option>
-        </select>
+      <OutcomeCallbackFields
+        outcomeStatus={outcomeStatus}
+        onOutcomeStatusChange={setOutcomeStatus}
+        callbackOccurred={callbackOccurred}
+        onCallbackOccurredChange={setCallbackOccurred}
+      />
 
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
-            <button
-              onClick={() => setCallbackOccurred("No")}
-              style={{
-                padding: "8px 12px",
-                fontWeight: 900,
-                border: "1px solid #cfcfcf",
-                borderRadius: 10,
-                background: "#ffffff",
-                color: "#111",
-                cursor: "pointer",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-              }}
-            >
-              Callback No
-            </button>
-
-            <button
-              onClick={() => setCallbackOccurred("Yes")}
-              style={{
-                padding: "8px 12px",
-                fontWeight: 900,
-                border: "1px solid #cfcfcf",
-                borderRadius: 10,
-                background: "#ffffff",
-                color: "#111",
-                cursor: "pointer",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-              }}
-            >
-              Callback Yes
-            </button>
-          </div>
-      </div>
-
-      {equipmentMemory.similarCases.length ? (
-  <div style={{ marginTop: 12 }}>
-    <div style={{ fontWeight: 900 }}>Similar prior cases</div>
-    <div style={{ display: "grid", gap: 8, marginTop: 8 }}>
-      {equipmentMemory.similarCases.map((item, i) => (
-        <div
-          key={i}
-          style={{
-            border: "1px solid #eee",
-            borderRadius: 10,
-            padding: 10,
-            background: "#fafafa",
-          }}
-        >
-          <SmallHint>
-            <b>Saved:</b> {item.savedAt ? new Date(item.savedAt).toLocaleString() : "-"}
-          </SmallHint>
-          <SmallHint style={{ marginTop: 4 }}>
-            <b>Symptom:</b> {item.symptom || "-"}
-          </SmallHint>
-          <SmallHint style={{ marginTop: 4 }}>
-            <b>Confirmed cause:</b> {item.finalConfirmedCause || "-"}
-          </SmallHint>
-          <SmallHint style={{ marginTop: 4 }}>
-            <b>Actual fix:</b> {item.actualFixPerformed || "-"}
-          </SmallHint>
-          <SmallHint style={{ marginTop: 4 }}>
-            <b>Outcome:</b> {item.outcomeStatus || "-"} • <b>Callback:</b> {item.callbackOccurred || "-"}
-          </SmallHint>
-        </div>
-      ))}
-    </div>
-  </div>
-) : null}
+      <SimilarPriorCases cases={equipmentMemory.similarCases} />
 
       <div style={{ gridColumn: "1 / -1" }}>
-                  {/* diagnostic-closeout-builder-v1 */}
-          <div
-            style={{
-              marginTop: 12,
-              border: "1px solid #e5e5e5",
-              borderRadius: 12,
-              padding: 12,
-              background: "#fafafa",
-              display: "grid",
-              gap: 12,
-            }}
-          >
-            <div style={{ fontWeight: 900, fontSize: 16 }}>
-              One-Tap Diagnostic Closeout Builder
-            </div>
+        <DiagnosticCloseoutBuilder
+          drafts={diagnosticCloseoutDrafts}
+          onDraftFieldChange={(field, value) =>
+            setDiagnosticCloseoutDrafts((prev) => ({ ...prev, [field]: value }))
+          }
+          message={diagnosticCloseoutMessage}
+          onGenerate={buildDiagnosticCloseoutDrafts}
+          onPushInternalSummary={pushInternalSummaryToTechCloseoutNotes}
+          onCopy={(field) => void copyDiagnosticCloseoutText(field)}
+          onAutoGrow={autoGrowTextarea}
+          followUpListening={followUpListening}
+          followUpDictationMessage={followUpDictationMessage}
+          onStartFollowUpDictation={startFollowUpDictation}
+          onStopFollowUpDictation={stopFollowUpDictation}
+        />
 
-            <SmallHint>
-              Builds a customer-friendly explanation, an internal tech summary, and a follow-up note from the current call data.
-            </SmallHint>
+        <PhotoAssistPanel
+          photoCount={Array.isArray(serviceEventPhotoUrls) ? serviceEventPhotoUrls.length : 0}
+          targetComponent={getCurrentAffectedComponentLabelForAssist()}
+          latestPhotoUrl={getLatestServiceEventPhotoUrl()}
+          photoType={photoAssistType}
+          onPhotoTypeChange={setPhotoAssistType}
+          onGenerate={buildPhotoAssistDraft}
+          onPushToTechNotes={pushPhotoAssistCloseoutToTechNotes}
+          message={photoAssistMessage}
+          draft={photoAssistDraft}
+          onDraftFieldChange={(field, value) =>
+            setPhotoAssistDraft((prev) => ({ ...prev, [field]: value }))
+          }
+          onCopy={(field) => void copyPhotoAssistText(field)}
+        />
 
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <button
-                type="button"
-                onClick={buildDiagnosticCloseoutDrafts}
-                style={{
-                  padding: "8px 12px",
-                  fontWeight: 900,
-                  border: "1px solid #cfcfcf",
-                  borderRadius: 10,
-                  background: "#ffffff",
-                  color: "#111",
-                  cursor: "pointer",
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                }}
-              >
-                Generate Closeout Drafts
-              </button>
+        <PhotoDrivenDiagnosticAssist
+          payload={buildPhotoDrivenDiagnosticAssistPayload()}
+          photoCount={Array.isArray(serviceEventPhotoUrls) ? serviceEventPhotoUrls.length : 0}
+          targetComponent={getCurrentAffectedComponentLabelForAssist()}
+          photoSubject={photoAssistSubject}
+          onPhotoSubjectChange={setPhotoAssistSubject}
+          onRefresh={generatePhotoDrivenDiagnosticAssist}
+          onAddToTechNotes={addPhotoAssistToTechCloseoutNotes}
+          message={photoAssistMessage}
+        />
 
-              <button
-                type="button"
-                onClick={pushInternalSummaryToTechCloseoutNotes}
-                style={{
-                  padding: "8px 12px",
-                  fontWeight: 900,
-                  border: "1px solid #cfcfcf",
-                  borderRadius: 10,
-                  background: "#ffffff",
-                  color: "#111",
-                  cursor: "pointer",
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                }}
-              >
-                Add Internal Summary to Tech Notes
-              </button>
-            </div>
-
-            {diagnosticCloseoutMessage ? (
-              <SmallHint>
-                <b>Closeout Builder:</b> {diagnosticCloseoutMessage}
-              </SmallHint>
-            ) : null}
-
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-                gap: 12,
-              }}
-            >
-              <div
-                style={{
-                  border: "1px solid #eee",
-                  borderRadius: 10,
-                  padding: 12,
-                  background: "#fff",
-                  display: "grid",
-                  gap: 8,
-                }}
-              >
-                <div style={{ fontWeight: 900 }}>Customer Summary</div>
-                <textarea data-auto-grow="true" onInput={autoGrowTextarea}
-                  value={diagnosticCloseoutDrafts.customerSummary}
-                  onChange={(e) =>
-                    setDiagnosticCloseoutDrafts((prev) => ({
-                      ...prev,
-                      customerSummary: e.target.value,
-                    }))
-                  }
-                  rows={8}
-                  style={{ width: "100%", padding: 8 }}
-                />
-                <button
-                  type="button"
-                  onClick={() => void copyDiagnosticCloseoutText("customerSummary")}
-                  style={{
-                    padding: "8px 12px",
-                    fontWeight: 900,
-                    border: "1px solid #cfcfcf",
-                    borderRadius: 10,
-                    background: "#ffffff",
-                    color: "#111",
-                    cursor: "pointer",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                  }}
-                >
-                  Copy Customer Summary
-                </button>
-              </div>
-
-              <div
-                style={{
-                  border: "1px solid #eee",
-                  borderRadius: 10,
-                  padding: 12,
-                  background: "#fff",
-                  display: "grid",
-                  gap: 8,
-                }}
-              >
-                <div style={{ fontWeight: 900 }}>Internal Tech Summary</div>
-                <textarea data-auto-grow="true" onInput={autoGrowTextarea}
-                  value={diagnosticCloseoutDrafts.internalSummary}
-                  onChange={(e) =>
-                    setDiagnosticCloseoutDrafts((prev) => ({
-                      ...prev,
-                      internalSummary: e.target.value,
-                    }))
-                  }
-                  rows={8}
-                  style={{ width: "100%", padding: 8 }}
-                />
-                <button
-                  type="button"
-                  onClick={() => void copyDiagnosticCloseoutText("internalSummary")}
-                  style={{
-                    padding: "8px 12px",
-                    fontWeight: 900,
-                    border: "1px solid #cfcfcf",
-                    borderRadius: 10,
-                    background: "#ffffff",
-                    color: "#111",
-                    cursor: "pointer",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                  }}
-                >
-                  Copy Internal Summary
-                </button>
-              </div>
-
-              <div
-                style={{
-                  border: "1px solid #eee",
-                  borderRadius: 10,
-                  padding: 12,
-                  background: "#fff",
-                  display: "grid",
-                  gap: 8,
-                }}
-              >
-                <div style={{ fontWeight: 900 }}>Recommended Follow-Up</div>
-                <textarea data-auto-grow="true" onInput={autoGrowTextarea}
-                  value={diagnosticCloseoutDrafts.followUp}
-                  onChange={(e) =>
-                    setDiagnosticCloseoutDrafts((prev) => ({
-                      ...prev,
-                      followUp: e.target.value,
-                    }))
-                  }
-                  rows={8}
-                  style={{ width: "100%", padding: 8 }}
-                />
-
-                {/* follow-up-dictation-only-v1 */}
-                <div style={{ marginTop: 8, display: "flex", gap: 10, flexWrap: "wrap" }}>
-                  <button
-                    type="button"
-                    onClick={startFollowUpDictation}
-                    disabled={!browserSupportsFollowUpDictation() || followUpListening}
-                    style={{
-                      padding: "8px 12px",
-                      fontWeight: 900,
-                      border: "1px solid #cfcfcf",
-                      borderRadius: 10,
-                      background: followUpListening ? "#f7f7f7" : "#ffffff",
-                      color: "#111",
-                      cursor:
-                        !browserSupportsFollowUpDictation() || followUpListening
-                          ? "not-allowed"
-                          : "pointer",
-                      boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                      opacity:
-                        !browserSupportsFollowUpDictation() || followUpListening ? 0.7 : 1,
-                    }}
-                  >
-                    {followUpListening ? "Listening..." : "Start Follow-Up Dictation"}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={stopFollowUpDictation}
-                    disabled={!followUpListening}
-                    style={{
-                      padding: "8px 12px",
-                      fontWeight: 900,
-                      border: "1px solid #cfcfcf",
-                      borderRadius: 10,
-                      background: "#ffffff",
-                      color: "#111",
-                      cursor: followUpListening ? "pointer" : "not-allowed",
-                      boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                      opacity: followUpListening ? 1 : 0.7,
-                    }}
-                  >
-                    Stop Dictation
-                  </button>
-                </div>
-
-                {!browserSupportsFollowUpDictation() ? (
-                  <SmallHint style={{ marginTop: 6 }}>
-                    Dictation is not supported in this browser. Try Chrome or Edge.
-                  </SmallHint>
-                ) : null}
-
-                {followUpDictationMessage ? (
-                  <SmallHint style={{ marginTop: 6 }}>
-                    <b>Follow-Up Dictation:</b> {followUpDictationMessage}
-                  </SmallHint>
-                ) : null}
-
-                <button
-                  type="button"
-                  onClick={() => void copyDiagnosticCloseoutText("followUp")}
-                  style={{
-                    padding: "8px 12px",
-                    fontWeight: 900,
-                    border: "1px solid #cfcfcf",
-                    borderRadius: 10,
-                    background: "#ffffff",
-                    color: "#111",
-                    cursor: "pointer",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                  }}
-                >
-                  Copy Follow-Up
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* photo-assist-panel-v1 */}
-          <div
-            style={{
-              marginTop: 12,
-              border: "1px solid #e5e5e5",
-              borderRadius: 12,
-              padding: 12,
-              background: "#fafafa",
-              display: "grid",
-              gap: 12,
-            }}
-          >
-            <div style={{ fontWeight: 900, fontSize: 16 }}>
-              Photo Assist
-            </div>
-
-            <SmallHint>
-              Use the attached photo plus the current component, symptom, readings, and history to generate
-              what the photo should help verify, what to check next, and a closeout note.
-            </SmallHint>
-
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                gap: 10,
-              }}
-            >
-              <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10, background: "#fff" }}>
-                <div style={{ fontWeight: 900, fontSize: 12, color: "#666", textTransform: "uppercase" }}>
-                  Attached Photos
-                </div>
-                <div style={{ marginTop: 4, fontWeight: 700 }}>
-                  {Array.isArray(serviceEventPhotoUrls) ? serviceEventPhotoUrls.length : 0}
-                </div>
-              </div>
-
-              <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10, background: "#fff" }}>
-                <div style={{ fontWeight: 900, fontSize: 12, color: "#666", textTransform: "uppercase" }}>
-                  Target Component
-                </div>
-                <div style={{ marginTop: 4, fontWeight: 700 }}>
-                  {getCurrentAffectedComponentLabelForAssist() || "Primary component"}
-                </div>
-              </div>
-
-              <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10, background: "#fff" }}>
-                <div style={{ fontWeight: 900, fontSize: 12, color: "#666", textTransform: "uppercase" }}>
-                  Latest Photo
-                </div>
-                <div style={{ marginTop: 4, fontWeight: 700 }}>
-                  {getLatestServiceEventPhotoUrl() ? "Ready" : "No photo yet"}
-                </div>
-              </div>
-            </div>
-
-            <div style={{ display: "grid", gap: 8 }}>
-              <label style={{ fontWeight: 900 }}>Photo Type</label>
-              <select
-                value={photoAssistType}
-                onChange={(e) => setPhotoAssistType(e.target.value)}
-                style={{ width: "100%", padding: 8 }}
-              >
-                <option value="general">General component photo</option>
-                <option value="board_wiring">Board / wiring photo</option>
-                <option value="ice_pattern">Ice / frost pattern photo</option>
-                <option value="coil_condition">Coil condition photo</option>
-                <option value="data_plate">Data plate / tag photo</option>
-                <option value="failed_part">Failed part photo</option>
-              </select>
-            </div>
-
-            {getLatestServiceEventPhotoUrl() ? (
-              <div style={{ display: "grid", gap: 8 }}>
-                <div style={{ fontWeight: 900 }}>Latest Attached Photo Preview</div>
-                <img
-                  src={getLatestServiceEventPhotoUrl()}
-                  alt="Latest service event photo"
-                  style={{
-                    maxWidth: "100%",
-                    maxHeight: 260,
-                    objectFit: "contain",
-                    border: "1px solid #ddd",
-                    borderRadius: 10,
-                    background: "#fff",
-                    padding: 8,
-                  }}
-                />
-              </div>
-            ) : null}
-
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <button
-                type="button"
-                onClick={buildPhotoAssistDraft}
-                style={{
-                  padding: "8px 12px",
-                  fontWeight: 900,
-                  border: "1px solid #cfcfcf",
-                  borderRadius: 10,
-                  background: "#ffffff",
-                  color: "#111",
-                  cursor: "pointer",
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                }}
-              >
-                Generate Photo Assist
-              </button>
-
-              <button
-                type="button"
-                onClick={pushPhotoAssistCloseoutToTechNotes}
-                style={{
-                  padding: "8px 12px",
-                  fontWeight: 900,
-                  border: "1px solid #cfcfcf",
-                  borderRadius: 10,
-                  background: "#ffffff",
-                  color: "#111",
-                  cursor: "pointer",
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                }}
-              >
-                Add Photo Note to Tech Notes
-              </button>
-            </div>
-
-            {photoAssistMessage ? (
-              <SmallHint>
-                <b>Photo Assist:</b> {photoAssistMessage}
-              </SmallHint>
-            ) : null}
-
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-                gap: 12,
-              }}
-            >
-              <div
-                style={{
-                  border: "1px solid #eee",
-                  borderRadius: 10,
-                  padding: 12,
-                  background: "#fff",
-                  display: "grid",
-                  gap: 8,
-                }}
-              >
-                <div style={{ fontWeight: 900 }}>What This Photo Should Help Verify</div>
-                <textarea
-                  value={photoAssistDraft.summary}
-                  onChange={(e) =>
-                    setPhotoAssistDraft((prev) => ({ ...prev, summary: e.target.value }))
-                  }
-                  rows={7}
-                  style={{ width: "100%", padding: 8, minHeight: 140, resize: "vertical" }}
-                />
-                <button
-                  type="button"
-                  onClick={() => void copyPhotoAssistText("summary")}
-                  style={{
-                    padding: "8px 12px",
-                    fontWeight: 900,
-                    border: "1px solid #cfcfcf",
-                    borderRadius: 10,
-                    background: "#ffffff",
-                    color: "#111",
-                    cursor: "pointer",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                  }}
-                >
-                  Copy Summary
-                </button>
-              </div>
-
-              <div
-                style={{
-                  border: "1px solid #eee",
-                  borderRadius: 10,
-                  padding: 12,
-                  background: "#fff",
-                  display: "grid",
-                  gap: 8,
-                }}
-              >
-                <div style={{ fontWeight: 900 }}>What To Check Next From The Photo</div>
-                <textarea
-                  value={photoAssistDraft.checks}
-                  onChange={(e) =>
-                    setPhotoAssistDraft((prev) => ({ ...prev, checks: e.target.value }))
-                  }
-                  rows={8}
-                  style={{ width: "100%", padding: 8, minHeight: 160, resize: "vertical" }}
-                />
-                <button
-                  type="button"
-                  onClick={() => void copyPhotoAssistText("checks")}
-                  style={{
-                    padding: "8px 12px",
-                    fontWeight: 900,
-                    border: "1px solid #cfcfcf",
-                    borderRadius: 10,
-                    background: "#ffffff",
-                    color: "#111",
-                    cursor: "pointer",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                  }}
-                >
-                  Copy Checks
-                </button>
-              </div>
-
-              <div
-                style={{
-                  border: "1px solid #eee",
-                  borderRadius: 10,
-                  padding: 12,
-                  background: "#fff",
-                  display: "grid",
-                  gap: 8,
-                }}
-              >
-                <div style={{ fontWeight: 900 }}>Suggested Photo Closeout Note</div>
-                <textarea
-                  value={photoAssistDraft.closeout}
-                  onChange={(e) =>
-                    setPhotoAssistDraft((prev) => ({ ...prev, closeout: e.target.value }))
-                  }
-                  rows={7}
-                  style={{ width: "100%", padding: 8, minHeight: 140, resize: "vertical" }}
-                />
-                <button
-                  type="button"
-                  onClick={() => void copyPhotoAssistText("closeout")}
-                  style={{
-                    padding: "8px 12px",
-                    fontWeight: 900,
-                    border: "1px solid #cfcfcf",
-                    borderRadius: 10,
-                    background: "#ffffff",
-                    color: "#111",
-                    cursor: "pointer",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                  }}
-                >
-                  Copy Closeout Note
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* photo-driven-diagnostic-assist-v1 */}
-          <div
-            style={{
-              marginTop: 12,
-              border: "1px solid #e5e5e5",
-              borderRadius: 12,
-              padding: 12,
-              background: "#fafafa",
-              display: "grid",
-              gap: 12,
-            }}
-          >
-            <div style={{ fontWeight: 900, fontSize: 16 }}>
-              Photo-Driven Diagnostic Assist
-            </div>
-
-            <SmallHint>
-              Choose what the photo is of and the app will turn the current component, symptom, and history into practical inspection guidance.
-            </SmallHint>
-
-            {(() => {
-              const payload = buildPhotoDrivenDiagnosticAssistPayload();
-
-              return (
-                <>
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                      gap: 10,
-                    }}
-                  >
-                    <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10, background: "#fff" }}>
-                      <div style={{ fontWeight: 900, fontSize: 12, color: "#666", textTransform: "uppercase" }}>
-                        Attached Service Event Photos
-                      </div>
-                      <div style={{ marginTop: 4, fontWeight: 700 }}>
-                        {Array.isArray(serviceEventPhotoUrls) ? serviceEventPhotoUrls.length : 0}
-                      </div>
-                    </div>
-
-                    <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10, background: "#fff" }}>
-                      <div style={{ fontWeight: 900, fontSize: 12, color: "#666", textTransform: "uppercase" }}>
-                        Target Component
-                      </div>
-                      <div style={{ marginTop: 4, fontWeight: 700 }}>
-                        {getCurrentAffectedComponentLabelForAssist() || "Primary component"}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div style={{ display: "grid", gap: 6 }}>
-                    <label style={{ fontWeight: 900 }}>What is this photo of?</label>
-                    <select
-                      value={photoAssistSubject}
-                      onChange={(e) => setPhotoAssistSubject(e.target.value)}
-                      style={{ width: "100%", padding: 8 }}
-                    >
-                      <option value="iced_coil">Iced coil / frost pattern</option>
-                      <option value="contactor_capacitor">Contactor / capacitor</option>
-                      <option value="control_board">Control board</option>
-                      <option value="wiring">Wiring</option>
-                      <option value="nameplate_tag">Nameplate / tag</option>
-                      <option value="drain_defrost">Drain / defrost issue</option>
-                      <option value="dirty_coil_airflow">Dirty coil / airflow issue</option>
-                      <option value="compressor_section">Compressor section</option>
-                    </select>
-                  </div>
-
-                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                    <button
-                      type="button"
-                      onClick={generatePhotoDrivenDiagnosticAssist}
-                      style={{
-                        padding: "8px 12px",
-                        fontWeight: 900,
-                        border: "1px solid #cfcfcf",
-                        borderRadius: 10,
-                        background: "#ffffff",
-                        color: "#111",
-                        cursor: "pointer",
-                        boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                      }}
-                    >
-                      Refresh Photo Assist
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={addPhotoAssistToTechCloseoutNotes}
-                      style={{
-                        padding: "8px 12px",
-                        fontWeight: 900,
-                        border: "1px solid #cfcfcf",
-                        borderRadius: 10,
-                        background: "#ffffff",
-                        color: "#111",
-                        cursor: "pointer",
-                        boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                      }}
-                    >
-                      Add Photo Assist to Tech Notes
-                    </button>
-                  </div>
-
-                  {photoAssistMessage ? (
-                    <SmallHint>
-                      <b>Photo Assist:</b> {photoAssistMessage}
-                    </SmallHint>
-                  ) : null}
-
-                  <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 12, background: "#fff" }}>
-                    <SmallHint>{payload.summary}</SmallHint>
-                  </div>
-
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-                      gap: 12,
-                    }}
-                  >
-                    <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 12, background: "#fff" }}>
-                      <div style={{ fontWeight: 900 }}>What to Inspect</div>
-                      <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                        {payload.inspect.map((item, idx) => (
-                          <li key={idx}>
-                            <SmallHint>{item}</SmallHint>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 12, background: "#fff" }}>
-                      <div style={{ fontWeight: 900 }}>What to Verify Next</div>
-                      <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                        {payload.verifyNext.map((item, idx) => (
-                          <li key={idx}>
-                            <SmallHint>{item}</SmallHint>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 12, background: "#fff" }}>
-                      <div style={{ fontWeight: 900 }}>Repair Decision Emphasis</div>
-                      <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                        {payload.repairDecisionEmphasis.map((item, idx) => (
-                          <li key={idx}>
-                            <SmallHint>{item}</SmallHint>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 12, background: "#fff" }}>
-                      <div style={{ fontWeight: 900 }}>Parts to Verify Emphasis</div>
-                      <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                        {payload.partsToVerifyEmphasis.map((item, idx) => (
-                          <li key={idx}>
-                            <SmallHint>{item}</SmallHint>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 12, background: "#fff" }}>
-                      <div style={{ fontWeight: 900 }}>What This Photo Can Support</div>
-                      <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                        {payload.photoCanSupport.map((item, idx) => (
-                          <li key={idx}>
-                            <SmallHint>{item}</SmallHint>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 12, background: "#fff" }}>
-                      <div style={{ fontWeight: 900 }}>What This Photo Cannot Prove</div>
-                      <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                        {payload.photoCannotProve.map((item, idx) => (
-                          <li key={idx}>
-                            <SmallHint>{item}</SmallHint>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 12, background: "#fff" }}>
-                      <div style={{ fontWeight: 900 }}>Selected Part Tie-In</div>
-                      <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                        {payload.photoPartTieIn.map((item, idx) => (
-                          <li key={idx}>
-                            <SmallHint>{item}</SmallHint>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 12, background: "#fff" }}>
-                      <div style={{ fontWeight: 900 }}>Watch-Outs</div>
-                      <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                        {payload.watchOuts.map((item, idx) => (
-                          <li key={idx}>
-                            <SmallHint>{item}</SmallHint>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                </>
-              );
-            })()}
-          </div>
-
-<label style={{ fontWeight: 900 }}>Tech Closeout Notes</label>
-        <br />
-        <textarea data-auto-grow="true" onInput={autoGrowTextarea}
+        <TechCloseoutNotesField
           value={techCloseoutNotes}
-          onChange={(e) => setTechCloseoutNotes(e.target.value)}
-        />
-
-          {/* closeout-note-dictation-v1 */}
-          <div style={{ marginTop: 8, display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <button
-              type="button"
-              onClick={startTechCloseoutDictation}
-              disabled={!browserSupportsTechCloseoutDictation() || techCloseoutListening}
-              style={{
-                padding: "8px 12px",
-                fontWeight: 900,
-                border: "1px solid #cfcfcf",
-                borderRadius: 10,
-                background: techCloseoutListening ? "#f7f7f7" : "#ffffff",
-                color: "#111",
-                cursor:
-                  !browserSupportsTechCloseoutDictation() || techCloseoutListening
-                    ? "not-allowed"
-                    : "pointer",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                opacity:
-                  !browserSupportsTechCloseoutDictation() || techCloseoutListening ? 0.7 : 1,
-              }}
-            >
-              {techCloseoutListening ? "Listening..." : "Start Note Dictation"}
-            </button>
-
-            <button
-              type="button"
-              onClick={stopTechCloseoutDictation}
-              disabled={!techCloseoutListening}
-              style={{
-                padding: "8px 12px",
-                fontWeight: 900,
-                border: "1px solid #cfcfcf",
-                borderRadius: 10,
-                background: "#ffffff",
-                color: "#111",
-                cursor: techCloseoutListening ? "pointer" : "not-allowed",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                opacity: techCloseoutListening ? 1 : 0.7,
-              }}
-            >
-              Stop Dictation
-            </button>
-          </div>
-
-          {!browserSupportsTechCloseoutDictation() ? (
-            <SmallHint style={{ marginTop: 6 }}>
-              Dictation is not supported in this browser. Try Chrome or Edge.
-            </SmallHint>
-          ) : null}
-
-          {techCloseoutDictationMessage ? (
-            <SmallHint style={{ marginTop: 6 }}>
-              <b>Dictation:</b> {techCloseoutDictationMessage}
-            </SmallHint>
-          ) : null}
-
-
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
-          <button
-            onClick={() => setTechCloseoutNotes("Verified operation after repair.")}
-            style={{
-              padding: "8px 12px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
-          >
-            Verified Operation
-          </button>
-
-          <button
-            onClick={() => setTechCloseoutNotes("Advised customer of findings and repair performed.")}
-            style={{
-              padding: "8px 12px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
-          >
-            Advised Customer
-          </button>
-
-          <button
-            onClick={() => setTechCloseoutNotes("Recommend follow-up.")}
-            style={{
-              padding: "8px 12px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
-          >
-            Recommend Follow-Up
-          </button>
-
-          <button
-            onClick={() => setTechCloseoutNotes("Monitor unit operation.")}
-            style={{
-              padding: "8px 12px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
-          >
-            Monitor Unit
-          </button>
-
-          <button
-            onClick={() => setTechCloseoutNotes("Temporary repair completed. Return visit may be needed.")}
-            style={{
-              padding: "8px 12px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
-          >
-            Temporary Repair
-          </button>
-
-          <button
-            onClick={() => setTechCloseoutNotes("Parts ordered. Return visit required after parts arrive.")}
-            style={{
-              padding: "8px 12px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
-          >
-            Parts Ordered
-          </button>
-
-          <button
-            onClick={() => setTechCloseoutNotes("Unit operating at departure.")}
-            style={{
-              padding: "8px 12px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
-          >
-            Operating At Departure
-          </button>
-
-          <button
-            onClick={() => setTechCloseoutNotes("Customer declined additional repair at this time.")}
-            style={{
-              padding: "8px 12px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
-          >
-            Customer Declined
-          </button>
-        </div>
-
-        <textarea
-          placeholder="What proved the fault, what was replaced/repaired, any notes for the next tech, anything unusual"
-          style={{ width: "100%", padding: 8, minHeight: 100 }}
+          onChange={setTechCloseoutNotes}
+          onAutoGrow={autoGrowTextarea}
+          listening={techCloseoutListening}
+          dictationMessage={techCloseoutDictationMessage}
+          onStartDictation={startTechCloseoutDictation}
+          onStopDictation={stopTechCloseoutDictation}
         />
       </div>
     </div>
