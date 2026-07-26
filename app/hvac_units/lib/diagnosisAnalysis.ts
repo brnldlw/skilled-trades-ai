@@ -1,6 +1,7 @@
 import { round1, toNumber } from "./basicHelpers";
 import { escapeHtml } from "./textHelpers";
 import { convertToStandard } from "./unitHelpers";
+import { tempFromPsig } from "./ptChart";
 import type { Observation, SavedUnitRecord, NameplateResult } from "../../lib/unit-store";
 
 export type Diagnosis = {
@@ -81,174 +82,6 @@ export type EquipmentMemoryInsight = {
 }[];
 };
 
-type PTPoint = { psi: number; tempF: number };
-
-const PT_TABLES: Record<string, PTPoint[]> = {
-  "R-410A": [
-    { psi: 40, tempF: 1 },
-    { psi: 50, tempF: 8 },
-    { psi: 60, tempF: 15 },
-    { psi: 70, tempF: 22 },
-    { psi: 80, tempF: 27 },
-    { psi: 90, tempF: 32 },
-    { psi: 100, tempF: 36 },
-    { psi: 110, tempF: 40 },
-    { psi: 118, tempF: 43 },
-    { psi: 125, tempF: 45 },
-    { psi: 135, tempF: 49 },
-    { psi: 145, tempF: 52 },
-    { psi: 155, tempF: 55 },
-    { psi: 170, tempF: 60 },
-    { psi: 190, tempF: 66 },
-    { psi: 220, tempF: 75 },
-    { psi: 250, tempF: 84 },
-    { psi: 280, tempF: 92 },
-    { psi: 300, tempF: 98 },
-    { psi: 320, tempF: 103 },
-    { psi: 340, tempF: 108 },
-    { psi: 360, tempF: 113 },
-    { psi: 380, tempF: 118 },
-    { psi: 418, tempF: 125 },
-    { psi: 450, tempF: 131 },
-  ],
-  "R-22": [
-    { psi: 40, tempF: 17 },
-    { psi: 50, tempF: 26 },
-    { psi: 58, tempF: 32 },
-    { psi: 68, tempF: 38 },
-    { psi: 76, tempF: 43 },
-    { psi: 84, tempF: 47 },
-    { psi: 96, tempF: 53 },
-    { psi: 106, tempF: 58 },
-    { psi: 118, tempF: 64 },
-    { psi: 130, tempF: 69 },
-    { psi: 146, tempF: 76 },
-    { psi: 160, tempF: 81 },
-    { psi: 178, tempF: 88 },
-    { psi: 196, tempF: 94 },
-    { psi: 211, tempF: 99 },
-    { psi: 226, tempF: 104 },
-    { psi: 242, tempF: 109 },
-    { psi: 260, tempF: 114 },
-    { psi: 278, tempF: 119 },
-    { psi: 296, tempF: 124 },
-  ],
-  "R-134a": [
-    { psi: 10, tempF: 1 },
-    { psi: 18, tempF: 18 },
-    { psi: 22, tempF: 24 },
-    { psi: 26, tempF: 30 },
-    { psi: 32, tempF: 38 },
-    { psi: 36, tempF: 43 },
-    { psi: 40, tempF: 47 },
-    { psi: 45, tempF: 52 },
-    { psi: 50, tempF: 57 },
-    { psi: 57, tempF: 64 },
-    { psi: 64, tempF: 70 },
-    { psi: 71, tempF: 76 },
-    { psi: 79, tempF: 82 },
-    { psi: 88, tempF: 88 },
-    { psi: 97, tempF: 94 },
-    { psi: 107, tempF: 100 },
-    { psi: 118, tempF: 106 },
-    { psi: 130, tempF: 112 },
-    { psi: 143, tempF: 118 },
-    { psi: 156, tempF: 123 },
-  ],
-  "R-404A": [
-    { psi: 20, tempF: -14 },
-    { psi: 30, tempF: -5 },
-    { psi: 40, tempF: 3 },
-    { psi: 50, tempF: 10 },
-    { psi: 60, tempF: 17 },
-    { psi: 70, tempF: 23 },
-    { psi: 80, tempF: 28 },
-    { psi: 90, tempF: 33 },
-    { psi: 100, tempF: 38 },
-    { psi: 110, tempF: 42 },
-    { psi: 125, tempF: 49 },
-    { psi: 140, tempF: 55 },
-    { psi: 160, tempF: 62 },
-    { psi: 180, tempF: 68 },
-    { psi: 200, tempF: 74 },
-    { psi: 225, tempF: 81 },
-    { psi: 250, tempF: 87 },
-    { psi: 275, tempF: 93 },
-    { psi: 300, tempF: 99 },
-  ],
-  "R-407C": [
-    { psi: 40, tempF: 11 },
-    { psi: 50, tempF: 19 },
-    { psi: 60, tempF: 26 },
-    { psi: 70, tempF: 32 },
-    { psi: 80, tempF: 38 },
-    { psi: 90, tempF: 43 },
-    { psi: 100, tempF: 48 },
-    { psi: 110, tempF: 52 },
-    { psi: 120, tempF: 56 },
-    { psi: 130, tempF: 60 },
-    { psi: 145, tempF: 66 },
-    { psi: 160, tempF: 72 },
-    { psi: 180, tempF: 79 },
-    { psi: 200, tempF: 86 },
-    { psi: 220, tempF: 92 },
-    { psi: 240, tempF: 98 },
-    { psi: 260, tempF: 104 },
-    { psi: 280, tempF: 109 },
-    { psi: 300, tempF: 114 },
-  ],
-  // Sourced from CoolProp 7.2.0 (see lib/ptChart.ts); no glide, pure component.
-  "R-290 (Propane)": [
-    { psi: 0, tempF: -40 },
-    { psi: 10, tempF: -21 },
-    { psi: 20, tempF: -5 },
-    { psi: 30, tempF: 8 },
-    { psi: 40, tempF: 19 },
-    { psi: 50, tempF: 28 },
-    { psi: 60, tempF: 37 },
-    { psi: 70, tempF: 45 },
-    { psi: 80, tempF: 52 },
-    { psi: 90, tempF: 58 },
-    { psi: 100, tempF: 64 },
-    { psi: 110, tempF: 70 },
-    { psi: 120, tempF: 75 },
-    { psi: 140, tempF: 85 },
-    { psi: 160, tempF: 94 },
-    { psi: 180, tempF: 102 },
-    { psi: 200, tempF: 110 },
-    { psi: 220, tempF: 117 },
-    { psi: 250, tempF: 127 },
-    { psi: 280, tempF: 136 },
-    { psi: 300, tempF: 142 },
-  ],
-  // Sourced from CoolProp 7.2.0 (see lib/ptChart.ts); no glide, pure component.
-  // Boils at 10.8F/1atm -- saturation pressure below that is negative (vacuum).
-  "R-600a (Isobutane)": [
-    { psi: -10, tempF: -36 },
-    { psi: -8, tempF: -22 },
-    { psi: -6, tempF: -12 },
-    { psi: -4, tempF: -3 },
-    { psi: -2, tempF: 4 },
-    { psi: 0, tempF: 11 },
-    { psi: 2, tempF: 17 },
-    { psi: 4, tempF: 22 },
-    { psi: 6, tempF: 27 },
-    { psi: 8, tempF: 32 },
-    { psi: 10, tempF: 36 },
-    { psi: 15, tempF: 46 },
-    { psi: 20, tempF: 55 },
-    { psi: 25, tempF: 62 },
-    { psi: 30, tempF: 69 },
-    { psi: 40, tempF: 82 },
-    { psi: 50, tempF: 92 },
-    { psi: 60, tempF: 102 },
-    { psi: 70, tempF: 111 },
-    { psi: 90, tempF: 126 },
-    { psi: 110, tempF: 139 },
-    { psi: 130, tempF: 150 },
-  ],
-};
-
 function normalizeLabel(label: string) {
   return label.trim().toLowerCase().replace(/\s+/g, " ");
 }
@@ -271,25 +104,6 @@ export function getObservationValue(
     const converted = convertToStandard(n, o.unit);
     if (converted && converted.unit === preferredUnit) return converted.value;
   }
-  return null;
-}
-
-function ptEstimateTempF(refrigerant: string, psi: number): number | null {
-  const table = PT_TABLES[refrigerant];
-  if (!table || !table.length || !Number.isFinite(psi)) return null;
-
-  if (psi <= table[0].psi) return table[0].tempF;
-  if (psi >= table[table.length - 1].psi) return table[table.length - 1].tempF;
-
-  for (let i = 0; i < table.length - 1; i++) {
-    const a = table[i];
-    const b = table[i + 1];
-    if (psi >= a.psi && psi <= b.psi) {
-      const ratio = (psi - a.psi) / (b.psi - a.psi);
-      return round1(a.tempF + (b.tempF - a.tempF) * ratio);
-    }
-  }
-
   return null;
 }
 
@@ -361,12 +175,12 @@ export function analyzeCharge(
 
   const ptEvapSat =
     enteredEvapSat === null && suctionPressure !== null && refrigerantType !== "Unknown"
-      ? ptEstimateTempF(refrigerantType, suctionPressure)
+      ? tempFromPsig(refrigerantType, suctionPressure)
       : null;
 
   const ptCondSat =
     enteredCondSat === null && liquidPressure !== null && refrigerantType !== "Unknown"
-      ? ptEstimateTempF(refrigerantType, liquidPressure)
+      ? tempFromPsig(refrigerantType, liquidPressure)
       : null;
 
   const evapSat = enteredEvapSat ?? ptEvapSat ?? null;
