@@ -116,6 +116,27 @@ export const PT_TABLES: Record<string, PTEntry[]> = {
     { tempF: 110, psig: 335.2 }, { tempF: 120, psig: 384.3 }, { tempF: 130, psig: 438.7 },
     { tempF: 140, psig: 462.0 },
   ],
+  // A3 (highly flammable) hydrocarbon, pure component, no glide.
+  "R-290 (Propane)": [
+    { tempF: -40, psig: 1.4 }, { tempF: -30, psig: 5.7 }, { tempF: -20, psig: 10.7 },
+    { tempF: -10, psig: 16.7 }, { tempF: 0, psig: 23.7 }, { tempF: 10, psig: 31.8 },
+    { tempF: 20, psig: 41.1 }, { tempF: 30, psig: 51.8 }, { tempF: 40, psig: 63.9 },
+    { tempF: 50, psig: 77.6 }, { tempF: 60, psig: 93.0 }, { tempF: 70, psig: 110.2 },
+    { tempF: 80, psig: 129.3 }, { tempF: 90, psig: 150.5 }, { tempF: 100, psig: 173.9 },
+    { tempF: 110, psig: 199.6 }, { tempF: 120, psig: 227.8 }, { tempF: 130, psig: 258.7 },
+    { tempF: 140, psig: 292.3 }, { tempF: 150, psig: 328.9 },
+  ],
+  // A3 (highly flammable) hydrocarbon, pure component, no glide. Boils
+  // at 10.8F/1atm so saturation pressure is negative (vacuum) below that.
+  "R-600a (Isobutane)": [
+    { tempF: -40, psig: -10.5 }, { tempF: -30, psig: -9.2 }, { tempF: -20, psig: -7.6 },
+    { tempF: -10, psig: -5.6 }, { tempF: 0, psig: -3.2 }, { tempF: 10, psig: -0.3 },
+    { tempF: 20, psig: 3.2 }, { tempF: 30, psig: 7.2 }, { tempF: 40, psig: 11.9 },
+    { tempF: 50, psig: 17.3 }, { tempF: 60, psig: 23.5 }, { tempF: 70, psig: 30.6 },
+    { tempF: 80, psig: 38.7 }, { tempF: 90, psig: 47.8 }, { tempF: 100, psig: 58.0 },
+    { tempF: 110, psig: 69.3 }, { tempF: 120, psig: 82.0 }, { tempF: 130, psig: 95.9 },
+    { tempF: 140, psig: 111.4 }, { tempF: 150, psig: 128.3 },
+  ],
 };
 
 // ─────────────────────────────────────────────────────────────
