@@ -68,17 +68,23 @@ export async function POST(req: NextRequest) {
   const sig = req.headers.get("stripe-signature");
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
+  // Signature verification is mandatory — an unset secret must reject the
+  // request, not fall back to trusting an unverified payload. Without this,
+  // a missing/misconfigured env var turns into a silent billing-fraud hole:
+  // anyone could POST a forged subscription event and get a paid tier free.
+  if (!webhookSecret) {
+    console.error("STRIPE_WEBHOOK_SECRET is not configured — rejecting webhook request.");
+    return NextResponse.json({ error: "Webhook not configured" }, { status: 500 });
+  }
+  if (!sig) {
+    return NextResponse.json({ error: "Missing stripe-signature header" }, { status: 400 });
+  }
+
   let event: any;
 
   try {
-    // Verify webhook signature
-    if (webhookSecret && sig) {
-      const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
-      event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
-    } else {
-      // Dev mode - parse without verification
-      event = JSON.parse(body);
-    }
+    const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+    event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
   } catch (err: any) {
     return NextResponse.json({ error: `Webhook error: ${err.message}` }, { status: 400 });
   }
