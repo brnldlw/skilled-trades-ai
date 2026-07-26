@@ -72,6 +72,10 @@ import { DiagnosticCloseoutBuilder } from "./components/DiagnosticCloseoutBuilde
 import { PhotoAssistPanel } from "./components/PhotoAssistPanel";
 import { PhotoDrivenDiagnosticAssist } from "./components/PhotoDrivenDiagnosticAssist";
 import { TechCloseoutNotesField } from "./components/TechCloseoutNotesField";
+import { PtChartChargeDiagnosis } from "./components/PtChartChargeDiagnosis";
+import { AirflowIntelligence } from "./components/AirflowIntelligence";
+import { DefrostIntelligence } from "./components/DefrostIntelligence";
+import { DefrostRepairGuidance } from "./components/DefrostRepairGuidance";
 
 import { CustomerReport } from "./components/CustomerReport";
 
@@ -10242,197 +10246,13 @@ return (
         </SectionCard>
 
         <SectionCard title="PT Chart Intelligence + Charge Diagnosis">
-          <SmallHint>
-            If saturation temps are not entered, the app will estimate them from pressure
-            and refrigerant type using a PT chart approximation.
-          </SmallHint>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr 1fr",
-              gap: 10,
-              marginTop: 12,
-            }}
-          >
-            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-              <div style={{ fontWeight: 900 }}>Delta-T</div>
-              <div style={{ fontSize: 22, fontWeight: 900, marginTop: 6 }}>
-                {chargeAnalysis.deltaT !== null ? `${chargeAnalysis.deltaT}°F` : "—"}
-              </div>
-            </div>
-
-            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-              <div style={{ fontWeight: 900 }}>Superheat</div>
-              <div style={{ fontSize: 22, fontWeight: 900, marginTop: 6 }}>
-                {chargeAnalysis.superheat !== null ? `${chargeAnalysis.superheat}°F` : "—"}
-              </div>
-            </div>
-
-            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-              <div style={{ fontWeight: 900 }}>Subcool</div>
-              <div style={{ fontSize: 22, fontWeight: 900, marginTop: 6 }}>
-                {chargeAnalysis.subcool !== null ? `${chargeAnalysis.subcool}°F` : "—"}
-              </div>
-            </div>
-          </div>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: 10,
-              marginTop: 10,
-            }}
-          >
-            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-              <div style={{ fontWeight: 900 }}>
-                Evap Saturation
-                <Badge text={chargeAnalysis.evapSatSource} />
-              </div>
-              <div style={{ marginTop: 6 }}>
-                {chargeAnalysis.evapSat !== null ? `${chargeAnalysis.evapSat}°F` : "—"}
-              </div>
-            </div>
-
-            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-              <div style={{ fontWeight: 900 }}>
-                Condensing Saturation
-                <Badge text={chargeAnalysis.condSatSource} />
-              </div>
-              <div style={{ marginTop: 6 }}>
-                {chargeAnalysis.condSat !== null ? `${chargeAnalysis.condSat}°F` : "—"}
-              </div>
-            </div>
-          </div>
-
-          <div
-            style={{
-              marginTop: 12,
-              border: "1px solid #eee",
-              borderRadius: 10,
-              padding: 10,
-              background: "#fafafa",
-            }}
-          >
-            <div style={{ fontWeight: 900 }}>Charge Condition</div>
-            <div style={{ fontSize: 16, fontWeight: 900, marginTop: 6 }}>
-              {chargeAnalysis.summary}
-            </div>
-            {chargeAnalysis.findings.length ? (
-              <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                {chargeAnalysis.findings.map((f, i) => (
-                  <li key={i}>
-                    <SmallHint>{f}</SmallHint>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <SmallHint style={{ marginTop: 8 }}>
-                Add more refrigeration readings to tighten the diagnosis.
-              </SmallHint>
-            )}
-          </div>
+          <PtChartChargeDiagnosis chargeAnalysis={chargeAnalysis} />
         </SectionCard>
       </div>
 
            <div style={{ marginTop: 10 }}>
         <SectionCard title="Airflow Intelligence">
-          <SmallHint>
-            Add return static, supply static, filter pressure drop, and coil pressure drop
-            to diagnose airflow restrictions.
-          </SmallHint>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr 1fr",
-              gap: 10,
-              marginTop: 12,
-            }}
-          >
-            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-              <div style={{ fontWeight: 900 }}>Total External Static</div>
-              <div style={{ fontSize: 22, fontWeight: 900, marginTop: 6 }}>
-                {airflowAnalysis.totalExternalStatic !== null
-                  ? `${airflowAnalysis.totalExternalStatic} inWC`
-                  : "—"}
-              </div>
-            </div>
-
-            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-              <div style={{ fontWeight: 900 }}>Return Static</div>
-              <div style={{ fontSize: 22, fontWeight: 900, marginTop: 6 }}>
-                {airflowAnalysis.returnStatic !== null
-                  ? `${airflowAnalysis.returnStatic} inWC`
-                  : "—"}
-              </div>
-            </div>
-
-            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-              <div style={{ fontWeight: 900 }}>Supply Static</div>
-              <div style={{ fontSize: 22, fontWeight: 900, marginTop: 6 }}>
-                {airflowAnalysis.supplyStatic !== null
-                  ? `${airflowAnalysis.supplyStatic} inWC`
-                  : "—"}
-              </div>
-            </div>
-          </div>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: 10,
-              marginTop: 10,
-            }}
-          >
-            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-              <div style={{ fontWeight: 900 }}>Filter Drop</div>
-              <div style={{ marginTop: 6 }}>
-                {airflowAnalysis.filterDrop !== null
-                  ? `${airflowAnalysis.filterDrop} inWC`
-                  : "—"}
-              </div>
-            </div>
-
-            <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-              <div style={{ fontWeight: 900 }}>Coil Drop</div>
-              <div style={{ marginTop: 6 }}>
-                {airflowAnalysis.coilDrop !== null
-                  ? `${airflowAnalysis.coilDrop} inWC`
-                  : "—"}
-              </div>
-            </div>
-          </div>
-
-          <div
-            style={{
-              marginTop: 12,
-              border: "1px solid #eee",
-              borderRadius: 10,
-              padding: 10,
-              background: "#fafafa",
-            }}
-          >
-            <div style={{ fontWeight: 900 }}>Airflow Summary</div>
-            <div style={{ fontSize: 16, fontWeight: 900, marginTop: 6 }}>
-              {airflowAnalysis.summary}
-            </div>
-            {airflowAnalysis.findings.length ? (
-              <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-                {airflowAnalysis.findings.map((f, i) => (
-                  <li key={i}>
-                    <SmallHint>{f}</SmallHint>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <SmallHint style={{ marginTop: 8 }}>
-                Add static readings to identify filter, coil, blower, or duct restrictions.
-              </SmallHint>
-            )}
-          </div>
+          <AirflowIntelligence airflowAnalysis={airflowAnalysis} />
         </SectionCard>
       </div>
 
@@ -10447,99 +10267,13 @@ return (
 
         <div style={{ marginTop: 10 }}>
   <SectionCard title="Defrost Intelligence">
-    <SmallHint>
-      Uses defrost timer state, heater amps, termination state, box temp, and coil temp
-      to spot refrigeration defrost problems.
-    </SmallHint>
-
-    <div
-      style={{
-        marginTop: 12,
-        border: "1px solid #eee",
-        borderRadius: 10,
-        padding: 10,
-        background: "#fafafa",
-      }}
-    >
-      <div style={{ fontWeight: 900 }}>Defrost Summary</div>
-      <div style={{ fontSize: 16, fontWeight: 900, marginTop: 6 }}>
-        {defrostAnalysis.summary}
-      </div>
-
-      {defrostAnalysis.findings.length ? (
-        <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-          {defrostAnalysis.findings.map((f, i) => (
-            <li key={i}>
-              <SmallHint>{f}</SmallHint>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <SmallHint style={{ marginTop: 8 }}>
-          Add defrost timer state, heater amps, termination stat state, box temp,
-          and evap coil temp for tighter refrigeration diagnosis.
-        </SmallHint>
-      )}
-    </div>
+    <DefrostIntelligence defrostAnalysis={defrostAnalysis} />
   </SectionCard>
 </div>
 
 <div style={{ marginTop: 10 }}>
   <SectionCard title="Defrost Repair Guidance">
-    <SmallHint>
-      Shows likely failed parts, why they are suspect, and the next field check to perform.
-    </SmallHint>
-
-    {defrostRepairGuidance.length ? (
-      <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
-        {defrostRepairGuidance.map((item, idx) => (
-          <div
-            key={`${item.part}-${idx}`}
-            style={{
-              border: "1px solid #eee",
-              borderRadius: 10,
-              padding: 10,
-              background: "#fafafa",
-            }}
-          >
-            <div style={{ fontWeight: 900 }}>
-              {item.part}
-              <Badge text={item.priority} />
-            </div>
-
-            <div style={{ marginTop: 8 }}>
-              <div style={{ fontWeight: 900 }}>Why it is suspect</div>
-              <SmallHint style={{ marginTop: 4 }}>{item.why}</SmallHint>
-            </div>
-
-            <div style={{ marginTop: 8 }}>
-              <div style={{ fontWeight: 900 }}>Next test</div>
-              <SmallHint style={{ marginTop: 4 }}>{item.nextTest}</SmallHint>
-            </div>
-
-            <div style={{ marginTop: 8 }}>
-              <div style={{ fontWeight: 900 }}>Quick field check</div>
-              <SmallHint style={{ marginTop: 4 }}>{item.quickCheck}</SmallHint>
-            </div>
-          </div>
-        ))}
-      </div>
-    ) : (
-      <div
-        style={{
-          marginTop: 12,
-          border: "1px solid #eee",
-          borderRadius: 10,
-          padding: 10,
-          background: "#fafafa",
-        }}
-      >
-        <SmallHint>
-          Add defrost-related measurements or enter a refrigeration icing / defrost complaint
-          to generate repair guidance.
-        </SmallHint>
-      </div>
-    )}
+    <DefrostRepairGuidance guidance={defrostRepairGuidance} />
   </SectionCard>
 </div>
 
