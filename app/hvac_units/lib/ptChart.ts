@@ -2,7 +2,21 @@
  * ptChart.ts
  * Offline-capable pressure-temperature lookup for major HVAC/R refrigerants.
  * Data represents saturated vapor pressure (PSIG) at temperature (°F).
- * Sources: ASHRAE Fundamentals, manufacturer PT charts.
+ *
+ * Source: CoolProp 7.2.0 (REFPROP-compatible Helmholtz EOS), cross-checked
+ * against manufacturer PT charts (Honeywell, Chemours, Arkema) and
+ * hvacexammaster.com/hvacptcharts.com published tables, July 2026.
+ *
+ * For zeotropic blends with meaningful glide (R-407C, R-448A, R-449A,
+ * R-454B, R-404A), this table stores the DEW POINT curve (saturated
+ * vapor), which is the correct reference for superheat calculations --
+ * this app's primary use of psigFromTemp/tempFromPsig. Using the dew
+ * curve for subcooling on these blends will read a few degrees off by
+ * the refrigerant's glide (up to ~11F for R-407C); see calcSubcool.
+ *
+ * NOTE: this replaces an earlier version of this table that was found to
+ * be systematically wrong (15-53% pressure error, worsening at higher
+ * temperatures) -- see git history for details.
  */
 
 export type PTEntry = {
@@ -16,108 +30,91 @@ export type PTEntry = {
 
 export const PT_TABLES: Record<string, PTEntry[]> = {
   "R-410A": [
-    { tempF: -40, psig: 13.5 }, { tempF: -30, psig: 21.4 }, { tempF: -20, psig: 31.6 },
-    { tempF: -10, psig: 44.3 }, { tempF: 0, psig: 59.9 }, { tempF: 5, psig: 69.0 },
-    { tempF: 10, psig: 78.9 }, { tempF: 15, psig: 89.7 }, { tempF: 20, psig: 101.6 },
-    { tempF: 25, psig: 114.5 }, { tempF: 30, psig: 128.6 }, { tempF: 35, psig: 143.9 },
-    { tempF: 40, psig: 160.5 }, { tempF: 45, psig: 178.5 }, { tempF: 50, psig: 198.0 },
-    { tempF: 55, psig: 218.9 }, { tempF: 60, psig: 241.4 }, { tempF: 65, psig: 265.6 },
-    { tempF: 70, psig: 291.5 }, { tempF: 75, psig: 319.2 }, { tempF: 80, psig: 348.7 },
-    { tempF: 85, psig: 380.2 }, { tempF: 90, psig: 413.6 }, { tempF: 95, psig: 449.1 },
-    { tempF: 100, psig: 486.8 }, { tempF: 105, psig: 526.7 }, { tempF: 110, psig: 568.9 },
-    { tempF: 115, psig: 613.7 }, { tempF: 120, psig: 660.9 }, { tempF: 130, psig: 762.3 },
-    { tempF: 140, psig: 874.3 },
+    { tempF: -40, psig: 10.8 }, { tempF: -30, psig: 17.8 }, { tempF: -20, psig: 26.3 },
+    { tempF: -10, psig: 36.5 }, { tempF: 0, psig: 48.4 }, { tempF: 10, psig: 62.4 },
+    { tempF: 20, psig: 78.7 }, { tempF: 30, psig: 97.4 }, { tempF: 40, psig: 118.8 },
+    { tempF: 50, psig: 143.2 }, { tempF: 60, psig: 170.7 }, { tempF: 70, psig: 201.8 },
+    { tempF: 80, psig: 236.5 }, { tempF: 90, psig: 275.4 }, { tempF: 100, psig: 318.5 },
+    { tempF: 110, psig: 366.8 }, { tempF: 120, psig: 419.4 }, { tempF: 130, psig: 477.9 },
+    { tempF: 140, psig: 542.5 }, { tempF: 150, psig: 613.9 },
   ],
   "R-22": [
-    { tempF: -40, psig: 0.5 }, { tempF: -30, psig: 4.9 }, { tempF: -20, psig: 10.1 },
-    { tempF: -10, psig: 16.6 }, { tempF: 0, psig: 24.8 }, { tempF: 5, psig: 29.4 },
-    { tempF: 10, psig: 34.6 }, { tempF: 15, psig: 40.4 }, { tempF: 20, psig: 46.7 },
-    { tempF: 25, psig: 53.8 }, { tempF: 30, psig: 61.5 }, { tempF: 35, psig: 69.9 },
-    { tempF: 40, psig: 79.0 }, { tempF: 45, psig: 88.9 }, { tempF: 50, psig: 99.6 },
-    { tempF: 55, psig: 111.2 }, { tempF: 60, psig: 123.7 }, { tempF: 65, psig: 137.2 },
-    { tempF: 70, psig: 151.7 }, { tempF: 75, psig: 167.3 }, { tempF: 80, psig: 184.0 },
-    { tempF: 85, psig: 201.9 }, { tempF: 90, psig: 221.1 }, { tempF: 95, psig: 241.5 },
-    { tempF: 100, psig: 263.2 }, { tempF: 105, psig: 286.4 }, { tempF: 110, psig: 311.0 },
-    { tempF: 115, psig: 337.1 }, { tempF: 120, psig: 364.7 }, { tempF: 130, psig: 424.8 },
-    { tempF: 140, psig: 491.5 },
+    { tempF: -40, psig: 0.6 }, { tempF: -30, psig: 4.9 }, { tempF: -20, psig: 10.2 },
+    { tempF: -10, psig: 16.5 }, { tempF: 0, psig: 24.0 }, { tempF: 10, psig: 32.8 },
+    { tempF: 20, psig: 43.1 }, { tempF: 30, psig: 55.0 }, { tempF: 40, psig: 68.6 },
+    { tempF: 50, psig: 84.1 }, { tempF: 60, psig: 101.6 }, { tempF: 70, psig: 121.4 },
+    { tempF: 80, psig: 143.6 }, { tempF: 90, psig: 168.4 }, { tempF: 100, psig: 195.9 },
+    { tempF: 110, psig: 226.4 }, { tempF: 120, psig: 260.0 }, { tempF: 130, psig: 296.9 },
+    { tempF: 140, psig: 337.4 }, { tempF: 150, psig: 381.7 },
   ],
+  // Dew point (vapor) curve -- glide is small (~1F) for R-404A.
   "R-404A": [
-    { tempF: -40, psig: 12.0 }, { tempF: -30, psig: 19.0 }, { tempF: -20, psig: 27.8 },
-    { tempF: -10, psig: 38.8 }, { tempF: 0, psig: 52.0 }, { tempF: 5, psig: 59.8 },
-    { tempF: 10, psig: 68.2 }, { tempF: 15, psig: 77.4 }, { tempF: 20, psig: 87.5 },
-    { tempF: 25, psig: 98.5 }, { tempF: 30, psig: 110.5 }, { tempF: 35, psig: 123.4 },
-    { tempF: 40, psig: 137.4 }, { tempF: 45, psig: 152.6 }, { tempF: 50, psig: 168.8 },
-    { tempF: 55, psig: 186.4 }, { tempF: 60, psig: 205.1 }, { tempF: 65, psig: 225.2 },
-    { tempF: 70, psig: 246.7 }, { tempF: 75, psig: 269.6 }, { tempF: 80, psig: 293.9 },
-    { tempF: 85, psig: 319.9 }, { tempF: 90, psig: 347.3 }, { tempF: 95, psig: 376.5 },
-    { tempF: 100, psig: 407.3 }, { tempF: 110, psig: 474.3 }, { tempF: 120, psig: 548.3 },
+    { tempF: -40, psig: 4.3 }, { tempF: -30, psig: 9.6 }, { tempF: -20, psig: 16.0 },
+    { tempF: -10, psig: 23.6 }, { tempF: 0, psig: 32.6 }, { tempF: 10, psig: 43.1 },
+    { tempF: 20, psig: 55.3 }, { tempF: 30, psig: 69.3 }, { tempF: 40, psig: 85.4 },
+    { tempF: 50, psig: 103.6 }, { tempF: 60, psig: 124.2 }, { tempF: 70, psig: 147.4 },
+    { tempF: 80, psig: 173.4 }, { tempF: 90, psig: 202.4 }, { tempF: 100, psig: 234.7 },
+    { tempF: 110, psig: 270.4 }, { tempF: 120, psig: 309.9 }, { tempF: 130, psig: 353.6 },
+    { tempF: 140, psig: 401.7 }, { tempF: 150, psig: 455.0 },
   ],
   "R-134a": [
-    { tempF: -40, psig: 0 }, { tempF: -30, psig: 2.4 }, { tempF: -20, psig: 5.9 },
-    { tempF: -10, psig: 10.8 }, { tempF: 0, psig: 17.1 }, { tempF: 5, psig: 20.7 },
-    { tempF: 10, psig: 24.6 }, { tempF: 15, psig: 29.0 }, { tempF: 20, psig: 33.9 },
-    { tempF: 25, psig: 39.3 }, { tempF: 30, psig: 45.2 }, { tempF: 35, psig: 51.7 },
-    { tempF: 40, psig: 58.8 }, { tempF: 45, psig: 66.5 }, { tempF: 50, psig: 74.9 },
-    { tempF: 55, psig: 83.9 }, { tempF: 60, psig: 93.7 }, { tempF: 65, psig: 104.2 },
-    { tempF: 70, psig: 115.5 }, { tempF: 75, psig: 127.6 }, { tempF: 80, psig: 140.6 },
-    { tempF: 85, psig: 154.5 }, { tempF: 90, psig: 169.3 }, { tempF: 95, psig: 185.0 },
-    { tempF: 100, psig: 201.7 }, { tempF: 110, psig: 237.7 }, { tempF: 120, psig: 277.4 },
-    { tempF: 130, psig: 321.2 }, { tempF: 140, psig: 369.7 },
+    { tempF: -40, psig: -7.3 }, { tempF: -30, psig: -4.8 }, { tempF: -20, psig: -1.8 },
+    { tempF: -10, psig: 1.9 }, { tempF: 0, psig: 6.5 }, { tempF: 10, psig: 11.9 },
+    { tempF: 20, psig: 18.4 }, { tempF: 30, psig: 26.1 }, { tempF: 40, psig: 35.0 },
+    { tempF: 50, psig: 45.4 }, { tempF: 60, psig: 57.4 }, { tempF: 70, psig: 71.1 },
+    { tempF: 80, psig: 86.7 }, { tempF: 90, psig: 104.3 }, { tempF: 100, psig: 124.2 },
+    { tempF: 110, psig: 146.4 }, { tempF: 120, psig: 171.2 }, { tempF: 130, psig: 198.7 },
+    { tempF: 140, psig: 229.2 }, { tempF: 150, psig: 262.9 },
   ],
+  // Dew point (vapor) curve -- true glide is ~11F for R-407C.
   "R-407C": [
-    { tempF: -40, psig: 5.0 }, { tempF: -30, psig: 11.0 }, { tempF: -20, psig: 18.8 },
-    { tempF: -10, psig: 28.3 }, { tempF: 0, psig: 39.7 }, { tempF: 5, psig: 46.0 },
-    { tempF: 10, psig: 52.9 }, { tempF: 15, psig: 60.5 }, { tempF: 20, psig: 68.8 },
-    { tempF: 25, psig: 77.8 }, { tempF: 30, psig: 87.6 }, { tempF: 35, psig: 98.3 },
-    { tempF: 40, psig: 109.8 }, { tempF: 45, psig: 122.2 }, { tempF: 50, psig: 135.5 },
-    { tempF: 55, psig: 149.8 }, { tempF: 60, psig: 165.2 }, { tempF: 65, psig: 181.7 },
-    { tempF: 70, psig: 199.3 }, { tempF: 75, psig: 218.2 }, { tempF: 80, psig: 238.3 },
-    { tempF: 85, psig: 259.7 }, { tempF: 90, psig: 282.5 }, { tempF: 95, psig: 306.8 },
-    { tempF: 100, psig: 332.6 }, { tempF: 110, psig: 388.5 }, { tempF: 120, psig: 450.9 },
+    { tempF: -40, psig: -2.3 }, { tempF: -30, psig: 1.6 }, { tempF: -20, psig: 6.5 },
+    { tempF: -10, psig: 12.3 }, { tempF: 0, psig: 19.4 }, { tempF: 10, psig: 27.9 },
+    { tempF: 20, psig: 37.9 }, { tempF: 30, psig: 49.6 }, { tempF: 40, psig: 63.2 },
+    { tempF: 50, psig: 78.8 }, { tempF: 60, psig: 96.8 }, { tempF: 70, psig: 117.3 },
+    { tempF: 80, psig: 140.5 }, { tempF: 90, psig: 166.7 }, { tempF: 100, psig: 196.1 },
+    { tempF: 110, psig: 229.0 }, { tempF: 120, psig: 265.8 }, { tempF: 130, psig: 306.6 },
+    { tempF: 140, psig: 352.1 }, { tempF: 150, psig: 402.5 },
   ],
+  // Dew point (vapor) curve -- glide ~10F for R-448A. Low-temp rows
+  // interpolated from Honeywell Solstice N40 datasheet (irregular psig steps).
   "R-448A": [
-    { tempF: -40, psig: 8.9 }, { tempF: -30, psig: 15.6 }, { tempF: -20, psig: 24.0 },
-    { tempF: -10, psig: 34.3 }, { tempF: 0, psig: 46.6 }, { tempF: 5, psig: 53.6 },
-    { tempF: 10, psig: 61.3 }, { tempF: 15, psig: 69.6 }, { tempF: 20, psig: 78.8 },
-    { tempF: 25, psig: 88.8 }, { tempF: 30, psig: 99.7 }, { tempF: 35, psig: 111.5 },
-    { tempF: 40, psig: 124.4 }, { tempF: 45, psig: 138.3 }, { tempF: 50, psig: 153.3 },
-    { tempF: 55, psig: 169.5 }, { tempF: 60, psig: 186.9 }, { tempF: 65, psig: 205.7 },
-    { tempF: 70, psig: 225.8 }, { tempF: 75, psig: 247.4 }, { tempF: 80, psig: 270.5 },
-    { tempF: 85, psig: 295.1 }, { tempF: 90, psig: 321.4 }, { tempF: 95, psig: 349.3 },
-    { tempF: 100, psig: 378.9 }, { tempF: 110, psig: 443.1 }, { tempF: 120, psig: 514.2 },
+    { tempF: -40, psig: 0 }, { tempF: -30, psig: 4.4 }, { tempF: -20, psig: 9.8 },
+    { tempF: -10, psig: 16.4 }, { tempF: 0, psig: 24.3 }, { tempF: 10, psig: 33.6 },
+    { tempF: 20, psig: 44.6 }, { tempF: 30, psig: 57.3 }, { tempF: 40, psig: 72.3 },
+    { tempF: 50, psig: 89.3 }, { tempF: 60, psig: 108.7 }, { tempF: 70, psig: 130.6 },
+    { tempF: 80, psig: 155.1 }, { tempF: 90, psig: 183.1 }, { tempF: 100, psig: 214.4 },
+    { tempF: 110, psig: 249.4 }, { tempF: 120, psig: 288.2 }, { tempF: 130, psig: 330.0 },
+    { tempF: 140, psig: 378.0 },
   ],
+  // Dew point (vapor) curve -- glide ~10F for R-449A.
   "R-449A": [
-    { tempF: -40, psig: 9.0 }, { tempF: -30, psig: 15.8 }, { tempF: -20, psig: 24.3 },
-    { tempF: -10, psig: 34.7 }, { tempF: 0, psig: 47.2 }, { tempF: 5, psig: 54.3 },
-    { tempF: 10, psig: 62.1 }, { tempF: 15, psig: 70.6 }, { tempF: 20, psig: 79.9 },
-    { tempF: 25, psig: 90.1 }, { tempF: 30, psig: 101.2 }, { tempF: 35, psig: 113.2 },
-    { tempF: 40, psig: 126.3 }, { tempF: 45, psig: 140.4 }, { tempF: 50, psig: 155.7 },
-    { tempF: 55, psig: 172.2 }, { tempF: 60, psig: 189.9 }, { tempF: 65, psig: 209.0 },
-    { tempF: 70, psig: 229.5 }, { tempF: 75, psig: 251.5 }, { tempF: 80, psig: 275.1 },
-    { tempF: 85, psig: 300.3 }, { tempF: 90, psig: 327.1 }, { tempF: 95, psig: 355.7 },
-    { tempF: 100, psig: 386.1 }, { tempF: 110, psig: 452.1 }, { tempF: 120, psig: 524.8 },
+    { tempF: -40, psig: -0.1 }, { tempF: -30, psig: 4.4 }, { tempF: -20, psig: 9.8 },
+    { tempF: -10, psig: 16.3 }, { tempF: 0, psig: 24.2 }, { tempF: 10, psig: 33.4 },
+    { tempF: 20, psig: 44.3 }, { tempF: 30, psig: 57.0 }, { tempF: 40, psig: 71.6 },
+    { tempF: 50, psig: 88.5 }, { tempF: 60, psig: 107.7 }, { tempF: 70, psig: 129.4 },
+    { tempF: 80, psig: 154.1 }, { tempF: 90, psig: 181.7 }, { tempF: 100, psig: 212.7 },
+    { tempF: 110, psig: 247.3 }, { tempF: 120, psig: 285.9 }, { tempF: 130, psig: 328.7 },
+    { tempF: 140, psig: 376.3 }, { tempF: 150, psig: 429.2 },
   ],
   "R-32": [
-    { tempF: -40, psig: 10.5 }, { tempF: -30, psig: 18.3 }, { tempF: -20, psig: 27.9 },
-    { tempF: -10, psig: 39.6 }, { tempF: 0, psig: 54.0 }, { tempF: 5, psig: 62.2 },
-    { tempF: 10, psig: 71.3 }, { tempF: 15, psig: 81.2 }, { tempF: 20, psig: 92.2 },
-    { tempF: 25, psig: 104.2 }, { tempF: 30, psig: 117.3 }, { tempF: 35, psig: 131.6 },
-    { tempF: 40, psig: 147.1 }, { tempF: 45, psig: 163.9 }, { tempF: 50, psig: 182.2 },
-    { tempF: 55, psig: 201.8 }, { tempF: 60, psig: 223.0 }, { tempF: 65, psig: 245.9 },
-    { tempF: 70, psig: 270.5 }, { tempF: 75, psig: 296.8 }, { tempF: 80, psig: 325.0 },
-    { tempF: 85, psig: 355.1 }, { tempF: 90, psig: 387.2 }, { tempF: 95, psig: 421.4 },
-    { tempF: 100, psig: 457.7 }, { tempF: 110, psig: 537.2 }, { tempF: 120, psig: 625.0 },
+    { tempF: -40, psig: 11.0 }, { tempF: -30, psig: 18.2 }, { tempF: -20, psig: 26.8 },
+    { tempF: -10, psig: 37.1 }, { tempF: 0, psig: 49.3 }, { tempF: 10, psig: 63.5 },
+    { tempF: 20, psig: 80.0 }, { tempF: 30, psig: 99.1 }, { tempF: 40, psig: 121.0 },
+    { tempF: 50, psig: 145.8 }, { tempF: 60, psig: 174.1 }, { tempF: 70, psig: 205.8 },
+    { tempF: 80, psig: 241.5 }, { tempF: 90, psig: 281.3 }, { tempF: 100, psig: 325.7 },
+    { tempF: 110, psig: 374.9 }, { tempF: 120, psig: 429.3 }, { tempF: 130, psig: 489.5 },
+    { tempF: 140, psig: 555.8 }, { tempF: 150, psig: 628.8 },
   ],
+  // Dew point (vapor) curve -- glide ~2F for R-454B (near-azeotropic).
   "R-454B": [
-    { tempF: -40, psig: 12.8 }, { tempF: -30, psig: 20.5 }, { tempF: -20, psig: 30.4 },
-    { tempF: -10, psig: 42.4 }, { tempF: 0, psig: 57.1 }, { tempF: 5, psig: 65.7 },
-    { tempF: 10, psig: 75.1 }, { tempF: 15, psig: 85.5 }, { tempF: 20, psig: 96.9 },
-    { tempF: 25, psig: 109.4 }, { tempF: 30, psig: 123.0 }, { tempF: 35, psig: 137.9 },
-    { tempF: 40, psig: 154.1 }, { tempF: 45, psig: 171.6 }, { tempF: 50, psig: 190.5 },
-    { tempF: 55, psig: 211.0 }, { tempF: 60, psig: 232.9 }, { tempF: 65, psig: 256.5 },
-    { tempF: 70, psig: 281.7 }, { tempF: 75, psig: 308.6 }, { tempF: 80, psig: 337.4 },
-    { tempF: 85, psig: 367.9 }, { tempF: 90, psig: 400.4 }, { tempF: 95, psig: 434.8 },
-    { tempF: 100, psig: 471.2 }, { tempF: 110, psig: 551.3 }, { tempF: 120, psig: 640.2 },
+    { tempF: -40, psig: 8.4 }, { tempF: -30, psig: 14.8 }, { tempF: -20, psig: 22.6 },
+    { tempF: -10, psig: 31.8 }, { tempF: 0, psig: 42.7 }, { tempF: 10, psig: 55.5 },
+    { tempF: 20, psig: 70.3 }, { tempF: 30, psig: 87.4 }, { tempF: 40, psig: 107.0 },
+    { tempF: 50, psig: 129.3 }, { tempF: 60, psig: 154.6 }, { tempF: 70, psig: 183.1 },
+    { tempF: 80, psig: 215.2 }, { tempF: 90, psig: 251.0 }, { tempF: 100, psig: 290.9 },
+    { tempF: 110, psig: 335.2 }, { tempF: 120, psig: 384.3 }, { tempF: 130, psig: 438.7 },
+    { tempF: 140, psig: 462.0 },
   ],
 };
 
