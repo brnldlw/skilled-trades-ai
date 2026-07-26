@@ -50,6 +50,12 @@ import { HistoricalEntryModeToggle } from "./components/HistoricalEntryModeToggl
 import { HelpQuickStart } from "./components/HelpQuickStart";
 import { PartsManualsAssist } from "./components/PartsManualsAssist";
 import { RepairDecisionPanel } from "./components/RepairDecisionPanel";
+import { UnitServiceTimeline } from "./components/UnitServiceTimeline";
+import { SavedUnitHistory } from "./components/SavedUnitHistory";
+import { SiteUnitsAtLocation } from "./components/SiteUnitsAtLocation";
+import { NameplateReader } from "./components/NameplateReader";
+import { SymptomPacks } from "./components/SymptomPacks";
+import { ServiceEventPhotos } from "./components/ServiceEventPhotos";
 
 import { CustomerReport } from "./components/CustomerReport";
 
@@ -2863,7 +2869,6 @@ export default function HVACUnitsPage() {
   >([]);
 
   const [savedUnits, setSavedUnits] = useState<SavedUnitRecord[]>([]);
-  const [historyFilter, setHistoryFilter] = useState("");
 
   const [currentLoadedUnitId, setCurrentLoadedUnitId] = useState<string>("");
 
@@ -3181,7 +3186,6 @@ const [checkedInsideForInternalLabel, setCheckedInsideForInternalLabel] = useSta
       }
 
       // component-filter-helpers-v1
-      const [unitTimelineComponentFilter, setUnitTimelineComponentFilter] = useState("all");
       const [unitProfileTimelineComponentFilter, setUnitProfileTimelineComponentFilter] = useState("all");
 
       function normalizeComponentFilterValue(value: string) {
@@ -7078,7 +7082,6 @@ const [serviceEventPhotoUrls, setServiceEventPhotoUrls] = useState<string[]>([])
 const [serviceEventPhotoBusy, setServiceEventPhotoBusy] = useState(false);
 const [serviceEventPhotoMessage, setServiceEventPhotoMessage] = useState("");
 const [editingServiceEventId, setEditingServiceEventId] = useState("");
-const [showServiceEventPhotos, setShowServiceEventPhotos] = useState(false);
 const [historicalEntryMode, setHistoricalEntryMode] = useState(false);
 
 const siteUnitsAtLocation = savedUnits.filter((u) => {
@@ -7200,26 +7203,6 @@ const errorCodeGuidance = useMemo(
     }),
   [manufacturer, model, equipmentType, errorCode, errorCodeSource]
 );
-
-  const filteredSavedUnits = useMemo(() => {
-    const q = historyFilter.trim().toLowerCase();
-    if (!q) return savedUnits;
-    return savedUnits.filter((u) =>
-      [
-        u.customerName,
-        u.siteName,
-        u.siteAddress,
-        u.unitNickname,
-        u.manufacturer,
-        u.model,
-        u.symptom,
-        u.equipmentType,
-      ]
-        .join(" ")
-        .toLowerCase()
-        .includes(q)
-    );
-  }, [savedUnits, historyFilter]);
 
   const libraryEquipmentTypeOptions = useMemo(
   () =>
@@ -12079,191 +12062,25 @@ return (
   );
 })()}
 <SectionCard title="Unit Service Timeline">
-    <SmallHint>
-      Shows prior service events for the currently loaded unit.
-    </SmallHint>
-
-    {unitServiceTimelineLoading ? (
-      <div style={{ marginTop: 12 }}>
-        <SmallHint>Loading service timeline...</SmallHint>
-      </div>
-    ) : unitServiceTimeline.length ? (
-      <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
-        {(() => {
-          const __options = getTimelineComponentFilterOptions(unitServiceTimeline);
-          const __activeFilter = __options.some((option) => option.value === unitTimelineComponentFilter)
-            ? unitTimelineComponentFilter
-            : "all";
-          const __filteredEvents = unitServiceTimeline.filter((event) =>
-            timelineEventMatchesComponentFilter(event, __activeFilter)
-          );
-
-          return (
-            <>
-              <div style={{ marginBottom: 10, display: "grid", gap: 6 }}>
-                <label style={{ display: "grid", gap: 6 }}>
-                  <span style={{ fontWeight: 900 }}>Filter Timeline by Component</span>
-                  <select
-                    value={__activeFilter}
-                    onChange={(e) => setUnitTimelineComponentFilter(e.target.value)}
-                    style={{ width: "100%", padding: 8 }}
-                  >
-                    {__options.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-
-              {__filteredEvents.length ? (
-                __filteredEvents.map((event) => (
-          <div
-            key={event.id}
-            style={{
-              border: "1px solid #eee",
-              borderRadius: 10,
-              padding: 10,
-              background: "#fafafa",
-            }}
-          >
-            <div style={{ fontWeight: 900 }}>
-              {event.service_date
-                ? new Date(event.service_date).toLocaleDateString()
-                : "Unknown service date"}
-            </div>
-
-            <div style={{ marginTop: 8 }}>
-              <SmallHint><b>Symptom:</b> {event.symptom || "-"}</SmallHint>
-            </div>
-
-            <div style={{ marginTop: 4 }}>
-              <SmallHint><b>Diagnosis:</b> {event.diagnosis_summary || "-"}</SmallHint>
-            </div>
-
-            <div style={{ marginTop: 4 }}>
-              <SmallHint><b>Confirmed Cause:</b> {event.final_confirmed_cause || "-"}</SmallHint>
-            </div>
-
-            {getAffectedComponentDisplayForEvent(event) ? (
-              <div style={{ marginTop: 4 }}>
-                <SmallHint>
-                  {/* affected-component-display-v1 */ /* component-filter-ui-current-timeline-v1 */}
-                  <b>Affected Component:</b> {getAffectedComponentDisplayForEvent(event)}
-                </SmallHint>
-              </div>
-            ) : null}
-
-            <div style={{ marginTop: 4 }}>
-              <SmallHint><b>Parts Replaced:</b> {event.parts_replaced || "-"}</SmallHint>
-            </div>
-
-            <div style={{ marginTop: 4 }}>
-              <SmallHint><b>Actual Fix:</b> {event.actual_fix_performed || "-"}</SmallHint>
-            </div>
-
-            <div style={{ marginTop: 4 }}>
-              <SmallHint>
-                <b>Outcome:</b> {event.outcome_status || "-"} • <b>Callback:</b> {event.callback_occurred || "-"}
-              </SmallHint>
-            </div>
-
-            <div style={{ marginTop: 4 }}>
-              <SmallHint><b>Notes:</b> {event.tech_closeout_notes || "-"}</SmallHint>
-
-              <div style={{ marginTop: 8 }}>
-                <button
-                  onClick={() => loadServiceEventIntoForm(event)}
-                  style={{
-                    padding: "8px 12px",
-                    fontWeight: 900,
-                    border: "1px solid #cfcfcf",
-                    borderRadius: 10,
-                    background: "#ffffff",
-                    color: "#111",
-                    cursor: "pointer",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                  }}
-                >
-                  Edit Event
-                </button>
-              </div>
-            </div>
-          </div>
-                ))
-              ) : (
-                <div
-                  style={{
-                    border: "1px solid #eee",
-                    borderRadius: 10,
-                    padding: 10,
-                    background: "#fafafa",
-                  }}
-                >
-                  <SmallHint>No service events match the selected component filter.</SmallHint>
-                </div>
-              )}
-            </>
-          );
-        })()}
-      </div>
-    ) : (
-      <div style={{ marginTop: 12 }}>
-        <SmallHint>
-          {unitServiceTimelineMessage || "Load a saved unit to view its service timeline."}
-        </SmallHint>
-      </div>
-    )}
+    <UnitServiceTimeline
+      loading={unitServiceTimelineLoading}
+      events={unitServiceTimeline}
+      message={unitServiceTimelineMessage}
+      getComponentFilterOptions={getTimelineComponentFilterOptions}
+      eventMatchesComponentFilter={timelineEventMatchesComponentFilter}
+      getComponentDisplayForEvent={getAffectedComponentDisplayForEvent}
+      onEditEvent={loadServiceEventIntoForm}
+    />
   </SectionCard>
 </div>
       <div style={{ marginTop: 16, display: showSavedUnitHistory ? "block" : "none" }}>
 
         <SectionCard title="Saved Unit History" id="unit-library" right={<Badge text={`${savedUnits.length} saved`} />}>
-          <input
-            value={historyFilter}
-            onChange={(e) => setHistoryFilter(e.target.value)}
-            placeholder="Search customer, site, model, symptom..."
-            style={{ width: "100%", padding: 8 }}
+          <SavedUnitHistory
+            savedUnits={savedUnits}
+            onLoadUnit={loadUnit}
+            onRemoveUnit={removeSavedUnit}
           />
-
-          <div
-            style={{
-              marginTop: 10,
-              display: "grid",
-              gap: 8,
-              maxHeight: 320,
-              overflow: "auto",
-            }}
-          >
-            {filteredSavedUnits.length ? (
-              filteredSavedUnits.map((u) => (
-                <div
-                  key={u.id}
-                  style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}
-                >
-                  <div style={{ fontWeight: 900 }}>
-                    {u.customerName || "No Customer"}
-                    {u.companyName ? <Badge text={u.companyName} /> : null}
-                    {u.unitNickname ? <Badge text={u.unitNickname} /> : null}
-                  </div>
-                  <SmallHint style={{ marginTop: 4 }}>
-                    {u.siteName || "-"} • {u.manufacturer || "-"} {u.model || "-"} •{" "}
-                    {u.equipmentType || "-"}
-                  </SmallHint>
-                  <SmallHint style={{ marginTop: 4 }}>
-                    Saved: {new Date(u.savedAt).toLocaleString()}
-                  </SmallHint>
-                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 8 }}>
-                    <PillButton text="Load" onClick={() => loadUnit(u)} />
-                    <PillButton text="Delete" onClick={() => removeSavedUnit(u.id)} />
-                  </div>
-                </div>
-              ))
-            ) : (
-              <SmallHint>No saved units yet.</SmallHint>
-            )}
-          </div>
         </SectionCard>
       </div>
       </div>
@@ -12499,89 +12316,13 @@ return (
           {/* top-site-units-block-v1 */}
           <div style={{ gridColumn: "1 / -1", marginTop: 12 }}>
             <SectionCard title="Site Units at This Location">
-              {!customerName.trim() || !siteName.trim() ? (
-                <SmallHint>
-                  Enter customer and site to see other units already saved at this location.
-                </SmallHint>
-              ) : !siteUnitsAtLocation.length ? (
-                <SmallHint>
-                  No saved units found yet for this customer/site.
-                </SmallHint>
-              ) : (
-                <div style={{ display: "grid", gap: 8 }}>
-                  <SmallHint>
-                    Saved units already at this site: <b>{siteUnitsAtLocation.length}</b>
-                  </SmallHint>
-
-                  {siteUnitsAtLocation.map((unit) => (
-                    <div
-                      key={unit.id}
-                      style={{
-                        border: "1px solid #e5e5e5",
-                        borderRadius: 10,
-                        padding: 10,
-                        background:
-                          currentLoadedUnitId && currentLoadedUnitId === unit.id
-                            ? "#f7fbff"
-                            : "#fafafa",
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          gap: 8,
-                          flexWrap: "wrap",
-                          alignItems: "center",
-                        }}
-                      >
-                        <div style={{ fontWeight: 900 }}>
-                          {unit.unitNickname || "No Unit Tag"}
-                        </div>
-
-                        <span
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            padding: "4px 8px",
-                            borderRadius: 999,
-                            border: "1px solid #cfcfcf",
-                            background: "#f7f7f7",
-                            fontSize: 12,
-                            fontWeight: 900,
-                          }}
-                        >
-                          {unit.equipmentType || "Unknown Type"}
-                        </span>
-
-                        {currentLoadedUnitId && currentLoadedUnitId === unit.id ? (
-                          <span
-                            style={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              padding: "4px 8px",
-                              borderRadius: 999,
-                              border: "1px solid #cfcfcf",
-                              background: "#eefaf0",
-                              fontSize: 12,
-                              fontWeight: 900,
-                            }}
-                          >
-                            CURRENTLY LOADED
-                          </span>
-                        ) : null}
-                      </div>
-
-                      <SmallHint style={{ marginTop: 6 }}>
-                        {unit.manufacturer || "-"} {unit.model || "-"} • Serial: {unit.serialNumber || "-"}
-                      </SmallHint>
-
-                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
-                        <PillButton text="Load This Unit" onClick={() => loadUnit(unit)} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <SiteUnitsAtLocation
+                customerName={customerName}
+                siteName={siteName}
+                siteUnitsAtLocation={siteUnitsAtLocation}
+                currentLoadedUnitId={currentLoadedUnitId}
+                onLoadUnit={loadUnit}
+              />
             </SectionCard>
           </div>
 
@@ -12659,68 +12400,20 @@ return (
           id="nameplate-reader"
           right={<PillButton text="Choose photo" onClick={() => fileInputRef.current?.click()} />}
         >
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            style={{ display: "none" }}
-            onChange={async (e) => {
-              const f = e.target.files?.[0];
-              if (f) await onPickNameplateFile(f);
+          <NameplateReader
+            fileInputRef={fileInputRef}
+            image={nameplateImage}
+            nameplate={nameplate}
+            busy={nameplateBusy}
+            error={nameplateErr}
+            onPickFile={onPickNameplateFile}
+            onParse={parseNameplate}
+            onClear={() => {
+              setNameplateImage("");
+              setNameplate(null);
+              setNameplateErr("");
             }}
           />
-
-          {nameplateImage ? (
-            <div style={{ display: "grid", gap: 10 }}>
-              <img
-                src={nameplateImage}
-                alt="Nameplate"
-                style={{
-                  width: "100%",
-                  maxHeight: 260,
-                  objectFit: "contain",
-                  border: "1px solid #eee",
-                  borderRadius: 10,
-                }}
-              />
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <PillButton
-                  text={nameplateBusy ? "Reading..." : "Read nameplate"}
-                  onClick={parseNameplate}
-                  disabled={nameplateBusy}
-                />
-                <PillButton
-                  text="Clear"
-                  onClick={() => {
-                    setNameplateImage("");
-                    setNameplate(null);
-                    setNameplateErr("");
-                  }}
-                />
-              </div>
-              {nameplateErr ? (
-                <div style={{ color: "crimson", fontWeight: 800 }}>{nameplateErr}</div>
-              ) : null}
-              {nameplate ? (
-                <div style={{ display: "grid", gap: 8 }}>
-                  <SmallHint>
-                    Confidence: <b>{nameplate.confidence}</b> — {nameplate.notes}
-                  </SmallHint>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                    <div><b>Manufacturer:</b> {nameplate.manufacturer ?? "-"}</div>
-                    <div><b>Model:</b> {nameplate.model ?? "-"}</div>
-                    <div><b>Serial:</b> {nameplate.serial ?? "-"}</div>
-                    <div><b>Refrigerant:</b> {nameplate.refrigerant ?? "-"}</div>
-                  </div>
-                </div>
-              ) : null}
-            </div>
-          ) : (
-            <SmallHint>
-              Upload a clear nameplate photo to extract manufacturer/model/serial/refrigerant.
-            </SmallHint>
-          )}
         </SectionCard>
 
          <div
@@ -12732,17 +12425,11 @@ return (
         }}
       >
         <SectionCard title="Symptom Packs" right={<Badge text={selectedPack.label} />}>
-          <SmallHint>Choose a symptom pack to load a tech-style flowchart.</SmallHint>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10 }}>
-            {SYMPTOM_PACKS.map((pack) => (
-              <PillButton
-                key={pack.id}
-                text={pack.label}
-                active={pack.id === selectedPackId}
-                onClick={() => selectPack(pack.id)}
-              />
-            ))}
-          </div>
+          <SymptomPacks
+            packs={SYMPTOM_PACKS}
+            selectedPackId={selectedPackId}
+            onSelectPack={selectPack}
+          />
         </SectionCard>
 
         </div>
@@ -14135,130 +13822,15 @@ return (
         </div>
 
 <SectionCard title="Service Event Photos">
-    <button
-      onClick={() => setShowServiceEventPhotos((v) => !v)}
-      style={{
-        padding: "10px 14px",
-        fontWeight: 900,
-        border: "1px solid #cfcfcf",
-        borderRadius: 10,
-        background: "#ffffff",
-        color: "#111",
-        cursor: "pointer",
-        boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-      }}
-    >
-      {showServiceEventPhotos ? "Hide Photos" : "Show Photos"}
-    </button>
-
-    {showServiceEventPhotos ? (
-      <div style={{ marginTop: 12 }}>
-        <SmallHint>
-          Attach field photos to this service event so the next tech can see what happened.
-        </SmallHint>
-
-        <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
-          <div>
-            <input
-              type="file"
-              accept="image/*"
-              capture="environment"
-              multiple
-              onChange={(e) => {
-                const files = e.target.files ? Array.from(e.target.files) : [];
-                e.currentTarget.value = "";
-                handleUploadServiceEventPhotos(files);
-              }}
-              style={{ width: "100%" }}
-            />
-          </div>
-
-          {serviceEventPhotoMessage ? (
-            <SmallHint>{serviceEventPhotoMessage}</SmallHint>
-          ) : null}
-
-          {serviceEventPhotoBusy ? (
-            <SmallHint>Uploading photo(s)...</SmallHint>
-          ) : null}
-
-          {serviceEventPhotoUrls.length ? (
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
-                gap: 10,
-              }}
-            >
-              {serviceEventPhotoUrls.map((url, i) => (
-                <div
-                  key={url + i}
-                  style={{
-                    border: "1px solid #eee",
-                    borderRadius: 10,
-                    padding: 8,
-                    background: "#fafafa",
-                  }}
-                >
-                  <button
-                    onClick={() => window.open(url, "_blank", "noopener,noreferrer")}
-                    style={{
-                      width: "100%",
-                      padding: 0,
-                      border: "1px solid #e5e5e5",
-                      borderRadius: 8,
-                      background: "#fff",
-                      cursor: "pointer",
-                      overflow: "hidden",
-                    }}
-                    title="Open full photo"
-                  >
-                    <img
-                      src={url}
-                      alt={`Service event photo ${i + 1}`}
-                      style={{
-                        width: "100%",
-                        height: 120,
-                        objectFit: "contain",
-                        borderRadius: 8,
-                        display: "block",
-                        background: "#fff",
-                      }}
-                    />
-                  </button>
-                  <button
-                    onClick={() =>
-                      setServiceEventPhotoUrls((prev) =>
-                        prev.filter((_, idx) => idx !== i)
-                      )
-                    }
-                    style={{
-                      marginTop: 8,
-                      width: "100%",
-                      padding: "8px 10px",
-                      fontWeight: 900,
-                      border: "1px solid #cfcfcf",
-                      borderRadius: 10,
-                      background: "#ffffff",
-                      color: "#111",
-                      cursor: "pointer",
-                      boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                    }}
-                  >
-                    Remove Photo
-                  </button>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <SmallHint>No service event photos attached yet.</SmallHint>
-          )}
-        </div>
-      </div>
-    ) : (
-      <SmallHint style={{ marginTop: 12 }}>
-        Hidden by default to keep the main workflow clean.
-      </SmallHint>
-    )}
+    <ServiceEventPhotos
+      photoUrls={serviceEventPhotoUrls}
+      busy={serviceEventPhotoBusy}
+      message={serviceEventPhotoMessage}
+      onUploadPhotos={handleUploadServiceEventPhotos}
+      onRemovePhoto={(index) =>
+        setServiceEventPhotoUrls((prev) => prev.filter((_, idx) => idx !== index))
+      }
+    />
   </SectionCard>
 </div>
 
