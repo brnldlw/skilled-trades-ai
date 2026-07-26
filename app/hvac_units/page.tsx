@@ -76,6 +76,14 @@ import { PtChartChargeDiagnosis } from "./components/PtChartChargeDiagnosis";
 import { AirflowIntelligence } from "./components/AirflowIntelligence";
 import { DefrostIntelligence } from "./components/DefrostIntelligence";
 import { DefrostRepairGuidance } from "./components/DefrostRepairGuidance";
+import { RealFlowchartEngine } from "./components/RealFlowchartEngine";
+import { ManualsPartsResults } from "./components/ManualsPartsResults";
+import { AdvancedAiOutput } from "./components/AdvancedAiOutput";
+import { DiagnosisSummaryAndCauses } from "./components/DiagnosisSummaryAndCauses";
+import { RepairGuidancePanel } from "./components/RepairGuidancePanel";
+import { RecommendedMeasurementsPanel } from "./components/RecommendedMeasurementsPanel";
+import { ErrorCodeGuidancePanel } from "./components/ErrorCodeGuidancePanel";
+import { AdminWorkTools } from "./components/AdminWorkTools";
 
 import { CustomerReport } from "./components/CustomerReport";
 
@@ -7026,16 +7034,6 @@ function browserSupportsSmartReadingsDictation() {
         return stripCircuitLineFromNotes(raw);
       }
 
-const [showBulkImportTools, setShowBulkImportTools] = useState(false);
-
-  const [workOrderImportText, setWorkOrderImportText] = useState("");
-  const [workOrderImportRows, setWorkOrderImportRows] = useState<Record<string, string>[]>([]);
-  const [workOrderImportMessage, setWorkOrderImportMessage] = useState("");
-  const [workOrderImportLoading, setWorkOrderImportLoading] = useState(false);
-  const [workOrderImportResults, setWorkOrderImportResults] = useState<
-  { rowNumber: number; action: string; unitId: string }[]
->([]);
-
   const [repairGuidanceMode, setRepairGuidanceMode] =
   useState<"apprentice" | "experienced">("apprentice");
 
@@ -7067,8 +7065,6 @@ const siteUnitsAtLocation = savedUnits.filter((u) => {
 
   return Boolean(customerName.trim() && siteName.trim() && sameCustomer && sameSite);
 });
-
- const [showAdvancedAiOutput, setShowAdvancedAiOutput] = useState(false);
 
   const [showAiChatBot, setShowAiChatBot] = useState(false);
 
@@ -7460,121 +7456,6 @@ const libraryCompanyOptions = useMemo(
     setFlowNodeId(pack.nodes[0]?.id || "");
     setFlowHistory([]);
   }
-
-  function parseSimpleCsv(text: string): Record<string, string>[] {
-  const lines = text
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean);
-
-  if (lines.length < 2) return [];
-
-  const headers = lines[0].split(",").map((h) => h.trim());
-
-  return lines.slice(1).map((line) => {
-    const values = line.split(",").map((v) => v.trim());
-    const row: Record<string, string> = {};
-
-    headers.forEach((header, idx) => {
-      row[header] = values[idx] || "";
-    });
-
-    return row;
-  });
-}
-
-async function importWorkOrderRows() {
-  if (!workOrderImportRows.length) {
-    setWorkOrderImportMessage("Nothing to import yet. Paste CSV and click Preview first.");
-    return;
-  }
-
-  setWorkOrderImportLoading(true);
-  setWorkOrderImportMessage("");
-  setWorkOrderImportResults([]);
-
-  try {
-    const results: { rowNumber: number; action: string; unitId: string }[] = [];
-
-    for (let i = 0; i < workOrderImportRows.length; i++) {
-      const row = workOrderImportRows[i];
-
-      let matchedUnit = await findStrongUnitMatchForCurrentUser({
-        customer_name: row.customer_name || "",
-        site_name: row.site_name || "",
-        unit_nickname: row.unit_nickname || "",
-        serial: row.serial || "",
-      });
-
-      let action = "matched-existing-unit";
-
-      if (!matchedUnit) {
-        matchedUnit = await createUnitForCurrentUser({
-          id: makeId(),
-          customer_name: row.customer_name || "",
-          site_name: row.site_name || "",
-          site_address: row.site_address || "",
-          unit_nickname: row.unit_nickname || "",
-          property_type: row.property_type || "",
-          equipment_type: row.equipment_type || "",
-          manufacturer: row.manufacturer || "",
-          model: row.model || "",
-          serial: row.serial || "",
-          refrigerant_type: row.refrigerant_type || "",
-        });
-
-        action = "created-new-unit";
-      }
-
-      await createServiceEventForCurrentUser({
-        id: makeId(),
-        unit_id: matchedUnit.id,
-        service_date: row.service_date || null,
-        symptom: row.symptom || "",
-        diagnosis_summary: row.diagnosis_summary || "",
-        final_confirmed_cause: row.final_confirmed_cause || "",
-        parts_replaced: row.parts_replaced || "",
-        actual_fix_performed: row.actual_fix_performed || "",
-        outcome_status: row.outcome_status || "",
-        callback_occurred: row.callback_occurred || "",
-        tech_closeout_notes: row.tech_closeout_notes || "",
-      });
-
-      results.push({
-        rowNumber: i + 1,
-        action,
-        unitId: matchedUnit.id,
-      });
-    }
-
-    setWorkOrderImportResults(results);
-    setWorkOrderImportMessage(`Imported ${results.length} work-order row(s).`);
-    setWorkOrderImportText("");
-    setWorkOrderImportRows([]);
-  } catch (err) {
-    console.error(err);
-    setWorkOrderImportMessage("Import failed.");
-  } finally {
-    setWorkOrderImportLoading(false);
-  }
-}
-
-function previewWorkOrderImport() {
-  try {
-    const rows = parseSimpleCsv(workOrderImportText);
-    setWorkOrderImportRows(rows);
-    setWorkOrderImportResults([]);
-    setWorkOrderImportMessage(
-      rows.length
-        ? `Parsed ${rows.length} row(s). Review before import.`
-        : "No valid rows found. Make sure the first row contains headers."
-    );
-  } catch {
-    setWorkOrderImportRows([]);
-    setWorkOrderImportResults([]);
-    setWorkOrderImportMessage("Could not parse CSV text.");
-  }
-}
 
   
   async function postDiagnose(payload: any) {
@@ -13142,48 +13023,14 @@ return (
       </div>
 
         <SectionCard title="Real Flowchart Engine">
-          <div style={{ border: "1px solid #eee", borderRadius: 12, padding: 12 }}>
-            <div style={{ fontWeight: 900 }}>{currentFlowNode.title}</div>
-            <div style={{ marginTop: 6, fontSize: 16 }}>{currentFlowNode.question}</div>
-            {currentFlowNode.how ? (
-              <SmallHint style={{ marginTop: 8 }}>How: {currentFlowNode.how}</SmallHint>
-            ) : null}
-            {currentFlowNode.suggestedMeasurement ? (
-              <SmallHint style={{ marginTop: 8 }}>
-                Suggested next reading: <b>{currentFlowNode.suggestedMeasurement}</b>
-              </SmallHint>
-            ) : null}
-
-            {!currentFlowNode.terminal ? (
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
-                <PillButton
-                  text={currentFlowNode.passLabel || "PASS"}
-                  onClick={() => advanceFlow("PASS")}
-                />
-                <PillButton
-                  text={currentFlowNode.failLabel || "FAIL"}
-                  onClick={() => advanceFlow("FAIL")}
-                />
-                <PillButton
-                  text="Use suggested reading"
-                  onClick={addSuggestedMeasurementFromFlow}
-                  disabled={!currentFlowNode.suggestedMeasurement}
-                />
-                <PillButton
-                  text="Reset flow"
-                  onClick={() => resetFlowForPack(selectedPackId)}
-                />
-              </div>
-            ) : (
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
-                <PillButton
-                  text="Reset flow"
-                  onClick={() => resetFlowForPack(selectedPackId)}
-                />
-                <PillButton text="Diagnose now" onClick={handleDiagnose} />
-              </div>
-            )}
-          </div>
+          <RealFlowchartEngine
+            node={currentFlowNode}
+            onPass={() => advanceFlow("PASS")}
+            onFail={() => advanceFlow("FAIL")}
+            onUseSuggestedReading={addSuggestedMeasurementFromFlow}
+            onResetFlow={() => resetFlowForPack(selectedPackId)}
+            onDiagnoseNow={handleDiagnose}
+          />
         </SectionCard>
       </div>
 
@@ -13196,66 +13043,7 @@ return (
         }}
       >
         <SectionCard title="Manuals + Parts Results">
-          {mpErr ? (
-            <div style={{ color: "crimson", fontWeight: 800 }}>{mpErr}</div>
-          ) : null}
-          {!manualsParts ? (
-            <SmallHint>
-              Press “Parts & Manuals” after filling Manufacturer / Model / Symptom.
-            </SmallHint>
-          ) : (
-            <div style={{ display: "grid", gap: 10 }}>
-              <div style={{ fontWeight: 900 }}>{manualsParts.summary}</div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                <div>
-                  <div style={{ fontWeight: 900 }}>Manuals</div>
-                  <div style={{ display: "grid", gap: 8, marginTop: 6 }}>
-                    {manualsParts.manuals.map((l, i) => (
-                      <a
-                        key={i}
-                        href={l.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        style={{
-                          border: "1px solid #eee",
-                          borderRadius: 10,
-                          padding: 10,
-                          textDecoration: "none",
-                          color: "#111",
-                        }}
-                      >
-                        <div style={{ fontWeight: 900 }}>{l.title}</div>
-                        {l.note ? <SmallHint>{l.note}</SmallHint> : null}
-                      </a>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <div style={{ fontWeight: 900 }}>Parts</div>
-                  <div style={{ display: "grid", gap: 8, marginTop: 6 }}>
-                    {manualsParts.parts.map((l, i) => (
-                      <a
-                        key={i}
-                        href={l.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        style={{
-                          border: "1px solid #eee",
-                          borderRadius: 10,
-                          padding: 10,
-                          textDecoration: "none",
-                          color: "#111",
-                        }}
-                      >
-                        <div style={{ fontWeight: 900 }}>{l.title}</div>
-                        {l.note ? <SmallHint>{l.note}</SmallHint> : null}
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+          <ManualsPartsResults error={mpErr} manualsParts={manualsParts} />
         </SectionCard>
 
 
@@ -13264,38 +13052,7 @@ return (
       <div style={{ marginTop: 16 }}>
         {parsed ? (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <SectionCard title="Summary">
-              <div style={{ fontWeight: 900 }}>{parsed.summary || "—"}</div>
-            </SectionCard>
-
-            <SectionCard title="Likely causes">
-              {parsed.likely_causes?.length ? (
-                <div style={{ display: "grid", gap: 10 }}>
-                  {parsed.likely_causes.map((c, idx) => (
-                    <div
-                      key={idx}
-                      style={{
-                        borderTop: idx ? "1px solid #eee" : "none",
-                        paddingTop: idx ? 10 : 0,
-                      }}
-                    >
-                      <div style={{ fontWeight: 900 }}>
-                        {c.cause || "Cause"}
-                        {typeof c.probability_percent === "number" ? (
-                          <Badge text={`${c.probability_percent}%`} />
-                        ) : null}
-                      </div>
-                      {typeof c.probability_percent === "number" ? (
-                        <ProbBar pct={c.probability_percent} />
-                      ) : null}
-                      {c.why ? <SmallHint style={{ marginTop: 6 }}>{c.why}</SmallHint> : null}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <SmallHint>No likely causes returned.</SmallHint>
-              )}
-            </SectionCard>
+            <DiagnosisSummaryAndCauses parsed={parsed} />
 
 <SectionCard
   title="Repair Guidance"
@@ -13314,467 +13071,31 @@ return (
     </div>
   }
 >
-  {repairGuidance.length ? (
-    <div style={{ display: "grid", gap: 10 }}>
-      {repairGuidance.map((item, idx) => (
-        <div
-          key={idx}
-          style={{
-            border: "1px solid #eee",
-            borderRadius: 10,
-            padding: 10,
-            background: "#fafafa",
-          }}
-        >
-          <div style={{ fontWeight: 900 }}>
-            {item.title}
-            {typeof item.confidence === "number" ? (
-              <Badge text={`${item.confidence}%`} />
-            ) : null}
-          </div>
-
-          <div style={{ marginTop: 8 }}>
-            <div style={{ fontWeight: 900 }}>Suspected part / system</div>
-            <SmallHint style={{ marginTop: 4 }}>{item.suspectedPart}</SmallHint>
-          </div>
-
-          <div style={{ marginTop: 8 }}>
-            <div style={{ fontWeight: 900 }}>Why it is suspect</div>
-            <SmallHint style={{ marginTop: 4 }}>{item.why}</SmallHint>
-          </div>
-
-          <div style={{ marginTop: 8 }}>
-            <div style={{ fontWeight: 900 }}>Confirm with this test</div>
-            <SmallHint style={{ marginTop: 4 }}>{item.confirmTest}</SmallHint>
-          </div>
-
-          <div style={{ marginTop: 8 }}>
-            <div style={{ fontWeight: 900 }}>Quick field check</div>
-            <SmallHint style={{ marginTop: 4 }}>{item.fieldCheck}</SmallHint>
-          </div>
-
-          <div style={{ marginTop: 8 }}>
-            <div style={{ fontWeight: 900 }}>Likely fix</div>
-            <SmallHint style={{ marginTop: 4 }}>{item.likelyFix}</SmallHint>
-          </div>
-
-          <div style={{ marginTop: 8 }}>
-            <div style={{ fontWeight: 900 }}>Common mistake</div>
-            <SmallHint style={{ marginTop: 4 }}>{item.commonMistake}</SmallHint>
-          </div>
-
-{repairGuidanceMode === "apprentice" ? (
-  <>
-    <div style={{ marginTop: 8 }}>
-      <div style={{ fontWeight: 900 }}>Tool to use</div>
-      <SmallHint style={{ marginTop: 4 }}>{item.toolToUse}</SmallHint>
-    </div>
-
-    <div style={{ marginTop: 8 }}>
-      <div style={{ fontWeight: 900 }}>Expected reading / condition</div>
-      <SmallHint style={{ marginTop: 4 }}>{item.expectedReading}</SmallHint>
-    </div>
-
-    <div style={{ marginTop: 8 }}>
-      <div style={{ fontWeight: 900 }}>If test passes</div>
-      <SmallHint style={{ marginTop: 4 }}>{item.passInterpretation}</SmallHint>
-    </div>
-
-    <div style={{ marginTop: 8 }}>
-      <div style={{ fontWeight: 900 }}>If test fails</div>
-      <SmallHint style={{ marginTop: 4 }}>{item.failInterpretation}</SmallHint>
-    </div>
-
-    <div style={{ marginTop: 8 }}>
-      <div style={{ fontWeight: 900 }}>What to do next if it fails</div>
-      <SmallHint style={{ marginTop: 4 }}>{item.nextIfFail}</SmallHint>
-    </div>
-
-    <div style={{ marginTop: 8 }}>
-      <div style={{ fontWeight: 900 }}>Quick field check</div>
-      <SmallHint style={{ marginTop: 4 }}>{item.fieldCheck}</SmallHint>
-    </div>
-
-    <div style={{ marginTop: 8 }}>
-      <div style={{ fontWeight: 900 }}>Common mistake</div>
-      <SmallHint style={{ marginTop: 4 }}>{item.commonMistake}</SmallHint>
-    </div>
-
-    <div style={{ marginTop: 8 }}>
-      <div style={{ fontWeight: 900 }}>Safety note</div>
-      <SmallHint style={{ marginTop: 4 }}>{item.safetyNote}</SmallHint>
-    </div>
-  </>
-) : (
-  <>
-    <div style={{ marginTop: 8 }}>
-      <div style={{ fontWeight: 900 }}>Tool to use</div>
-      <SmallHint style={{ marginTop: 4 }}>{item.toolToUse}</SmallHint>
-    </div>
-
-    <div style={{ marginTop: 8 }}>
-      <div style={{ fontWeight: 900 }}>What to do next if it fails</div>
-      <SmallHint style={{ marginTop: 4 }}>{item.nextIfFail}</SmallHint>
-    </div>
-  </>
-)}
-
-          <div style={{ marginTop: 8 }}>
-            <div style={{ fontWeight: 900 }}>Safety note</div>
-            <SmallHint style={{ marginTop: 4 }}>{item.safetyNote}</SmallHint>
-          </div>
-        </div>
-      ))}
-    </div>
-  ) : (
-    <SmallHint>
-      Run a diagnosis to generate repair guidance and step-by-step field checks.
-    </SmallHint>
-  )}
+  <RepairGuidancePanel items={repairGuidance} mode={repairGuidanceMode} />
 </SectionCard>
 
 <SectionCard title="Recommended Measurements">
-  {measurementCoaching.length ? (
-    <div style={{ display: "grid", gap: 10 }}>
-      {measurementCoaching.map((item, idx) => (
-        <div
-          key={idx}
-          style={{
-            border: "1px solid #eee",
-            borderRadius: 10,
-            padding: 10,
-            background: "#fafafa",
-          }}
-        >
-          <div style={{ fontWeight: 900 }}>{item.measurement}</div>
-
-          <div style={{ marginTop: 8 }}>
-            <div style={{ fontWeight: 900 }}>Tool to use</div>
-            <SmallHint style={{ marginTop: 4 }}>{item.tool}</SmallHint>
-          </div>
-
-          <div style={{ marginTop: 8 }}>
-            <div style={{ fontWeight: 900 }}>Where to measure</div>
-            <SmallHint style={{ marginTop: 4 }}>{item.whereToMeasure}</SmallHint>
-          </div>
-
-          <div style={{ marginTop: 8 }}>
-            <div style={{ fontWeight: 900 }}>Expected reading / condition</div>
-            <SmallHint style={{ marginTop: 4 }}>{item.expectedResult}</SmallHint>
-          </div>
-
-          <div style={{ marginTop: 8 }}>
-            <div style={{ fontWeight: 900 }}>If high</div>
-            <SmallHint style={{ marginTop: 4 }}>{item.ifHigh}</SmallHint>
-          </div>
-
-          <div style={{ marginTop: 8 }}>
-            <div style={{ fontWeight: 900 }}>If low</div>
-            <SmallHint style={{ marginTop: 4 }}>{item.ifLow}</SmallHint>
-          </div>
-
-          <div style={{ marginTop: 8 }}>
-            <div style={{ fontWeight: 900 }}>What to do next</div>
-            <SmallHint style={{ marginTop: 4 }}>{item.nextStep}</SmallHint>
-          </div>
-        </div>
-      ))}
-    </div>
-  ) : (
-    <SmallHint>
-      Run a diagnosis to get recommended field measurements and coaching.
-    </SmallHint>
-  )}
+  <RecommendedMeasurementsPanel items={measurementCoaching} />
 </SectionCard>
 
 <SectionCard title="Error Code Guidance">
-  {errorCodeGuidance ? (
-    <div
-      style={{
-        border: "1px solid #eee",
-        borderRadius: 10,
-        padding: 10,
-        background: "#fafafa",
-      }}
-    >
-      <div style={{ fontWeight: 900 }}>{errorCodeGuidance.title}</div>
-
-      <div style={{ marginTop: 8 }}>
-        <div style={{ fontWeight: 900 }}>Summary</div>
-        <SmallHint style={{ marginTop: 4 }}>{errorCodeGuidance.summary}</SmallHint>
-      </div>
-
-      <div style={{ marginTop: 8 }}>
-        <div style={{ fontWeight: 900 }}>First checks</div>
-        <ul style={{ marginTop: 6, paddingLeft: 18 }}>
-          {errorCodeGuidance.firstChecks.map((item, idx) => (
-            <li key={idx}>
-              <SmallHint>{item}</SmallHint>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <div style={{ marginTop: 8 }}>
-        <div style={{ fontWeight: 900 }}>Warnings</div>
-        <ul style={{ marginTop: 6, paddingLeft: 18 }}>
-          {errorCodeGuidance.warnings.map((item, idx) => (
-            <li key={idx}>
-              <SmallHint>{item}</SmallHint>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <div style={{ marginTop: 8 }}>
-        <div style={{ fontWeight: 900 }}>What to check next</div>
-        <ul style={{ marginTop: 6, paddingLeft: 18 }}>
-          {errorCodeGuidance.nextSteps.map((item, idx) => (
-            <li key={idx}>
-              <SmallHint>{item}</SmallHint>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  ) : (
-    <SmallHint>
-      Enter an error code to generate code-specific guidance.
-    </SmallHint>
-  )}
+  <ErrorCodeGuidancePanel guidance={errorCodeGuidance} />
 </SectionCard>
 
                     <SectionCard title="Advanced AI Output">
-                <button
-                  onClick={() => setShowAdvancedAiOutput((v) => !v)}
-                  style={{
-              padding: "10px 14px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
-                >
-                  {showAdvancedAiOutput
-                    ? "Hide Advanced AI Output"
-                    : "Show Advanced AI Output"}
-                </button>
-
-                {showAdvancedAiOutput ? (
-                  <div style={{ marginTop: 12 }}>
-                    <div
-                      style={{
-                        whiteSpace: "pre-wrap",
-                        margin: 0,
-                        border: "1px solid #eee",
-                        borderRadius: 10,
-                        padding: 10,
-                        background: "#fafafa",
-                        fontFamily: "inherit",
-                        fontSize: 14,
-                        lineHeight: 1.5,
-                      }}
-                    >
-                      {formatRawOutput(rawResult || "No results yet.")}
-                    </div>
-                  </div>
-                ) : (
-                  <SmallHint style={{ marginTop: 12 }}>
-                    Advanced AI output is hidden by default to keep the field workflow clean.
-                  </SmallHint>
-                )}
-              </SectionCard>
+                      <AdvancedAiOutput rawResult={rawResult} />
+                    </SectionCard>
             </div>
           ) : (
             <SectionCard title="Advanced AI Output">
-              <button
-                onClick={() => setShowAdvancedAiOutput((v) => !v)}
-                style={{
-              padding: "10px 14px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
-              >
-                {showAdvancedAiOutput
-                  ? "Hide Advanced AI Output"
-                  : "Show Advanced AI Output"}
-              </button>
-
-              {showAdvancedAiOutput ? (
-                <div style={{ marginTop: 12 }}>
-                  <div
-                    style={{
-                      whiteSpace: "pre-wrap",
-                      margin: 0,
-                      border: "1px solid #eee",
-                      borderRadius: 10,
-                      padding: 10,
-                      background: "#fafafa",
-                      fontFamily: "inherit",
-                      fontSize: 14,
-                      lineHeight: 1.5,
-                    }}
-                  >
-                    {formatRawOutput(rawResult || "No results yet.")}
-                  </div>
-                </div>
-              ) : (
-                <SmallHint style={{ marginTop: 12 }}>
-                  Advanced AI output is hidden by default to keep the field workflow clean.
-                </SmallHint>
-              )}
+              <AdvancedAiOutput rawResult={rawResult} />
             </SectionCard>
           )}
       </div>
 
       <SectionCard title="Admin / Work Tools">
-    <button
-      onClick={() => setShowBulkImportTools((v) => !v)}
-      style={{
-              padding: "10px 14px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
-    >
-      {showBulkImportTools ? "Hide Bulk Import" : "Show Bulk Import"}
-    </button>
-
-    {showBulkImportTools ? (
-      <div style={{ marginTop: 12 }}>
-        <SmallHint>
-          Paste CSV with a header row. Required columns for best matching:
-          customer_name,site_name,site_address,unit_nickname,property_type,equipment_type,manufacturer,model,serial,refrigerant_type,service_date,symptom,diagnosis_summary,final_confirmed_cause,parts_replaced,actual_fix_performed,outcome_status,callback_occurred,tech_closeout_notes
-        </SmallHint>
-
-        <div style={{ marginTop: 12 }}>
-          <textarea
-            value={workOrderImportText}
-            onChange={(e) => setWorkOrderImportText(e.target.value)}
-            placeholder="Paste work-order CSV here..."
-            style={{ width: "100%", minHeight: 180, padding: 10 }}
-          />
-        </div>
-
-        <div style={{ display: "flex", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
-          <button
-            onClick={previewWorkOrderImport}
-            style={{
-              padding: "10px 14px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
-          >
-            Preview Import
-          </button>
-
-          <button
-            onClick={importWorkOrderRows}
-            disabled={workOrderImportLoading || !workOrderImportRows.length}
-            style={{
-              padding: "10px 14px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
-          >
-            {workOrderImportLoading ? "Importing..." : "Import Rows"}
-          </button>
-        </div>
-
-        {workOrderImportMessage ? (
-          <div style={{ marginTop: 12 }}>
-            <SmallHint>{workOrderImportMessage}</SmallHint>
-          </div>
-        ) : null}
-
-        {workOrderImportRows.length ? (
-          <div style={{ marginTop: 12, overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr>
-                  {Object.keys(workOrderImportRows[0]).map((key) => (
-                    <th
-                      key={key}
-                      style={{
-                        textAlign: "left",
-                        borderBottom: "1px solid #ddd",
-                        padding: 8,
-                        fontSize: 12,
-                      }}
-                    >
-                      {key}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {workOrderImportRows.slice(0, 10).map((row, idx) => (
-                  <tr key={idx}>
-                    {Object.keys(workOrderImportRows[0]).map((key) => (
-                      <td
-                        key={key}
-                        style={{
-                          borderBottom: "1px solid #f0f0f0",
-                          padding: 8,
-                          fontSize: 12,
-                        }}
-                      >
-                        {row[key]}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <SmallHint style={{ marginTop: 8 }}>
-              Showing first {Math.min(10, workOrderImportRows.length)} row(s) of {workOrderImportRows.length}.
-            </SmallHint>
-          </div>
-        ) : null}
-
-        {workOrderImportResults.length ? (
-          <div style={{ marginTop: 12 }}>
-            <div style={{ fontWeight: 900 }}>Import Results</div>
-            <ul style={{ marginTop: 8, paddingLeft: 18 }}>
-              {workOrderImportResults.map((item, idx) => (
-                <li key={idx}>
-                  <SmallHint>
-                    Row {item.rowNumber}: {item.action} → unit {item.unitId}
-                  </SmallHint>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
-      </div>
-    ) : (
-      <SmallHint style={{ marginTop: 12 }}>
-        Bulk import is hidden by default to keep the field workflow clean.
-      </SmallHint>
-    )}
-  </SectionCard>
+        <AdminWorkTools />
+      </SectionCard>
 </div>
 
       {showUnitProfile && (
