@@ -45,6 +45,10 @@ import { NavMenu } from "../components/NavMenu";
 
 import { JobIdentityProvider } from "./context/JobIdentity";
 
+import { CompanyAdminPanel } from "./components/CompanyAdminPanel";
+import { HistoricalEntryModeToggle } from "./components/HistoricalEntryModeToggle";
+import { HelpQuickStart } from "./components/HelpQuickStart";
+
 import { CustomerReport } from "./components/CustomerReport";
 
 import { SmartReadingsVoice, VoiceTextArea, VoiceInputButton } from "./components/VoiceInput";
@@ -7942,23 +7946,12 @@ const [needsCompanyOnboarding, setNeedsCompanyOnboarding] = useState(false);
 const [onboardingCompanyName, setOnboardingCompanyName] = useState("");
 const [onboardingBusy, setOnboardingBusy] = useState(false);
 const [onboardingMessage, setOnboardingMessage] = useState("");
-const [addTechEmail, setAddTechEmail] = useState("");
-const [addTechBusy, setAddTechBusy] = useState(false);
-const [addTechMessage, setAddTechMessage] = useState("");
-const [showAddTechTools, setShowAddTechTools] = useState(false);
-const [companyMembers, setCompanyMembers] = useState<
-  { id: string; user_id: string; email: string; full_name: string; role: string; status: string; created_at?: string }[]
->([]);
-const [companyMembersBusy, setCompanyMembersBusy] = useState(false);
-const [companyMembersMessage, setCompanyMembersMessage] = useState("");
-const [showCompanyTeam, setShowCompanyTeam] = useState(false);
 const [serviceEventPhotoUrls, setServiceEventPhotoUrls] = useState<string[]>([]);
 const [serviceEventPhotoBusy, setServiceEventPhotoBusy] = useState(false);
 const [serviceEventPhotoMessage, setServiceEventPhotoMessage] = useState("");
 const [editingServiceEventId, setEditingServiceEventId] = useState("");
 const [showServiceEventPhotos, setShowServiceEventPhotos] = useState(false);
 const [historicalEntryMode, setHistoricalEntryMode] = useState(false);
-const [showQuickStartInline, setShowQuickStartInline] = useState(true);
 
 const siteUnitsAtLocation = savedUnits.filter((u) => {
   const sameCustomer =
@@ -9463,108 +9456,7 @@ async function handleCreateCompanyOnboarding() {
   }
 }
 
-  async function handleAddTechToCompany() {
-  const email = addTechEmail.trim().toLowerCase();
-  if (!email) {
-    setAddTechMessage("Enter the tech email.");
-    return;
-  }
-
-  try {
-    setAddTechBusy(true);
-    setAddTechMessage("");
-
-    const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
-
-    if (sessionError) throw sessionError;
-    if (!session?.access_token) throw new Error("No active session found.");
-
-    const res = await fetch("/api/company/add-member", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${session.access_token}`,
-      },
-      body: JSON.stringify({
-        email,
-        role: "tech",
-      }),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok || !data?.ok) {
-      throw new Error(data?.error || `Server error (${res.status})`);
-    }
-
-    if (data?.alreadyMember) {
-      setAddTechMessage("That user is already attached to this company.");
-    } else {
-      setAddTechMessage("Tech added to company.");
-    }
-
-    setAddTechEmail("");
-    await loadCompanyMembers();
-  } catch (err) {
-    console.error("ADD TECH FAILED", err);
-    const msg =
-      err instanceof Error
-        ? err.message
-        : typeof err === "object"
-          ? JSON.stringify(err)
-          : String(err);
-
-    setAddTechMessage(`Add tech failed: ${msg}`);
-  } finally {
-    setAddTechBusy(false);
-  }
-}
-
-async function loadCompanyMembers() {
-  try {
-    setCompanyMembersBusy(true);
-    setCompanyMembersMessage("");
-
-    const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
-
-    if (sessionError) throw sessionError;
-    if (!session?.access_token) throw new Error("No active session found.");
-
-    const res = await fetch("/api/company/list-members", {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${session.access_token}`,
-      },
-    });
-
-    const data = await res.json();
-
-    if (!res.ok || !data?.ok) {
-      throw new Error(data?.error || `Server error (${res.status})`);
-    }
-
-    setCompanyMembers(data.members || []);
-  } catch (err) {
-    console.error("LOAD COMPANY MEMBERS FAILED", err);
-    const msg =
-      err instanceof Error
-        ? err.message
-        : typeof err === "object"
-          ? JSON.stringify(err)
-          : String(err);
-
-    setCompanyMembersMessage(`Could not load company team: ${msg}`);
-    setCompanyMembers([]);
-  } finally {
-    setCompanyMembersBusy(false);
-  }
-}
+// handleAddTechToCompany and loadCompanyMembers moved to CompanyAdminPanel.tsx
 
 async function handleUploadServiceEventPhotos(files: File[] | FileList | null) {
   const fileArray = Array.isArray(files) ? files : files ? Array.from(files) : [];
@@ -10197,136 +10089,7 @@ return (
 })()}
 {!historicalEntryMode ? (
       <div style={{ marginTop: 10 }}>
-        <SectionCard title="Company Admin / Add Tech">
-          <button
-            onClick={() => setShowAddTechTools((v) => !v)}
-            style={{
-              padding: "10px 14px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
-          >
-            {showAddTechTools ? "Hide Add Tech" : "Show Add Tech"}
-          </button>
-
-          {showAddTechTools ? (
-            <div style={{ marginTop: 12 }}>
-              <SmallHint>
-                Add an existing user account to your company as a tech.
-              </SmallHint>
-
-              <div
-                style={{
-                  marginTop: 12,
-                  display: "grid",
-                  gridTemplateColumns: "1fr auto",
-                  gap: 10,
-                  alignItems: "end",
-                }}
-              >
-                <div>
-                  <label style={{ fontWeight: 900 }}>"Tech Email"</label>
-                  <br />
-                  <input
-                    value={addTechEmail}
-                    onChange={(e) => setAddTechEmail(e.target.value)}
-                    placeholder="tech@example.com"
-                    style={{ width: "100%", padding: 8 }}
-                  />
-                </div>
-
-                <button
-                  onClick={handleAddTechToCompany}
-                  disabled={addTechBusy}
-                  style={{
-              padding: "10px 14px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
-                >
-                  {addTechBusy ? "Adding..." : "Add Tech"}
-                </button>
-              </div>
-
-              {addTechMessage ? (
-                <SmallHint style={{ marginTop: 10 }}>{addTechMessage}</SmallHint>
-              ) : null}
-            </div>
-          ) : (
-            <SmallHint style={{ marginTop: 12 }}>
-              Hidden by default to keep the main workflow clean.
-            </SmallHint>
-          )}
-        </SectionCard>
-      </div>
-      ) : null}
-
-{!historicalEntryMode ? (
-      <div style={{ marginTop: 10 }}>
-        <SectionCard title="Company Team">
-          <button
-            onClick={() => setShowCompanyTeam((v) => !v)}
-            style={{
-              padding: "10px 14px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
-          >
-            {showCompanyTeam ? "Hide Team" : "Show Team"}
-          </button>
-
-          {showCompanyTeam ? (
-            <div style={{ marginTop: 12 }}>
-              {companyMembersBusy ? (
-                <SmallHint>Loading company team...</SmallHint>
-              ) : companyMembers.length ? (
-                <div style={{ display: "grid", gap: 8 }}>
-                  {companyMembers.map((member) => (
-                    <div
-                      key={member.id}
-                      style={{
-                        border: "1px solid #eee",
-                        borderRadius: 10,
-                        padding: 10,
-                        background: "#fafafa",
-                      }}
-                    >
-                      <div style={{ fontWeight: 900 }}>
-                        {member.full_name || member.email || member.user_id}
-                      </div>
-                      <SmallHint style={{ marginTop: 4 }}>
-                        {member.email || "No email"} • {member.role || "-"} • {member.status || "-"}
-                      </SmallHint>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <SmallHint>
-                  {companyMembersMessage || "No company members found yet."}
-                </SmallHint>
-              )}
-            </div>
-          ) : (
-            <SmallHint style={{ marginTop: 12 }}>
-              Hidden by default to keep the main workflow clean.
-            </SmallHint>
-          )}
-        </SectionCard>
+        <CompanyAdminPanel />
       </div>
       ) : null}
 
@@ -10340,91 +10103,16 @@ return (
       >
       <div style={{ marginTop: 10 }}>
         <SectionCard title="Historical Entry Mode">
-          <button
-            onClick={() => setHistoricalEntryMode((v) => !v)}
-            style={{
-              padding: "10px 14px",
-              fontWeight: 900,
-              border: "1px solid #cfcfcf",
-              borderRadius: 10,
-              background: "#ffffff",
-              color: "#111",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            }}
-          >
-            {historicalEntryMode ? "Turn Historical Entry Mode Off" : "Turn Historical Entry Mode On"}
-          </button>
-
-          <SmallHint style={{ marginTop: 12 }}>
-            {historicalEntryMode
-              ? "Historical Entry Mode is ON. Company/admin sections are hidden so you can enter past calls faster."
-              : "Turn this on when entering old service calls. It hides company/admin clutter and keeps the screen cleaner."}
-          </SmallHint>
+          <HistoricalEntryModeToggle
+            enabled={historicalEntryMode}
+            onToggle={() => setHistoricalEntryMode((v) => !v)}
+          />
         </SectionCard>
       </div>
 
-        
         <div style={{ marginTop: 10 }}>
           <SectionCard title="Help / Quick Start">
-            <button
-              onClick={() => setShowQuickStartInline((v) => !v)}
-              style={{
-                padding: "10px 14px",
-                fontWeight: 900,
-                border: "1px solid #cfcfcf",
-                borderRadius: 10,
-                background: "#ffffff",
-                color: "#111",
-                cursor: "pointer",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-              }}
-            >
-              {showQuickStartInline ? "Hide Quick Start" : "Show Quick Start"}
-            </button>
-
-            {showQuickStartInline ? (
-
-            <div style={{ display: "grid", gap: 14 }}>
-              <div>
-                <div style={{ fontWeight: 900, marginBottom: 6 }}>1. Quick Start</div>
-                <SmallHint>Save a new unit or load an existing one. Enter the symptom, use the hints, add photos if needed, then save the call to the timeline.</SmallHint>
-              </div>
-
-              <div>
-                <div style={{ fontWeight: 900, marginBottom: 6 }}>2. Historical Entry</div>
-                <SmallHint>Load the unit first whenever possible. Turn on Historical Entry Mode to reduce clutter. Enter service date, symptom, cause, fix, outcome, callback, and notes. Use Save & Add Another for multiple old calls on the same unit.</SmallHint>
-              </div>
-
-              <div>
-                <div style={{ fontWeight: 900, marginBottom: 6 }}>3. Photos</div>
-                <SmallHint>Open Service Event Photos, take or attach photos, then save the call so the photos stay with that service event and appear later in timeline/profile history.</SmallHint>
-              </div>
-
-              <div>
-                <div style={{ fontWeight: 900, marginBottom: 6 }}>4. Editing</div>
-                <SmallHint>Load a unit and use Update Loaded Unit to correct unit details. In Unit Service Timeline, use Edit Event to fix a saved service entry, then use Update Event to save changes.</SmallHint>
-              </div>
-
-              <div>
-                <div style={{ fontWeight: 900, marginBottom: 6 }}>5. Parts / Manuals / Hints</div>
-                <SmallHint>Unit History Troubleshooting Hints uses saved history from that unit. Parts & Manuals Assist gives broad search and history-aware suggestions. History is guidance only and does not stop you from chasing a brand-new issue.</SmallHint>
-              </div>
-
-              <div>
-                <div style={{ fontWeight: 900, marginBottom: 6 }}>FAQ</div>
-                <SmallHint><b>How do I avoid duplicates?</b> Load the unit first when possible. Serial number is the strongest identifier.</SmallHint>
-                <SmallHint><b>How do I correct a unit?</b> Load it, change the fields, then click Update Loaded Unit.</SmallHint>
-                <SmallHint><b>How do I fix a saved call?</b> Use Edit Event in the Unit Service Timeline.</SmallHint>
-                <SmallHint><b>How do I enter lots of old calls fast?</b> Use Historical Entry Mode and Save & Add Another.</SmallHint>
-                <SmallHint><b>Where do photos go?</b> Photos attach to the service event and show in the timeline/profile later.</SmallHint>
-              </div>
-            </div>
-            ) : (
-              <SmallHint style={{ marginTop: 12 }}>
-                Hidden to keep the main workflow clean.
-              </SmallHint>
-            )}
+            <HelpQuickStart />
           </SectionCard>
         </div>
 
