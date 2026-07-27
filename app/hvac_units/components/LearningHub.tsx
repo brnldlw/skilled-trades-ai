@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+import { useLang } from "../../components/LanguageContext";
+import { t, type TranslationKey } from "../../lib/translations";
 
 type Resource = {
   title: string;
@@ -66,6 +68,36 @@ const ALL_TAGS = [
   "walk-in", "ice machine", "compressor", "manufacturer",
 ];
 
+const TAG_LABEL_KEYS: Record<string, TranslationKey> = {
+  "All": "lh_tag_all",
+  "diagnosis": "lh_tag_diagnosis",
+  "refrigerant": "lh_tag_refrigerant",
+  "superheat": "lh_tag_superheat",
+  "subcooling": "lh_tag_subcooling",
+  "commercial": "lh_tag_commercial",
+  "residential": "lh_tag_residential",
+  "heat pump": "lh_tag_heat_pump",
+  "controls": "lh_tag_controls",
+  "electrical": "lh_tag_electrical",
+  "wiring": "lh_tag_wiring",
+  "a2l": "lh_tag_a2l",
+  "epa": "lh_tag_epa",
+  "certification": "lh_tag_certification",
+  "walk-in": "lh_tag_walk_in",
+  "ice machine": "lh_tag_ice_machine",
+  "compressor": "lh_tag_compressor",
+  "manufacturer": "lh_tag_manufacturer",
+};
+
+const TYPE_LABEL_KEYS: Record<string, TranslationKey> = {
+  all: "lh_type_all",
+  video: "lh_type_video",
+  forum: "lh_type_forum",
+  article: "lh_type_article",
+  course: "lh_type_course",
+  manual: "lh_type_manual",
+};
+
 type LearningHubProps = {
   currentSymptom?: string;
   currentCause?: string;
@@ -73,6 +105,7 @@ type LearningHubProps = {
 };
 
 export function LearningHub({ currentSymptom, currentCause, equipmentType }: LearningHubProps) {
+  const { lang } = useLang();
   const [search, setSearch] = useState("");
   const [activeTag, setActiveTag] = useState("All");
   const [activeType, setActiveType] = useState<Resource["type"] | "all">("all");
@@ -121,22 +154,22 @@ export function LearningHub({ currentSymptom, currentCause, equipmentType }: Lea
     <div>
       <div style={{ marginBottom: 14, padding: "12px 14px", background: "#eff6ff", border: "1px solid #bae6fd", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
         <div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: "#1d4ed8" }}>📱 App Tour</div>
-          <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>Replay the guided intro to see all features</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#1d4ed8" }}>📱 {t("lh_app_tour_title", lang)}</div>
+          <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>{t("lh_app_tour_hint", lang)}</div>
         </div>
         <button onClick={replayTour}
           style={{ padding: "7px 16px", background: "#2563eb", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}>
-          Replay Tour
+          {t("lh_replay_tour", lang)}
         </button>
       </div>
       {/* Job context suggestion */}
       {suggestedTags.length > 0 && (
         <div style={{ marginBottom: 12, padding: "10px 14px", background: "#eff6ff", border: "1px solid #bae6fd", borderRadius: 10, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" as const }}>
-          <span style={{ fontSize: 13, fontWeight: 700, color: "#1d4ed8" }}>🎯 Based on your current job:</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "#1d4ed8" }}>🎯 {t("lh_based_on_job", lang)}</span>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" as const }}>
-            {suggestedTags.map(t => (
-              <button key={t} onClick={() => setActiveTag(t)} style={{ padding: "3px 10px", borderRadius: 20, border: "none", background: "#2563eb", color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
-                {t}
+            {suggestedTags.map(tag => (
+              <button key={tag} onClick={() => setActiveTag(tag)} style={{ padding: "3px 10px", borderRadius: 20, border: "none", background: "#2563eb", color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                {TAG_LABEL_KEYS[tag] ? t(TAG_LABEL_KEYS[tag], lang) : tag}
               </button>
             ))}
           </div>
@@ -147,25 +180,25 @@ export function LearningHub({ currentSymptom, currentCause, equipmentType }: Lea
       <input
         value={search}
         onChange={e => setSearch(e.target.value)}
-        placeholder="Search resources..."
+        placeholder={t("lh_search_placeholder", lang)}
         style={{ width: "100%", padding: "10px 14px", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: 14, fontFamily: "inherit", marginBottom: 10, background: "#fafafa" }}
       />
 
       {/* Type filter */}
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap" as const, marginBottom: 10 }}>
-        {(["all", "video", "forum", "article", "course", "manual"] as const).map(t => (
-          <button key={t} onClick={() => setActiveType(t)} style={{ padding: "5px 12px", borderRadius: 20, border: `1px solid ${activeType === t ? "#0f1f3d" : "#e2e8f0"}`, background: activeType === t ? "#0f1f3d" : "#fff", color: activeType === t ? "#fff" : "#374151", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", gap: 4 }}>
-            {t !== "all" && <span>{TYPE_ICONS[t]}</span>}
-            {t === "all" ? "All Types" : t.charAt(0).toUpperCase() + t.slice(1) + "s"}
+        {(["all", "video", "forum", "article", "course", "manual"] as const).map(ty => (
+          <button key={ty} onClick={() => setActiveType(ty)} style={{ padding: "5px 12px", borderRadius: 20, border: `1px solid ${activeType === ty ? "#0f1f3d" : "#e2e8f0"}`, background: activeType === ty ? "#0f1f3d" : "#fff", color: activeType === ty ? "#fff" : "#374151", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", gap: 4 }}>
+            {ty !== "all" && <span>{TYPE_ICONS[ty]}</span>}
+            {t(TYPE_LABEL_KEYS[ty], lang)}
           </button>
         ))}
       </div>
 
       {/* Tag filter */}
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap" as const, marginBottom: 14 }}>
-        {ALL_TAGS.map(t => (
-          <button key={t} onClick={() => setActiveTag(t)} style={{ padding: "4px 10px", borderRadius: 20, border: `1px solid ${activeTag === t ? "#2563eb" : "#e2e8f0"}`, background: activeTag === t ? "#dbeafe" : "#fff", color: activeTag === t ? "#1d4ed8" : "#64748b", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-            {t}
+        {ALL_TAGS.map(tag => (
+          <button key={tag} onClick={() => setActiveTag(tag)} style={{ padding: "4px 10px", borderRadius: 20, border: `1px solid ${activeTag === tag ? "#2563eb" : "#e2e8f0"}`, background: activeTag === tag ? "#dbeafe" : "#fff", color: activeTag === tag ? "#1d4ed8" : "#64748b", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+            {TAG_LABEL_KEYS[tag] ? t(TAG_LABEL_KEYS[tag], lang) : tag}
           </button>
         ))}
       </div>
@@ -174,7 +207,7 @@ export function LearningHub({ currentSymptom, currentCause, equipmentType }: Lea
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {sorted.length === 0 && (
           <div style={{ textAlign: "center", padding: "24px 0", color: "#94a3b8", fontSize: 13 }}>
-            No resources found. Try a different search or tag.
+            {t("lh_no_resources", lang)}
           </div>
         )}
         {sorted.map((r, i) => (
@@ -193,19 +226,19 @@ export function LearningHub({ currentSymptom, currentCause, equipmentType }: Lea
                     {r.type.toUpperCase()}
                   </span>
                   {r.free ? (
-                    <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: "#dcfce7", color: "#16a34a" }}>FREE</span>
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: "#dcfce7", color: "#16a34a" }}>{t("lh_badge_free", lang)}</span>
                   ) : (
-                    <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: "#f1f5f9", color: "#64748b" }}>PAID</span>
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: "#f1f5f9", color: "#64748b" }}>{t("lh_badge_paid", lang)}</span>
                   )}
-                  {suggestedTags.some(t => r.tags.includes(t)) && (
-                    <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: "#eff6ff", color: "#2563eb" }}>🎯 Relevant to your job</span>
+                  {suggestedTags.some(tag => r.tags.includes(tag)) && (
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: "#eff6ff", color: "#2563eb" }}>{t("lh_badge_relevant", lang)}</span>
                   )}
                 </div>
                 <div style={{ fontSize: 12, color: "#94a3b8", marginBottom: 4 }}>{r.source}</div>
                 <div style={{ fontSize: 12, color: "#64748b", lineHeight: 1.5 }}>{r.description}</div>
                 <div style={{ display: "flex", gap: 4, flexWrap: "wrap" as const, marginTop: 6 }}>
-                  {r.tags.slice(0, 4).map(t => (
-                    <span key={t} style={{ fontSize: 10, padding: "1px 7px", borderRadius: 20, background: "#f1f5f9", color: "#64748b" }}>{t}</span>
+                  {r.tags.slice(0, 4).map(tag => (
+                    <span key={tag} style={{ fontSize: 10, padding: "1px 7px", borderRadius: 20, background: "#f1f5f9", color: "#64748b" }}>{TAG_LABEL_KEYS[tag] ? t(TAG_LABEL_KEYS[tag], lang) : tag}</span>
                   ))}
                 </div>
               </div>
@@ -216,7 +249,7 @@ export function LearningHub({ currentSymptom, currentCause, equipmentType }: Lea
       </div>
 
       <div style={{ marginTop: 12, padding: "8px 12px", background: "#f8fafc", borderRadius: 8, fontSize: 11, color: "#94a3b8", lineHeight: 1.6 }}>
-        All external links open in a new tab. My HVAC/R Tool is not affiliated with these resources — they're curated by techs, for techs.
+        {t("lh_footer_disclaimer", lang)}
       </div>
     </div>
   );

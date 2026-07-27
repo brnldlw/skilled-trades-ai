@@ -3,9 +3,12 @@
 import { useState } from "react";
 import { SmallHint } from "./SmallHint";
 import { formatRawOutput } from "../lib/textHelpers";
+import { useLang } from "../../components/LanguageContext";
+import { t } from "../../lib/translations";
 
 export function AdvancedAiOutput({ rawResult }: { rawResult: string }) {
   const [show, setShow] = useState(false);
+  const { lang } = useLang();
 
   return (
     <>
@@ -22,7 +25,7 @@ export function AdvancedAiOutput({ rawResult }: { rawResult: string }) {
           boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
         }}
       >
-        {show ? "Hide Advanced AI Output" : "Show Advanced AI Output"}
+        {show ? t("btn_hide_advanced_ai_output", lang) : t("btn_show_advanced_ai_output", lang)}
       </button>
 
       {show ? (
@@ -40,12 +43,12 @@ export function AdvancedAiOutput({ rawResult }: { rawResult: string }) {
               lineHeight: 1.5,
             }}
           >
-            {formatRawOutput(rawResult || "No results yet.")}
+            {formatRawOutput(rawResult || t("no_results_yet", lang))}
           </div>
         </div>
       ) : (
         <SmallHint style={{ marginTop: 12 }}>
-          Advanced AI output is hidden by default to keep the field workflow clean.
+          {t("advanced_ai_output_hidden_hint", lang)}
         </SmallHint>
       )}
     </>

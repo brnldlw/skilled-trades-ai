@@ -1,6 +1,8 @@
 "use client";
 
 import { SmallHint } from "./SmallHint";
+import { useLang } from "../../components/LanguageContext";
+import { t } from "../../lib/translations";
 
 export function HistoricalEntryModeToggle({
   enabled,
@@ -9,6 +11,7 @@ export function HistoricalEntryModeToggle({
   enabled: boolean;
   onToggle: () => void;
 }) {
+  const { lang } = useLang();
   return (
     <>
       <button
@@ -24,13 +27,13 @@ export function HistoricalEntryModeToggle({
           boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
         }}
       >
-        {enabled ? "Turn Historical Entry Mode Off" : "Turn Historical Entry Mode On"}
+        {enabled ? t("btn_historical_mode_off", lang) : t("btn_historical_mode_on", lang)}
       </button>
 
       <SmallHint style={{ marginTop: 12 }}>
         {enabled
-          ? "Historical Entry Mode is ON. Company/admin sections are hidden so you can enter past calls faster."
-          : "Turn this on when entering old service calls. It hides company/admin clutter and keeps the screen cleaner."}
+          ? t("historical_mode_on_hint", lang)
+          : t("historical_mode_off_hint", lang)}
       </SmallHint>
     </>
   );
