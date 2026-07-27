@@ -1,6 +1,9 @@
 "use client";
 
 import React, { useState, useRef, useCallback } from "react";
+import { useLang } from "../../components/LanguageContext";
+import { t } from "../../lib/translations";
+import { translateMeasurementLabel } from "../data/presets";
 
 type VoiceInputProps = {
   onResult: (text: string) => void;
@@ -244,6 +247,7 @@ type SmartReadingsVoiceProps = {
 };
 
 export function SmartReadingsVoice({ onReadings, onRawText }: SmartReadingsVoiceProps) {
+  const { lang } = useLang();
   const [listening, setListening] = useState(false);
   const [lastText, setLastText] = useState("");
   const [parsed, setParsed] = useState<ParsedReading[]>([]);
@@ -304,24 +308,24 @@ export function SmartReadingsVoice({ onReadings, onRawText }: SmartReadingsVoice
       >
         <span style={{ fontSize: 18 }}>{listening ? "⏹" : "🎤"}</span>
         {listening
-          ? "Listening... tap to stop"
-          : "Speak Readings — e.g. \"suction 118, head 385, superheat 14\""}
+          ? t("voice_listening_stop", lang)
+          : t("voice_speak_readings", lang)}
       </button>
 
       {lastText && (
         <div style={{ marginTop: 8, padding: "8px 12px", background: "#f8fafc", borderRadius: 8, border: "1px solid #e2e8f0" }}>
-          <div style={{ fontSize: 11, color: "#64748b", marginBottom: 4, fontWeight: 600 }}>HEARD:</div>
+          <div style={{ fontSize: 11, color: "#64748b", marginBottom: 4, fontWeight: 600 }}>{t("voice_heard", lang)}</div>
           <div style={{ fontSize: 13, color: "#374151" }}>{lastText}</div>
         </div>
       )}
 
       {parsed.length > 0 && (
         <div style={{ marginTop: 6, padding: "8px 12px", background: "#f0fdf4", borderRadius: 8, border: "1px solid #bbf7d0" }}>
-          <div style={{ fontSize: 11, color: "#166534", marginBottom: 6, fontWeight: 600 }}>PARSED {parsed.length} READING{parsed.length !== 1 ? "S" : ""}:</div>
+          <div style={{ fontSize: 11, color: "#166534", marginBottom: 6, fontWeight: 600 }}>{parsed.length} {t("voice_parsed_readings", lang)}</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
             {parsed.map((r, i) => (
               <div key={i} style={{ fontSize: 12, color: "#166534", display: "flex", justifyContent: "space-between" }}>
-                <span>{r.label}</span>
+                <span>{translateMeasurementLabel(r.label, lang)}</span>
                 <span style={{ fontWeight: 700 }}>{r.value} {r.unit}</span>
               </div>
             ))}

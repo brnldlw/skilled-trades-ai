@@ -149,6 +149,64 @@ export function translateEquipmentGroupLabel(label: string, lang: Language): str
   return key ? t(key, lang) : label;
 }
 
+// Measurement preset labels are stored verbatim as the canonical
+// Observation.label value (matched against elsewhere via
+// getObservationValue's substring checks, e.g. l.includes("suction")) --
+// like equipment types, only the *displayed* label is translated.
+const MEASUREMENT_LABEL_KEYS: Record<string, TranslationKey> = {
+  "Suction Pressure": "measure_suction_pressure",
+  "Liquid Pressure": "measure_liquid_pressure",
+  "Return Air Temp": "measure_return_air_temp",
+  "Supply Air Temp": "measure_supply_air_temp",
+  "Suction Line Temp": "measure_suction_line_temp",
+  "Liquid Line Temp": "measure_liquid_line_temp",
+  "Suction Saturation Temp": "measure_suction_sat_temp",
+  "Condensing Saturation Temp": "measure_condensing_sat_temp",
+  "Superheat": "measure_superheat",
+  "Subcool": "measure_subcool",
+  "Delta T (Return-Supply)": "measure_delta_t_return_supply",
+  "Return Static": "measure_return_static",
+  "Supply Static": "measure_supply_static",
+  "Filter Pressure Drop": "measure_filter_pressure_drop",
+  "Coil Pressure Drop": "measure_coil_pressure_drop",
+  "External Static Pressure": "measure_external_static_pressure",
+  "Compressor Amps": "measure_compressor_amps",
+  "Line Voltage": "measure_line_voltage",
+  "Control Voltage (R-C)": "measure_control_voltage_rc",
+  "Low Pressure Switch Status": "measure_low_pressure_switch_status",
+  "High Pressure Switch Status": "measure_high_pressure_switch_status",
+  "Gas Inlet Pressure": "measure_gas_inlet_pressure",
+  "Manifold Pressure": "measure_manifold_pressure",
+  "Heat Rise": "measure_heat_rise",
+  "Inducer Amps": "measure_inducer_amps",
+  "Flame Sensor": "measure_flame_sensor",
+  "Limit Switch Continuity": "measure_limit_switch_continuity",
+  "Control Voltage (R-W)": "measure_control_voltage_rw",
+  "Pressure Switch Status": "measure_pressure_switch_status",
+  "Limit Switch Status": "measure_limit_switch_status",
+  "Rollout Switch Status": "measure_rollout_switch_status",
+  "Condensate Safety Status": "measure_condensate_safety_status",
+  "Box Temp": "measure_box_temp",
+  "Evap Coil Temp": "measure_evap_coil_temp",
+  "Head Pressure": "measure_head_pressure",
+  "Defrost Heater Amps": "measure_defrost_heater_amps",
+  "Termination Stat State": "measure_termination_stat_state",
+  "Defrost Timer State": "measure_defrost_timer_state",
+  "Water Fill Time": "measure_water_fill_time",
+  "Harvest Cycle Time": "measure_harvest_cycle_time",
+  "Water Supply Pressure": "measure_water_supply_pressure",
+  "Water Temp": "measure_water_temp",
+  "Bin Thermostat State": "measure_bin_thermostat_state",
+  "Hot Gas Valve Voltage": "measure_hot_gas_valve_voltage",
+  "Bin Control Status": "measure_bin_control_status",
+  "Water Level Control Status": "measure_water_level_control_status",
+};
+
+export function translateMeasurementLabel(label: string, lang: Language): string {
+  const key = MEASUREMENT_LABEL_KEYS[label];
+  return key ? t(key, lang) : label;
+}
+
 export const unitOptions: string[] = [
   "psi",
   "kPa",

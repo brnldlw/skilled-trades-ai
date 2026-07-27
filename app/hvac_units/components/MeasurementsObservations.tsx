@@ -12,7 +12,10 @@ import {
   refrigerationPresets,
   miniSplitPresets,
   iceMachinePresets,
+  translateMeasurementLabel,
 } from "../data/presets";
+import { useLang } from "../../components/LanguageContext";
+import { t } from "../../lib/translations";
 
 export function MeasurementsObservations({
   equipmentType,
@@ -50,6 +53,7 @@ export function MeasurementsObservations({
   onRemoveObservation: (idx: number) => void;
 }) {
   const { symptom, observations } = useJobIdentity();
+  const { lang } = useLang();
 
   const equipmentLower = equipmentType.toLowerCase();
   const presets = equipmentLower.includes("ice machine")
@@ -70,7 +74,7 @@ export function MeasurementsObservations({
         {presets.map((p) => (
           <PillButton
             key={p.label}
-            text={p.label}
+            text={translateMeasurementLabel(p.label, lang)}
             onClick={() => onApplyPreset(p.label, p.unit)}
           />
         ))}
@@ -92,7 +96,7 @@ export function MeasurementsObservations({
         }}
       >
         <div>
-          <label style={{ fontWeight: 900 }}>Label</label>
+          <label style={{ fontWeight: 900 }}>{t("field_label", lang)}</label>
           <input
             value={obsLabel}
             onChange={(e) => onObsLabelChange(e.target.value)}
@@ -100,7 +104,7 @@ export function MeasurementsObservations({
           />
         </div>
         <div>
-          <label style={{ fontWeight: 900 }}>Value</label>
+          <label style={{ fontWeight: 900 }}>{t("field_value", lang)}</label>
           <input
             value={obsValue}
             onChange={(e) => onObsValueChange(e.target.value)}
@@ -108,7 +112,7 @@ export function MeasurementsObservations({
           />
         </div>
         <div>
-          <label style={{ fontWeight: 900 }}>Unit</label>
+          <label style={{ fontWeight: 900 }}>{t("field_unit", lang)}</label>
           <select
             value={obsUnit}
             onChange={(e) => onObsUnitChange(e.target.value)}
@@ -125,7 +129,7 @@ export function MeasurementsObservations({
 
       <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
         <div>
-          <label style={{ fontWeight: 900 }}>Note (optional)</label>
+          <label style={{ fontWeight: 900 }}>{t("field_note_optional", lang)}</label>
           <input
             value={obsNote}
             onChange={(e) => onObsNoteChange(e.target.value)}
@@ -146,7 +150,7 @@ export function MeasurementsObservations({
             checked={autoConvert}
             onChange={(e) => onAutoConvertChange(e.target.checked)}
           />
-          Auto-convert (kPa→psi, °C→°F, Pa→inWC)
+          {t("auto_convert_label", lang)}
         </label>
 
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -160,7 +164,7 @@ export function MeasurementsObservations({
           cursor: "pointer",
           boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
         }}>
-            Add measurement
+            {t("btn_add_measurement_lower", lang)}
           </button>
           <button
             onClick={onClearAll}
@@ -175,7 +179,7 @@ export function MeasurementsObservations({
           boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
         }}
           >
-            Clear all
+            {t("btn_clear_all", lang)}
           </button>
         </div>
 
@@ -195,19 +199,19 @@ export function MeasurementsObservations({
               >
                 <div>
                   <div style={{ fontWeight: 900 }}>
-                    {o.label}
+                    {translateMeasurementLabel(o.label, lang)}
                     <Badge text={`${o.value} ${o.unit}`} />
                   </div>
                   {o.note ? <SmallHint>{o.note}</SmallHint> : null}
                 </div>
                 <button onClick={() => onRemoveObservation(idx)} style={{ fontWeight: 900 }}>
-                  Remove
+                  {t("btn_remove", lang)}
                 </button>
               </div>
             ))}
           </div>
         ) : (
-          <SmallHint>No measurements added yet.</SmallHint>
+          <SmallHint>{t("no_measurements_yet", lang)}</SmallHint>
         )}
       </div>
     </>

@@ -8511,9 +8511,9 @@ return (
             gap: 12,
           }}
         >
-          <div style={{ fontWeight: 900, fontSize: 16 }}>Step 2B — Quick Measurements / Observations</div>
+          <div style={{ fontWeight: 900, fontSize: 16 }}>{t("step2b_title", lang)}</div>
           <SmallHint>
-            Add the first key reading(s) here before going deeper into diagnosis.
+            {t("step2b_hint", lang)}
           </SmallHint>
 
           <div
@@ -8524,7 +8524,7 @@ return (
             }}
           >
             <div>
-              <label style={{ fontWeight: 900 }}>Label</label>
+              <label style={{ fontWeight: 900 }}>{t("field_label", lang)}</label>
               <input
                 value={obsLabel}
                 onChange={(e) => setObsLabel(e.target.value)}
@@ -8532,7 +8532,7 @@ return (
               />
             </div>
             <div>
-              <label style={{ fontWeight: 900 }}>Value</label>
+              <label style={{ fontWeight: 900 }}>{t("field_value", lang)}</label>
               <input
                 value={obsValue}
                 onChange={(e) => setObsValue(e.target.value)}
@@ -8540,7 +8540,7 @@ return (
               />
             </div>
             <div>
-              <label style={{ fontWeight: 900 }}>Unit</label>
+              <label style={{ fontWeight: 900 }}>{t("field_unit", lang)}</label>
               <select
                 value={obsUnit}
                 onChange={(e) => setObsUnit(e.target.value)}
@@ -8557,7 +8557,7 @@ return (
 
           <div style={{ display: "grid", gap: 10 }}>
             <div>
-              <label style={{ fontWeight: 900 }}>Note (optional)</label>
+              <label style={{ fontWeight: 900 }}>{t("field_note_optional", lang)}</label>
               <input
                 value={obsNote}
                 onChange={(e) => setObsNote(e.target.value)}
@@ -8578,7 +8578,7 @@ return (
                 checked={autoConvert}
                 onChange={(e) => setAutoConvert(e.target.checked)}
               />
-              Auto-convert (kPa→psi, °C→°F, Pa→inWC)
+              {t("auto_convert_label", lang)}
             </label>
 
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -8596,7 +8596,7 @@ return (
                   boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
                 }}
               >
-                Add Measurement
+                {t("btn_add_measurement", lang)}
               </button>
 
               <div
@@ -8611,7 +8611,7 @@ return (
                   fontWeight: 900,
                 }}
               >
-                Observations Entered: {Array.isArray(observations) ? observations.length : 0}
+                {t("observations_entered_count", lang)} {Array.isArray(observations) ? observations.length : 0}
               </div>
             </div>
           </div>
@@ -8642,7 +8642,7 @@ return (
           }}
         />
       </div>
-      <SectionCard title="Measurements / Observations" id="measurements">
+      <SectionCard title={t("measurements_title", lang)} id="measurements">
           <MeasurementsObservations
             equipmentType={equipmentType}
             measurementOptions={measurementOptions}
@@ -9917,9 +9917,9 @@ return (
                 gap: 12,
               }}
             >
-              <div style={{ fontWeight: 900, fontSize: 16 }}>Step 2 — Complaint + Evidence</div>
+              <div style={{ fontWeight: 900, fontSize: 16 }}>{t("step2_title", lang)}</div>
               <SmallHint>
-                Enter the service date and complaint here first. Use the lower troubleshooting sections for deeper guidance.
+                {t("step2_hint", lang)}
               </SmallHint>
 
               <div
@@ -9930,7 +9930,7 @@ return (
                 }}
               >
                 <div>
-                  <label style={{ fontWeight: 900 }}>{"Service Date"}</label>
+                  <label style={{ fontWeight: 900 }}>{t("job_form_service_date", lang)}</label>
                   <input
                     type="date"
                     value={serviceDate}
@@ -9940,7 +9940,7 @@ return (
                 </div>
 
                 <div>
-                  <label style={{ fontWeight: 900 }}>Affected Component</label>
+                  <label style={{ fontWeight: 900 }}>{t("job_form_affected_component", lang)}</label>
                   {(() => {
                     const options = getAffectedComponentOptions();
                     return (
@@ -9955,7 +9955,7 @@ return (
                           }}
                           style={{ width: "100%", padding: 8 }}
                         >
-                          <option value="">Select affected component</option>
+                          <option value="">{t("affected_component_select_placeholder", lang)}</option>
                           {options.map((option) => (
                             <option key={option.id} value={option.id}>
                               {option.label}
@@ -9973,7 +9973,7 @@ return (
                             minHeight: 38,
                           }}
                         >
-                          {getCurrentAffectedComponentLabelForAssist() || "Select the exact component for this call"}
+                          {getCurrentAffectedComponentLabelForAssist() || t("affected_component_select_default", lang)}
                         </div>
                       </div>
                     );
@@ -9981,12 +9981,12 @@ return (
                 </div>
 
                 <div style={{ gridColumn: "1 / -1" }}>
-                  <label style={{ fontWeight: 900 }}>Symptom / Complaint</label>
+                  <label style={{ fontWeight: 900 }}>{t("job_form_symptom", lang)}</label>
                   <textarea
                     value={symptom}
                     onChange={(e) => setSymptom(e.target.value)}
                     rows={4}
-                    placeholder="Example: not cooling, high head pressure, circuit 2 freezing, repeated defrost issue"
+                    placeholder={t("symptom_placeholder", lang)}
                     style={{ width: "100%", padding: 8 }}
                   />
                 </div>
@@ -10007,9 +10007,9 @@ return (
                 gap: 12,
               }}
             >
-              <div style={{ fontWeight: 900, fontSize: 16 }}>Step 2A — Quick Evidence</div>
+              <div style={{ fontWeight: 900, fontSize: 16 }}>{t("step2a_title", lang)}</div>
               <SmallHint>
-                Set the photo subject early and quickly confirm whether photos and observations have been added for this call.
+                {t("step2a_hint", lang)}
               </SmallHint>
 
               <div
@@ -10020,25 +10020,25 @@ return (
                 }}
               >
                 <div>
-                  <label style={{ fontWeight: 900 }}>Photo Subject</label>
+                  <label style={{ fontWeight: 900 }}>{t("photo_subject_label", lang)}</label>
                   <select
                     value={photoAssistSubject}
                     onChange={(e) => setPhotoAssistSubject(e.target.value)}
                     style={{ width: "100%", padding: 8 }}
                   >
-                    <option value="iced_coil">Iced Coil</option>
-                    <option value="contactor_capacitor">Contactor / Capacitor</option>
-                    <option value="control_board">Control Board</option>
-                    <option value="wiring">Wiring</option>
-                    <option value="nameplate_tag">Nameplate / Tag</option>
-                    <option value="drain_defrost">Drain / Defrost</option>
-                    <option value="dirty_coil_airflow">Dirty Coil / Airflow</option>
-                    <option value="compressor_section">Compressor Section</option>
+                    <option value="iced_coil">{t("photo_subject_iced_coil", lang)}</option>
+                    <option value="contactor_capacitor">{t("photo_subject_contactor_capacitor", lang)}</option>
+                    <option value="control_board">{t("photo_subject_control_board", lang)}</option>
+                    <option value="wiring">{t("photo_subject_wiring", lang)}</option>
+                    <option value="nameplate_tag">{t("photo_subject_nameplate_tag", lang)}</option>
+                    <option value="drain_defrost">{t("photo_subject_drain_defrost", lang)}</option>
+                    <option value="dirty_coil_airflow">{t("photo_subject_dirty_coil_airflow", lang)}</option>
+                    <option value="compressor_section">{t("photo_subject_compressor_section", lang)}</option>
                   </select>
                 </div>
 
                 <div>
-                  <label style={{ fontWeight: 900 }}>Photos Attached</label>
+                  <label style={{ fontWeight: 900 }}>{t("photos_attached_label", lang)}</label>
                   <div
                     style={{
                       width: "100%",
@@ -10054,7 +10054,7 @@ return (
                 </div>
 
                 <div>
-                  <label style={{ fontWeight: 900 }}>Observations Entered</label>
+                  <label style={{ fontWeight: 900 }}>{t("observations_entered_label", lang)}</label>
                   <div
                     style={{
                       width: "100%",
