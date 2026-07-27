@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+import { useLang } from "../../components/LanguageContext";
+import { t, type Language } from "../../lib/translations";
 
 type Supplier = {
   name: string;
@@ -54,29 +56,30 @@ type QuickPart = {
 };
 
 function getQuickParts(
-  equipmentType?: string,
-  finalConfirmedCause?: string,
-  partsReplaced?: string
+  equipmentType: string | undefined,
+  finalConfirmedCause: string | undefined,
+  partsReplaced: string | undefined,
+  lang: Language
 ): QuickPart[] {
   const parts: QuickPart[] = [];
   const combined = `${finalConfirmedCause || ""} ${partsReplaced || ""} ${equipmentType || ""}`.toLowerCase();
 
-  if (combined.includes("capacitor") || combined.includes("cap")) parts.push({ label: "Capacitor", query: "run capacitor dual" });
-  if (combined.includes("contactor")) parts.push({ label: "Contactor", query: "contactor 2 pole 24V coil" });
-  if (combined.includes("compressor")) parts.push({ label: "Compressor", query: "compressor replacement" });
-  if (combined.includes("txv") || combined.includes("expansion valve")) parts.push({ label: "TXV", query: "thermal expansion valve TXV" });
-  if (combined.includes("fan motor") || combined.includes("condenser fan")) parts.push({ label: "Condenser Fan Motor", query: "condenser fan motor" });
-  if (combined.includes("blower") || combined.includes("evaporator fan")) parts.push({ label: "Blower Motor", query: "blower motor ECM" });
-  if (combined.includes("control board") || combined.includes("board")) parts.push({ label: "Control Board", query: "control board PCB" });
-  if (combined.includes("defrost")) parts.push({ label: "Defrost Board", query: "defrost control board" });
-  if (combined.includes("reversing valve")) parts.push({ label: "Reversing Valve", query: "reversing valve 4-way" });
-  if (combined.includes("filter") || combined.includes("filter drier")) parts.push({ label: "Filter Drier", query: "filter drier liquid line" });
-  if (combined.includes("belt")) parts.push({ label: "Belt", query: "V-belt AHU blower" });
-  if (combined.includes("motor")) parts.push({ label: "Motor", query: "replacement motor" });
-  if (combined.includes("valve")) parts.push({ label: "Solenoid Valve", query: "solenoid valve refrigeration" });
-  if (combined.includes("thermostat")) parts.push({ label: "Thermostat", query: "commercial thermostat" });
-  if (combined.includes("pressure switch")) parts.push({ label: "Pressure Switch", query: "high low pressure switch refrigeration" });
-  if (combined.includes("drain")) parts.push({ label: "Condensate Pump", query: "condensate pump drain" });
+  if (combined.includes("capacitor") || combined.includes("cap")) parts.push({ label: t("part_capacitor", lang), query: "run capacitor dual" });
+  if (combined.includes("contactor")) parts.push({ label: t("part_contactor", lang), query: "contactor 2 pole 24V coil" });
+  if (combined.includes("compressor")) parts.push({ label: t("part_compressor", lang), query: "compressor replacement" });
+  if (combined.includes("txv") || combined.includes("expansion valve")) parts.push({ label: t("part_txv", lang), query: "thermal expansion valve TXV" });
+  if (combined.includes("fan motor") || combined.includes("condenser fan")) parts.push({ label: t("pl_part_condenser_fan_motor", lang), query: "condenser fan motor" });
+  if (combined.includes("blower") || combined.includes("evaporator fan")) parts.push({ label: t("pl_part_blower_motor", lang), query: "blower motor ECM" });
+  if (combined.includes("control board") || combined.includes("board")) parts.push({ label: t("part_control_board", lang), query: "control board PCB" });
+  if (combined.includes("defrost")) parts.push({ label: t("pl_part_defrost_board", lang), query: "defrost control board" });
+  if (combined.includes("reversing valve")) parts.push({ label: t("pl_part_reversing_valve", lang), query: "reversing valve 4-way" });
+  if (combined.includes("filter") || combined.includes("filter drier")) parts.push({ label: t("part_filter_drier", lang), query: "filter drier liquid line" });
+  if (combined.includes("belt")) parts.push({ label: t("pl_part_belt", lang), query: "V-belt AHU blower" });
+  if (combined.includes("motor")) parts.push({ label: t("pl_part_motor", lang), query: "replacement motor" });
+  if (combined.includes("valve")) parts.push({ label: t("pl_part_solenoid_valve", lang), query: "solenoid valve refrigeration" });
+  if (combined.includes("thermostat")) parts.push({ label: t("pl_part_thermostat", lang), query: "commercial thermostat" });
+  if (combined.includes("pressure switch")) parts.push({ label: t("pl_part_pressure_switch", lang), query: "high low pressure switch refrigeration" });
+  if (combined.includes("drain")) parts.push({ label: t("pl_part_condensate_pump", lang), query: "condensate pump drain" });
 
   return parts;
 }
@@ -102,6 +105,7 @@ const SUPPLY_CHAINS = [
 ];
 
 function SupplyHouseFinder() {
+  const { lang } = useLang();
   const [mode, setMode] = useState<"idle" | "locating" | "done" | "error">("idle");
   const [zip, setZip] = useState("");
   const [locationStr, setLocationStr] = useState("");
@@ -149,16 +153,16 @@ function SupplyHouseFinder() {
   return (
     <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 12, padding: "16px" }}>
       <div style={{ fontSize: 14, fontWeight: 800, color: "#0f1f3d", marginBottom: 4 }}>
-        📍 Find Nearest Supply House
+        {t("pl_find_supply_house", lang)}
       </div>
       <div style={{ fontSize: 12, color: "#64748b", marginBottom: 14, lineHeight: 1.5 }}>
-        Use your GPS location or enter a zip code to find the closest HVAC/R supply houses.
+        {t("pl_find_supply_hint", lang)}
       </div>
 
       {/* Chain selector */}
       <div style={{ marginBottom: 12 }}>
         <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#374151", marginBottom: 5, textTransform: "uppercase" as const, letterSpacing: "0.04em" }}>
-          Which supplier?
+          {t("pl_which_supplier", lang)}
         </label>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" as const }}>
           {SUPPLY_CHAINS.map(chain => (
@@ -175,49 +179,49 @@ function SupplyHouseFinder() {
         <div style={{ display: "flex", flexDirection: "column" as const, gap: 10 }}>
           <button onClick={getGpsLocation}
             style={{ padding: "12px", background: "#0f1f3d", color: "#fff", border: "none", borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-            📍 Use My Current Location
+            {t("pl_use_current_location", lang)}
           </button>
 
           <div style={{ display: "flex", gap: 8 }}>
             <input value={zip} onChange={e => setZip(e.target.value.replace(/\D/g, "").slice(0, 5))}
               onKeyDown={e => e.key === "Enter" && useZip()}
-              placeholder="Or enter zip code..."
+              placeholder={t("pl_zip_placeholder", lang)}
               style={{ flex: 1, padding: "10px 12px", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: 14, fontFamily: "inherit", background: "#fff" }} />
             <button onClick={useZip} disabled={zip.length < 5}
               style={{ padding: "10px 16px", background: zip.length >= 5 ? "#2563eb" : "#e2e8f0", color: zip.length >= 5 ? "#fff" : "#94a3b8", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: zip.length >= 5 ? "pointer" : "not-allowed", fontFamily: "inherit" }}>
-              Search
+              {t("btn_search", lang)}
             </button>
           </div>
 
           {mode === "error" && (
             <div style={{ fontSize: 12, color: "#dc2626", padding: "8px 12px", background: "#fef2f2", borderRadius: 8 }}>
-              Could not get GPS location. Enter your zip code instead.
+              {t("pl_gps_error", lang)}
             </div>
           )}
         </div>
       ) : mode === "locating" ? (
         <div style={{ padding: "16px", textAlign: "center" as const, color: "#64748b", fontSize: 14 }}>
-          📍 Getting your location...
+          {t("pl_getting_location", lang)}
         </div>
       ) : (
         <div>
           <div style={{ fontSize: 12, color: "#16a34a", fontWeight: 700, marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>
-            ✓ Location set — {locationStr.includes(",") ? "using GPS" : `zip: ${locationStr}`}
+            ✓ {locationStr.includes(",") ? t("pl_location_set_gps", lang) : t("pl_location_set_zip", lang).replace("{value}", locationStr)}
             <button onClick={() => { setMode("idle"); setLocationStr(""); setZip(""); }}
               style={{ background: "none", border: "none", color: "#94a3b8", fontSize: 11, cursor: "pointer", fontFamily: "inherit", marginLeft: 4 }}>
-              Change
+              {t("btn_change", lang)}
             </button>
           </div>
 
           {/* Find button */}
           <button onClick={openAllNearby}
             style={{ width: "100%", padding: "13px", background: "#f97316", color: "#fff", border: "none", borderRadius: 10, fontWeight: 800, fontSize: 15, cursor: "pointer", fontFamily: "inherit", marginBottom: 10, boxShadow: "0 4px 16px rgba(249,115,22,0.3)" }}>
-            🗺️ Show Nearest {selectedChain}
+            {t("pl_show_nearest", lang).replace("{value}", selectedChain)}
           </button>
 
           {/* All suppliers quick links */}
           <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: 8 }}>
-            Or find any of these nearby:
+            {t("pl_find_any_nearby", lang)}
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
             {SUPPLY_CHAINS.filter(c => c.name !== "Any HVAC Supply").map(chain => (
@@ -226,7 +230,7 @@ function SupplyHouseFinder() {
                 <span style={{ fontSize: 16 }}>{chain.icon}</span>
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 700, color: chain.color }}>{chain.name}</div>
-                  <div style={{ fontSize: 10, color: "#94a3b8" }}>Open in Maps →</div>
+                  <div style={{ fontSize: 10, color: "#94a3b8" }}>{t("pl_open_in_maps", lang)}</div>
                 </div>
               </button>
             ))}
@@ -238,10 +242,11 @@ function SupplyHouseFinder() {
 }
 
 export function PartsLookup({ manufacturer, model, equipmentType, finalConfirmedCause, partsReplaced, initialQuery }: Props) {
+  const { lang } = useLang();
   const [query, setQuery] = useState(initialQuery || "");
   const [searched, setSearched] = useState(false);
 
-  const quickParts = getQuickParts(equipmentType, finalConfirmedCause, partsReplaced);
+  const quickParts = getQuickParts(equipmentType, finalConfirmedCause, partsReplaced, lang);
 
   function openSupplier(supplier: Supplier, q: string) {
     const url = supplier.buildUrl(q, manufacturer, model);
@@ -277,7 +282,7 @@ export function PartsLookup({ manufacturer, model, equipmentType, finalConfirmed
           gap: 8,
           flexWrap: "wrap" as const,
         }}>
-          <span>🎯 Searching with context:</span>
+          <span>{t("pl_searching_context", lang)}</span>
           {manufacturer && <span style={{ fontWeight: 700 }}>{manufacturer}</span>}
           {model && <span style={{ fontWeight: 700 }}>{model}</span>}
           {finalConfirmedCause && <span style={{ color: "#3b82f6" }}>· {finalConfirmedCause}</span>}
@@ -290,7 +295,7 @@ export function PartsLookup({ manufacturer, model, equipmentType, finalConfirmed
           value={query}
           onChange={e => setQuery(e.target.value)}
           onKeyDown={e => e.key === "Enter" && handleSearch(query)}
-          placeholder="Enter part name or part number..."
+          placeholder={t("pl_search_placeholder", lang)}
           style={{
             flex: 1,
             padding: "10px 14px",
@@ -317,7 +322,7 @@ export function PartsLookup({ manufacturer, model, equipmentType, finalConfirmed
             flexShrink: 0,
           }}
         >
-          Search
+          {t("btn_search", lang)}
         </button>
       </div>
 
@@ -325,7 +330,7 @@ export function PartsLookup({ manufacturer, model, equipmentType, finalConfirmed
       {quickParts.length > 0 && (
         <div style={{ marginBottom: 14 }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 6 }}>
-            Quick lookup — based on your job
+            {t("pl_quick_lookup", lang)}
           </div>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" as const }}>
             {quickParts.map(p => (
@@ -356,7 +361,7 @@ export function PartsLookup({ manufacturer, model, equipmentType, finalConfirmed
       {(searched || query.trim()) && (
         <div>
           <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 8 }}>
-            Search on supplier sites
+            {t("pl_search_supplier_sites", lang)}
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 8 }}>
             {SUPPLIERS.map(supplier => (
@@ -389,22 +394,22 @@ export function PartsLookup({ manufacturer, model, equipmentType, finalConfirmed
                 <span style={{ fontSize: 18, flexShrink: 0 }}>{supplier.icon}</span>
                 <div>
                   <div style={{ fontSize: 12, fontWeight: 700, color: supplier.color }}>{supplier.name}</div>
-                  <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 1 }}>Opens in new tab</div>
+                  <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 1 }}>{t("pl_opens_new_tab", lang)}</div>
                 </div>
               </button>
             ))}
           </div>
 
           <div style={{ marginTop: 10, fontSize: 11, color: "#94a3b8", lineHeight: 1.5 }}>
-            Each button opens a new tab pre-filled with your search.
-            {manufacturer && model && ` Manufacturer (${manufacturer}) and model (${model}) are included in the search automatically.`}
+            {t("pl_each_button_note", lang)}
+            {manufacturer && model && t("pl_mfr_model_included", lang).replace("{mfr}", manufacturer).replace("{model}", model)}
           </div>
         </div>
       )}
 
       {!searched && !query.trim() && quickParts.length === 0 && (
         <div style={{ padding: "20px 0", textAlign: "center", color: "#94a3b8", fontSize: 13 }}>
-          Enter a part name or number above to search across all major suppliers at once.
+          {t("pl_empty_state", lang)}
         </div>
       )}
     </div>
