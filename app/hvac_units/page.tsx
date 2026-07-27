@@ -6166,7 +6166,7 @@ async function handleDiagnose() {
         chargeAnalysis,
         airflowAnalysis,
         equipmentMemory,
-        
+        lang,
       });
     } finally {
       setLoading(false);
@@ -6196,6 +6196,7 @@ async function updateDiagnosisNow() {
         chargeAnalysis,
         airflowAnalysis,
         equipmentMemory,
+        lang,
       });
     } finally {
       setLoading(false);
@@ -8789,13 +8790,13 @@ return (
           )}
         </SectionCard>
 
-        <SectionCard title="PT Chart Intelligence + Charge Diagnosis">
+        <SectionCard title={t("pt_chart_intelligence_title", lang)}>
           <PtChartChargeDiagnosis chargeAnalysis={chargeAnalysis} />
         </SectionCard>
       </div>
 
            <div style={{ marginTop: 10 }}>
-        <SectionCard title="Airflow Intelligence">
+        <SectionCard title={t("airflow_intelligence_title", lang)}>
           <AirflowIntelligence airflowAnalysis={airflowAnalysis} />
         </SectionCard>
       </div>
@@ -8810,13 +8811,13 @@ return (
       >
 
         <div style={{ marginTop: 10 }}>
-  <SectionCard title="Defrost Intelligence">
+  <SectionCard title={t("defrost_intelligence_title", lang)}>
     <DefrostIntelligence defrostAnalysis={defrostAnalysis} />
   </SectionCard>
 </div>
 
 <div style={{ marginTop: 10 }}>
-  <SectionCard title="Defrost Repair Guidance">
+  <SectionCard title={t("defrost_repair_guidance_title", lang)}>
     <DefrostRepairGuidance guidance={defrostRepairGuidance} />
   </SectionCard>
 </div>
@@ -8908,24 +8909,23 @@ return (
             gap: 6,
           }}
         >
-          <div style={{ fontWeight: 900, fontSize: 18 }}>Step 3 — Diagnose</div>
+          <div style={{ fontWeight: 900, fontSize: 18 }}>{t("step3_title", lang)}</div>
           <SmallHint>
-            Use these sections to decide what to test next, which parts are really in play, and what still needs to be proven before replacement.
+            {t("step3_hint", lang)}
           </SmallHint>
         </div>
       </div>
 
       {/* AI Diagnosis Assistant */}
       <div style={{ marginTop: 10 }}>
-        <SectionCard title="🤖 AI Diagnosis Assistant" id="ai-chat">
+        <SectionCard title={`🤖 ${t("ai_assistant_title", lang)}`} id="ai-chat">
           <SmallHint>
-            Chat with a Claude-powered master technician. Describe symptoms, share readings, and get
-            step-by-step guidance tailored to this exact job. Your field readings are automatically included.
+            {t("ai_chat_full_hint", lang)}
           </SmallHint>
           <div style={{ marginTop: 8, padding: "8px 12px", background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 8, display: "flex", alignItems: "flex-start", gap: 8 }}>
             <span style={{ fontSize: 14, flexShrink: 0 }}>⚠️</span>
             <span style={{ fontSize: 12, color: "#92400e", lineHeight: 1.5 }}>
-              <strong>Garbage in, garbage out.</strong> The AI is only as accurate as the information you give it. Verify your readings before you ask — wrong pressures lead to wrong diagnosis.
+              {t("ai_gigo_full", lang)}
             </span>
           </div>
           <div style={{ marginTop: 10 }}>
@@ -8942,7 +8942,7 @@ return (
                 cursor: "pointer",
               }}
             >
-              {showAiChatBot ? "▲ Hide AI Assistant" : "▼ Open AI Assistant"}
+              {showAiChatBot ? `▲ ${t("ai_hide_assistant", lang)}` : `▼ ${t("ai_open_assistant", lang)}`}
             </button>
             {showAiChatBot && (
               <div style={{ marginTop: 12 }}>
@@ -9126,10 +9126,9 @@ return (
 
 {/* repair-decision-panel-v2 */}
       <div style={{ marginTop: 10 }}>
-        <SectionCard title="Repair Decision Panel" id="repair">
+        <SectionCard title={t("repair_decision_title", lang)} id="repair">
           <SmallHint>
-            Helps move from diagnosis into a smarter repair decision by showing likely parts to verify,
-            why they are in play, what to prove first, and the callback risk if replaced blindly.
+            {t("repair_decision_hint", lang)}
           </SmallHint>
 
           <RepairDecisionPanel
@@ -9147,10 +9146,9 @@ return (
 
 {/* guided-next-test-engine-v2 */}
       <div style={{ marginTop: 10 }}>
-        <SectionCard title="Guided Next-Test Engine" id="guided-diagnosis">
+        <SectionCard title={t("guided_next_test_title", lang)} id="guided-diagnosis">
           <SmallHint>
-            Uses the selected affected component, current symptom, and same-component history to suggest
-            the next field checks instead of making the tech guess.
+            {t("guided_next_test_hint", lang)}
           </SmallHint>
 
           {(() => {
@@ -9170,21 +9168,21 @@ return (
                 >
                   <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10, background: "#fafafa" }}>
                     <div style={{ fontWeight: 900, fontSize: 12, color: "#666", textTransform: "uppercase" }}>
-                      Target Component
+                      {t("label_target_component", lang)}
                     </div>
-                    <div style={{ marginTop: 4, fontWeight: 700 }}>{targetComponent || "Primary component"}</div>
+                    <div style={{ marginTop: 4, fontWeight: 700 }}>{targetComponent || t("fallback_primary_component", lang)}</div>
                   </div>
 
                   <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10, background: "#fafafa" }}>
                     <div style={{ fontWeight: 900, fontSize: 12, color: "#666", textTransform: "uppercase" }}>
-                      Current Symptom
+                      {t("label_current_symptom", lang)}
                     </div>
                     <div style={{ marginTop: 4, fontWeight: 700 }}>{symptom || "—"}</div>
                   </div>
 
                   <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10, background: "#fafafa" }}>
                     <div style={{ fontWeight: 900, fontSize: 12, color: "#666", textTransform: "uppercase" }}>
-                      Same-Component History
+                      {t("label_same_component_history", lang)}
                     </div>
                     <div style={{ marginTop: 4, fontWeight: 700 }}>{sameComponentHistory.length}</div>
                   </div>
@@ -9199,7 +9197,7 @@ return (
                       background: "#fff8e8",
                     }}
                   >
-                    <div style={{ fontWeight: 900 }}>Pattern Warnings</div>
+                    <div style={{ fontWeight: 900 }}>{t("label_pattern_warnings", lang)}</div>
                     <ul style={{ marginTop: 8, paddingLeft: 18 }}>
                       {warningSignals.slice(0, 3).map((item, idx) => (
                         <li key={idx}>
@@ -9224,12 +9222,12 @@ return (
                       }}
                     >
                       <div style={{ fontWeight: 900 }}>
-                        Test {idx + 1}: {test.title}
+                        {t("label_test_n", lang)} {idx + 1}: {test.title}
                       </div>
 
-                      <SmallHint><b>Tool:</b> {test.tool}</SmallHint>
-                      <SmallHint><b>Why:</b> {test.why}</SmallHint>
-                      <SmallHint><b>What to do:</b> {test.how}</SmallHint>
+                      <SmallHint><b>{t("label_tool", lang)}</b> {test.tool}</SmallHint>
+                      <SmallHint><b>{t("label_why", lang)}</b> {test.why}</SmallHint>
+                      <SmallHint><b>{t("label_what_to_do", lang)}</b> {test.how}</SmallHint>
                     </div>
                   ))}
                 </div>
@@ -9240,9 +9238,9 @@ return (
       </div>
 
         <div style={{ marginTop: 10 }}>
-        <SectionCard title="Suggested Parts to Verify Before Replacing">
+        <SectionCard title={t("suggested_parts_title", lang)}>
           <SmallHint>
-            Ranks suggested parts by confidence so the tech can verify the strongest repair path before making a blind swap.
+            {t("suggested_parts_hint", lang)}
           </SmallHint>
 
           {(() => {
@@ -9251,7 +9249,7 @@ return (
             if (!items.length) {
               return (
                 <div style={{ marginTop: 12 }}>
-                  <SmallHint>No suggested parts are ready yet. Add component, symptom, or readings to tighten the list.</SmallHint>
+                  <SmallHint>{t("suggested_parts_empty", lang)}</SmallHint>
                 </div>
               );
             }
@@ -9272,7 +9270,7 @@ return (
                   >
                     <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
                       <div style={{ fontWeight: 900 }}>
-                        Part {idx + 1}: {item.part}
+                        {t("label_part_n", lang)} {idx + 1}: {item.part}
                       </div>
 
                       <div
@@ -9290,12 +9288,16 @@ return (
                                 : "#fff1f1",
                         }}
                       >
-                        {item.confidence}
+                        {item.confidence === "High confidence"
+                          ? t("confidence_high", lang)
+                          : item.confidence === "Verify first"
+                            ? t("confidence_verify_first", lang)
+                            : t("confidence_low_callback", lang)}
                       </div>
                     </div>
 
                     <div>
-                      <SmallHint><b>Why this part is in play:</b></SmallHint>
+                      <SmallHint><b>{t("label_why_part_in_play", lang)}</b></SmallHint>
                       <ul style={{ marginTop: 6, paddingLeft: 18 }}>
                         {item.reasons.map((reason, reasonIdx) => (
                           <li key={reasonIdx}>
@@ -9306,7 +9308,7 @@ return (
                     </div>
 
                     <div>
-                      <SmallHint><b>Prove before replacing:</b></SmallHint>
+                      <SmallHint><b>{t("label_prove_before_replacing", lang)}</b></SmallHint>
                       <ul style={{ marginTop: 6, paddingLeft: 18 }}>
                         {item.prove.map((entry, proveIdx) => (
                           <li key={proveIdx}>
@@ -9316,7 +9318,7 @@ return (
                       </ul>
                     </div>
 
-                    <SmallHint><b>Blind replace risk:</b> {item.blindRisk}</SmallHint>
+                    <SmallHint><b>{t("label_blind_replace_risk", lang)}</b> {item.blindRisk}</SmallHint>
 
                     <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                       <button
@@ -9347,7 +9349,7 @@ return (
                           boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
                         }}
                       >
-                        Add Part Name to Parts Replaced
+                        {t("btn_add_part_to_replaced", lang)}
                       </button>
                     </div>
                   </div>
@@ -11651,7 +11653,7 @@ return (
         </SectionCard>
       </div>
 
-        <SectionCard title="Real Flowchart Engine">
+        <SectionCard title={t("real_flowchart_title", lang)}>
           <RealFlowchartEngine
             node={currentFlowNode}
             onPass={() => advanceFlow("PASS")}
@@ -11671,7 +11673,7 @@ return (
           gap: 12,
         }}
       >
-        <SectionCard title="Manuals + Parts Results">
+        <SectionCard title={t("manuals_parts_title", lang)}>
           <ManualsPartsResults error={mpErr} manualsParts={manualsParts} />
         </SectionCard>
 
@@ -11684,16 +11686,16 @@ return (
             <DiagnosisSummaryAndCauses parsed={parsed} />
 
 <SectionCard
-  title="Repair Guidance"
+  title={t("repair_guidance_title", lang)}
   right={
     <div style={{ display: "flex", gap: 8 }}>
       <PillButton
-        text="Apprentice"
+        text={t("pill_apprentice", lang)}
         active={repairGuidanceMode === "apprentice"}
         onClick={() => setRepairGuidanceMode("apprentice")}
       />
       <PillButton
-        text="Experienced"
+        text={t("pill_experienced", lang)}
         active={repairGuidanceMode === "experienced"}
         onClick={() => setRepairGuidanceMode("experienced")}
       />
@@ -11703,11 +11705,11 @@ return (
   <RepairGuidancePanel items={repairGuidance} mode={repairGuidanceMode} />
 </SectionCard>
 
-<SectionCard title="Recommended Measurements">
+<SectionCard title={t("recommended_measurements_title", lang)}>
   <RecommendedMeasurementsPanel items={measurementCoaching} />
 </SectionCard>
 
-<SectionCard title="Error Code Guidance">
+<SectionCard title={t("error_code_guidance_title", lang)}>
   <ErrorCodeGuidancePanel guidance={errorCodeGuidance} />
 </SectionCard>
 

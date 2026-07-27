@@ -1,6 +1,8 @@
 "use client";
 
 import { SmallHint } from "./SmallHint";
+import { useLang } from "../../components/LanguageContext";
+import { t } from "../../lib/translations";
 
 type LinkItem = { title: string; url: string; note?: string };
 
@@ -17,6 +19,7 @@ export function ManualsPartsResults({
   error: string;
   manualsParts: ManualsParts | null;
 }) {
+  const { lang } = useLang();
   return (
     <>
       {error ? (
@@ -24,14 +27,14 @@ export function ManualsPartsResults({
       ) : null}
       {!manualsParts ? (
         <SmallHint>
-          Press "Parts & Manuals" after filling Manufacturer / Model / Symptom.
+          {t("manuals_parts_prompt", lang)}
         </SmallHint>
       ) : (
         <div style={{ display: "grid", gap: 10 }}>
           <div style={{ fontWeight: 900 }}>{manualsParts.summary}</div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             <div>
-              <div style={{ fontWeight: 900 }}>Manuals</div>
+              <div style={{ fontWeight: 900 }}>{t("label_manuals", lang)}</div>
               <div style={{ display: "grid", gap: 8, marginTop: 6 }}>
                 {manualsParts.manuals.map((l, i) => (
                   <a
@@ -54,7 +57,7 @@ export function ManualsPartsResults({
               </div>
             </div>
             <div>
-              <div style={{ fontWeight: 900 }}>Parts</div>
+              <div style={{ fontWeight: 900 }}>{t("label_parts", lang)}</div>
               <div style={{ display: "grid", gap: 8, marginTop: 6 }}>
                 {manualsParts.parts.map((l, i) => (
                   <a

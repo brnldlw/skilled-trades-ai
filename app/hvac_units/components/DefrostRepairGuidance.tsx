@@ -2,6 +2,8 @@
 
 import { SmallHint } from "./SmallHint";
 import { Badge } from "./Badge";
+import { useLang } from "../../components/LanguageContext";
+import { t } from "../../lib/translations";
 
 type GuidanceItem = {
   part: string;
@@ -12,10 +14,11 @@ type GuidanceItem = {
 };
 
 export function DefrostRepairGuidance({ guidance }: { guidance: GuidanceItem[] }) {
+  const { lang } = useLang();
   return (
     <>
       <SmallHint>
-        Shows likely failed parts, why they are suspect, and the next field check to perform.
+        {t("defrost_repair_hint", lang)}
       </SmallHint>
 
       {guidance.length ? (
@@ -36,17 +39,17 @@ export function DefrostRepairGuidance({ guidance }: { guidance: GuidanceItem[] }
               </div>
 
               <div style={{ marginTop: 8 }}>
-                <div style={{ fontWeight: 900 }}>Why it is suspect</div>
+                <div style={{ fontWeight: 900 }}>{t("label_why_suspect", lang)}</div>
                 <SmallHint style={{ marginTop: 4 }}>{item.why}</SmallHint>
               </div>
 
               <div style={{ marginTop: 8 }}>
-                <div style={{ fontWeight: 900 }}>Next test</div>
+                <div style={{ fontWeight: 900 }}>{t("label_next_test", lang)}</div>
                 <SmallHint style={{ marginTop: 4 }}>{item.nextTest}</SmallHint>
               </div>
 
               <div style={{ marginTop: 8 }}>
-                <div style={{ fontWeight: 900 }}>Quick field check</div>
+                <div style={{ fontWeight: 900 }}>{t("label_quick_field_check", lang)}</div>
                 <SmallHint style={{ marginTop: 4 }}>{item.quickCheck}</SmallHint>
               </div>
             </div>
@@ -63,8 +66,7 @@ export function DefrostRepairGuidance({ guidance }: { guidance: GuidanceItem[] }
           }}
         >
           <SmallHint>
-            Add defrost-related measurements or enter a refrigeration icing / defrost complaint
-            to generate repair guidance.
+            {t("defrost_repair_empty", lang)}
           </SmallHint>
         </div>
       )}

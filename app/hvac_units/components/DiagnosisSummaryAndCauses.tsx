@@ -4,6 +4,8 @@ import { SmallHint } from "./SmallHint";
 import { Badge } from "./Badge";
 import { ProbBar } from "./ProbBar";
 import { SectionCard } from "./SectionCard";
+import { useLang } from "../../components/LanguageContext";
+import { t } from "../../lib/translations";
 
 type LikelyCause = {
   cause: string;
@@ -17,13 +19,14 @@ type Diagnosis = {
 };
 
 export function DiagnosisSummaryAndCauses({ parsed }: { parsed: Diagnosis }) {
+  const { lang } = useLang();
   return (
     <>
-      <SectionCard title="Summary">
+      <SectionCard title={t("label_summary", lang)}>
         <div style={{ fontWeight: 900 }}>{parsed.summary || "—"}</div>
       </SectionCard>
 
-      <SectionCard title="Likely causes">
+      <SectionCard title={t("label_likely_causes", lang)}>
         {parsed.likely_causes?.length ? (
           <div style={{ display: "grid", gap: 10 }}>
             {parsed.likely_causes.map((c, idx) => (
@@ -35,7 +38,7 @@ export function DiagnosisSummaryAndCauses({ parsed }: { parsed: Diagnosis }) {
                 }}
               >
                 <div style={{ fontWeight: 900 }}>
-                  {c.cause || "Cause"}
+                  {c.cause || t("label_cause_fallback", lang)}
                   {typeof c.probability_percent === "number" ? (
                     <Badge text={`${c.probability_percent}%`} />
                   ) : null}
@@ -48,7 +51,7 @@ export function DiagnosisSummaryAndCauses({ parsed }: { parsed: Diagnosis }) {
             ))}
           </div>
         ) : (
-          <SmallHint>No likely causes returned.</SmallHint>
+          <SmallHint>{t("no_likely_causes", lang)}</SmallHint>
         )}
       </SectionCard>
     </>

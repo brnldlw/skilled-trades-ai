@@ -2,6 +2,15 @@
 
 import { SmallHint } from "./SmallHint";
 import { Badge } from "./Badge";
+import { useLang } from "../../components/LanguageContext";
+import { t, type TranslationKey } from "../../lib/translations";
+
+const SOURCE_KEYS: Record<string, TranslationKey> = {
+  entered: "source_entered",
+  "pt-chart": "source_pt_chart",
+  "gauge-photo": "source_gauge_photo",
+  none: "source_none",
+};
 
 type ChargeAnalysis = {
   deltaT: number | null;
@@ -16,11 +25,15 @@ type ChargeAnalysis = {
 };
 
 export function PtChartChargeDiagnosis({ chargeAnalysis }: { chargeAnalysis: ChargeAnalysis }) {
+  const { lang } = useLang();
+  const translateSource = (source: string) => {
+    const key = SOURCE_KEYS[source];
+    return key ? t(key, lang) : source;
+  };
   return (
     <>
       <SmallHint>
-        If saturation temps are not entered, the app will estimate them from pressure
-        and refrigerant type using a PT chart approximation.
+        {t("pt_chart_hint", lang)}
       </SmallHint>
 
       <div
@@ -32,21 +45,21 @@ export function PtChartChargeDiagnosis({ chargeAnalysis }: { chargeAnalysis: Cha
         }}
       >
         <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-          <div style={{ fontWeight: 900 }}>Delta-T</div>
+          <div style={{ fontWeight: 900 }}>{t("label_delta_t", lang)}</div>
           <div style={{ fontSize: 22, fontWeight: 900, marginTop: 6 }}>
             {chargeAnalysis.deltaT !== null ? `${chargeAnalysis.deltaT}°F` : "—"}
           </div>
         </div>
 
         <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-          <div style={{ fontWeight: 900 }}>Superheat</div>
+          <div style={{ fontWeight: 900 }}>{t("measure_superheat", lang)}</div>
           <div style={{ fontSize: 22, fontWeight: 900, marginTop: 6 }}>
             {chargeAnalysis.superheat !== null ? `${chargeAnalysis.superheat}°F` : "—"}
           </div>
         </div>
 
         <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-          <div style={{ fontWeight: 900 }}>Subcool</div>
+          <div style={{ fontWeight: 900 }}>{t("measure_subcool", lang)}</div>
           <div style={{ fontSize: 22, fontWeight: 900, marginTop: 6 }}>
             {chargeAnalysis.subcool !== null ? `${chargeAnalysis.subcool}°F` : "—"}
           </div>
@@ -63,8 +76,8 @@ export function PtChartChargeDiagnosis({ chargeAnalysis }: { chargeAnalysis: Cha
       >
         <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
           <div style={{ fontWeight: 900 }}>
-            Evap Saturation
-            <Badge text={chargeAnalysis.evapSatSource} />
+            {t("label_evap_saturation", lang)}
+            <Badge text={translateSource(chargeAnalysis.evapSatSource)} />
           </div>
           <div style={{ marginTop: 6 }}>
             {chargeAnalysis.evapSat !== null ? `${chargeAnalysis.evapSat}°F` : "—"}
@@ -73,8 +86,8 @@ export function PtChartChargeDiagnosis({ chargeAnalysis }: { chargeAnalysis: Cha
 
         <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
           <div style={{ fontWeight: 900 }}>
-            Condensing Saturation
-            <Badge text={chargeAnalysis.condSatSource} />
+            {t("label_condensing_saturation", lang)}
+            <Badge text={translateSource(chargeAnalysis.condSatSource)} />
           </div>
           <div style={{ marginTop: 6 }}>
             {chargeAnalysis.condSat !== null ? `${chargeAnalysis.condSat}°F` : "—"}
@@ -91,7 +104,7 @@ export function PtChartChargeDiagnosis({ chargeAnalysis }: { chargeAnalysis: Cha
           background: "#fafafa",
         }}
       >
-        <div style={{ fontWeight: 900 }}>Charge Condition</div>
+        <div style={{ fontWeight: 900 }}>{t("label_charge_condition", lang)}</div>
         <div style={{ fontSize: 16, fontWeight: 900, marginTop: 6 }}>
           {chargeAnalysis.summary}
         </div>
@@ -105,7 +118,7 @@ export function PtChartChargeDiagnosis({ chargeAnalysis }: { chargeAnalysis: Cha
           </ul>
         ) : (
           <SmallHint style={{ marginTop: 8 }}>
-            Add more refrigeration readings to tighten the diagnosis.
+            {t("charge_diagnosis_more_readings", lang)}
           </SmallHint>
         )}
       </div>

@@ -221,6 +221,7 @@ export async function POST(req: NextRequest) {
 
     const observations = body?.observations || [];
     const pathLog = body?.pathLog || [];
+    const lang = body?.lang === "es" ? "es" : "en";
 
     const apiKey = process.env.OPENAI_API_KEY || "";
     if (!apiKey) {
@@ -249,6 +250,7 @@ ${formatPath(pathLog)}
 You are an expert HVAC/R service technician.
 You produce field-usable troubleshooting output with tight, practical wording.
 You must follow the JSON Schema exactly.
+${lang === "es" ? "Write every string value in the JSON in Spanish (español), as a Spanish-speaking field tech would say it. Keep the JSON field/property names in English exactly as the schema requires — only translate the natural-language values." : ""}
 `.trim();
 
     const input = `

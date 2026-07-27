@@ -1,6 +1,8 @@
 "use client";
 
 import { SmallHint } from "./SmallHint";
+import { useLang } from "../../components/LanguageContext";
+import { t } from "../../lib/translations";
 
 type AirflowAnalysis = {
   totalExternalStatic: number | null;
@@ -13,11 +15,11 @@ type AirflowAnalysis = {
 };
 
 export function AirflowIntelligence({ airflowAnalysis }: { airflowAnalysis: AirflowAnalysis }) {
+  const { lang } = useLang();
   return (
     <>
       <SmallHint>
-        Add return static, supply static, filter pressure drop, and coil pressure drop
-        to diagnose airflow restrictions.
+        {t("airflow_hint", lang)}
       </SmallHint>
 
       <div
@@ -29,7 +31,7 @@ export function AirflowIntelligence({ airflowAnalysis }: { airflowAnalysis: Airf
         }}
       >
         <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-          <div style={{ fontWeight: 900 }}>Total External Static</div>
+          <div style={{ fontWeight: 900 }}>{t("label_total_external_static", lang)}</div>
           <div style={{ fontSize: 22, fontWeight: 900, marginTop: 6 }}>
             {airflowAnalysis.totalExternalStatic !== null
               ? `${airflowAnalysis.totalExternalStatic} inWC`
@@ -38,7 +40,7 @@ export function AirflowIntelligence({ airflowAnalysis }: { airflowAnalysis: Airf
         </div>
 
         <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-          <div style={{ fontWeight: 900 }}>Return Static</div>
+          <div style={{ fontWeight: 900 }}>{t("measure_return_static", lang)}</div>
           <div style={{ fontSize: 22, fontWeight: 900, marginTop: 6 }}>
             {airflowAnalysis.returnStatic !== null
               ? `${airflowAnalysis.returnStatic} inWC`
@@ -47,7 +49,7 @@ export function AirflowIntelligence({ airflowAnalysis }: { airflowAnalysis: Airf
         </div>
 
         <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-          <div style={{ fontWeight: 900 }}>Supply Static</div>
+          <div style={{ fontWeight: 900 }}>{t("measure_supply_static", lang)}</div>
           <div style={{ fontSize: 22, fontWeight: 900, marginTop: 6 }}>
             {airflowAnalysis.supplyStatic !== null
               ? `${airflowAnalysis.supplyStatic} inWC`
@@ -65,7 +67,7 @@ export function AirflowIntelligence({ airflowAnalysis }: { airflowAnalysis: Airf
         }}
       >
         <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-          <div style={{ fontWeight: 900 }}>Filter Drop</div>
+          <div style={{ fontWeight: 900 }}>{t("label_filter_drop", lang)}</div>
           <div style={{ marginTop: 6 }}>
             {airflowAnalysis.filterDrop !== null
               ? `${airflowAnalysis.filterDrop} inWC`
@@ -74,7 +76,7 @@ export function AirflowIntelligence({ airflowAnalysis }: { airflowAnalysis: Airf
         </div>
 
         <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
-          <div style={{ fontWeight: 900 }}>Coil Drop</div>
+          <div style={{ fontWeight: 900 }}>{t("label_coil_drop", lang)}</div>
           <div style={{ marginTop: 6 }}>
             {airflowAnalysis.coilDrop !== null
               ? `${airflowAnalysis.coilDrop} inWC`
@@ -92,7 +94,7 @@ export function AirflowIntelligence({ airflowAnalysis }: { airflowAnalysis: Airf
           background: "#fafafa",
         }}
       >
-        <div style={{ fontWeight: 900 }}>Airflow Summary</div>
+        <div style={{ fontWeight: 900 }}>{t("label_airflow_summary", lang)}</div>
         <div style={{ fontSize: 16, fontWeight: 900, marginTop: 6 }}>
           {airflowAnalysis.summary}
         </div>
@@ -106,7 +108,7 @@ export function AirflowIntelligence({ airflowAnalysis }: { airflowAnalysis: Airf
           </ul>
         ) : (
           <SmallHint style={{ marginTop: 8 }}>
-            Add static readings to identify filter, coil, blower, or duct restrictions.
+            {t("airflow_more_readings", lang)}
           </SmallHint>
         )}
       </div>

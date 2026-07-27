@@ -24,9 +24,13 @@ type ChatRequest = {
   serviceHistory?: ServiceEventContext[];
   // Copilot mode — structured diagnostic reasoning
   copilotMode?: boolean;
+  lang?: "en" | "es";
 };
 
 function buildSystemPrompt(ctx: Omit<ChatRequest, "messages">): string {
+  const langInstruction = ctx.lang === "es"
+    ? "\n\nIMPORTANT: Respond in Spanish (español). The technician you're talking to reads Spanish. Keep all HVAC/R technical terms, refrigerant names, and units as commonly used by Spanish-speaking field techs."
+    : "";
   const equipLine = ctx.equipmentType ? `Equipment Type: ${ctx.equipmentType}` : "";
   const mfrLine = ctx.manufacturer ? `Manufacturer: ${ctx.manufacturer}` : "";
   const modelLine = ctx.model ? `Model: ${ctx.model}` : "";
@@ -154,7 +158,7 @@ Follow ignition sequence: inducer → pressure switch → igniter → gas valve 
 - Never ask more than 2 questions at once.
 - Always show your suspect ranking when you have one.
 - Lead them to the answer — don't just dump information.
-- When you have enough evidence, commit to a diagnosis. Don't hedge forever.`;
+- When you have enough evidence, commit to a diagnosis. Don't hedge forever.${langInstruction}`;
   }
 
   // ── STANDARD MODE (fallback) ──────────────────────────────
@@ -169,7 +173,7 @@ ${contextBlock ? `## Current Job Context\n${contextBlock}\n` : ""}${historyBlock
 5. Safety first — flag A2L/A3 hazards proactively.
 6. Be concise and field-ready — no walls of text.
 
-Equipment coverage: RTUs, splits, mini-splits, heat pumps, furnaces, boilers, chillers, commercial refrigeration, ice machines, VRF.`;
+Equipment coverage: RTUs, splits, mini-splits, heat pumps, furnaces, boilers, chillers, commercial refrigeration, ice machines, VRF.${langInstruction}`;
 }
 
 export async function POST(req: NextRequest) {
@@ -195,6 +199,7 @@ export async function POST(req: NextRequest) {
       observations: body.observations,
       serviceHistory: body.serviceHistory,
       copilotMode: body.copilotMode ?? true, // Default ON — copilot mode is now the standard
+      lang: body.lang,
     });
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {

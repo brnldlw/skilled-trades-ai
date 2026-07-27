@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { useLang } from "../../components/LanguageContext";
+import { t } from "../../lib/translations";
 
 // ─── Types ────────────────────────────────────────────────────
 type ChatMessage = {
@@ -213,14 +214,14 @@ function TypingIndicator() {
 }
 
 // ─── Quick Starters ───────────────────────────────────────────
-const QUICK_STARTS = [
-  "Not cooling, high suction pressure, what should I check first?",
-  "Walk me through checking a TXV vs fixed orifice system",
-  "Compressor not starting, capacitor tests good, what's next?",
-  "How do I verify refrigerant charge on this system?",
-  "What are the A2L safety precautions I need to follow?",
-  "High head pressure, normal suction — top causes?",
-];
+const QUICK_START_KEYS = [
+  "ai_quick_start_1",
+  "ai_quick_start_2",
+  "ai_quick_start_3",
+  "ai_quick_start_4",
+  "ai_quick_start_5",
+  "ai_quick_start_6",
+] as const;
 
 // ═══════════════════════════════════════════════════════════════
 // Main Component
@@ -311,26 +312,27 @@ export function AiChatBot({
           observations,
           serviceHistory,
           copilotMode: true,
+          lang,
         }),
       });
 
       const data = await res.json();
 
       if (!res.ok || data.error) {
-        setError(data.error || `Server error (${res.status})`);
+        setError(data.error || `${t("ai_server_error", lang)} (${res.status})`);
         return;
       }
 
       const assistantMsg: ChatMessage = {
         id: makeId(),
         role: "assistant",
-        content: data.reply || "No response received.",
+        content: data.reply || t("ai_no_response", lang),
         timestamp: new Date(),
       };
 
       setMessages((prev) => [...prev, assistantMsg]);
     } catch (err: any) {
-      setError("Network error: " + (err?.message || "Could not reach server."));
+      setError(t("ai_network_error", lang) + " " + (err?.message || t("ai_could_not_reach_server", lang)));
     } finally {
       setLoading(false);
     }
@@ -384,12 +386,12 @@ export function AiChatBot({
           </div>
           {contextParts.length > 0 && (
             <div style={{ fontSize: 11, color: "#93c5fd", marginTop: 2 }}>
-              Context: {contextParts.join(" · ")}
+              {t("ai_context_label", lang)} {contextParts.join(" · ")}
             </div>
           )}
           {contextParts.length === 0 && (
             <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>
-              Fill in equipment info above for smarter answers
+              {t("ai_hint", lang)}
             </div>
           )}
         </div>
@@ -402,7 +404,7 @@ export function AiChatBot({
               color: "#cbd5e1", fontWeight: 700,
             }}
           >
-            Clear
+            {t("btn_clear", lang)}
           </button>
         )}
       </div>
@@ -419,7 +421,7 @@ export function AiChatBot({
       }}>
         <span style={{ fontSize: 13, flexShrink: 0 }}>⚠️</span>
         <span style={{ fontSize: 11, color: "#92400e", lineHeight: 1.4 }}>
-          <strong>Garbage in, garbage out.</strong> Accurate readings = accurate diagnosis. Verify your pressures and temps before you ask.
+          {t("ai_gigo_banner", lang)}
         </span>
       </div>
 
@@ -437,10 +439,10 @@ export function AiChatBot({
           <div style={{ textAlign: "center", padding: "16px 8px" }}>
             <div style={{ fontSize: 28, marginBottom: 8 }}>🔧</div>
             <div style={{ fontWeight: 800, fontSize: 14, color: "#1e3a5f", marginBottom: 4 }}>
-              Ask me anything about this system
+              {t("ai_chat_empty_title", lang)}
             </div>
             <div style={{ fontSize: 12, color: "#64748b", marginBottom: 16 }}>
-              I think like a 25-year master tech. Describe symptoms, share readings, or ask me to walk you through a test.
+              {t("ai_chat_empty_subtitle", lang)}
             </div>
           </div>
         )}
@@ -449,10 +451,12 @@ export function AiChatBot({
         {showQuickStarts && messages.length === 0 && (
           <div style={{ marginBottom: 12 }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.5px" }}>
-              Quick questions
+              {t("ai_quick_questions", lang)}
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {QUICK_STARTS.map((q, i) => (
+              {QUICK_START_KEYS.map((key, i) => {
+                const q = t(key, lang);
+                return (
                 <button key={i} onClick={() => sendMessage(q)} style={{
                   textAlign: "left", padding: "8px 12px", borderRadius: 8,
                   background: "#fff", border: "1px solid #e2e8f0",
@@ -465,7 +469,8 @@ export function AiChatBot({
                 >
                   {q}
                 </button>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
@@ -507,10 +512,10 @@ export function AiChatBot({
           flexWrap: "wrap" as const,
         }}>
           {Array.isArray(observations) && observations.length > 0 && (
-            <span>📊 {observations.length} field reading{observations.length !== 1 ? "s" : ""} in context</span>
+            <span>📊 {observations.length} {t(observations.length !== 1 ? "word_field_readings" : "word_field_reading", lang)} {t("in_context_suffix", lang)}</span>
           )}
           {Array.isArray(serviceHistory) && serviceHistory.length > 0 && (
-            <span>📋 {serviceHistory.length} prior service visit{serviceHistory.length !== 1 ? "s" : ""} in context</span>
+            <span>📋 {serviceHistory.length} {t(serviceHistory.length !== 1 ? "word_prior_service_visits" : "word_prior_service_visit", lang)} {t("in_context_suffix", lang)}</span>
           )}
         </div>
       ) : null}
@@ -554,7 +559,7 @@ export function AiChatBot({
             type="button"
             onClick={startVoice}
             disabled={loading || listening}
-            title="Speak your question"
+            title={t("ai_speak_question", lang)}
             style={{
               width: 38, height: 38,
               borderRadius: 10,
@@ -590,7 +595,7 @@ export function AiChatBot({
             height: 38,
           }}
         >
-          {loading ? "…" : "Send"}
+          {loading ? "…" : t("ai_send", lang)}
         </button>
         <style>{`@keyframes mic-pulse { 0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,0.3)} 50%{box-shadow:0 0 0 6px rgba(220,38,38,0)} }`}</style>
       </div>

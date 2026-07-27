@@ -1,6 +1,8 @@
 "use client";
 
 import { SmallHint } from "./SmallHint";
+import { useLang } from "../../components/LanguageContext";
+import { t } from "../../lib/translations";
 
 type DefrostAnalysis = {
   summary: string;
@@ -8,11 +10,11 @@ type DefrostAnalysis = {
 };
 
 export function DefrostIntelligence({ defrostAnalysis }: { defrostAnalysis: DefrostAnalysis }) {
+  const { lang } = useLang();
   return (
     <>
       <SmallHint>
-        Uses defrost timer state, heater amps, termination state, box temp, and coil temp
-        to spot refrigeration defrost problems.
+        {t("defrost_hint", lang)}
       </SmallHint>
 
       <div
@@ -24,7 +26,7 @@ export function DefrostIntelligence({ defrostAnalysis }: { defrostAnalysis: Defr
           background: "#fafafa",
         }}
       >
-        <div style={{ fontWeight: 900 }}>Defrost Summary</div>
+        <div style={{ fontWeight: 900 }}>{t("label_defrost_summary", lang)}</div>
         <div style={{ fontSize: 16, fontWeight: 900, marginTop: 6 }}>
           {defrostAnalysis.summary}
         </div>
@@ -39,8 +41,7 @@ export function DefrostIntelligence({ defrostAnalysis }: { defrostAnalysis: Defr
           </ul>
         ) : (
           <SmallHint style={{ marginTop: 8 }}>
-            Add defrost timer state, heater amps, termination stat state, box temp,
-            and evap coil temp for tighter refrigeration diagnosis.
+            {t("defrost_more_readings", lang)}
           </SmallHint>
         )}
       </div>
