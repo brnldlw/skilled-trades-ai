@@ -2438,8 +2438,8 @@ function browserSupportsSmartReadingsDictation() {
 
         const primaryLabel =
           (unitProfileUnit?.unitNickname
-            ? `Primary component — ${unitProfileUnit.unitNickname}`
-            : "Primary component");
+            ? t("label_primary_component_dash", lang).replace("{value}", unitProfileUnit.unitNickname)
+            : t("fallback_primary_component", lang));
 
         for (const event of events) {
           const label = String(
@@ -2568,8 +2568,8 @@ function browserSupportsSmartReadingsDictation() {
           const componentLabel = String(
             event.affected_component_label_snapshot ||
               getAffectedComponentDisplayForEvent(event) ||
-              (unit?.unitNickname ? `Primary component — ${unit.unitNickname}` : "Primary component")
-          ).trim() || "Primary component";
+              (unit?.unitNickname ? t("label_primary_component_dash", lang).replace("{value}", unit.unitNickname) : t("fallback_primary_component", lang))
+          ).trim() || t("fallback_primary_component", lang);
 
           const siteLabel = String(unit?.siteName || unit?.siteAddress || "Unknown site").trim();
           const equipmentLabel = String(unit?.equipmentType || "Unknown equipment").trim();
@@ -2633,7 +2633,7 @@ function browserSupportsSmartReadingsDictation() {
       // guided-next-test-engine-v2
       function buildGuidedNextTests() {
         // guided-next-test-engine-v3
-        const componentLabel = String(getCurrentAffectedComponentLabelForAssist() || "Primary component").trim();
+        const componentLabel = String(getCurrentAffectedComponentLabelForAssist() || t("fallback_primary_component", lang)).trim();
         const componentLabelLower = componentLabel.toLowerCase();
         const equipment = String(equipmentType || "").trim().toLowerCase();
         const issue = String(symptom || "").trim().toLowerCase();
@@ -3038,54 +3038,54 @@ function browserSupportsSmartReadingsDictation() {
 
         if (superheat !== null && subcool !== null) {
           if (superheat > 18 && subcool < 5) {
-            notes.push("High superheat with low subcool points toward underfeed, undercharge, restriction, or airflow verification.");
-            followUpItems.push("Verify airflow and refrigerant feed path before repeating major part replacement.");
+            notes.push(t("pce_high_sh_low_sc_note", lang));
+            followUpItems.push(t("pce_high_sh_low_sc_followup", lang));
           } else if (superheat < 6 && subcool > 15) {
-            notes.push("Low superheat with high subcool points toward floodback, overfeed, or an airflow-related issue.");
-            followUpItems.push("Check airflow and metering behavior before condemning compressor or charge condition.");
+            notes.push(t("pce_low_sh_high_sc_note", lang));
+            followUpItems.push(t("pce_low_sh_high_sc_followup", lang));
           } else if (superheat > 18 && subcool > 15) {
-            notes.push("High superheat with high subcool can point toward a liquid-line restriction or feed issue.");
-            followUpItems.push("Check for restriction points and liquid line temperature drop before replacing components.");
+            notes.push(t("pce_high_sh_high_sc_note", lang));
+            followUpItems.push(t("pce_high_sh_high_sc_followup", lang));
           } else if (superheat >= 6 && superheat <= 18 && subcool >= 5 && subcool <= 15) {
-            notes.push("Superheat and subcool look reasonably balanced, so controls, airflow, or electrical checks may matter more than a major charge correction.");
+            notes.push(t("pce_sh_sc_balanced_note", lang));
           }
         } else {
           if (superheat !== null) {
             if (superheat > 20) {
-              notes.push("High superheat suggests the evaporator may be starved or airflow may need verified.");
-              followUpItems.push("Verify feed path, airflow, and possible restriction before changing major parts.");
+              notes.push(t("pce_high_sh_only_note", lang));
+              followUpItems.push(t("pce_high_sh_only_followup", lang));
             } else if (superheat < 5) {
-              notes.push("Low superheat suggests floodback, overfeed, or airflow issues should be checked.");
-              followUpItems.push("Check evaporator airflow and metering behavior before adding charge or replacing compressors.");
+              notes.push(t("pce_low_sh_only_note", lang));
+              followUpItems.push(t("pce_low_sh_only_followup", lang));
             }
           }
 
           if (subcool !== null) {
             if (subcool < 5) {
-              notes.push("Low subcool suggests undercharge or liquid feed verification may still be needed.");
+              notes.push(t("pce_low_sc_only_note", lang));
             } else if (subcool > 15) {
-              notes.push("High subcool suggests overcharge or a restriction should be ruled out.");
+              notes.push(t("pce_high_sc_only_note", lang));
             }
           }
         }
 
         if (deltaT !== null) {
           if (deltaT < 14) {
-            notes.push("The return-to-supply temperature split is weak, which points toward airflow, control, or charge/feed verification.");
-            followUpItems.push("Verify indoor airflow and compare current split against operating conditions before closing the call.");
+            notes.push(t("pce_low_split_note", lang));
+            followUpItems.push(t("pce_low_split_followup", lang));
           } else if (deltaT > 24) {
-            notes.push("The return-to-supply temperature split is very high, so airflow restriction, icing, or low-load conditions should be considered.");
-            followUpItems.push("Check filter, coil, fan performance, and frost pattern before repeating the same repair.");
+            notes.push(t("pce_high_split_note", lang));
+            followUpItems.push(t("pce_high_split_followup", lang));
           }
         }
 
         if (headPressure !== null && ambientTemp !== null && headPressure > ambientTemp * 3.2) {
-          notes.push("Head pressure is high relative to ambient, which points toward heat rejection issues first.");
-          followUpItems.push("Verify condenser airflow, fan operation, coil cleanliness, and ambient/load conditions.");
+          notes.push(t("pce_head_ambient_note", lang));
+          followUpItems.push(t("pce_head_ambient_followup", lang));
         }
 
         if (boxTemp !== null && String(equipmentType || "").toLowerCase().includes("walk-in")) {
-          notes.push(`Box temperature is ${boxTemp}°F, so defrost performance, control strategy, and actual box load should be part of the closeout decision.`);
+          notes.push(t("pce_box_temp_note", lang).replace("{value}", String(boxTemp)));
         }
 
         const uniqueNotes: string[] = [];
@@ -3113,7 +3113,7 @@ function browserSupportsSmartReadingsDictation() {
       }
 
       function buildDiagnosticCloseoutDrafts() {
-        const targetComponent = String(getCurrentAffectedComponentLabelForAssist() || "Primary component").trim();
+        const targetComponent = String(getCurrentAffectedComponentLabelForAssist() || t("fallback_primary_component", lang)).trim();
         const cause = String(finalConfirmedCause || "").trim();
         const fix = String(actualFixPerformed || "").trim();
         const currentSymptom = String(symptom || "").trim();
@@ -3125,16 +3125,16 @@ function browserSupportsSmartReadingsDictation() {
         const readingsInterpretationResult = buildPlainEnglishCloseoutReadingsInterpretation();
         const readingsInterpretation = readingsInterpretationResult.summary;
         const readingsFollowUp = readingsInterpretationResult.followUpItems;
-        const siteLabel = String(siteName || siteAddress || customerName || "this site").trim();
+        const siteLabel = String(siteName || siteAddress || customerName || t("fallback_this_site", lang)).trim();
         const followUpItems: string[] = [];
 
         if (callback.toLowerCase() === "yes") {
-          followUpItems.push("Watch closely for callback risk because this issue has repeated.");
+          followUpItems.push(t("dcd_followup_callback", lang));
         }
 
         if (recentHistoryCount > 0) {
           followUpItems.push(
-            `This component has ${recentHistoryCount} prior same-component event${recentHistoryCount === 1 ? "" : "s"} in history.`
+            t("dcd_followup_history_count", lang).replace("{count}", String(recentHistoryCount))
           );
         }
 
@@ -3147,39 +3147,42 @@ function browserSupportsSmartReadingsDictation() {
         }
 
         if (outcome && outcome !== "Not Set") {
-          followUpItems.push(`Current outcome status: ${outcome}.`);
+          followUpItems.push(t("dcd_followup_outcome_status", lang).replace("{value}", outcome));
         }
 
         if (!followUpItems.length) {
-          followUpItems.push("No immediate follow-up flags were identified from the current call data.");
+          followUpItems.push(t("dcd_followup_none", lang));
         }
 
         const customerSummaryLines = [
-          `At ${siteLabel}, the reported issue was ${currentSymptom || "an equipment problem"} on ${targetComponent}.`,
+          t("dcd_cs_reported_issue", lang)
+            .replace("{site}", siteLabel)
+            .replace("{symptom}", currentSymptom || t("dcd_cs_equipment_problem_fallback", lang))
+            .replace("{component}", targetComponent),
           cause
-            ? `The likely confirmed cause was ${cause}.`
-            : "A confirmed cause has not been documented yet.",
+            ? t("dcd_cs_cause_known", lang).replace("{value}", cause)
+            : t("dcd_cs_cause_unknown", lang),
           fix
-            ? `Work performed: ${fix}.`
-            : "A final repair action has not been documented yet.",
+            ? t("dcd_cs_fix_known", lang).replace("{value}", fix)
+            : t("dcd_cs_fix_unknown", lang),
           outcome && outcome !== "Not Set"
-            ? `Current system status: ${outcome}.`
+            ? t("dcd_cs_status", lang).replace("{value}", outcome)
             : "",
-          readingsInterpretation ? `Reading interpretation: ${readingsInterpretation}` : "",
-          readingsSummary ? `Key field readings: ${readingsSummary}.` : "",
+          readingsInterpretation ? t("dcd_cs_reading_interpretation", lang).replace("{value}", readingsInterpretation) : "",
+          readingsSummary ? t("dcd_cs_key_readings", lang).replace("{value}", readingsSummary) : "",
         ].filter(Boolean);
 
         const internalSummaryLines = [
-          `Affected component: ${targetComponent}`,
-          currentSymptom ? `Complaint/symptom: ${currentSymptom}` : "",
-          cause ? `Confirmed cause: ${cause}` : "Confirmed cause: not documented",
-          fix ? `Actual fix: ${fix}` : "Actual fix: not documented",
-          readingsInterpretation ? `Readings meaning: ${readingsInterpretation}` : "",
-          readingsSummary ? `Key readings: ${readingsSummary}` : "",
-          outcome && outcome !== "Not Set" ? `Outcome: ${outcome}` : "",
-          callback ? `Callback flag: ${callback}` : "",
+          t("dcd_is_affected_component", lang).replace("{value}", targetComponent),
+          currentSymptom ? t("dcd_is_complaint", lang).replace("{value}", currentSymptom) : "",
+          cause ? t("dcd_is_cause_known", lang).replace("{value}", cause) : t("dcd_is_cause_unknown", lang),
+          fix ? t("dcd_is_fix_known", lang).replace("{value}", fix) : t("dcd_is_fix_unknown", lang),
+          readingsInterpretation ? t("dcd_is_readings_meaning", lang).replace("{value}", readingsInterpretation) : "",
+          readingsSummary ? t("dcd_is_key_readings", lang).replace("{value}", readingsSummary) : "",
+          outcome && outcome !== "Not Set" ? t("dcd_is_outcome", lang).replace("{value}", outcome) : "",
+          callback ? t("dcd_is_callback_flag", lang).replace("{value}", callback) : "",
           recentHistoryCount
-            ? `Same-component history count: ${recentHistoryCount}`
+            ? t("dcd_is_history_count", lang).replace("{value}", String(recentHistoryCount))
             : "",
         ].filter(Boolean);
 
@@ -3191,7 +3194,7 @@ function browserSupportsSmartReadingsDictation() {
           followUp: followUpLines.join("\n"),
         });
 
-        setDiagnosticCloseoutMessage("Closeout drafts generated.");
+        setDiagnosticCloseoutMessage(t("dcd_drafts_generated", lang));
       }
 
       async function copyDiagnosticCloseoutText(
@@ -3199,30 +3202,30 @@ function browserSupportsSmartReadingsDictation() {
       ) {
         const value = diagnosticCloseoutDrafts[key];
         if (!value.trim()) {
-          setDiagnosticCloseoutMessage("Generate the closeout drafts first.");
+          setDiagnosticCloseoutMessage(t("dcd_generate_first", lang));
           return;
         }
 
         try {
           await navigator.clipboard.writeText(value);
-          setDiagnosticCloseoutMessage("Copied to clipboard.");
+          setDiagnosticCloseoutMessage(t("dcd_copied", lang));
         } catch (err) {
           console.error("COPY DIAGNOSTIC CLOSEOUT FAILED", err);
-          setDiagnosticCloseoutMessage("Could not copy to clipboard.");
+          setDiagnosticCloseoutMessage(t("dcd_copy_failed", lang));
         }
       }
 
       function pushInternalSummaryToTechCloseoutNotes() {
         const internalSummary = diagnosticCloseoutDrafts.internalSummary.trim();
         if (!internalSummary) {
-          setDiagnosticCloseoutMessage("Generate the closeout drafts first.");
+          setDiagnosticCloseoutMessage(t("dcd_generate_first", lang));
           return;
         }
 
         setTechCloseoutNotes((prev) =>
           [String(prev || "").trim(), internalSummary].filter(Boolean).join("\n\n")
         );
-        setDiagnosticCloseoutMessage("Internal summary added to Tech Closeout Notes.");
+        setDiagnosticCloseoutMessage(t("dcd_internal_added", lang));
       }
 
       // symptom-dictation-v1
@@ -3243,7 +3246,7 @@ function browserSupportsSmartReadingsDictation() {
 
         if (!SpeechRecognitionCtor) {
           setSymptomDictationMessage(
-            "Speech recognition is not supported in this browser. Try Chrome or Edge."
+            t("symptom_dictation_not_supported", lang)
           );
           return;
         }
@@ -3263,7 +3266,7 @@ function browserSupportsSmartReadingsDictation() {
 
           recognition.onstart = () => {
             setSymptomListening(true);
-            setSymptomDictationMessage("Listening for Symptom...");
+            setSymptomDictationMessage(t("symptom_dictation_listening", lang));
           };
 
           recognition.onresult = (event: any) => {
@@ -3280,7 +3283,7 @@ function browserSupportsSmartReadingsDictation() {
             if (!cleaned) return;
 
             setSymptom((prev) => [String(prev || "").trim(), cleaned].filter(Boolean).join(" "));
-            setSymptomDictationMessage("Dictation added to Symptom.");
+            setSymptomDictationMessage(t("symptom_dictation_added", lang));
           };
 
           recognition.onerror = (event: any) => {
@@ -3288,8 +3291,8 @@ function browserSupportsSmartReadingsDictation() {
             w.__symptomRecognition = null;
             setSymptomDictationMessage(
               event?.error
-                ? `Dictation error: ${String(event.error)}`
-                : "Dictation failed."
+                ? t("symptom_dictation_error", lang).replace("{value}", String(event.error))
+                : t("symptom_dictation_failed", lang)
             );
           };
 
@@ -3302,7 +3305,7 @@ function browserSupportsSmartReadingsDictation() {
         } catch (err) {
           setSymptomListening(false);
           (window as any).__symptomRecognition = null;
-          setSymptomDictationMessage("Could not start dictation.");
+          setSymptomDictationMessage(t("symptom_dictation_could_not_start", lang));
           console.error("SYMPTOM DICTATION FAILED", err);
         }
       }
@@ -3494,7 +3497,7 @@ function browserSupportsSmartReadingsDictation() {
               serial: String(serialNumber || nameplate?.serial || ""),
             };
 
-        const componentLabel = String(target.label || "Primary component").trim();
+        const componentLabel = String(target.label || t("fallback_primary_component", lang)).trim();
         const componentRole = String(target.role || "").toLowerCase();
         const issue = String(symptom || "").trim();
         const readingsSummary =
@@ -3965,7 +3968,7 @@ function browserSupportsSmartReadingsDictation() {
       const [photoAssistSubject, setPhotoAssistSubject] = useState("iced_coil");
       
       function buildPhotoDrivenDiagnosticAssistPayload() {
-        const targetComponent = String(getCurrentAffectedComponentLabelForAssist() || "Primary component").trim();
+        const targetComponent = String(getCurrentAffectedComponentLabelForAssist() || t("fallback_primary_component", lang)).trim();
         const componentLabelLower = targetComponent.toLowerCase();
         const equipment = String(equipmentType || "").trim().toLowerCase();
         const issue = String(symptom || "").trim().toLowerCase();
@@ -4404,7 +4407,7 @@ function browserSupportsSmartReadingsDictation() {
 
       // repair-decision-panel-v2
       function buildRepairDecisionPanelItems() {
-        const targetComponent = String(getCurrentAffectedComponentLabelForAssist() || "Primary component").trim();
+        const targetComponent = String(getCurrentAffectedComponentLabelForAssist() || t("fallback_primary_component", lang)).trim();
         const componentLabelLower = targetComponent.toLowerCase();
         const equipment = String(equipmentType || "").trim().toLowerCase();
         const issue = String(symptom || "").trim().toLowerCase();
@@ -4705,7 +4708,7 @@ function browserSupportsSmartReadingsDictation() {
 
       // suggested-parts-to-verify-v1
       function buildSuggestedPartsToVerifyItems() {
-        const targetComponent = String(getCurrentAffectedComponentLabelForAssist() || "Primary component").trim();
+        const targetComponent = String(getCurrentAffectedComponentLabelForAssist() || t("fallback_primary_component", lang)).trim();
         const issue = String(symptom || "").trim().toLowerCase();
         const sameComponentHistory = getSameComponentHistoryForTroubleshooting();
         const decisions = buildRepairDecisionPanelItems();
@@ -4888,7 +4891,7 @@ function browserSupportsSmartReadingsDictation() {
       const [selectedVerificationPart, setSelectedVerificationPart] = useState("");
 
       function buildPartVerificationChecklistItems() {
-        const targetComponent = String(getCurrentAffectedComponentLabelForAssist() || "Primary component").trim();
+        const targetComponent = String(getCurrentAffectedComponentLabelForAssist() || t("fallback_primary_component", lang)).trim();
         const issue = String(symptom || "").trim();
         const suggestions = buildSuggestedPartsToVerifyItems();
         const suggestedPartNames = suggestions.map((item) => item.part);
@@ -5154,7 +5157,7 @@ function browserSupportsSmartReadingsDictation() {
         const checklist = buildPartVerificationChecklistItems();
         const selectedPart = String(checklist.selectedPart || selectedVerificationPart || "").trim();
         const selectedOutcome = String(selectedVerificationOutcome || "").trim();
-        const targetComponent = String(getCurrentAffectedComponentLabelForAssist() || "Primary component").trim();
+        const targetComponent = String(getCurrentAffectedComponentLabelForAssist() || t("fallback_primary_component", lang)).trim();
         const issue = String(symptom || "").trim().toLowerCase();
         const equipment = String(equipmentType || "").trim().toLowerCase();
         const note = String(verificationOutcomeNote || "").trim();
@@ -5399,7 +5402,7 @@ function browserSupportsSmartReadingsDictation() {
       function buildRepairExecutionAssist() {
         const checklist = buildPartVerificationChecklistItems();
         const selectedPart = String(checklist.selectedPart || selectedVerificationPart || "").trim();
-        const targetComponent = String(getCurrentAffectedComponentLabelForAssist() || "Primary component").trim();
+        const targetComponent = String(getCurrentAffectedComponentLabelForAssist() || t("fallback_primary_component", lang)).trim();
         const componentLower = targetComponent.toLowerCase();
         const equipment = String(equipmentType || "").trim();
         const equipmentLower = equipment.toLowerCase();
@@ -10311,7 +10314,7 @@ return (
                   }}
                 >
                   <SmallHint>
-                    <b>Component:</b> {getCurrentAffectedComponentLabelForAssist() || primaryComponentRole || "Primary component"}
+                    <b>{t("label_component_colon", lang)}</b> {getCurrentAffectedComponentLabelForAssist() || primaryComponentRole || t("fallback_primary_component", lang)}
                   </SmallHint>
                 </div>
 
