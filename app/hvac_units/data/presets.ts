@@ -18,6 +18,64 @@ export const refrigerantOptions: string[] = [
   "R-600a (Isobutane)",
 ];
 
+export type EquipmentTypeGroup = {
+  groupLabel: string;
+  options: string[];
+};
+
+export const equipmentTypeGroups: EquipmentTypeGroup[] = [
+  {
+    groupLabel: "── Cooling / Heating ──",
+    options: [
+      "RTU",
+      "Split System",
+      "Heat Pump",
+      "Packaged Heat Pump",
+      "Mini-Split",
+      "Multi-Zone Mini-Split",
+      "VRF System",
+      "Furnace",
+      "Air Handler",
+      "Boiler",
+      "Chiller — Air Cooled",
+      "Chiller — Water Cooled",
+      "Make-Up Air Unit",
+      "Energy Recovery Unit",
+      "Fan Coil Unit",
+      "Unit Heater",
+      "PTAC / PTHP",
+      "Ceiling Cassette",
+      "Computer Room AC (CRAC)",
+    ],
+  },
+  {
+    groupLabel: "── Commercial Refrigeration ──",
+    options: [
+      "Walk-In Cooler",
+      "Walk-In Freezer",
+      "Reach-In Cooler",
+      "Reach-In Freezer",
+      "Merchandiser / Display Case",
+      "Ice Machine — Cuber",
+      "Ice Machine — Flaker",
+      "Ice Machine — Nugget",
+      "Ice Machine — Tube",
+      "Remote Condensing Unit",
+      "Remote Evaporator",
+      "Beverage Cooler",
+      "Prep Table / Cold Table",
+      "Blast Chiller / Freezer",
+      "Refrigerated Trailer",
+      "Process Cooling Unit",
+      "Server Room Cooling",
+    ],
+  },
+  {
+    groupLabel: "── Other ──",
+    options: ["Dehumidifier — Commercial", "Dehumidifier — Residential", "Humidifier", "ERV / HRV", "Other"],
+  },
+];
+
 export const unitOptions: string[] = [
   "psi",
   "kPa",

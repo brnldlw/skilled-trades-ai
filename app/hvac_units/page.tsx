@@ -235,6 +235,7 @@ import { toNumber, round1 } from "./lib/basicHelpers";
 import {
   refrigerantOptions,
   unitOptions,
+  equipmentTypeGroups,
   coolingPresets,
   heatingPresets,
   refrigerationPresets,
@@ -9585,53 +9586,15 @@ return (
               onChange={(e) => setEquipmentType(e.target.value)}
               style={{ width: "100%", padding: 8 }}
             >
-              <optgroup label="── Cooling / Heating ──">
-                <option>RTU</option>
-                <option>Split System</option>
-                <option>Heat Pump</option>
-                <option>Packaged Heat Pump</option>
-                <option>Mini-Split</option>
-                <option>Multi-Zone Mini-Split</option>
-                <option>VRF System</option>
-                <option>Furnace</option>
-                <option>Air Handler</option>
-                <option>Boiler</option>
-                <option>Chiller — Air Cooled</option>
-                <option>Chiller — Water Cooled</option>
-                <option>Make-Up Air Unit</option>
-                <option>Energy Recovery Unit</option>
-                <option>Fan Coil Unit</option>
-                <option>Unit Heater</option>
-                <option>PTAC / PTHP</option>
-                <option>Ceiling Cassette</option>
-                <option>Computer Room AC (CRAC)</option>
-              </optgroup>
-              <optgroup label="── Commercial Refrigeration ──">
-                <option>Walk-In Cooler</option>
-                <option>Walk-In Freezer</option>
-                <option>Reach-In Cooler</option>
-                <option>Reach-In Freezer</option>
-                <option>Merchandiser / Display Case</option>
-                <option>Ice Machine — Cuber</option>
-                <option>Ice Machine — Flaker</option>
-                <option>Ice Machine — Nugget</option>
-                <option>Ice Machine — Tube</option>
-                <option>Remote Condensing Unit</option>
-                <option>Remote Evaporator</option>
-                <option>Beverage Cooler</option>
-                <option>Prep Table / Cold Table</option>
-                <option>Blast Chiller / Freezer</option>
-                <option>Refrigerated Trailer</option>
-                <option>Process Cooling Unit</option>
-                <option>Server Room Cooling</option>
-              </optgroup>
-              <optgroup label="── Other ──">
-                <option>Dehumidifier — Commercial</option>
-                <option>Dehumidifier — Residential</option>
-                <option>Humidifier</option>
-                <option>ERV / HRV</option>
-                <option>Other</option>
-              </optgroup>
+              {equipmentTypeGroups.map((group) => (
+                <optgroup key={group.groupLabel} label={group.groupLabel}>
+                  {group.options.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
             </select>
           </div>
 
@@ -9767,10 +9730,14 @@ return (
                     onChange={(e) => setEquipmentType(e.target.value)}
                     style={{ width: "100%", padding: 8 }}
                   >
-                    {unitOptions.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
+                    {equipmentTypeGroups.map((group) => (
+                      <optgroup key={group.groupLabel} label={group.groupLabel}>
+                        {group.options.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </optgroup>
                     ))}
                   </select>
                 </div>
@@ -9779,7 +9746,7 @@ return (
           </div>
 
 
-          
+
           {/* top-site-units-block-v1 */}
           <div style={{ gridColumn: "1 / -1", marginTop: 12 }}>
             <SectionCard title="Site Units at This Location">
