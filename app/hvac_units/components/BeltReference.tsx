@@ -1,19 +1,21 @@
 "use client";
 
 import React, { useState } from "react";
+import { useLang } from "../../components/LanguageContext";
+import { t, type TranslationKey } from "../../lib/translations";
 
 // ── Belt section dimensions ───────────────────────────────────
-const BELT_SECTIONS: Record<string, { topWidth: string; thickness: string; angle: string; note: string }> = {
-  "3L": { topWidth: "3/8\"", thickness: "7/32\"", angle: "40°", note: "Light duty fractional" },
-  "4L": { topWidth: "1/2\"", thickness: "5/16\"", angle: "40°", note: "Fractional horsepower — most common residential AHU" },
-  "5L": { topWidth: "21/32\"", thickness: "3/8\"", angle: "40°", note: "Fractional horsepower — light commercial" },
-  "A":  { topWidth: "1/2\"", thickness: "5/16\"", angle: "40°", note: "Classical V-belt — heavy duty equivalent to 4L" },
-  "B":  { topWidth: "21/32\"", thickness: "13/32\"", angle: "40°", note: "Classical V-belt — light commercial AHUs" },
-  "C":  { topWidth: "7/8\"", thickness: "17/32\"", angle: "40°", note: "Classical V-belt — commercial and industrial" },
-  "D":  { topWidth: "1-1/4\"", thickness: "3/4\"", angle: "40°", note: "Heavy commercial / industrial" },
-  "3V": { topWidth: "3/8\"", thickness: "5/16\"", angle: "60°", note: "Wedge belt — high horsepower, narrow" },
-  "5V": { topWidth: "5/8\"", thickness: "17/32\"", angle: "60°", note: "Wedge belt — commercial AHU and blowers" },
-  "8V": { topWidth: "1\"", thickness: "29/32\"", angle: "60°", note: "Wedge belt — heavy industrial" },
+const BELT_SECTIONS: Record<string, { topWidth: string; thickness: string; angle: string; note: string; noteKey: TranslationKey }> = {
+  "3L": { topWidth: "3/8\"", thickness: "7/32\"", angle: "40°", note: "Light duty fractional", noteKey: "belt_note_3l" },
+  "4L": { topWidth: "1/2\"", thickness: "5/16\"", angle: "40°", note: "Fractional horsepower — most common residential AHU", noteKey: "belt_note_4l" },
+  "5L": { topWidth: "21/32\"", thickness: "3/8\"", angle: "40°", note: "Fractional horsepower — light commercial", noteKey: "belt_note_5l" },
+  "A":  { topWidth: "1/2\"", thickness: "5/16\"", angle: "40°", note: "Classical V-belt — heavy duty equivalent to 4L", noteKey: "belt_note_a" },
+  "B":  { topWidth: "21/32\"", thickness: "13/32\"", angle: "40°", note: "Classical V-belt — light commercial AHUs", noteKey: "belt_note_b" },
+  "C":  { topWidth: "7/8\"", thickness: "17/32\"", angle: "40°", note: "Classical V-belt — commercial and industrial", noteKey: "belt_note_c" },
+  "D":  { topWidth: "1-1/4\"", thickness: "3/4\"", angle: "40°", note: "Heavy commercial / industrial", noteKey: "belt_note_d" },
+  "3V": { topWidth: "3/8\"", thickness: "5/16\"", angle: "60°", note: "Wedge belt — high horsepower, narrow", noteKey: "belt_note_3v" },
+  "5V": { topWidth: "5/8\"", thickness: "17/32\"", angle: "60°", note: "Wedge belt — commercial AHU and blowers", noteKey: "belt_note_5v" },
+  "8V": { topWidth: "1\"", thickness: "29/32\"", angle: "60°", note: "Wedge belt — heavy industrial", noteKey: "belt_note_8v" },
 };
 
 // ── Common belt cross-reference data ─────────────────────────
@@ -145,6 +147,7 @@ function openSupplierSearch(query: string) {
 type ResultCardProps = { number: string; data: BeltData };
 
 function ResultCard({ number, data }: ResultCardProps) {
+  const { lang } = useLang();
   return (
     <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 10, padding: "12px 14px", display: "flex", flexDirection: "column" as const, gap: 8 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
@@ -156,7 +159,7 @@ function ResultCard({ number, data }: ResultCardProps) {
           onClick={() => openSupplierSearch(number)}
           style={{ padding: "5px 12px", background: "#0f1f3d", color: "#fff", border: "none", borderRadius: 6, fontWeight: 700, fontSize: 11, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}
         >
-          Find it →
+          {t("btn_find_it", lang)}
         </button>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
@@ -172,13 +175,14 @@ function ResultCard({ number, data }: ResultCardProps) {
         ))}
       </div>
       <div style={{ fontSize: 11, color: "#64748b" }}>
-        Section: <strong>{data.section}</strong> · OC: <strong>{data.oc}"</strong> · {BELT_SECTIONS[data.section]?.note || ""}
+        {t("belt_label_section_colon", lang)} <strong>{data.section}</strong> · OC: <strong>{data.oc}"</strong> · {BELT_SECTIONS[data.section] ? t(BELT_SECTIONS[data.section].noteKey, lang) : ""}
       </div>
     </div>
   );
 }
 
 export function BeltReference() {
+  const { lang } = useLang();
   const [mode, setMode] = useState<"number" | "dimensions">("number");
   const [query, setQuery] = useState("");
   const [section, setSection] = useState("4L");
@@ -204,21 +208,21 @@ export function BeltReference() {
     <div>
       {/* How to measure tip */}
       <div style={{ background: "#eff6ff", border: "1px solid #bae6fd", borderRadius: 8, padding: "10px 14px", marginBottom: 14, fontSize: 12, color: "#1d4ed8", lineHeight: 1.6 }}>
-        <strong>📏 How to measure a belt:</strong> Wrap a string around the outside of the belt and measure — that's the Outside Circumference (OC). Or read the part number stamped on the old belt — the last 3 digits of a 4L or 5V belt are the OC in tenths (4L350 = 35.0" OC).
+        <strong>{t("belt_how_to_measure_title", lang)}</strong> {t("belt_how_to_measure_body", lang)}
       </div>
 
       {/* Mode tabs */}
       <div style={{ display: "flex", background: "#f1f5f9", borderRadius: 10, padding: 4, marginBottom: 14 }}>
         {[
-          { key: "number", label: "🔢 Search by Part Number" },
-          { key: "dimensions", label: "📐 Search by Dimensions" },
+          { key: "number", labelKey: "belt_tab_by_number" as const },
+          { key: "dimensions", labelKey: "belt_tab_by_dimensions" as const },
         ].map(m => (
           <button
             key={m.key}
             onClick={() => { setMode(m.key as "number" | "dimensions"); setResults([]); setSearched(false); }}
             style={{ flex: 1, padding: "9px 0", borderRadius: 8, border: "none", background: mode === m.key ? "#fff" : "transparent", color: mode === m.key ? "#0f1f3d" : "#64748b", fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit", boxShadow: mode === m.key ? "0 1px 4px rgba(0,0,0,0.08)" : "none", transition: "all 0.2s" }}
           >
-            {m.label}
+            {t(m.labelKey, lang)}
           </button>
         ))}
       </div>
@@ -227,25 +231,25 @@ export function BeltReference() {
       {mode === "number" && (
         <div style={{ marginBottom: 14 }}>
           <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 6 }}>
-            Enter belt number, Gates number, Dayco number, or Browning number
+            {t("belt_label_enter_number", lang)}
           </label>
           <div style={{ display: "flex", gap: 8 }}>
             <input
               value={query}
               onChange={e => setQuery(e.target.value)}
               onKeyDown={e => e.key === "Enter" && handleNumberSearch()}
-              placeholder="e.g. 4L350, A35, B42, 5V600..."
+              placeholder={t("belt_placeholder_number", lang)}
               style={{ flex: 1, padding: "10px 14px", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: 14, fontFamily: "inherit", background: "#fafafa" }}
             />
             <button
               onClick={handleNumberSearch}
               style={{ padding: "10px 18px", background: "#0f1f3d", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}
             >
-              Search
+              {t("btn_search", lang)}
             </button>
           </div>
           <div style={{ marginTop: 8, display: "flex", gap: 6, flexWrap: "wrap" as const }}>
-            <span style={{ fontSize: 11, color: "#94a3b8" }}>Common sections:</span>
+            <span style={{ fontSize: 11, color: "#94a3b8" }}>{t("belt_common_sections", lang)}</span>
             {Object.keys(BELT_SECTIONS).map(s => (
               <button key={s} onClick={() => { setQuery(s); }}
                 style={{ padding: "3px 10px", borderRadius: 20, border: "1px solid #e2e8f0", background: "#fff", color: "#374151", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
@@ -261,20 +265,20 @@ export function BeltReference() {
         <div style={{ marginBottom: 14 }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <div>
-              <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 6 }}>Belt Section</label>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 6 }}>{t("belt_label_section", lang)}</label>
               <select
                 value={section}
                 onChange={e => setSection(e.target.value)}
                 style={{ width: "100%", padding: "10px 12px", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: 14, fontFamily: "inherit", background: "#fafafa" }}
               >
                 {Object.entries(BELT_SECTIONS).map(([s, info]) => (
-                  <option key={s} value={s}>{s} — {info.topWidth} wide · {info.note}</option>
+                  <option key={s} value={s}>{s} — {info.topWidth} {t("belt_wide_dot", lang)} {t(info.noteKey, lang)}</option>
                 ))}
               </select>
             </div>
             <div>
               <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 6 }}>
-                Outside Circumference (inches)
+                {t("belt_label_oc_inches", lang)}
               </label>
               <input
                 value={length}
@@ -293,18 +297,18 @@ export function BeltReference() {
             onClick={handleDimSearch}
             style={{ marginTop: 12, padding: "10px 24px", background: "#0f1f3d", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}
           >
-            Find Belts
+            {t("btn_find_belts", lang)}
           </button>
 
           {/* Section reference */}
           <div style={{ marginTop: 14, background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, padding: "10px 14px" }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 8 }}>Belt section reference</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 8 }}>{t("belt_section_reference_title", lang)}</div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 6 }}>
               {Object.entries(BELT_SECTIONS).map(([s, info]) => (
                 <div key={s} style={{ background: section === s ? "#dbeafe" : "#fff", border: `1px solid ${section === s ? "#93c5fd" : "#e2e8f0"}`, borderRadius: 6, padding: "6px 10px", cursor: "pointer" }}
                   onClick={() => setSection(s)}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: "#1e293b" }}>{s}</div>
-                  <div style={{ fontSize: 10, color: "#64748b", lineHeight: 1.4 }}>{info.topWidth} wide · {info.note}</div>
+                  <div style={{ fontSize: 10, color: "#64748b", lineHeight: 1.4 }}>{info.topWidth} {t("belt_wide_dot", lang)} {t(info.noteKey, lang)}</div>
                 </div>
               ))}
             </div>
@@ -316,16 +320,16 @@ export function BeltReference() {
       {searched && (
         <div>
           <div style={{ fontSize: 12, fontWeight: 700, color: "#64748b", marginBottom: 8 }}>
-            {results.length > 0 ? `${results.length} result${results.length !== 1 ? "s" : ""} found` : "No matches found"}
+            {results.length > 0 ? t("belt_results_found", lang).replace("{count}", String(results.length)) : t("belt_no_matches", lang)}
           </div>
           {results.length === 0 && (
             <div style={{ padding: "16px", background: "#f8fafc", borderRadius: 10, fontSize: 13, color: "#94a3b8", textAlign: "center" as const }}>
-              <div style={{ marginBottom: 8 }}>No exact match in database.</div>
+              <div style={{ marginBottom: 8 }}>{t("belt_no_exact_match", lang)}</div>
               <button
                 onClick={() => openSupplierSearch(query || `${section} ${length}`)}
                 style={{ padding: "8px 16px", background: "#0f1f3d", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}
               >
-                Search Johnstone Supply →
+                {t("btn_search_johnstone", lang)}
               </button>
             </div>
           )}
@@ -337,13 +341,12 @@ export function BeltReference() {
 
       {!searched && (
         <div style={{ padding: "20px 0", textAlign: "center" as const, color: "#94a3b8", fontSize: 13 }}>
-          Search by part number to find cross-references, or enter belt dimensions to find all matching belt numbers.
+          {t("belt_empty_state", lang)}
         </div>
       )}
 
       <div style={{ marginTop: 12, fontSize: 11, color: "#94a3b8", lineHeight: 1.6 }}>
-        Cross-reference data covers common HVAC/R AHU belts. Always verify against manufacturer specs before ordering.
-        Gates, Dayco, and Browning numbers are for reference — confirm availability with your supplier.
+        {t("belt_footer_disclaimer", lang)}
       </div>
     </div>
   );
