@@ -5103,14 +5103,14 @@ function browserSupportsSmartReadingsDictation() {
         }
 
         const lines = [
-          "Verification Outcome",
-          `Part: ${selectedPart}`,
-          `Outcome: ${outcome}`,
-          symptom ? `Symptom: ${symptom}` : "",
+          t("voc_note_title", lang),
+          t("voc_note_part", lang).replace("{value}", selectedPart),
+          t("voc_note_outcome", lang).replace("{value}", outcome),
+          symptom ? t("voc_note_symptom", lang).replace("{value}", symptom) : "",
           getCurrentAffectedComponentLabelForAssist()
-            ? `Component: ${getCurrentAffectedComponentLabelForAssist()}`
+            ? t("voc_note_component", lang).replace("{value}", String(getCurrentAffectedComponentLabelForAssist()))
             : "",
-          verificationOutcomeNote.trim() ? `Note: ${verificationOutcomeNote.trim()}` : "",
+          verificationOutcomeNote.trim() ? t("voc_note_note", lang).replace("{value}", verificationOutcomeNote.trim()) : "",
         ].filter(Boolean);
 
         const block = lines.join("\n");
@@ -5144,7 +5144,7 @@ function browserSupportsSmartReadingsDictation() {
           });
         }
 
-        setVerificationOutcomeMessage("Verification outcome added to Tech Closeout Notes.");
+        setVerificationOutcomeMessage(t("voc_added_to_notes", lang));
       }
 
       // suggested-follow-up-watchlist-v1
@@ -5217,145 +5217,145 @@ function browserSupportsSmartReadingsDictation() {
           }
         };
 
-        addUnique(watchNext, `Selected part path: ${selectedPart || "No part selected yet"}.`);
-        addUnique(watchNext, `Target component: ${targetComponent}.`);
+        addUnique(watchNext, t("sfw_selected_part_path", lang).replace("{value}", selectedPart || t("sfw_no_part_selected", lang)));
+        addUnique(watchNext, t("pvc_note_target_component", lang).replace("{value}", targetComponent));
 
         if (selectedOutcome) {
-          addUnique(monitoringNote, `Verification outcome: ${selectedOutcome}.`);
+          addUnique(monitoringNote, t("sfw_verification_outcome", lang).replace("{value}", selectedOutcome));
         }
 
         const partLower = selectedPart.toLowerCase();
 
         if (partLower.includes("contactor")) {
-          addUnique(watchNext, "Watch compressor and condenser fan operation after the call is satisfied.");
-          addUnique(recheckItems, "Recheck line/load voltage and contact drop under load.");
-          addUnique(recheckItems, "Inspect wire heat damage and lug tightness after operation.");
-          addUnique(callbackRisk, "A new contactor can fail again if the real issue is motor/compressor load or wire heat.");
+          addUnique(watchNext, t("sfw_watch_contactor", lang));
+          addUnique(recheckItems, t("sfw_recheck_contactor1", lang));
+          addUnique(recheckItems, t("sfw_recheck_contactor2", lang));
+          addUnique(callbackRisk, t("sfw_risk_contactor", lang));
         }
 
         if (partLower.includes("capacitor")) {
-          addUnique(watchNext, "Watch the motor/compressor start and run behavior after startup.");
-          addUnique(recheckItems, "Recheck actual µF if symptoms return.");
-          addUnique(recheckItems, "Compare connected motor/compressor amp draw after the repair.");
-          addUnique(callbackRisk, "Capacitors often fail again when the attached motor/compressor is weak.");
+          addUnique(watchNext, t("sfw_watch_capacitor", lang));
+          addUnique(recheckItems, t("sfw_recheck_capacitor1", lang));
+          addUnique(recheckItems, t("sfw_recheck_capacitor2", lang));
+          addUnique(callbackRisk, t("sfw_risk_capacitor", lang));
         }
 
         if (partLower.includes("condenser fan motor")) {
-          addUnique(watchNext, "Watch head pressure trend and condenser airflow after repair.");
-          addUnique(recheckItems, "Recheck fan rotation, amp draw, and coil cleanliness.");
+          addUnique(watchNext, t("sfw_watch_cond_fan", lang));
+          addUnique(recheckItems, t("sfw_recheck_cond_fan", lang));
           if (headPressure !== null && ambientTemp !== null) {
-            addUnique(monitoringNote, `Head/ambient context at diagnosis: ${headPressure} psi head with ${ambientTemp}°F ambient.`);
+            addUnique(monitoringNote, t("sfw_note_head_ambient", lang).replace("{head}", String(headPressure)).replace("{ambient}", String(ambientTemp)));
           }
-          addUnique(callbackRisk, "Outdoor airflow callbacks happen when coil condition or voltage issues are missed.");
+          addUnique(callbackRisk, t("sfw_risk_cond_fan", lang));
         }
 
         if (partLower.includes("evaporator fan motor")) {
-          addUnique(watchNext, "Watch airflow, frost return, and drain condition after operation.");
-          addUnique(recheckItems, "Recheck fan operation and airflow path after the box or space pulls down.");
+          addUnique(watchNext, t("sfw_watch_evap_fan", lang));
+          addUnique(recheckItems, t("sfw_recheck_evap_fan", lang));
           if (deltaT !== null) {
-            addUnique(monitoringNote, `Air split context at diagnosis: ${deltaT}°F.`);
+            addUnique(monitoringNote, t("sfw_note_air_split", lang).replace("{value}", String(deltaT)));
           }
-          addUnique(callbackRisk, "Fan-related callbacks happen when the real issue is still defrost, drain, or blocked airflow.");
+          addUnique(callbackRisk, t("sfw_risk_evap_fan", lang));
         }
 
         if (partLower.includes("defrost heater")) {
-          addUnique(watchNext, "Watch the next full defrost cycle and confirm the ice pattern does not return.");
-          addUnique(recheckItems, "Recheck termination, control output, and drain path.");
+          addUnique(watchNext, t("sfw_watch_defrost_heater", lang));
+          addUnique(recheckItems, t("sfw_recheck_defrost_heater", lang));
           if (boxTemp !== null) {
-            addUnique(monitoringNote, `Box temperature context: ${boxTemp}°F.`);
+            addUnique(monitoringNote, t("sfw_note_box_temp", lang).replace("{value}", String(boxTemp)));
           }
-          addUnique(callbackRisk, "Heater replacement alone may not solve the call if termination/control logic is wrong.");
+          addUnique(callbackRisk, t("sfw_risk_defrost_heater", lang));
         }
 
         if (partLower.includes("defrost termination") || partLower.includes("defrost control")) {
-          addUnique(watchNext, "Watch the next timed/initiated defrost and confirm heater/fan sequence.");
-          addUnique(recheckItems, "Recheck fan delay, termination state, and drain heat path.");
-          addUnique(callbackRisk, "Defrost callbacks happen when timing logic is not verified against actual ice pattern.");
+          addUnique(watchNext, t("sfw_watch_defrost_term", lang));
+          addUnique(recheckItems, t("sfw_recheck_defrost_term", lang));
+          addUnique(callbackRisk, t("sfw_risk_defrost_term", lang));
         }
 
         if (partLower.includes("txv") || partLower.includes("eev") || partLower.includes("metering")) {
-          addUnique(watchNext, "Watch superheat/subcool trend and frost pattern after the system stabilizes.");
-          addUnique(recheckItems, "Recheck airflow and restriction path before assuming the feed path is fixed.");
+          addUnique(watchNext, t("sfw_watch_txv", lang));
+          addUnique(recheckItems, t("sfw_recheck_txv", lang));
           if (superheat !== null && subcool !== null) {
-            addUnique(monitoringNote, `SH/SC context at diagnosis: SH ${superheat}°F, SC ${subcool}°F.`);
+            addUnique(monitoringNote, t("sfw_note_shsc", lang).replace("{sh}", String(superheat)).replace("{sc}", String(subcool)));
           }
-          addUnique(callbackRisk, "Metering-device callbacks happen when airflow or restriction was the real cause.");
+          addUnique(callbackRisk, t("sfw_risk_txv", lang));
         }
 
         if (partLower.includes("blower motor")) {
-          addUnique(watchNext, "Watch airflow, split, and drain safety behavior after the repair.");
-          addUnique(recheckItems, "Recheck amp draw, wheel condition, and board/relay output.");
+          addUnique(watchNext, t("sfw_watch_blower", lang));
+          addUnique(recheckItems, t("sfw_recheck_blower", lang));
           if (deltaT !== null) {
-            addUnique(monitoringNote, `Air split context at diagnosis: ${deltaT}°F.`);
+            addUnique(monitoringNote, t("sfw_note_air_split", lang).replace("{value}", String(deltaT)));
           }
-          addUnique(callbackRisk, "Blower callbacks happen when the true issue is control output or drain interruption.");
+          addUnique(callbackRisk, t("sfw_risk_blower", lang));
         }
 
         if (partLower.includes("float switch") || partLower.includes("drain safety")) {
-          addUnique(watchNext, "Watch drain flow and whether the control interruption returns.");
-          addUnique(recheckItems, "Recheck actual drain condition and switch state.");
-          addUnique(callbackRisk, "Drain safety callbacks happen when the water problem was not corrected.");
+          addUnique(watchNext, t("sfw_watch_float", lang));
+          addUnique(recheckItems, t("sfw_recheck_float", lang));
+          addUnique(callbackRisk, t("sfw_risk_float", lang));
         }
 
         if (partLower.includes("ignitor")) {
-          addUnique(watchNext, "Watch the next heat cycle through ignition and flame prove.");
-          addUnique(recheckItems, "Recheck board output and full heat sequence if symptoms return.");
-          addUnique(callbackRisk, "Ignition callbacks happen when the full safety chain is not checked.");
+          addUnique(watchNext, t("sfw_watch_ignitor", lang));
+          addUnique(recheckItems, t("sfw_recheck_ignitor", lang));
+          addUnique(callbackRisk, t("sfw_risk_ignitor", lang));
         }
 
         if (partLower.includes("flame sensor")) {
-          addUnique(watchNext, "Watch flame proving through multiple heat cycles.");
-          addUnique(recheckItems, "Recheck flame signal, burner carryover, and ignition quality.");
-          addUnique(callbackRisk, "Flame-sense callbacks happen when ignition quality or grounding is still weak.");
+          addUnique(watchNext, t("sfw_watch_flame", lang));
+          addUnique(recheckItems, t("sfw_recheck_flame", lang));
+          addUnique(callbackRisk, t("sfw_risk_flame", lang));
         }
 
         if (partLower.includes("pressure switch")) {
-          addUnique(watchNext, "Watch the next full heat call and confirm pressure-proving stays stable.");
-          addUnique(recheckItems, "Recheck inducer operation, tubing, venting, and condensate path.");
-          addUnique(callbackRisk, "Pressure-switch callbacks happen when draft or drain issues were not corrected.");
+          addUnique(watchNext, t("sfw_watch_pressure_switch", lang));
+          addUnique(recheckItems, t("sfw_recheck_pressure_switch", lang));
+          addUnique(callbackRisk, t("sfw_risk_pressure_switch", lang));
         }
 
         if (partLower.includes("water valve") || partLower.includes("water pump") || partLower.includes("sensor")) {
-          addUnique(watchNext, "Watch the next full sequence and confirm water-side timing stays correct.");
-          addUnique(recheckItems, "Recheck component response during the expected cycle.");
-          addUnique(callbackRisk, "Sequence callbacks happen when the wrong side of the system was blamed.");
+          addUnique(watchNext, t("sfw_watch_water", lang));
+          addUnique(recheckItems, t("sfw_recheck_water", lang));
+          addUnique(callbackRisk, t("sfw_risk_water", lang));
         }
 
         if (equipment.includes("walk-in")) {
-          addUnique(watchNext, "Watch actual box pull-down and next defrost cycle.");
+          addUnique(watchNext, t("sfw_watch_walkin", lang));
         }
 
         if (issue.includes("icing") || issue.includes("freeze") || issue.includes("ice")) {
-          addUnique(watchNext, "Watch for return ice pattern, drain issues, and airflow drop after the repair.");
-          addUnique(callbackRisk, "Freeze-up complaints often return if airflow/defrost/feed verification was incomplete.");
+          addUnique(watchNext, t("sfw_watch_icing", lang));
+          addUnique(callbackRisk, t("sfw_risk_icing", lang));
         }
 
         if (issue.includes("not cooling") || issue.includes("no cool")) {
-          addUnique(watchNext, "Watch temperature pull-down and whether the full call completes normally.");
+          addUnique(watchNext, t("sfw_watch_nocool", lang));
         }
 
         if (selectedOutcome === "Tested good") {
-          addUnique(monitoringNote, "Selected part tested good, so watch the stronger alternate path instead of replacing this part.");
+          addUnique(monitoringNote, t("sfw_note_tested_good", lang));
         }
 
         if (selectedOutcome === "Needs more testing") {
-          addUnique(monitoringNote, "More testing is still needed before committing the repair path.");
+          addUnique(monitoringNote, t("sfw_note_needs_testing", lang));
         }
 
         if (note) {
-          addUnique(monitoringNote, `Tech note: ${note}`);
+          addUnique(monitoringNote, t("sfw_note_tech_note", lang).replace("{value}", note));
         }
 
         if (!watchNext.length) {
-          addUnique(watchNext, "Watch system operation after the repair path is verified.");
+          addUnique(watchNext, t("sfw_watch_fallback", lang));
         }
 
         if (!recheckItems.length) {
-          addUnique(recheckItems, "Recheck the strongest measurement and sequence item tied to the selected part.");
+          addUnique(recheckItems, t("sfw_recheck_fallback", lang));
         }
 
         if (!callbackRisk.length) {
-          addUnique(callbackRisk, "Blind replacement without proving the full path is the main callback risk.");
+          addUnique(callbackRisk, t("sfw_risk_fallback", lang));
         }
 
         return {
@@ -5372,13 +5372,13 @@ function browserSupportsSmartReadingsDictation() {
         const payload = buildSuggestedFollowUpWatchlist();
 
         const text = [
-          "Suggested Follow-Up Watchlist",
-          payload.selectedPart ? `Part: ${payload.selectedPart}` : "",
-          payload.selectedOutcome ? `Outcome: ${payload.selectedOutcome}` : "",
-          payload.watchNext.length ? "Watch Next:\n- " + payload.watchNext.join("\n- ") : "",
-          payload.recheckItems.length ? "Recheck Items:\n- " + payload.recheckItems.join("\n- ") : "",
-          payload.callbackRisk.length ? "Callback Risk:\n- " + payload.callbackRisk.join("\n- ") : "",
-          payload.monitoringNote.length ? "Monitoring Notes:\n- " + payload.monitoringNote.join("\n- ") : "",
+          t("sfw_notes_title", lang),
+          payload.selectedPart ? t("sfw_notes_part", lang).replace("{value}", payload.selectedPart) : "",
+          payload.selectedOutcome ? t("sfw_notes_outcome", lang).replace("{value}", payload.selectedOutcome) : "",
+          payload.watchNext.length ? t("sfw_notes_watch_next", lang) + payload.watchNext.join("\n- ") : "",
+          payload.recheckItems.length ? t("sfw_notes_recheck_items", lang) + payload.recheckItems.join("\n- ") : "",
+          payload.callbackRisk.length ? t("sfw_notes_callback_risk", lang) + payload.callbackRisk.join("\n- ") : "",
+          payload.monitoringNote.length ? t("sfw_notes_monitoring", lang) + payload.monitoringNote.join("\n- ") : "",
         ]
           .filter(Boolean)
           .join("\n\n");
@@ -5392,7 +5392,7 @@ function browserSupportsSmartReadingsDictation() {
           [String(prev || "").trim(), text].filter(Boolean).join("\n\n")
         );
 
-        setFollowUpWatchlistMessage("Suggested watchlist added to Follow-Up and Tech Closeout Notes.");
+        setFollowUpWatchlistMessage(t("sfw_added_to_notes", lang));
       }
 
       // repair-execution-assist-v1
