@@ -1,6 +1,41 @@
 "use client";
 
 import React, { useState } from "react";
+import { useLang } from "../../components/LanguageContext";
+import { t, type TranslationKey } from "../../lib/translations";
+
+const FILTER_COMMON_KEYS: Record<string, TranslationKey> = {
+  "Small residential AHU": "filter_common_small_res_ahu",
+  "Small residential unit": "filter_common_small_res_unit",
+  "Residential AHU": "filter_common_res_ahu",
+  "Very common residential": "filter_common_very_common_res",
+  "Common residential": "filter_common_common_res",
+  "Residential return": "filter_common_res_return",
+  "Most common residential size": "filter_common_most_common_res",
+  "Residential / light commercial": "filter_common_res_light_comm",
+  "Larger residential AHU": "filter_common_larger_res_ahu",
+  "Residential": "filter_common_residential",
+  "High efficiency residential": "filter_common_high_eff_res",
+  "Media filter — residential / light commercial": "filter_common_media_res_light",
+  "Media filter — very common": "filter_common_media_very_common",
+  "Media filter": "filter_common_media",
+  "5\" media — Lennox, Carrier, Trane systems": "filter_common_5in_lennox",
+  "5\" media — high efficiency systems": "filter_common_5in_high_eff",
+  "Commercial AHU — standard": "filter_common_comm_ahu_standard",
+  "Commercial AHU": "filter_common_comm_ahu",
+  "Commercial AHU — very common": "filter_common_comm_ahu_very_common",
+  "Commercial AHU — 4\" media": "filter_common_comm_ahu_4in",
+  "Commercial RTU — common Carrier/Trane size": "filter_common_comm_rtu_carrier",
+  "Commercial RTU / AHU": "filter_common_comm_rtu_ahu",
+  "RTU — 2 ton to 5 ton": "filter_common_rtu_2_5ton",
+  "RTU — 3 ton to 7.5 ton": "filter_common_rtu_3_75ton",
+  "RTU — 5 ton to 10 ton": "filter_common_rtu_5_10ton",
+};
+
+function translateFilterCommon(value: string, lang: "en" | "es"): string {
+  const key = FILTER_COMMON_KEYS[value];
+  return key ? t(key, lang) : value;
+}
 
 // ─── MERV Rating Guide ────────────────────────────────────────
 const MERV_GUIDE = [
@@ -89,6 +124,7 @@ function filterSupplierLinks(nominal: string, merv: string) {
 }
 
 export function FilterReference() {
+  const { lang } = useLang();
   const [searchMode, setSearchMode] = useState<"size" | "number">("size");
   const [filterType, setFilterType] = useState<"all" | "residential" | "commercial">("all");
   const [length, setLength] = useState("");
@@ -139,20 +175,20 @@ export function FilterReference() {
     <div>
       {/* Type toggle */}
       <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap" as const }}>
-        {(["all", "residential", "commercial"] as const).map(t => (
-          <button key={t} onClick={() => setFilterType(t)}
-            style={{ padding: "7px 16px", borderRadius: 20, border: `1px solid ${filterType === t ? "#0f1f3d" : "#e2e8f0"}`, background: filterType === t ? "#0f1f3d" : "#fff", color: filterType === t ? "#fff" : "#374151", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
-            {t === "all" ? "All Types" : t.charAt(0).toUpperCase() + t.slice(1)}
+        {(["all", "residential", "commercial"] as const).map(ty => (
+          <button key={ty} onClick={() => setFilterType(ty)}
+            style={{ padding: "7px 16px", borderRadius: 20, border: `1px solid ${filterType === ty ? "#0f1f3d" : "#e2e8f0"}`, background: filterType === ty ? "#0f1f3d" : "#fff", color: filterType === ty ? "#fff" : "#374151", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+            {ty === "all" ? t("filter_type_all", lang) : ty === "residential" ? t("filter_type_residential", lang) : t("filter_type_commercial", lang)}
           </button>
         ))}
       </div>
 
       {/* Mode tabs */}
       <div style={{ display: "flex", background: "#f1f5f9", borderRadius: 10, padding: 4, marginBottom: 14 }}>
-        {[{ key: "size", label: "📐 Search by Dimensions" }, { key: "number", label: "🔢 Search by Part Number" }].map(m => (
+        {[{ key: "size", labelKey: "filter_tab_by_dimensions" as const }, { key: "number", labelKey: "filter_tab_by_number" as const }].map(m => (
           <button key={m.key} onClick={() => { setSearchMode(m.key as "size" | "number"); setResults([]); setSearched(false); }}
             style={{ flex: 1, padding: "9px 0", borderRadius: 8, border: "none", background: searchMode === m.key ? "#fff" : "transparent", color: searchMode === m.key ? "#0f1f3d" : "#64748b", fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit", boxShadow: searchMode === m.key ? "0 1px 4px rgba(0,0,0,0.08)" : "none" }}>
-            {m.label}
+            {t(m.labelKey, lang)}
           </button>
         ))}
       </div>
@@ -161,19 +197,19 @@ export function FilterReference() {
       {searchMode === "size" && (
         <div style={{ marginBottom: 14 }}>
           <div style={{ background: "#eff6ff", border: "1px solid #bae6fd", borderRadius: 8, padding: "8px 12px", marginBottom: 12, fontSize: 12, color: "#1d4ed8" }}>
-            <strong>📏 Tip:</strong> Measure the actual filter slot opening (not the old filter). Use nominal size — always round up to nearest inch. Example: 19.75" × 24.75" slot = 20×25 nominal size.
+            <strong>{t("filter_tip_title", lang)}</strong> {t("filter_tip_body", lang)}
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 10 }}>
             <div>
-              <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#374151", marginBottom: 4, textTransform: "uppercase" as const, letterSpacing: "0.04em" }}>Length (inches)</label>
+              <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#374151", marginBottom: 4, textTransform: "uppercase" as const, letterSpacing: "0.04em" }}>{t("filter_label_length", lang)}</label>
               <input style={inp} type="number" placeholder="e.g. 20" value={length} onChange={e => setLength(e.target.value)} onKeyDown={e => e.key === "Enter" && handleSizeSearch()} />
             </div>
             <div>
-              <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#374151", marginBottom: 4, textTransform: "uppercase" as const, letterSpacing: "0.04em" }}>Width (inches)</label>
+              <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#374151", marginBottom: 4, textTransform: "uppercase" as const, letterSpacing: "0.04em" }}>{t("filter_label_width", lang)}</label>
               <input style={inp} type="number" placeholder="e.g. 25" value={width} onChange={e => setWidth(e.target.value)} onKeyDown={e => e.key === "Enter" && handleSizeSearch()} />
             </div>
             <div>
-              <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#374151", marginBottom: 4, textTransform: "uppercase" as const, letterSpacing: "0.04em" }}>Depth (inches)</label>
+              <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#374151", marginBottom: 4, textTransform: "uppercase" as const, letterSpacing: "0.04em" }}>{t("filter_label_depth", lang)}</label>
               <select style={inp} value={depth} onChange={e => setDepth(e.target.value)}>
                 <option value="1">1"</option>
                 <option value="2">2"</option>
@@ -183,7 +219,7 @@ export function FilterReference() {
             </div>
           </div>
           <button onClick={handleSizeSearch} style={{ padding: "10px 20px", background: "#0f1f3d", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}>
-            Find Filter Size
+            {t("btn_find_filter_size", lang)}
           </button>
         </div>
       )}
@@ -192,12 +228,12 @@ export function FilterReference() {
       {searchMode === "number" && (
         <div style={{ marginBottom: 14 }}>
           <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#374151", marginBottom: 6, textTransform: "uppercase" as const, letterSpacing: "0.04em" }}>
-            Enter filter size or part number
+            {t("filter_label_enter_size", lang)}
           </label>
           <div style={{ display: "flex", gap: 8 }}>
             <input style={inp} placeholder="e.g. 20x25x1, 16x25x4, 20x25..." value={partNumber} onChange={e => setPartNumber(e.target.value)} onKeyDown={e => e.key === "Enter" && handlePartSearch()} />
             <button onClick={handlePartSearch} style={{ padding: "10px 18px", background: "#0f1f3d", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}>
-              Search
+              {t("btn_search", lang)}
             </button>
           </div>
         </div>
@@ -206,9 +242,9 @@ export function FilterReference() {
       {/* MERV selector */}
       <div style={{ marginBottom: 14 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-          <label style={{ fontSize: 11, fontWeight: 700, color: "#374151", textTransform: "uppercase" as const, letterSpacing: "0.04em" }}>MERV Rating Needed</label>
+          <label style={{ fontSize: 11, fontWeight: 700, color: "#374151", textTransform: "uppercase" as const, letterSpacing: "0.04em" }}>{t("filter_label_merv_needed", lang)}</label>
           <button onClick={() => setShowMervGuide(v => !v)} style={{ background: "none", border: "none", color: "#2563eb", fontSize: 12, cursor: "pointer", fontFamily: "inherit", fontWeight: 600 }}>
-            {showMervGuide ? "▲ Hide guide" : "▼ What MERV do I need?"}
+            {showMervGuide ? t("btn_hide_guide", lang) : t("btn_what_merv", lang)}
           </button>
         </div>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" as const }}>
@@ -227,12 +263,12 @@ export function FilterReference() {
                 <div style={{ fontSize: 13, fontWeight: 800, color: g.color, width: 52, flexShrink: 0 }}>MERV {g.merv}</div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 12, fontWeight: 600, color: "#1e293b" }}>{g.use}</div>
-                  <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>Captures: {g.capture}</div>
+                  <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>{t("filter_captures_colon", lang)} {g.capture}</div>
                 </div>
               </div>
             ))}
             <div style={{ fontSize: 11, color: "#94a3b8", padding: "6px 0" }}>
-              ⚠️ Higher MERV = more restriction. Always verify system static pressure before upgrading to MERV 13+. High MERV filters on undersized blowers cause airflow problems and coil freeze.
+              {t("filter_merv_warning", lang)}
             </div>
           </div>
         )}
@@ -242,15 +278,15 @@ export function FilterReference() {
       {searched && (
         <div>
           <div style={{ fontSize: 12, fontWeight: 700, color: "#64748b", marginBottom: 8 }}>
-            {results.length > 0 ? `${results.length} match${results.length !== 1 ? "es" : ""} found` : "No exact matches"}
+            {results.length > 0 ? t("filter_matches_found", lang).replace("{count}", String(results.length)) : t("filter_no_exact_matches", lang)}
           </div>
 
           {results.length === 0 && (
             <div style={{ padding: "16px", background: "#f8fafc", borderRadius: 10, textAlign: "center" as const }}>
-              <div style={{ fontSize: 13, color: "#94a3b8", marginBottom: 10 }}>Size not in database — may be a non-standard size.</div>
+              <div style={{ fontSize: 13, color: "#94a3b8", marginBottom: 10 }}>{t("filter_not_in_database", lang)}</div>
               <button onClick={() => window.open(`https://filterbuy.com/filters/air-filters/?size=${encodeURIComponent(length + "x" + width + "x" + depth)}`, "_blank")}
                 style={{ padding: "8px 16px", background: "#0f1f3d", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>
-                Search FilterBuy for custom sizes →
+                {t("btn_search_filterbuy", lang)}
               </button>
             </div>
           )}
@@ -263,21 +299,21 @@ export function FilterReference() {
                   <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 10 }}>
                     <div>
                       <div style={{ fontSize: 17, fontWeight: 800, color: "#0f1f3d" }}>{f.nominal}</div>
-                      <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>Actual size: {f.actual}</div>
+                      <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>{t("filter_actual_size_colon", lang)} {f.actual}</div>
                       <div style={{ display: "flex", gap: 6, marginTop: 4, flexWrap: "wrap" as const }}>
                         <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: f.type === "residential" ? "#dbeafe" : f.type === "commercial" ? "#dcfce7" : "#f3e8ff", color: f.type === "residential" ? "#1d4ed8" : f.type === "commercial" ? "#166534" : "#7c3aed" }}>
-                          {f.type === "both" ? "Residential + Commercial" : f.type.charAt(0).toUpperCase() + f.type.slice(1)}
+                          {f.type === "both" ? t("filter_type_both", lang) : f.type === "residential" ? t("filter_type_residential", lang) : t("filter_type_commercial", lang)}
                         </span>
                         <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: "#0f1f3d", color: "#fff" }}>
-                          MERV {selectedMerv} selected
+                          {t("filter_merv_selected", lang).replace("{value}", selectedMerv)}
                         </span>
                       </div>
                     </div>
                   </div>
                   <div style={{ fontSize: 12, color: "#374151", marginBottom: 10 }}>
-                    <strong>Common use:</strong> {f.common}
+                    <strong>{t("filter_common_use_colon", lang)}</strong> {translateFilterCommon(f.common, lang)}
                   </div>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 6 }}>Find it at</div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 6 }}>{t("filter_find_it_at", lang)}</div>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(130px,1fr))", gap: 6 }}>
                     {links.map(l => (
                       <button key={l.name} onClick={() => window.open(l.url, "_blank")}
@@ -295,12 +331,12 @@ export function FilterReference() {
 
       {!searched && (
         <div style={{ padding: "20px 0", textAlign: "center" as const, color: "#94a3b8", fontSize: 13 }}>
-          Enter filter dimensions or a part number to find cross-references and supplier links.
+          {t("filter_empty_state", lang)}
         </div>
       )}
 
       <div style={{ marginTop: 12, fontSize: 11, color: "#94a3b8", lineHeight: 1.6 }}>
-        Always measure the actual filter slot — not the old filter. Nominal sizes are rounded up from actual dimensions.
+        {t("filter_footer_disclaimer", lang)}
       </div>
     </div>
   );
