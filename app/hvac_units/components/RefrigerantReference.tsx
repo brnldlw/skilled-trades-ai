@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+import { useLang } from "../../components/LanguageContext";
+import { t, type TranslationKey } from "../../lib/translations";
 
 type RefrigerantData = {
   name: string;
@@ -13,8 +15,11 @@ type RefrigerantData = {
   boilingPoint: string;
   criticalTemp: string;
   phaseOut: string;
+  phaseOutKey: TranslationKey;
   a2lNotes?: string;
+  a2lNotesKey?: TranslationKey;
   commonUse: string;
+  commonUseKey: TranslationKey;
   status: "active" | "phasedown" | "phaseout" | "new";
 };
 
@@ -26,7 +31,9 @@ const REFRIGERANTS: Record<string, RefrigerantData> = {
     replaces: ["R-12"],
     boilingPoint: "-41.4°F", criticalTemp: "204.8°F",
     phaseOut: "Production ended Jan 1, 2020 in the US. Reclaimed R-22 still legal to use for servicing existing equipment. No new equipment since 2010.",
+    phaseOutKey: "refr_r22_phaseout",
     commonUse: "Legacy residential and commercial AC, heat pumps. Millions of systems still in service.",
+    commonUseKey: "refr_r22_common",
     status: "phaseout",
   },
   "R-410A": {
@@ -36,7 +43,9 @@ const REFRIGERANTS: Record<string, RefrigerantData> = {
     replaces: ["R-22"],
     boilingPoint: "-61.1°F", criticalTemp: "161.8°F",
     phaseOut: "EPA Section 608 phasedown ongoing. New residential equipment must use lower-GWP refrigerant by 2025. Existing equipment can continue to be serviced. Production caps reducing through 2036.",
+    phaseOutKey: "refr_r410a_phaseout",
     commonUse: "Dominant residential and light commercial AC and heat pumps from 2010-2025. Majority of equipment in field today.",
+    commonUseKey: "refr_r410a_common",
     status: "phasedown",
   },
   "R-32": {
@@ -46,8 +55,11 @@ const REFRIGERANTS: Record<string, RefrigerantData> = {
     replaces: ["R-410A"],
     boilingPoint: "-61.2°F", criticalTemp: "173.4°F",
     phaseOut: "Currently approved. Lower GWP than R-410A. A2L mildly flammable — requires A2L-certified equipment and handling procedures.",
+    phaseOutKey: "refr_r32_phaseout",
     a2lNotes: "Mildly flammable. Requires A2L-rated recovery equipment, brazing procedures with nitrogen purge, and no open flames near refrigerant. Check local codes for installation requirements.",
+    a2lNotesKey: "refr_r32_a2l",
     commonUse: "New residential split systems and mini-splits. Used by Daikin, Mitsubishi, Fujitsu, and others. Growing market share.",
+    commonUseKey: "refr_r32_common",
     status: "active",
   },
   "R-454B": {
@@ -57,8 +69,11 @@ const REFRIGERANTS: Record<string, RefrigerantData> = {
     replaces: ["R-410A"],
     boilingPoint: "-60.9°F", criticalTemp: "166.1°F",
     phaseOut: "Currently approved. Primary R-410A replacement for residential equipment in the US. Carrier Puron Advance, Trane Opteon. A2L handling required.",
+    phaseOutKey: "refr_r454b_phaseout",
     a2lNotes: "A2L — mildly flammable. Requires A2L-rated tools and equipment. Cannot use standard R-410A recovery equipment for R-454B-only service after EPA deadline. Nitrogen purge brazing recommended.",
+    a2lNotesKey: "refr_r454b_a2l",
     commonUse: "New residential AC and heat pumps replacing R-410A. Carrier, Trane, Bryant, Payne systems. Required for new equipment sold after Jan 1, 2025.",
+    commonUseKey: "refr_r454b_common",
     status: "active",
   },
   "R-452B": {
@@ -68,8 +83,11 @@ const REFRIGERANTS: Record<string, RefrigerantData> = {
     replaces: ["R-410A"],
     boilingPoint: "-57.8°F", criticalTemp: "165.9°F",
     phaseOut: "Currently approved. Used by some manufacturers as R-410A replacement. A2L handling required.",
+    phaseOutKey: "refr_r452b_phaseout",
     a2lNotes: "A2L — mildly flammable. Same handling precautions as R-454B. Verify equipment compatibility before service.",
+    a2lNotesKey: "refr_r452b_a2l",
     commonUse: "Commercial unitary equipment. Some Lennox and York systems.",
+    commonUseKey: "refr_r452b_common",
     status: "active",
   },
   "R-407C": {
@@ -79,7 +97,9 @@ const REFRIGERANTS: Record<string, RefrigerantData> = {
     replaces: ["R-22"],
     boilingPoint: "-46.3°F", criticalTemp: "186.9°F",
     phaseOut: "Subject to HFC phasedown. Still widely used. Temperature glide (10°F+) means charge always by weight — never by pressure alone.",
+    phaseOutKey: "refr_r407c_phaseout",
     commonUse: "Commercial AC, chillers, some residential. R-22 retrofit alternative. Temperature glide — must charge by weight.",
+    commonUseKey: "refr_r407c_common",
     status: "phasedown",
   },
   "R-404A": {
@@ -89,7 +109,9 @@ const REFRIGERANTS: Record<string, RefrigerantData> = {
     replaces: ["R-502", "R-22 (refrigeration)"],
     boilingPoint: "-49.8°F", criticalTemp: "161.2°F",
     phaseOut: "High GWP — significant phasedown pressure. Still in service on many walk-ins. Replacements available. Avoid installing new systems with R-404A.",
+    phaseOutKey: "refr_r404a_phaseout",
     commonUse: "Walk-in coolers and freezers, reach-in cases, ice machines, transport refrigeration. Huge installed base.",
+    commonUseKey: "refr_r404a_common",
     status: "phasedown",
   },
   "R-448A": {
@@ -99,7 +121,9 @@ const REFRIGERANTS: Record<string, RefrigerantData> = {
     replaces: ["R-404A", "R-22 (refrigeration)"],
     boilingPoint: "-46.7°F", criticalTemp: "170.1°F",
     phaseOut: "Currently approved. Widely used R-404A replacement. A1 safety class — no flammability concerns. Lower GWP than R-404A.",
+    phaseOutKey: "refr_r448a_phaseout",
     commonUse: "Commercial refrigeration retrofit and new equipment. Walk-ins, reach-ins, supermarket cases. Popular Honeywell/Solstice product.",
+    commonUseKey: "refr_r448a_common",
     status: "active",
   },
   "R-449A": {
@@ -109,7 +133,9 @@ const REFRIGERANTS: Record<string, RefrigerantData> = {
     replaces: ["R-404A", "R-22 (refrigeration)"],
     boilingPoint: "-47.2°F", criticalTemp: "170.2°F",
     phaseOut: "Currently approved. A1 safety class — no flammability. R-404A replacement with similar performance. Chemours/Opteon product.",
+    phaseOutKey: "refr_r449a_phaseout",
     commonUse: "Commercial refrigeration — walk-ins, reach-ins, display cases. Drop-in replacement approach for R-404A retrofits.",
+    commonUseKey: "refr_r449a_common",
     status: "active",
   },
   "R-134a": {
@@ -119,7 +145,9 @@ const REFRIGERANTS: Record<string, RefrigerantData> = {
     replaces: ["R-12"],
     boilingPoint: "-15.1°F", criticalTemp: "214.0°F",
     phaseOut: "Subject to HFC phasedown. Still common in automotive AC, chillers, and medium-temp refrigeration.",
+    phaseOutKey: "refr_r134a_phaseout",
     commonUse: "Automotive AC, centrifugal chillers, medium-temp refrigeration, vending machines.",
+    commonUseKey: "refr_r134a_common",
     status: "phasedown",
   },
   "R-507A": {
@@ -129,7 +157,9 @@ const REFRIGERANTS: Record<string, RefrigerantData> = {
     replaces: ["R-502"],
     boilingPoint: "-52.1°F", criticalTemp: "159.1°F",
     phaseOut: "Highest GWP of common refrigerants — significant phasedown pressure. Similar performance to R-404A. Replacements strongly recommended for new installs.",
+    phaseOutKey: "refr_r507a_phaseout",
     commonUse: "Low-temperature refrigeration, freezers, transport. Similar applications to R-404A.",
+    commonUseKey: "refr_r507a_common",
     status: "phasedown",
   },
   "R-290": {
@@ -139,8 +169,11 @@ const REFRIGERANTS: Record<string, RefrigerantData> = {
     replaces: ["R-22", "R-404A (small systems)"],
     boilingPoint: "-43.7°F", criticalTemp: "206.2°F",
     phaseOut: "Natural refrigerant — minimal environmental impact. A3 — highly flammable. Charge limited to 150g in most applications. EPA SNAP approved for specific applications.",
+    phaseOutKey: "refr_r290_phaseout",
     a2lNotes: "A3 — HIGHLY FLAMMABLE. Not A2L. Requires specific training, equipment, and handling procedures. Charge size strictly limited. No ignition sources. Commercial use requires proper certification and facilities.",
+    a2lNotesKey: "refr_r290_a2l",
     commonUse: "Residential mini-splits (specific models), plug-in commercial reach-ins, vending machines. Growing use in small commercial refrigeration.",
+    commonUseKey: "refr_r290_common",
     status: "active",
   },
   "R-600a": {
@@ -150,28 +183,32 @@ const REFRIGERANTS: Record<string, RefrigerantData> = {
     replaces: ["R-134a (domestic refrigerators)"],
     boilingPoint: "10.9°F", criticalTemp: "273.0°F",
     phaseOut: "Natural refrigerant. A3 — highly flammable. Standard in European and increasingly US domestic refrigerators.",
+    phaseOutKey: "refr_r600a_phaseout",
     a2lNotes: "A3 — HIGHLY FLAMMABLE. Domestic refrigerators only. Very small charge amounts. Do not use standard recovery equipment — requires hydrocarbon-rated equipment.",
+    a2lNotesKey: "refr_r600a_a2l",
     commonUse: "Domestic refrigerators and freezers. Very common in European-made appliances now entering US market.",
+    commonUseKey: "refr_r600a_common",
     status: "active",
   },
 };
 
-const STATUS_CONFIG = {
-  active:    { label: "Active",     bg: "#dcfce7", color: "#166534" },
-  phasedown: { label: "Phasedown",  bg: "#fef9c3", color: "#854d0e" },
-  phaseout:  { label: "Phase-out",  bg: "#fee2e2", color: "#991b1b" },
-  new:       { label: "New",        bg: "#dbeafe", color: "#1e40af" },
+const STATUS_CONFIG: Record<string, { labelKey: TranslationKey; bg: string; color: string }> = {
+  active:    { labelKey: "refr_status_active",    bg: "#dcfce7", color: "#166534" },
+  phasedown: { labelKey: "refr_status_phasedown", bg: "#fef9c3", color: "#854d0e" },
+  phaseout:  { labelKey: "refr_status_phaseout",  bg: "#fee2e2", color: "#991b1b" },
+  new:       { labelKey: "refr_status_new",       bg: "#dbeafe", color: "#1e40af" },
 };
 
-const SAFETY_CONFIG: Record<string, { bg: string; color: string; note: string }> = {
-  "A1":  { bg: "#dcfce7", color: "#166534", note: "Non-flammable, low toxicity" },
-  "A2L": { bg: "#fef9c3", color: "#854d0e", note: "Mildly flammable, low toxicity — A2L handling required" },
-  "A2":  { bg: "#ffedd5", color: "#9a3412", note: "Flammable, low toxicity" },
-  "A3":  { bg: "#fee2e2", color: "#991b1b", note: "Highly flammable, low toxicity" },
-  "B1":  { bg: "#f3e8ff", color: "#6b21a8", note: "Non-flammable, higher toxicity" },
+const SAFETY_CONFIG: Record<string, { bg: string; color: string; noteKey: TranslationKey }> = {
+  "A1":  { bg: "#dcfce7", color: "#166534", noteKey: "refr_safety_a1_note" },
+  "A2L": { bg: "#fef9c3", color: "#854d0e", noteKey: "refr_safety_a2l_note" },
+  "A2":  { bg: "#ffedd5", color: "#9a3412", noteKey: "refr_safety_a2_note" },
+  "A3":  { bg: "#fee2e2", color: "#991b1b", noteKey: "refr_safety_a3_note" },
+  "B1":  { bg: "#f3e8ff", color: "#6b21a8", noteKey: "refr_safety_b1_note" },
 };
 
 export function RefrigerantReference() {
+  const { lang } = useLang();
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "a1" | "a2l" | "active" | "phasedown">("all");
@@ -200,26 +237,26 @@ export function RefrigerantReference() {
     <div>
       {/* A2L warning banner */}
       <div style={{ background: "#fef9c3", border: "1px solid #fde68a", borderRadius: 8, padding: "10px 14px", marginBottom: 14, fontSize: 12, color: "#854d0e", lineHeight: 1.6 }}>
-        <strong>⚠️ A2L Transition:</strong> R-454B and R-32 are now required for new residential equipment in the US. All techs servicing new equipment must be familiar with A2L handling requirements. A2L refrigerants are mildly flammable — standard R-410A procedures are not sufficient.
+        <strong>{t("refr_a2l_banner_title", lang)}</strong> {t("refr_a2l_banner_body", lang)}
       </div>
 
       {/* Search */}
       <input value={search} onChange={e => { setSearch(e.target.value); setSelected(null); }}
-        placeholder="Search by refrigerant name, use, or replaces..."
+        placeholder={t("refr_search_placeholder", lang)}
         style={{ width: "100%", padding: "10px 14px", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: 14, fontFamily: "inherit", marginBottom: 10, background: "#fafafa" }} />
 
       {/* Filter buttons */}
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap" as const, marginBottom: 14 }}>
         {[
-          { key: "all", label: "All" },
-          { key: "a1", label: "A1 — Non-flammable" },
-          { key: "a2l", label: "A2L — Mildly flammable" },
-          { key: "active", label: "Currently approved" },
-          { key: "phasedown", label: "Being phased out" },
+          { key: "all", labelKey: "refr_filter_all" as const },
+          { key: "a1", labelKey: "refr_filter_a1" as const },
+          { key: "a2l", labelKey: "refr_filter_a2l" as const },
+          { key: "active", labelKey: "refr_filter_active" as const },
+          { key: "phasedown", labelKey: "refr_filter_phasedown" as const },
         ].map(f => (
           <button key={f.key} onClick={() => setFilter(f.key as typeof filter)}
             style={{ padding: "5px 12px", borderRadius: 20, border: `1px solid ${filter === f.key ? "#0f1f3d" : "#e2e8f0"}`, background: filter === f.key ? "#0f1f3d" : "#fff", color: filter === f.key ? "#fff" : "#374151", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-            {f.label}
+            {t(f.labelKey, lang)}
           </button>
         ))}
       </div>
@@ -240,11 +277,11 @@ export function RefrigerantReference() {
                     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" as const, marginBottom: 4 }}>
                       <span style={{ fontSize: 15, fontWeight: 800, color: "#0f1f3d" }}>{key}</span>
                       <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: safety.bg, color: safety.color }}>{r.safetyClass}</span>
-                      <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: status.bg, color: status.color }}>{status.label}</span>
-                      <span style={{ fontSize: 10, color: "#94a3b8" }}>GWP: {r.gwp}</span>
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: status.bg, color: status.color }}>{t(status.labelKey, lang)}</span>
+                      <span style={{ fontSize: 10, color: "#94a3b8" }}>{t("refr_label_gwp", lang)}: {r.gwp}</span>
                     </div>
-                    <div style={{ fontSize: 12, color: "#64748b", marginBottom: 2 }}>{r.commonUse}</div>
-                    <div style={{ fontSize: 11, color: "#94a3b8" }}>Oil: {r.oilType}</div>
+                    <div style={{ fontSize: 12, color: "#64748b", marginBottom: 2 }}>{t(r.commonUseKey, lang)}</div>
+                    <div style={{ fontSize: 11, color: "#94a3b8" }}>{t("refr_oil_colon", lang)} {r.oilType}</div>
                   </div>
                   <span style={{ color: "#94a3b8", fontSize: 16 }}>→</span>
                 </div>
@@ -252,7 +289,7 @@ export function RefrigerantReference() {
             );
           })}
           {filtered.length === 0 && (
-            <div style={{ textAlign: "center" as const, padding: 24, color: "#94a3b8", fontSize: 13 }}>No refrigerants found matching your search.</div>
+            <div style={{ textAlign: "center" as const, padding: 24, color: "#94a3b8", fontSize: 13 }}>{t("refr_no_results", lang)}</div>
           )}
         </div>
       )}
@@ -262,34 +299,34 @@ export function RefrigerantReference() {
         <div>
           <button onClick={() => setSelected(null)}
             style={{ marginBottom: 14, padding: "7px 14px", background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit", color: "#374151" }}>
-            ← Back to list
+            {t("refr_back_to_list", lang)}
           </button>
 
           <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, padding: "18px 20px" }}>
             <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 16, flexWrap: "wrap" as const }}>
               <div style={{ fontSize: 22, fontWeight: 800, color: "#0f1f3d" }}>{selected}</div>
-              <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20, background: SAFETY_CONFIG[selectedData.safetyClass].bg, color: SAFETY_CONFIG[selectedData.safetyClass].color }}>{selectedData.safetyClass} — {SAFETY_CONFIG[selectedData.safetyClass].note}</span>
-              <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20, background: STATUS_CONFIG[selectedData.status].bg, color: STATUS_CONFIG[selectedData.status].color }}>{STATUS_CONFIG[selectedData.status].label}</span>
+              <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20, background: SAFETY_CONFIG[selectedData.safetyClass].bg, color: SAFETY_CONFIG[selectedData.safetyClass].color }}>{selectedData.safetyClass} — {t(SAFETY_CONFIG[selectedData.safetyClass].noteKey, lang)}</span>
+              <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20, background: STATUS_CONFIG[selectedData.status].bg, color: STATUS_CONFIG[selectedData.status].color }}>{t(STATUS_CONFIG[selectedData.status].labelKey, lang)}</span>
             </div>
 
-            {selectedData.a2lNotes && (
+            {selectedData.a2lNotesKey && (
               <div style={{ background: "#fef9c3", border: "1px solid #fde68a", borderLeft: "4px solid #ca8a04", borderRadius: 8, padding: "12px 14px", marginBottom: 14 }}>
-                <div style={{ fontSize: 12, fontWeight: 800, color: "#854d0e", marginBottom: 4 }}>⚠️ Flammability Notice</div>
-                <div style={{ fontSize: 12, color: "#92400e", lineHeight: 1.6 }}>{selectedData.a2lNotes}</div>
+                <div style={{ fontSize: 12, fontWeight: 800, color: "#854d0e", marginBottom: 4 }}>{t("refr_flammability_notice", lang)}</div>
+                <div style={{ fontSize: 12, color: "#92400e", lineHeight: 1.6 }}>{t(selectedData.a2lNotesKey, lang)}</div>
               </div>
             )}
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))", gap: 10, marginBottom: 14 }}>
               {[
-                { label: "GWP", value: selectedData.gwp.toString() },
-                { label: "Safety Class", value: selectedData.safetyClass },
-                { label: "Type", value: selectedData.type },
-                { label: "Oil Type", value: selectedData.oilType },
-                { label: "Boiling Point", value: selectedData.boilingPoint },
-                { label: "Critical Temp", value: selectedData.criticalTemp },
+                { labelKey: "refr_label_gwp" as const, value: selectedData.gwp.toString() },
+                { labelKey: "refr_label_safety_class" as const, value: selectedData.safetyClass },
+                { labelKey: "refr_label_type" as const, value: selectedData.type },
+                { labelKey: "refr_label_oil_type" as const, value: selectedData.oilType },
+                { labelKey: "refr_label_boiling_point" as const, value: selectedData.boilingPoint },
+                { labelKey: "refr_label_critical_temp" as const, value: selectedData.criticalTemp },
               ].map(p => (
-                <div key={p.label} style={{ background: "#f8fafc", borderRadius: 8, padding: "8px 12px" }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 3 }}>{p.label}</div>
+                <div key={p.labelKey} style={{ background: "#f8fafc", borderRadius: 8, padding: "8px 12px" }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 3 }}>{t(p.labelKey, lang)}</div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: "#1e293b" }}>{p.value}</div>
                 </div>
               ))}
@@ -297,7 +334,7 @@ export function RefrigerantReference() {
 
             {selectedData.replaces.length > 0 && (
               <div style={{ marginBottom: 10 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: 4 }}>Replaces</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: 4 }}>{t("refr_label_replaces", lang)}</div>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap" as const }}>
                   {selectedData.replaces.map(r => (
                     <span key={r} style={{ fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 20, background: "#f1f5f9", color: "#374151" }}>{r}</span>
@@ -308,7 +345,7 @@ export function RefrigerantReference() {
 
             {selectedData.replacedBy.length > 0 && (
               <div style={{ marginBottom: 10 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: 4 }}>Being replaced by</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: 4 }}>{t("refr_label_replaced_by", lang)}</div>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap" as const }}>
                   {selectedData.replacedBy.map(r => (
                     <button key={r} onClick={() => setSelected(r)}
@@ -321,13 +358,13 @@ export function RefrigerantReference() {
             )}
 
             <div style={{ marginBottom: 10 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: 4 }}>Common use</div>
-              <div style={{ fontSize: 13, color: "#374151", lineHeight: 1.6 }}>{selectedData.commonUse}</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: 4 }}>{t("refr_label_common_use", lang)}</div>
+              <div style={{ fontSize: 13, color: "#374151", lineHeight: 1.6 }}>{t(selectedData.commonUseKey, lang)}</div>
             </div>
 
             <div style={{ background: "#f8fafc", borderRadius: 8, padding: "10px 14px" }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: 4 }}>Phase-out / status</div>
-              <div style={{ fontSize: 12, color: "#374151", lineHeight: 1.6 }}>{selectedData.phaseOut}</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: 4 }}>{t("refr_label_phaseout_status", lang)}</div>
+              <div style={{ fontSize: 12, color: "#374151", lineHeight: 1.6 }}>{t(selectedData.phaseOutKey, lang)}</div>
             </div>
           </div>
         </div>
