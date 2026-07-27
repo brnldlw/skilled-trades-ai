@@ -3,6 +3,7 @@ import { escapeHtml } from "./textHelpers";
 import { convertToStandard } from "./unitHelpers";
 import { tempFromPsig } from "./ptChart";
 import type { Observation, SavedUnitRecord, NameplateResult } from "../../lib/unit-store";
+import { t, type Language } from "../../lib/translations";
 
 export type Diagnosis = {
   summary?: string;
@@ -110,7 +111,8 @@ export function getObservationValue(
 export function analyzeCharge(
   observations: Observation[],
   equipmentType: string,
-  refrigerantType: string
+  refrigerantType: string,
+  lang: Language = "en"
 ): ChargeAnalysis {
   const returnAir =
     getObservationValue(
@@ -210,97 +212,87 @@ export function analyzeCharge(
       : null;
 
   const findings: string[] = [];
-  let summary = "Need more readings.";
+  let summary = t("diag_charge_need_more_readings", lang);
 
   const isCoolingType =
     !equipmentType.toLowerCase().includes("furnace") &&
     !equipmentType.toLowerCase().includes("boiler");
 
   if (evapSatSource === "pt-chart") {
-    findings.push(`Evap saturation estimated from ${refrigerantType} PT chart.`);
+    findings.push(t("diag_evap_sat_from_pt_chart", lang).replace("{value}", refrigerantType));
   }
   if (condSatSource === "pt-chart") {
-    findings.push(`Condensing saturation estimated from ${refrigerantType} PT chart.`);
+    findings.push(t("diag_cond_sat_from_pt_chart", lang).replace("{value}", refrigerantType));
   }
 
   if (deltaT !== null) {
     if (deltaT < 12) {
-      findings.push(
-        "Delta-T is low, which can point to low capacity, high airflow, or charge/load issues."
-      );
+      findings.push(t("diag_deltat_low", lang));
     } else if (deltaT > 22) {
-      findings.push(
-        "Delta-T is high, which can point to low airflow or a heavily loaded coil."
-      );
+      findings.push(t("diag_deltat_high", lang));
     } else {
-      findings.push("Delta-T is in a typical cooling range.");
+      findings.push(t("diag_deltat_normal", lang));
     }
   }
 
   if (superheat !== null) {
     if (superheat > 20) {
-      findings.push(
-        "Superheat is high, which points toward undercharge, restriction, or starving evaporator."
-      );
+      findings.push(t("diag_superheat_high", lang));
     } else if (superheat < 5) {
-      findings.push(
-        "Superheat is very low, which points toward overfeeding, floodback risk, or low airflow."
-      );
+      findings.push(t("diag_superheat_low", lang));
     } else {
-      findings.push("Superheat is in a usable normal range.");
+      findings.push(t("diag_superheat_normal", lang));
     }
   }
 
   if (subcool !== null) {
     if (subcool < 5) {
-      findings.push("Subcool is low, which points toward undercharge or flash gas.");
+      findings.push(t("diag_subcool_low", lang));
     } else if (subcool > 18) {
-      findings.push(
-        "Subcool is high, which points toward overcharge, restriction, or backed-up liquid."
-      );
+      findings.push(t("diag_subcool_high", lang));
     } else {
-      findings.push("Subcool is in a usable normal range.");
+      findings.push(t("diag_subcool_normal", lang));
     }
   }
 
   if (isCoolingType) {
     if (superheat !== null && subcool !== null) {
       if (superheat > 18 && subcool < 5) {
-        summary = "Likely undercharged system.";
+        summary = t("diag_summary_undercharged", lang);
       } else if (superheat < 6 && subcool > 15) {
-        summary = "Likely overcharged system or overfeeding condition.";
+        summary = t("diag_summary_overcharged", lang);
       } else if (superheat > 18 && subcool > 15) {
-        summary = "Possible restriction or metering issue.";
+        summary = t("diag_summary_restriction", lang);
       } else if (superheat >= 6 && superheat <= 18 && subcool >= 5 && subcool <= 15) {
-        summary = "Charge looks reasonably close based on entered readings.";
+        summary = t("diag_summary_charge_close", lang);
       } else {
-        summary = "Charge condition is mixed; verify airflow and saturation temps.";
+        summary = t("diag_summary_charge_mixed", lang);
       }
     } else if (superheat !== null) {
       if (superheat > 18) {
-        summary = "High superheat suggests undercharge or restriction.";
+        summary = t("diag_summary_high_sh_only", lang);
       } else if (superheat < 6) {
-        summary = "Low superheat suggests floodback, overfeed, or airflow issue.";
+        summary = t("diag_summary_low_sh_only", lang);
       } else {
-        summary = "Superheat looks reasonable, but subcool is still needed.";
+        summary = t("diag_summary_sh_ok_need_sc", lang);
       }
     } else if (subcool !== null) {
       if (subcool < 5) {
-        summary = "Low subcool suggests undercharge.";
+        summary = t("diag_summary_low_sc_only", lang);
       } else if (subcool > 15) {
-        summary = "High subcool suggests overcharge or restriction.";
+        summary = t("diag_summary_high_sc_only", lang);
       } else {
-        summary = "Subcool looks reasonable, but superheat is still needed.";
+        summary = t("diag_summary_sc_ok_need_sh", lang);
       }
     } else if (
       suctionPressure !== null &&
       liquidPressure !== null &&
       refrigerantType !== "Unknown"
     ) {
-      summary = "PT chart estimated saturation temps. Add line temps for full SH/SC diagnosis.";
+      summary = t("diag_summary_pt_only", lang);
     }
   } else {
-    summary = "Charge calculator is mainly intended for cooling / refrigeration systems.";
+    summary = t("diag_summary_not_cooling_type", lang);
   }
 
   return {
@@ -316,7 +308,7 @@ export function analyzeCharge(
   };
 }
 
-export function analyzeAirflow(observations: Observation[]): AirflowAnalysis {
+export function analyzeAirflow(observations: Observation[], lang: Language = "en"): AirflowAnalysis {
   const returnStatic =
     getObservationValue(
       observations,
@@ -351,15 +343,15 @@ export function analyzeAirflow(observations: Observation[]): AirflowAnalysis {
       : null;
 
   const findings: string[] = [];
-  let summary = "Need more static readings.";
+  let summary = t("diag_airflow_need_more", lang);
 
   if (totalExternalStatic !== null) {
     if (totalExternalStatic <= 0.5) {
-      findings.push("Total external static is in a typical range for many systems.");
+      findings.push(t("diag_tesp_normal", lang));
     } else if (totalExternalStatic <= 0.8) {
-      findings.push("Total external static is elevated. Airflow may be reduced.");
+      findings.push(t("diag_tesp_elevated", lang));
     } else {
-      findings.push("Total external static is high. Strong airflow restriction is likely.");
+      findings.push(t("diag_tesp_high", lang));
     }
   }
 
@@ -368,65 +360,59 @@ export function analyzeAirflow(observations: Observation[]): AirflowAnalysis {
     const supplyAbs = Math.abs(supplyStatic);
 
     if (returnAbs > supplyAbs * 1.35) {
-      findings.push("Return side is carrying more restriction than supply side.");
+      findings.push(t("diag_return_more_restriction", lang));
     } else if (supplyAbs > returnAbs * 1.35) {
-      findings.push("Supply side is carrying more restriction than return side.");
+      findings.push(t("diag_supply_more_restriction", lang));
     } else {
-      findings.push("Return and supply static are fairly balanced.");
+      findings.push(t("diag_static_balanced", lang));
     }
   }
 
   if (filterDrop !== null) {
     if (filterDrop < 0.08) {
-      findings.push("Filter pressure drop is low.");
+      findings.push(t("diag_filter_drop_low", lang));
     } else if (filterDrop <= 0.18) {
-      findings.push("Filter pressure drop is moderate.");
+      findings.push(t("diag_filter_drop_moderate", lang));
     } else {
-      findings.push(
-        "Filter pressure drop is high. Dirty filter or undersized filter section is likely."
-      );
+      findings.push(t("diag_filter_drop_high", lang));
     }
   }
 
   if (coilDrop !== null) {
     if (coilDrop < 0.2) {
-      findings.push("Coil pressure drop is low to moderate.");
+      findings.push(t("diag_coil_drop_low", lang));
     } else if (coilDrop <= 0.35) {
-      findings.push("Coil pressure drop is elevated.");
+      findings.push(t("diag_coil_drop_elevated", lang));
     } else {
-      findings.push(
-        "Coil pressure drop is high. Dirty evaporator coil, wet coil loading, or airflow bottleneck is likely."
-      );
+      findings.push(t("diag_coil_drop_high", lang));
     }
   }
 
   if (totalExternalStatic !== null) {
     if (totalExternalStatic > 0.8) {
       if ((filterDrop ?? 0) > 0.18) {
-        summary =
-          "High static with high filter drop. Check filter, rack, and return air path first.";
+        summary = t("diag_airflow_summary_high_filter", lang);
       } else if ((coilDrop ?? 0) > 0.35) {
-        summary = "High static with high coil drop. Check evaporator coil and blower setup.";
+        summary = t("diag_airflow_summary_high_coil", lang);
       } else if (
         returnStatic !== null &&
         supplyStatic !== null &&
         Math.abs(returnStatic) > Math.abs(supplyStatic) * 1.35
       ) {
-        summary = "High static with return-side burden. Look for return restriction.";
+        summary = t("diag_airflow_summary_return_burden", lang);
       } else if (
         returnStatic !== null &&
         supplyStatic !== null &&
         Math.abs(supplyStatic) > Math.abs(returnStatic) * 1.35
       ) {
-        summary = "High static with supply-side burden. Look for supply duct or coil restriction.";
+        summary = t("diag_airflow_summary_supply_burden", lang);
       } else {
-        summary = "Static is high. Airflow restriction is likely somewhere in the system.";
+        summary = t("diag_airflow_summary_high_generic", lang);
       }
     } else if (totalExternalStatic > 0.5) {
-      summary =
-        "Static is somewhat elevated. Verify blower speed and inspect filter/coil/duct path.";
+      summary = t("diag_airflow_summary_elevated", lang);
     } else {
-      summary = "Static looks reasonably normal.";
+      summary = t("diag_airflow_summary_normal", lang);
     }
   }
 
@@ -444,7 +430,8 @@ export function analyzeAirflow(observations: Observation[]): AirflowAnalysis {
 export function analyzeDefrost(
   observations: Observation[],
   equipmentType: string,
-  symptom: string
+  symptom: string,
+  lang: Language = "en"
 ) {
   const timerStateRaw = observations
     .slice()
@@ -480,7 +467,7 @@ export function analyzeDefrost(
   const equipmentLow = equipmentType.toLowerCase();
 
   const findings: string[] = [];
-  let summary = "Need more defrost readings.";
+  let summary = t("diag_defrost_need_more", lang);
 
   const isRefrigeration =
     equipmentLow.includes("cooler") ||
@@ -489,7 +476,7 @@ export function analyzeDefrost(
 
   if (!isRefrigeration) {
     return {
-      summary: "Defrost intelligence is mainly intended for refrigeration equipment.",
+      summary: t("diag_defrost_not_refrigeration", lang),
       findings: [] as string[],
     };
   }
@@ -503,7 +490,7 @@ export function analyzeDefrost(
     symptomLow.includes("iced evaporator");
 
   if (likelyDefrostComplaint) {
-    findings.push("Symptom points toward a possible defrost-related issue.");
+    findings.push(t("diag_defrost_symptom_hint", lang));
   }
 
   if (timerState) {
@@ -512,23 +499,23 @@ export function analyzeDefrost(
       timerState.includes("in defrost") ||
       timerState.includes("active")
     ) {
-      findings.push("Control appears to be calling for defrost.");
+      findings.push(t("diag_defrost_calling", lang));
     } else if (
       timerState.includes("cool") ||
       timerState.includes("refrigeration") ||
       timerState.includes("run")
     ) {
-      findings.push("Control appears to be in refrigeration mode, not defrost.");
+      findings.push(t("diag_defrost_in_refrig_mode", lang));
     } else {
-      findings.push(`Defrost timer/control state entered as: ${timerStateRaw}`);
+      findings.push(t("diag_defrost_timer_state_entered", lang).replace("{value}", String(timerStateRaw)));
     }
   }
 
   if (heaterAmps !== null) {
     if (heaterAmps > 0.2) {
-      findings.push("Defrost heater amperage is present.");
+      findings.push(t("diag_defrost_heater_amps_present", lang));
     } else {
-      findings.push("Defrost heater amperage is essentially zero.");
+      findings.push(t("diag_defrost_heater_amps_zero", lang));
     }
   }
 
@@ -538,30 +525,30 @@ export function analyzeDefrost(
       terminationState.includes("made") ||
       terminationState.includes("continuity")
     ) {
-      findings.push("Termination control appears closed / made.");
+      findings.push(t("diag_defrost_term_closed", lang));
     } else if (
       terminationState.includes("open") ||
       terminationState.includes("tripped")
     ) {
-      findings.push("Termination control appears open.");
+      findings.push(t("diag_defrost_term_open", lang));
     } else {
-      findings.push(`Termination state entered as: ${terminationStateRaw}`);
+      findings.push(t("diag_defrost_term_state_entered", lang).replace("{value}", String(terminationStateRaw)));
     }
   }
 
   if (evapCoilTemp !== null) {
     if (evapCoilTemp < 20) {
-      findings.push("Evaporator coil temperature is very low / frozen-range.");
+      findings.push(t("diag_defrost_coil_temp_low", lang));
     } else if (evapCoilTemp > 40) {
-      findings.push("Evaporator coil temperature is warm enough that termination may be expected.");
+      findings.push(t("diag_defrost_coil_temp_warm", lang));
     }
   }
 
   if (boxTemp !== null) {
     if (equipmentLow.includes("freezer") && boxTemp > 10) {
-      findings.push("Freezer box temperature is high.");
+      findings.push(t("diag_defrost_freezer_box_high", lang));
     } else if (equipmentLow.includes("cooler") && boxTemp > 40) {
-      findings.push("Cooler box temperature is high.");
+      findings.push(t("diag_defrost_cooler_box_high", lang));
     }
   }
 
@@ -570,15 +557,13 @@ export function analyzeDefrost(
     heaterAmps !== null &&
     heaterAmps < 0.2
   ) {
-    summary =
-      "Unit appears to be in defrost, but heater amps are not present. Likely heater circuit, heater, limit, relay, contactor, or wiring issue.";
+    summary = t("diag_defrost_summary_no_amps", lang);
   } else if (
     likelyDefrostComplaint &&
     timerState &&
     (timerState.includes("cool") || timerState.includes("run"))
   ) {
-    summary =
-      "Defrost complaint is present, but the unit appears to remain in refrigeration mode. Likely defrost initiation / timer / board / controller issue.";
+    summary = t("diag_defrost_summary_stuck_refrig", lang);
   } else if (
     heaterAmps !== null &&
     heaterAmps > 0.2 &&
@@ -587,8 +572,7 @@ export function analyzeDefrost(
     evapCoilTemp !== null &&
     evapCoilTemp < 25
   ) {
-    summary =
-      "Defrost heat is present, but termination appears open too early for a still-cold coil. Likely bad termination stat / sensor or placement issue.";
+    summary = t("diag_defrost_summary_early_term", lang);
   } else if (
     likelyDefrostComplaint &&
     heaterAmps !== null &&
@@ -596,19 +580,16 @@ export function analyzeDefrost(
     evapCoilTemp !== null &&
     evapCoilTemp > 40
   ) {
-    summary =
-      "Defrost appears to be functioning. Check drain restriction, airflow, door infiltration, or fan delay issues.";
+    summary = t("diag_defrost_summary_functioning", lang);
   } else if (
     likelyDefrostComplaint &&
     !timerState &&
     heaterAmps === null &&
     !terminationState
   ) {
-    summary =
-      "Need timer/board state, heater amps, and termination state to diagnose defrost properly.";
+    summary = t("diag_defrost_summary_need_data", lang);
   } else {
-    summary =
-      "Defrost condition is mixed. Verify timer/board initiation, heater amps, termination control, drain condition, and door infiltration.";
+    summary = t("diag_defrost_summary_mixed", lang);
   }
 
   return { summary, findings };
@@ -617,7 +598,8 @@ export function analyzeDefrost(
 export function buildDefrostRepairGuidance(
   observations: Observation[],
   equipmentType: string,
-  symptom: string
+  symptom: string,
+  lang: Language = "en"
 ) {
   const timerStateRaw = observations
     .slice()
@@ -681,18 +663,18 @@ export function buildDefrostRepairGuidance(
     heaterAmps < 0.2
   ) {
     repairItems.push({
-      part: "Defrost heater circuit",
-      why: "Unit appears to be in defrost but heater amps are not present.",
-      nextTest: "Check heater voltage and continuity through the heater circuit.",
-      quickCheck: "Ohm heater, limits, and wiring. Verify voltage reaches heater during defrost.",
+      part: t("diag_repair_part_heater_circuit", lang),
+      why: t("diag_repair_why_no_heater_amps", lang),
+      nextTest: t("diag_repair_next_heater_voltage", lang),
+      quickCheck: t("diag_repair_quick_heater_ohm", lang),
       priority: "High",
     });
 
     repairItems.push({
-      part: "Defrost relay / contactor / board output",
-      why: "Defrost may be commanded, but power may not be getting to the heaters.",
-      nextTest: "Check output voltage from timer/board/relay to heater circuit.",
-      quickCheck: "Measure line voltage at relay output while in defrost.",
+      part: t("diag_repair_part_relay_output", lang),
+      why: t("diag_repair_why_relay_power", lang),
+      nextTest: t("diag_repair_next_relay_voltage", lang),
+      quickCheck: t("diag_repair_quick_relay_voltage", lang),
       priority: "High",
     });
   }
@@ -703,10 +685,10 @@ export function buildDefrostRepairGuidance(
     (timerState.includes("cool") || timerState.includes("run"))
   ) {
     repairItems.push({
-      part: "Defrost timer / control board / controller",
-      why: "Complaint suggests defrost issue, but unit appears to remain in refrigeration mode.",
-      nextTest: "Force a defrost cycle and verify initiation output.",
-      quickCheck: "Advance timer manually or command board into defrost.",
+      part: t("diag_repair_part_timer_board", lang),
+      why: t("diag_repair_why_stuck_refrig", lang),
+      nextTest: t("diag_repair_next_force_defrost", lang),
+      quickCheck: t("diag_repair_quick_advance_timer", lang),
       priority: "High",
     });
   }
@@ -720,10 +702,10 @@ export function buildDefrostRepairGuidance(
     evapCoilTemp < 25
   ) {
     repairItems.push({
-      part: "Termination stat / sensor",
-      why: "Termination appears open too early while coil is still very cold.",
-      nextTest: "Check termination control state against actual coil temperature.",
-      quickCheck: "Measure continuity / resistance and compare to expected cut-out temperature.",
+      part: t("diag_repair_part_term_stat", lang),
+      why: t("diag_repair_why_term_early", lang),
+      nextTest: t("diag_repair_next_term_vs_coil", lang),
+      quickCheck: t("diag_repair_quick_term_resistance", lang),
       priority: "High",
     });
   }
@@ -736,18 +718,18 @@ export function buildDefrostRepairGuidance(
     evapCoilTemp > 40
   ) {
     repairItems.push({
-      part: "Drain line / drain pan / drain heater",
-      why: "Defrost heat appears present, so remaining icing may be from drainage problems.",
-      nextTest: "Check drain flow and drain heater operation if equipped.",
-      quickCheck: "Pour warm water through drain and inspect for freeze-back.",
+      part: t("diag_repair_part_drain", lang),
+      why: t("diag_repair_why_drain", lang),
+      nextTest: t("diag_repair_next_drain_flow", lang),
+      quickCheck: t("diag_repair_quick_drain_water", lang),
       priority: "Medium",
     });
 
     repairItems.push({
-      part: "Door gaskets / infiltration / fan delay",
-      why: "If defrost works, re-icing may be caused by moisture infiltration or fan timing.",
-      nextTest: "Inspect door seal, traffic pattern, strip curtain, and fan restart timing.",
-      quickCheck: "Look for frost concentrated near door opening or fan blow pattern.",
+      part: t("diag_repair_part_door_gaskets", lang),
+      why: t("diag_repair_why_door_gaskets", lang),
+      nextTest: t("diag_repair_next_door_inspect", lang),
+      quickCheck: t("diag_repair_quick_door_frost", lang),
       priority: "Medium",
     });
   }
@@ -759,20 +741,20 @@ export function buildDefrostRepairGuidance(
     !terminationState
   ) {
     repairItems.push({
-      part: "Defrost controls not yet verified",
-      why: "Key defrost measurements are missing.",
-      nextTest: "Collect timer state, heater amps, and termination stat state.",
-      quickCheck: "Add those three measurements and rerun diagnosis.",
+      part: t("diag_repair_part_not_verified", lang),
+      why: t("diag_repair_why_missing_data", lang),
+      nextTest: t("diag_repair_next_collect_data", lang),
+      quickCheck: t("diag_repair_quick_add_measurements", lang),
       priority: "High",
     });
   }
 
   if (boxTemp !== null && equipmentLow.includes("freezer") && boxTemp > 15) {
     repairItems.push({
-      part: "Door infiltration / heavy load / evaporator airflow",
-      why: "Box temperature is high, which may be adding excessive frost load.",
-      nextTest: "Inspect door opening frequency, gasket sealing, and evap fan airflow.",
-      quickCheck: "Check for snow/ice near entry and weak airflow across coil.",
+      part: t("diag_repair_part_door_load", lang),
+      why: t("diag_repair_why_box_temp_high", lang),
+      nextTest: t("diag_repair_next_door_freq", lang),
+      quickCheck: t("diag_repair_quick_snow_entry", lang),
       priority: "Medium",
     });
   }
@@ -910,7 +892,8 @@ export function buildEquipmentMemoryInsight(
     model: string;
     manufacturer: string;
     equipmentType: string;
-  }
+  },
+  lang: Language = "en"
 ): EquipmentMemoryInsight {
   const related = savedUnits.filter(
     (r) => r.id !== current.id && isRelatedRecord(current, r)
@@ -919,7 +902,7 @@ export function buildEquipmentMemoryInsight(
   if (!related.length) {
     return {
       relatedCount: 0,
-      summary: "No prior matching history found yet for this unit.",
+      summary: t("diag_memory_no_history", lang),
       repeatedSymptoms: [],
       repeatedCauses: [],
       repeatedMeasurementPatterns: [],
@@ -948,68 +931,66 @@ export function buildEquipmentMemoryInsight(
   for (const p of repeatedMeasurementPatterns) {
     const low = p.toLowerCase();
     if (low.includes("high total external static")) {
-      suggestionPool.push("Inspect filter, coil, and blower speed first");
+      suggestionPool.push(t("diag_suggest_filter_coil_blower", lang));
     }
     if (low.includes("high coil pressure drop")) {
-      suggestionPool.push("Inspect evaporator coil and blower setup");
+      suggestionPool.push(t("diag_suggest_evap_coil_blower", lang));
     }
     if (low.includes("high filter pressure drop")) {
-      suggestionPool.push("Check filter size, condition, and rack sealing");
+      suggestionPool.push(t("diag_suggest_filter_size", lang));
     }
     if (low.includes("return-side restriction")) {
-      suggestionPool.push("Check return duct, filter section, and return grilles");
+      suggestionPool.push(t("diag_suggest_return_duct", lang));
     }
     if (low.includes("supply-side restriction")) {
-      suggestionPool.push("Check supply duct restrictions and coil discharge path");
+      suggestionPool.push(t("diag_suggest_supply_duct", lang));
     }
     if (low.includes("undercharge pattern")) {
-      suggestionPool.push("Leak check refrigerant circuit before adding charge");
+      suggestionPool.push(t("diag_suggest_leak_check", lang));
     }
     if (low.includes("restriction / metering pattern")) {
-      suggestionPool.push("Check TXV / metering device and liquid line restrictions");
+      suggestionPool.push(t("diag_suggest_txv_check", lang));
     }
     if (low.includes("high superheat")) {
-      suggestionPool.push("Verify evaporator feed and refrigerant charge");
+      suggestionPool.push(t("diag_suggest_evap_feed", lang));
     }
     if (low.includes("low subcool")) {
-      suggestionPool.push("Verify charge level and liquid line integrity");
+      suggestionPool.push(t("diag_suggest_charge_liquid_line", lang));
     }
   }
 
   for (const c of repeatedCauses) {
     const low = c.toLowerCase();
     if (low.includes("fan")) {
-      suggestionPool.push("Inspect fan motor, blade, capacitor, and rotation");
+      suggestionPool.push(t("diag_suggest_fan_motor", lang));
     }
     if (low.includes("airflow")) {
-      suggestionPool.push("Check airflow before condemning refrigeration parts");
+      suggestionPool.push(t("diag_suggest_airflow_before_condemning", lang));
     }
     if (low.includes("capacitor")) {
-      suggestionPool.push("Test run capacitor and amp draw");
+      suggestionPool.push(t("diag_suggest_test_capacitor", lang));
     }
     if (low.includes("contactor")) {
-      suggestionPool.push("Inspect contactor points and coil voltage");
+      suggestionPool.push(t("diag_suggest_contactor_points", lang));
     }
     if (low.includes("compressor")) {
-      suggestionPool.push("Verify compressor amps, voltage, and overload condition");
+      suggestionPool.push(t("diag_suggest_compressor_amps", lang));
     }
     if (low.includes("thermostat") || low.includes("control")) {
-      suggestionPool.push("Verify thermostat signal and control sequence");
+      suggestionPool.push(t("diag_suggest_thermostat_signal", lang));
     }
   }
 
   const dedupedSuggestions = [...new Set(suggestionPool)].slice(0, 4);
 
-  let summary = `Found ${related.length} related prior service entr${
-    related.length === 1 ? "y" : "ies"
-  } for this unit or matching equipment.`;
+  let summary = t("diag_memory_found_related", lang).replace("{count}", String(related.length));
 
   if (repeatedMeasurementPatterns.length) {
-    summary = `This unit shows repeated pattern history. Most common pattern: ${repeatedMeasurementPatterns[0]}.`;
+    summary = t("diag_memory_pattern_summary", lang).replace("{value}", repeatedMeasurementPatterns[0]);
   } else if (repeatedCauses.length) {
-    summary = `This unit has repeat issue history. Most common likely cause: ${repeatedCauses[0]}.`;
+    summary = t("diag_memory_cause_summary", lang).replace("{value}", repeatedCauses[0]);
   } else if (repeatedSymptoms.length) {
-    summary = `This unit has repeated complaint history. Most common symptom: ${repeatedSymptoms[0]}.`;
+    summary = t("diag_memory_symptom_summary", lang).replace("{value}", repeatedSymptoms[0]);
   }
 
   return {
@@ -1061,6 +1042,7 @@ export function buildServiceReportHtml(args: {
   chargeAnalysis: ChargeAnalysis;
   airflowAnalysis: AirflowAnalysis;
   equipmentMemory: EquipmentMemoryInsight;
+  lang?: Language;
 }) {
 
   const {
@@ -1080,6 +1062,7 @@ export function buildServiceReportHtml(args: {
     chargeAnalysis,
     airflowAnalysis,
     equipmentMemory,
+    lang = "en",
   } = args;
 
   const now = new Date().toLocaleString();
@@ -1096,7 +1079,7 @@ export function buildServiceReportHtml(args: {
           `
         )
         .join("")
-    : `<tr><td colspan="3">No measurements entered.</td></tr>`;
+    : `<tr><td colspan="3">${escapeHtml(t("psr_no_measurements", lang))}</td></tr>`;
 
   const likelyCauseRows =
     parsed?.likely_causes?.length
@@ -1104,37 +1087,37 @@ export function buildServiceReportHtml(args: {
           .map(
             (c) => `
               <li>
-                <strong>${escapeHtml(c.cause || "Cause")}</strong>
+                <strong>${escapeHtml(c.cause || t("psr_cause_fallback", lang))}</strong>
                 ${typeof c.probability_percent === "number" ? ` — ${c.probability_percent}%` : ""}
                 ${c.why ? `<div class="muted">${escapeHtml(c.why)}</div>` : ""}
               </li>
             `
           )
           .join("")
-      : `<li>No likely causes available yet.</li>`;
+      : `<li>${escapeHtml(t("psr_no_likely_causes", lang))}</li>`;
 
   const memoryRows =
     equipmentMemory.suggestedFirstChecks.length
       ? equipmentMemory.suggestedFirstChecks
           .map((s) => `<li>${escapeHtml(s)}</li>`)
           .join("")
-      : `<li>No prior unit history suggestions yet.</li>`;
+      : `<li>${escapeHtml(t("psr_no_memory_suggestions", lang))}</li>`;
 
   const airflowRows =
     airflowAnalysis.findings.length
       ? airflowAnalysis.findings.map((f) => `<li>${escapeHtml(f)}</li>`).join("")
-      : `<li>No airflow findings yet.</li>`;
+      : `<li>${escapeHtml(t("psr_no_airflow_findings", lang))}</li>`;
 
   const chargeRows =
     chargeAnalysis.findings.length
       ? chargeAnalysis.findings.map((f) => `<li>${escapeHtml(f)}</li>`).join("")
-      : `<li>No charge findings yet.</li>`;
+      : `<li>${escapeHtml(t("psr_no_charge_findings", lang))}</li>`;
 
   return `<!doctype html>
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>HVAC Service Report</title>
+  <title>${escapeHtml(t("psr_title", lang))}</title>
   <style>
     body { font-family: Arial, Helvetica, sans-serif; color: #111; margin: 24px; line-height: 1.35; }
     h1, h2 { margin: 0 0 8px 0; }
@@ -1153,46 +1136,46 @@ export function buildServiceReportHtml(args: {
 <body>
   <div class="header">
     <div>
-      <h1>HVAC Service Report</h1>
-      <div class="muted">Generated ${escapeHtml(now)}</div>
+      <h1>${escapeHtml(t("psr_title", lang))}</h1>
+      <div class="muted">${escapeHtml(t("psr_generated", lang))} ${escapeHtml(now)}</div>
     </div>
     <div style="text-align:right">
-      <div><span class="label">Property Type:</span> ${escapeHtml(propertyType || "-")}</div>
-      <div><span class="label">Equipment Type:</span> ${escapeHtml(equipmentType || "-")}</div>
+      <div><span class="label">${escapeHtml(t("psr_property_type", lang))}</span> ${escapeHtml(propertyType || "-")}</div>
+      <div><span class="label">${escapeHtml(t("psr_equipment_type", lang))}</span> ${escapeHtml(equipmentType || "-")}</div>
     </div>
   </div>
 
   <div class="section">
-    <h2>Customer / Site / Unit</h2>
+    <h2>${escapeHtml(t("psr_section_customer_site_unit", lang))}</h2>
     <div class="grid">
-      <div><span class="label">Customer:</span> ${escapeHtml(customerName || "-")}</div>
-      <div><span class="label">Site:</span> ${escapeHtml(siteName || "-")}</div>
-      <div><span class="label">Address:</span> ${escapeHtml(siteAddress || "-")}</div>
-      <div><span class="label">Unit Tag:</span> ${escapeHtml(unitNickname || "-")}</div>
-      <div><span class="label">Manufacturer:</span> ${escapeHtml(manufacturer || "-")}</div>
-      <div><span class="label">Model:</span> ${escapeHtml(model || "-")}</div>
-      <div><span class="label">Refrigerant:</span> ${escapeHtml(refrigerantType || "-")}</div>
-      <div><span class="label">Nameplate Serial:</span> ${escapeHtml(nameplate?.serial || "-")}</div>
+      <div><span class="label">${escapeHtml(t("psr_customer", lang))}</span> ${escapeHtml(customerName || "-")}</div>
+      <div><span class="label">${escapeHtml(t("psr_site", lang))}</span> ${escapeHtml(siteName || "-")}</div>
+      <div><span class="label">${escapeHtml(t("psr_address", lang))}</span> ${escapeHtml(siteAddress || "-")}</div>
+      <div><span class="label">${escapeHtml(t("psr_unit_tag", lang))}</span> ${escapeHtml(unitNickname || "-")}</div>
+      <div><span class="label">${escapeHtml(t("psr_manufacturer", lang))}</span> ${escapeHtml(manufacturer || "-")}</div>
+      <div><span class="label">${escapeHtml(t("psr_model", lang))}</span> ${escapeHtml(model || "-")}</div>
+      <div><span class="label">${escapeHtml(t("psr_refrigerant", lang))}</span> ${escapeHtml(refrigerantType || "-")}</div>
+      <div><span class="label">${escapeHtml(t("psr_nameplate_serial", lang))}</span> ${escapeHtml(nameplate?.serial || "-")}</div>
     </div>
   </div>
 
   <div class="section">
-    <h2>Customer Complaint / Symptom</h2>
+    <h2>${escapeHtml(t("psr_section_complaint", lang))}</h2>
     <div>${escapeHtml(symptom || "-")}</div>
   </div>
 
   <div class="section">
-    <h2>Diagnosis Summary</h2>
-    <div>${escapeHtml(parsed?.summary || "No AI diagnosis summary available yet.")}</div>
+    <h2>${escapeHtml(t("psr_section_diagnosis_summary", lang))}</h2>
+    <div>${escapeHtml(parsed?.summary || t("psr_no_ai_summary", lang))}</div>
   </div>
 
   <div class="section">
-    <h2>Likely Causes</h2>
+    <h2>${escapeHtml(t("psr_section_likely_causes", lang))}</h2>
     <ul>${likelyCauseRows}</ul>
   </div>
 
   <div class="section">
-    <h2>Charge Analysis</h2>
+    <h2>${escapeHtml(t("psr_section_charge_analysis", lang))}</h2>
     <div>
       <span class="label">Delta-T:</span> ${chargeAnalysis.deltaT !== null ? `${chargeAnalysis.deltaT}°F` : "—"}
       <span class="pill">Evap Sat: ${chargeAnalysis.evapSat !== null ? `${chargeAnalysis.evapSat}°F` : "—"} / ${escapeHtml(chargeAnalysis.evapSatSource)}</span>
@@ -1200,12 +1183,12 @@ export function buildServiceReportHtml(args: {
       <span class="pill">SH: ${chargeAnalysis.superheat !== null ? `${chargeAnalysis.superheat}°F` : "—"}</span>
       <span class="pill">SC: ${chargeAnalysis.subcool !== null ? `${chargeAnalysis.subcool}°F` : "—"}</span>
     </div>
-    <div style="margin-top:8px"><span class="label">Summary:</span> ${escapeHtml(chargeAnalysis.summary)}</div>
+    <div style="margin-top:8px"><span class="label">${escapeHtml(t("psr_label_summary", lang))}</span> ${escapeHtml(chargeAnalysis.summary)}</div>
     <ul>${chargeRows}</ul>
   </div>
 
   <div class="section">
-    <h2>Airflow Analysis</h2>
+    <h2>${escapeHtml(t("psr_section_airflow_analysis", lang))}</h2>
     <div>
       <span class="pill">TESP: ${airflowAnalysis.totalExternalStatic !== null ? `${airflowAnalysis.totalExternalStatic} inWC` : "—"}</span>
       <span class="pill">Return: ${airflowAnalysis.returnStatic !== null ? `${airflowAnalysis.returnStatic} inWC` : "—"}</span>
@@ -1213,25 +1196,25 @@ export function buildServiceReportHtml(args: {
       <span class="pill">Filter Drop: ${airflowAnalysis.filterDrop !== null ? `${airflowAnalysis.filterDrop} inWC` : "—"}</span>
       <span class="pill">Coil Drop: ${airflowAnalysis.coilDrop !== null ? `${airflowAnalysis.coilDrop} inWC` : "—"}</span>
     </div>
-    <div style="margin-top:8px"><span class="label">Summary:</span> ${escapeHtml(airflowAnalysis.summary)}</div>
+    <div style="margin-top:8px"><span class="label">${escapeHtml(t("psr_label_summary", lang))}</span> ${escapeHtml(airflowAnalysis.summary)}</div>
     <ul>${airflowRows}</ul>
   </div>
 
   <div class="section">
-    <h2>Equipment Memory AI</h2>
-    <div><span class="label">Summary:</span> ${escapeHtml(equipmentMemory.summary)}</div>
-    <div class="muted">Related prior entries: ${equipmentMemory.relatedCount}</div>
+    <h2>${escapeHtml(t("psr_section_equipment_memory", lang))}</h2>
+    <div><span class="label">${escapeHtml(t("psr_label_summary", lang))}</span> ${escapeHtml(equipmentMemory.summary)}</div>
+    <div class="muted">${escapeHtml(t("psr_related_entries", lang))} ${equipmentMemory.relatedCount}</div>
     <ul>${memoryRows}</ul>
   </div>
 
   <div class="section">
-    <h2>Measurements / Observations</h2>
+    <h2>${escapeHtml(t("psr_section_measurements", lang))}</h2>
     <table>
       <thead>
         <tr>
-          <th>Measurement</th>
-          <th>Value</th>
-          <th>Note</th>
+          <th>${escapeHtml(t("psr_table_measurement", lang))}</th>
+          <th>${escapeHtml(t("psr_table_value", lang))}</th>
+          <th>${escapeHtml(t("psr_table_note", lang))}</th>
         </tr>
       </thead>
       <tbody>${obsRows}</tbody>
@@ -1239,14 +1222,14 @@ export function buildServiceReportHtml(args: {
   </div>
 
   <div class="section">
-    <h2>Recommended Next Actions</h2>
+    <h2>${escapeHtml(t("psr_section_next_actions", lang))}</h2>
     <ul>
       ${
         equipmentMemory.suggestedFirstChecks.length
           ? equipmentMemory.suggestedFirstChecks
               .map((s) => `<li>${escapeHtml(s)}</li>`)
               .join("")
-          : "<li>Continue collecting measurements and verify the sequence of operation.</li>"
+          : `<li>${escapeHtml(t("psr_next_actions_fallback", lang))}</li>`
       }
     </ul>
   </div>

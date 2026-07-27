@@ -4974,122 +4974,122 @@ function browserSupportsSmartReadingsDictation() {
         const partLower = selectedPart.toLowerCase();
 
         if (partLower.includes("contactor")) {
-          add("Verify line voltage into the contactor.");
-          add("Verify coil voltage when the call is present.");
-          add("Check line-to-load contact drop under load.");
-          add("Inspect for pitted contacts, overheated wires, and loose lugs.");
-          addNote("Do not replace the contactor without checking whether compressor/fan load caused the failure.");
+          add(t("pvc_contactor_1", lang));
+          add(t("pvc_contactor_2", lang));
+          add(t("pvc_contactor_3", lang));
+          add(t("pvc_contactor_4", lang));
+          addNote(t("pvc_note_contactor", lang));
         }
 
         if (partLower.includes("capacitor")) {
-          add("Test actual capacitance and compare against the rated µF.");
-          add("Verify supply voltage to the motor/compressor circuit.");
-          add("Check amp draw on the connected motor/compressor.");
-          add("Inspect for swelling, oil leakage, or overheated terminals.");
-          addNote("A failed capacitor can be the symptom of a weak motor or compressor.");
+          add(t("pvc_capacitor_1", lang));
+          add(t("pvc_capacitor_2", lang));
+          add(t("pvc_capacitor_3", lang));
+          add(t("pvc_capacitor_4", lang));
+          addNote(t("pvc_note_capacitor", lang));
         }
 
         if (partLower.includes("condenser fan motor")) {
-          add("Verify proper voltage to the fan motor.");
-          add("Check fan rotation and blade condition.");
-          add("Compare motor amp draw to expected operation.");
-          add("Inspect the coil for dirt and confirm heat rejection is not the root issue.");
+          add(t("pvc_cond_fan_1", lang));
+          add(t("pvc_cond_fan_2", lang));
+          add(t("pvc_cond_fan_3", lang));
+          add(t("pvc_cond_fan_4", lang));
           if (headPressure !== null && ambientTemp !== null && headPressure > ambientTemp * 3.2) {
-            addNote("High head relative to ambient supports heat-rejection verification before condemning the motor.");
+            addNote(t("pvc_note_cond_fan_head", lang));
           }
         }
 
         if (partLower.includes("evaporator fan motor")) {
-          add("Verify fan operation and correct rotation.");
-          add("Check voltage at the motor and any speed/module output.");
-          add("Inspect blade/wheel condition and airflow path.");
-          add("Check for ice, drain problems, and defrost issues affecting airflow.");
+          add(t("pvc_evap_fan_1", lang));
+          add(t("pvc_evap_fan_2", lang));
+          add(t("pvc_evap_fan_3", lang));
+          add(t("pvc_evap_fan_4", lang));
           if (deltaT !== null && deltaT < 14) {
-            addNote("Weak split supports airflow/fan verification before deeper refrigerant-side part swaps.");
+            addNote(t("pvc_note_evap_fan_split", lang));
           }
         }
 
         if (partLower.includes("defrost heater")) {
-          add("Ohm the heater for continuity with power isolated.");
-          add("Verify control/board output to the heater during defrost.");
-          add("Check termination and timer/schedule path.");
-          add("Inspect drain and ice pattern to verify the heater failure matches the symptom.");
-          addNote("A heater alone may not solve the issue if termination or schedule logic is wrong.");
+          add(t("pvc_defrost_heater_1", lang));
+          add(t("pvc_defrost_heater_2", lang));
+          add(t("pvc_defrost_heater_3", lang));
+          add(t("pvc_defrost_heater_4", lang));
+          addNote(t("pvc_note_defrost_heater", lang));
         }
 
         if (partLower.includes("defrost termination") || partLower.includes("defrost control")) {
-          add("Verify the defrost schedule and control output.");
-          add("Check termination state and whether the heater circuit is actually being commanded.");
-          add("Verify fan delay and drain heat path if applicable.");
-          add("Compare the timing logic to the actual icing pattern and box condition.");
-          addNote("Defrost control decisions should match the full sequence, not just the ice complaint.");
+          add(t("pvc_defrost_term_1", lang));
+          add(t("pvc_defrost_term_2", lang));
+          add(t("pvc_defrost_term_3", lang));
+          add(t("pvc_defrost_term_4", lang));
+          addNote(t("pvc_note_defrost_term", lang));
         }
 
         if (partLower.includes("txv") || partLower.includes("eev") || partLower.includes("metering")) {
-          add("Verify airflow before condemning the metering device.");
-          add("Compare frost pattern to superheat/subcool and overall load.");
-          add("Check for restriction points such as a filter drier or liquid-line issue.");
-          add("Confirm feed behavior matches the complaint before replacement.");
+          add(t("pvc_txv_1", lang));
+          add(t("pvc_txv_2", lang));
+          add(t("pvc_txv_3", lang));
+          add(t("pvc_txv_4", lang));
           if (superheat !== null && subcool !== null) {
-            addNote(`Current SH/SC context: SH ${superheat}°F, SC ${subcool}°F.`);
+            addNote(t("pvc_note_txv_shsc", lang).replace("{sh}", String(superheat)).replace("{sc}", String(subcool)));
           }
         }
 
         if (partLower.includes("blower motor")) {
-          add("Verify board/relay/module output to the blower.");
-          add("Check capacitor/module condition and motor amp draw.");
-          add("Inspect wheel cleanliness and airflow restrictions.");
-          add("Confirm drain safeties are not interrupting the indoor section.");
+          add(t("pvc_blower_1", lang));
+          add(t("pvc_blower_2", lang));
+          add(t("pvc_blower_3", lang));
+          add(t("pvc_blower_4", lang));
           if (deltaT !== null) {
-            addNote(`Current air split is ${deltaT}°F, which should be considered before replacing the blower.`);
+            addNote(t("pvc_note_blower_split", lang).replace("{value}", String(deltaT)));
           }
         }
 
         if (partLower.includes("float switch") || partLower.includes("drain safety")) {
-          add("Verify the drain condition and water level.");
-          add("Confirm switch continuity/open state matches the actual drain condition.");
-          add("Check whether the safety is interrupting the control circuit.");
-          add("Rule out a real drain issue before replacing the safety.");
+          add(t("pvc_float_1", lang));
+          add(t("pvc_float_2", lang));
+          add(t("pvc_float_3", lang));
+          add(t("pvc_float_4", lang));
         }
 
         if (partLower.includes("ignitor")) {
-          add("Verify call for heat and full ignition sequence.");
-          add("Check ignitor resistance/current draw as appropriate.");
-          add("Confirm board output to the ignitor.");
-          add("Verify the pressure switch and safety chain before replacing.");
+          add(t("pvc_ignitor_1", lang));
+          add(t("pvc_ignitor_2", lang));
+          add(t("pvc_ignitor_3", lang));
+          add(t("pvc_ignitor_4", lang));
         }
 
         if (partLower.includes("flame sensor")) {
-          add("Verify flame signal / proving before replacement.");
-          add("Inspect flame quality and burner carryover.");
-          add("Clean/test the sensor and confirm the board is receiving proof.");
-          add("Verify the issue is not upstream in ignition or gas delivery.");
+          add(t("pvc_flame_1", lang));
+          add(t("pvc_flame_2", lang));
+          add(t("pvc_flame_3", lang));
+          add(t("pvc_flame_4", lang));
         }
 
         if (partLower.includes("pressure switch")) {
-          add("Verify inducer operation and tubing condition.");
-          add("Confirm pressure switch closure/opening against actual draft conditions.");
-          add("Check venting and condensate traps if applicable.");
-          add("Verify board input state before replacing the switch.");
+          add(t("pvc_press_switch_1", lang));
+          add(t("pvc_press_switch_2", lang));
+          add(t("pvc_press_switch_3", lang));
+          add(t("pvc_press_switch_4", lang));
         }
 
         if (partLower.includes("water valve") || partLower.includes("water pump") || partLower.includes("sensor")) {
-          add("Separate sequence issues from actual component failure.");
-          add("Verify power/control to the component.");
-          add("Check the component response during the expected cycle.");
-          add("Confirm the symptom is water-side before replacing refrigeration-related parts.");
+          add(t("pvc_water_1", lang));
+          add(t("pvc_water_2", lang));
+          add(t("pvc_water_3", lang));
+          add(t("pvc_water_4", lang));
         }
 
         if (!checklist.length) {
-          add("Verify the selected part actually matches the target component and complaint.");
-          add("Check control call, power path, and the strongest repair-decision items first.");
-          add("Use readings/history/photo context before making a blind replacement.");
+          add(t("pvc_fallback_1", lang));
+          add(t("pvc_fallback_2", lang));
+          add(t("pvc_fallback_3", lang));
         }
 
         if (issue) {
-          addNote(`Current symptom context: ${issue}.`);
+          addNote(t("pvc_note_symptom_context", lang).replace("{value}", issue));
         }
-        addNote(`Target component: ${targetComponent}.`);
+        addNote(t("pvc_note_target_component", lang).replace("{value}", targetComponent));
 
         return {
           selectedPart,
@@ -5793,20 +5793,20 @@ useEffect(() => {
   const parsed = useMemo(() => parseDiagnosis(rawResult), [rawResult]);
 
   const chargeAnalysis = useMemo(
-    () => analyzeCharge(observations, equipmentType, refrigerantType),
-    [observations, equipmentType, refrigerantType]
+    () => analyzeCharge(observations, equipmentType, refrigerantType, lang),
+    [observations, equipmentType, refrigerantType, lang]
   );
 
-  const airflowAnalysis = useMemo(() => analyzeAirflow(observations), [observations]);
+  const airflowAnalysis = useMemo(() => analyzeAirflow(observations, lang), [observations, lang]);
 
 const defrostAnalysis = useMemo(
-  () => analyzeDefrost(observations, equipmentType, symptom),
-  [observations, equipmentType, symptom]
+  () => analyzeDefrost(observations, equipmentType, symptom, lang),
+  [observations, equipmentType, symptom, lang]
 );
 
 const defrostRepairGuidance = useMemo(
-  () => buildDefrostRepairGuidance(observations, equipmentType, symptom),
-  [observations, equipmentType, symptom]
+  () => buildDefrostRepairGuidance(observations, equipmentType, symptom, lang),
+  [observations, equipmentType, symptom, lang]
 );
 
   const equipmentMemory = useMemo(
@@ -5818,8 +5818,8 @@ const defrostRepairGuidance = useMemo(
         model,
         manufacturer,
         equipmentType,
-      }),
-    [savedUnits, customerName, siteName, unitNickname, model, manufacturer, equipmentType]
+      }, lang),
+    [savedUnits, customerName, siteName, unitNickname, model, manufacturer, equipmentType, lang]
   );
 
   const currentFlowNode = useMemo(
@@ -7173,6 +7173,7 @@ async function handleSignOut() {
       chargeAnalysis,
       airflowAnalysis,
       equipmentMemory,
+      lang,
     });
 
     const blob = new Blob([html], { type: "text/html" });
@@ -7180,7 +7181,7 @@ async function handleSignOut() {
     const win = window.open(url, "_blank", "noopener,noreferrer,width=1000,height=900");
 
     if (!win) {
-      alert("Popup blocked. Please allow popups for this site.");
+      alert(t("alert_popup_blocked", lang));
       URL.revokeObjectURL(url);
       return;
     }
@@ -10890,7 +10891,7 @@ return (
           </div>
 
           <div style={{ gridColumn: "1 / -1" }}>
-            <label style={{ fontWeight: 900 }}>Symptom</label>
+            <label style={{ fontWeight: 900 }}>{t("label_symptom", lang)}</label>
             <br />
             <textarea data-auto-grow="true" onInput={autoGrowTextarea}
               value={symptom}
@@ -10915,7 +10916,7 @@ return (
                 opacity: !browserSupportsFieldDictation() || symptomListening ? 0.7 : 1,
               }}
             >
-              {symptomListening ? "Listening..." : "Start Symptom Dictation"}
+              {symptomListening ? t("dictation_listening", lang) : t("btn_start_symptom_dictation", lang)}
             </button>
 
             <button
@@ -10934,19 +10935,19 @@ return (
                 opacity: symptomListening ? 1 : 0.7,
               }}
             >
-              Stop Dictation
+              {t("btn_stop_dictation", lang)}
             </button>
           </div>
 
           {!browserSupportsFieldDictation() ? (
             <SmallHint style={{ marginTop: 6 }}>
-              Dictation is not supported in this browser. Try Chrome or Edge.
+              {t("dictation_not_supported", lang)}
             </SmallHint>
           ) : null}
 
           {symptomDictationMessage ? (
             <SmallHint style={{ marginTop: 6 }}>
-              <b>Symptom Dictation:</b> {symptomDictationMessage}
+              <b>{t("label_symptom_dictation_colon", lang)}</b> {symptomDictationMessage}
             </SmallHint>
           ) : null}
 
@@ -10973,7 +10974,7 @@ return (
                   !browserSupportsSymptomDictation() || symptomListening ? 0.7 : 1,
               }}
             >
-              {symptomListening ? "Listening..." : "Start Symptom Dictation"}
+              {symptomListening ? t("dictation_listening", lang) : t("btn_start_symptom_dictation", lang)}
             </button>
 
             <button
@@ -10992,19 +10993,19 @@ return (
                 opacity: symptomListening ? 1 : 0.7,
               }}
             >
-              Stop Dictation
+              {t("btn_stop_dictation", lang)}
             </button>
           </div>
 
           {!browserSupportsSymptomDictation() ? (
             <SmallHint style={{ marginTop: 6 }}>
-              Dictation is not supported in this browser. Try Chrome or Edge.
+              {t("dictation_not_supported", lang)}
             </SmallHint>
           ) : null}
 
           {symptomDictationMessage ? (
             <SmallHint style={{ marginTop: 6 }}>
-              <b>Symptom Dictation:</b> {symptomDictationMessage}
+              <b>{t("label_symptom_dictation_colon", lang)}</b> {symptomDictationMessage}
             </SmallHint>
           ) : null}
 
@@ -11023,7 +11024,7 @@ return (
                   boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
                 }}
               >
-                No Cooling
+                {t("symptom_no_cooling", lang)}
               </button>
 
               <button
@@ -11039,7 +11040,7 @@ return (
                   boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
                 }}
               >
-                No Heat
+                {t("symptom_no_heat", lang)}
               </button>
 
               <button
@@ -11055,7 +11056,7 @@ return (
                   boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
                 }}
               >
-                Water Leak
+                {t("symptom_water_leak", lang)}
               </button>
 
               <button
@@ -11071,7 +11072,7 @@ return (
                   boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
                 }}
               >
-                Not Running
+                {t("symptom_not_running", lang)}
               </button>
 
               <button
@@ -11087,7 +11088,7 @@ return (
                   boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
                 }}
               >
-                Low Temp
+                {t("symptom_low_temp", lang)}
               </button>
 
               <button
@@ -11103,7 +11104,7 @@ return (
                   boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
                 }}
               >
-                High Temp
+                {t("symptom_high_temp", lang)}
               </button>
 
               <button
@@ -11119,7 +11120,7 @@ return (
                   boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
                 }}
               >
-                Noise
+                {t("symptom_noise", lang)}
               </button>
 
               <button
@@ -11135,7 +11136,7 @@ return (
                   boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
                 }}
               >
-                Maintenance
+                {t("symptom_maintenance", lang)}
               </button>
             </div>
 
@@ -11160,7 +11161,7 @@ return (
               boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
             }}
           >
-            {loading ? "Diagnosing..." : "Diagnose"}
+            {loading ? t("btn_diagnosing", lang) : t("btn_diagnose", lang)}
           </button>
 
           <button
@@ -11177,7 +11178,7 @@ return (
               boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
             }}
           >
-            Update diagnosis (with measurements)
+            {t("btn_update_diagnosis", lang)}
           </button>
 
           <button
@@ -11194,18 +11195,18 @@ return (
               boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
             }}
           >
-            {mpBusy ? "Finding..." : "Parts & Manuals"}
+            {mpBusy ? t("btn_finding", lang) : t("btn_parts_manuals", lang)}
           </button>
         </div>
       </div>
 
       <div style={{ marginTop: 10 }}>
         <SectionCard
-          title="Service Report Generator"
-          right={<PillButton text="Open printable report" onClick={openPrintableReport} />}
+          title={t("service_report_gen_title", lang)}
+          right={<PillButton text={t("btn_open_printable_report", lang)} onClick={openPrintableReport} />}
         >
           <SmallHint>
-            Opens a clean service report in a new tab. From there you can print it or save it as PDF.
+            {t("service_report_gen_hint", lang)}
           </SmallHint>
 
           <div
@@ -11217,7 +11218,7 @@ return (
               background: "#fafafa",
             }}
           >
-            <div style={{ fontWeight: 900 }}>Report Preview</div>
+            <div style={{ fontWeight: 900 }}>{t("label_report_preview", lang)}</div>
 
             <div
               style={{
@@ -11227,43 +11228,43 @@ return (
                 marginTop: 10,
               }}
             >
-              <div><b>Customer:</b> {customerName || "-"}</div>
-              <div><b>Company:</b> {unitProfileUnit?.companyName || "-"}</div>
-              <div><b>Site:</b> {siteName || "-"}</div>
-              <div><b>Address:</b> {siteAddress || "-"}</div>
-              <div><b>Unit Tag:</b> {unitNickname || "-"}</div>
-              <div><b>Manufacturer:</b> {manufacturer || "-"}</div>
-              <div><b>Model:</b> {model || "-"}</div>
-              <div><b>Equipment Type:</b> {equipmentType || "-"}</div>
-              <div><b>Refrigerant:</b> {refrigerantType || "-"}</div>
+              <div><b>{t("label_customer_colon", lang)}</b> {customerName || "-"}</div>
+              <div><b>{t("label_company_colon", lang)}</b> {unitProfileUnit?.companyName || "-"}</div>
+              <div><b>{t("label_site_colon", lang)}</b> {siteName || "-"}</div>
+              <div><b>{t("label_address_colon", lang)}</b> {siteAddress || "-"}</div>
+              <div><b>{t("label_unit_tag_colon", lang)}</b> {unitNickname || "-"}</div>
+              <div><b>{t("label_manufacturer_colon", lang)}</b> {manufacturer || "-"}</div>
+              <div><b>{t("label_model_colon", lang)}</b> {model || "-"}</div>
+              <div><b>{t("label_equipment_type_colon", lang)}</b> {equipmentType || "-"}</div>
+              <div><b>{t("label_refrigerant_colon", lang)}</b> {refrigerantType || "-"}</div>
             </div>
 
             <div>
-  <label style={{ fontWeight: 900 }}>Error Code (optional)</label>
+  <label style={{ fontWeight: 900 }}>{t("label_error_code_optional", lang)}</label>
   <br />
   <input
     value={errorCode}
     onChange={(e) => setErrorCode(e.target.value)}
-    placeholder="Example: E1, F2, 3 flashes, P4"
+    placeholder={t("placeholder_error_code_example", lang)}
     style={{ width: "100%", padding: 8 }}
   />
 </div>
 
 <div>
-  <label style={{ fontWeight: 900 }}>Error Code Source</label>
+  <label style={{ fontWeight: 900 }}>{t("label_error_code_source", lang)}</label>
   <br />
   <select
     value={errorCodeSource}
     onChange={(e) => setErrorCodeSource(e.target.value)}
     style={{ width: "100%", padding: 8 }}
   >
-    <option>Control Board</option>
-    <option>Thermostat</option>
-    <option>Indoor Unit</option>
-    <option>Outdoor Unit</option>
-    <option>Display Panel</option>
-    <option>Blink Code</option>
-    <option>Unknown</option>
+    <option value="Control Board">{t("error_source_control_board", lang)}</option>
+    <option value="Thermostat">{t("error_source_thermostat", lang)}</option>
+    <option value="Indoor Unit">{t("error_source_indoor_unit", lang)}</option>
+    <option value="Outdoor Unit">{t("error_source_outdoor_unit", lang)}</option>
+    <option value="Display Panel">{t("error_source_display_panel", lang)}</option>
+    <option value="Blink Code">{t("error_source_blink_code", lang)}</option>
+    <option value="Unknown">{t("error_source_unknown", lang)}</option>
   </select>
 </div>
 
