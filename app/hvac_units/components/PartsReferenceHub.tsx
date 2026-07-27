@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+import { useLang } from "../../components/LanguageContext";
+import { t, type Language } from "../../lib/translations";
 
 // ─── CAPACITOR CROSS-REFERENCE ────────────────────────────────
 type CapResult = {
@@ -12,10 +14,9 @@ type CapResult = {
   suppliers: { name: string; partNote: string }[];
 };
 
-function findCapacitor(mfd: string, voltage: string, type: string): CapResult | null {
+function findCapacitor(mfd: string, voltage: string, type: string, lang: Language): CapResult | null {
   if (!mfd || !voltage) return null;
   const mfdNum = parseFloat(mfd);
-  const voltNum = parseInt(voltage);
 
   const suppliers = [
     { name: "Johnstone Supply", partNote: `Search: ${mfd}MFD ${voltage}V ${type} capacitor` },
@@ -27,14 +28,14 @@ function findCapacitor(mfd: string, voltage: string, type: string): CapResult | 
     mfd,
     voltage,
     type,
-    terminals: type === "Dual Run" ? "C · FAN · HERM terminals" : "Two terminals",
+    terminals: type === "Dual Run" ? t("prh_terminals_dual", lang) : t("prh_terminals_two", lang),
     commonUse: type === "Dual Run"
-      ? `Compressor (HERM) + condenser fan motor (FAN) on the same unit. Most common on residential equipment.`
+      ? t("prh_cap_use_dual", lang)
       : mfdNum > 40
-        ? "Compressor start or large compressor run."
+        ? t("prh_cap_use_start_large", lang)
         : mfdNum > 10
-          ? "Compressor run — single section."
-          : "Fan motor run — single section.",
+          ? t("prh_cap_use_run_single", lang)
+          : t("prh_cap_use_fan_single", lang),
     suppliers,
   };
 }
@@ -51,35 +52,34 @@ type MotorResult = {
   searchTerms: string;
 };
 
-function findMotor(hp: string, rpm: string, voltage: string, frame: string, motorType: string): MotorResult | null {
+function findMotor(hp: string, rpm: string, voltage: string, frame: string, motorType: string, lang: Language): MotorResult | null {
   if (!hp || !rpm || !voltage) return null;
 
   const hpNum = parseFloat(hp);
-  const rpmNum = parseInt(rpm);
 
   let commonParts: { brand: string; series: string; note: string }[] = [];
-  let enclosure = "TEAO (Totally Enclosed Air Over)";
+  let enclosure = t("prh_enclosure_teao", lang);
 
   if (motorType === "condenser") {
-    enclosure = "TEAO";
+    enclosure = t("prh_enclosure_teao_short", lang);
     commonParts = [
-      { brand: "Fasco", series: "D series", note: `D${Math.round(hpNum * 100).toString().padStart(3, "0")} — verify frame and shaft specs` },
+      { brand: "Fasco", series: "D series", note: `D${Math.round(hpNum * 100).toString().padStart(3, "0")} — ${t("prh_motor_note_fasco_d", lang)}` },
       { brand: "Century / Genteq", series: "C series", note: "C" + Math.round(hpNum * 100).toString().padStart(3, "0") },
-      { brand: "AO Smith", series: "ORM series", note: "Outdoor rated — verify shaft diameter and length" },
+      { brand: "AO Smith", series: "ORM series", note: t("prh_motor_note_aosmith", lang) },
     ];
   } else if (motorType === "blower") {
-    enclosure = "Open Drip Proof (ODP) or PSC";
+    enclosure = t("prh_enclosure_odp_psc", lang);
     commonParts = [
-      { brand: "Fasco", series: "7000/8000 series", note: "ECM replacements available for most PSC blower motors" },
-      { brand: "Century / Genteq", series: "Evergreen series", note: "Universal ECM replacement — highly recommended" },
-      { brand: "US Motors", series: "Rescue EZ series", note: "Adjustable speed ECM — check torque specs" },
+      { brand: "Fasco", series: "7000/8000 series", note: t("prh_motor_note_fasco_blower", lang) },
+      { brand: "Century / Genteq", series: "Evergreen series", note: t("prh_motor_note_evergreen", lang) },
+      { brand: "US Motors", series: "Rescue EZ series", note: t("prh_motor_note_rescue", lang) },
     ];
   } else {
-    enclosure = "ODP or TEFC";
+    enclosure = t("prh_enclosure_odp_tefc", lang);
     commonParts = [
-      { brand: "Leeson", series: "C face motors", note: "Verify frame, shaft, and mounting" },
-      { brand: "Marathon", series: "Blue Max series", note: "Check HP, RPM, voltage, frame" },
-      { brand: "Baldor", series: "Super-E series", note: "Premium efficiency — verify frame" },
+      { brand: "Leeson", series: "C face motors", note: t("prh_motor_note_leeson", lang) },
+      { brand: "Marathon", series: "Blue Max series", note: t("prh_motor_note_marathon", lang) },
+      { brand: "Baldor", series: "Super-E series", note: t("prh_motor_note_baldor", lang) },
     ];
   }
 
@@ -88,7 +88,7 @@ function findMotor(hp: string, rpm: string, voltage: string, frame: string, moto
     rpm,
     voltage,
     frame,
-    rotation: "CW or CCW — verify existing motor rotation before ordering",
+    rotation: t("prh_motor_rotation", lang),
     enclosure,
     commonParts,
     searchTerms: `${hp} HP ${rpm} RPM ${voltage}V ${motorType} motor ${frame ? frame + " frame" : ""}`.trim(),
@@ -105,7 +105,7 @@ type ContactorResult = {
   searchTerms: string;
 };
 
-function findContactor(poles: string, amps: string, coilVoltage: string): ContactorResult | null {
+function findContactor(poles: string, amps: string, coilVoltage: string, lang: Language): ContactorResult | null {
   if (!poles || !amps || !coilVoltage) return null;
 
   const ampsNum = parseInt(amps);
@@ -115,17 +115,17 @@ function findContactor(poles: string, amps: string, coilVoltage: string): Contac
     {
       brand: "Honeywell / Resideo",
       part: `R8${poles === "2" ? "242" : "222"}A${ampsNum <= 30 ? "1032" : "1040"}`,
-      note: `${poles}-pole, ${amps}A, ${coilVoltage} coil — verify exact coil voltage`,
+      note: `${poles}-pole, ${amps}A, ${coilVoltage} coil — ${t("prh_cont_note_honeywell", lang)}`,
     },
     {
       brand: "Square D / Schneider",
       part: `LC1D${ampsNum <= 25 ? "18" : ampsNum <= 40 ? "32" : "50"}${coilV === "24" ? "BX" : "MX"}`,
-      note: "IEC style — verify dimensional fit if replacing direct",
+      note: t("prh_cont_note_square_d", lang),
     },
     {
       brand: "Packard",
       part: `C${poles}${ampsNum}A${coilV}`,
-      note: "OEM style replacement — widely available at HVAC distributors",
+      note: t("prh_cont_note_packard", lang),
     },
   ];
 
@@ -133,7 +133,7 @@ function findContactor(poles: string, amps: string, coilVoltage: string): Contac
     poles,
     amps,
     coilVoltage,
-    type: poles === "1" ? "Single pole — typically used for small loads or fan circuits" : "Two pole — standard compressor contactor",
+    type: poles === "1" ? t("prh_cont_type_single", lang) : t("prh_cont_type_two", lang),
     commonParts,
     searchTerms: `${poles} pole contactor ${amps} amp ${coilVoltage} coil HVAC`,
   };
@@ -153,6 +153,7 @@ function openSearch(query: string, supplier: string = "johnstone") {
 type Tab = "capacitor" | "motor" | "contactor";
 
 export function PartsReferenceHub() {
+  const { lang } = useLang();
   const [tab, setTab] = useState<Tab>("capacitor");
 
   // Capacitor state
@@ -192,19 +193,19 @@ export function PartsReferenceHub() {
   };
 
   const tabs: { key: Tab; label: string; icon: string }[] = [
-    { key: "capacitor", label: "Capacitors", icon: "⚡" },
-    { key: "motor", label: "Motors", icon: "🔄" },
-    { key: "contactor", label: "Contactors", icon: "🔌" },
+    { key: "capacitor", label: t("prh_tab_capacitors", lang), icon: "⚡" },
+    { key: "motor", label: t("prh_tab_motors", lang), icon: "🔄" },
+    { key: "contactor", label: t("prh_tab_contactors", lang), icon: "🔌" },
   ];
 
   return (
     <div>
       {/* Tabs */}
       <div style={{ display: "flex", background: "#f1f5f9", borderRadius: 10, padding: 4, marginBottom: 16 }}>
-        {tabs.map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)}
-            style={{ flex: 1, padding: "9px 0", borderRadius: 8, border: "none", background: tab === t.key ? "#fff" : "transparent", color: tab === t.key ? "#0f1f3d" : "#64748b", fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit", boxShadow: tab === t.key ? "0 1px 4px rgba(0,0,0,0.08)" : "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-            <span>{t.icon}</span><span>{t.label}</span>
+        {tabs.map(tb => (
+          <button key={tb.key} onClick={() => setTab(tb.key)}
+            style={{ flex: 1, padding: "9px 0", borderRadius: 8, border: "none", background: tab === tb.key ? "#fff" : "transparent", color: tab === tb.key ? "#0f1f3d" : "#64748b", fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit", boxShadow: tab === tb.key ? "0 1px 4px rgba(0,0,0,0.08)" : "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+            <span>{tb.icon}</span><span>{tb.label}</span>
           </button>
         ))}
       </div>
@@ -213,35 +214,35 @@ export function PartsReferenceHub() {
       {tab === "capacitor" && (
         <div>
           <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 8, padding: "8px 12px", marginBottom: 14, fontSize: 12, color: "#92400e" }}>
-            <strong>⚠️ Always verify:</strong> MFD rating must be within ±6% of original. Voltage rating must meet or exceed original — never go lower.
+            <strong>{t("prh_cap_verify_title", lang)}</strong> {t("prh_cap_verify_body", lang)}
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 12 }}>
             <div>
-              <label style={lbl}>MFD Rating</label>
+              <label style={lbl}>{t("prh_label_mfd", lang)}</label>
               <input style={inp} type="number" placeholder="e.g. 45/5, 35, 7.5" value={capMfd} onChange={e => setCapMfd(e.target.value)} />
-              <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 3 }}>For dual run: enter as "45/5" or just the compressor MFD</div>
+              <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 3 }}>{t("prh_mfd_hint", lang)}</div>
             </div>
             <div>
-              <label style={lbl}>Voltage Rating</label>
+              <label style={lbl}>{t("prh_label_voltage_rating", lang)}</label>
               <select style={inp} value={capVoltage} onChange={e => setCapVoltage(e.target.value)}>
-                <option value="370">370V — most common residential</option>
-                <option value="440">440V — can replace 370V</option>
-                <option value="370/440">370/440V — dual rated</option>
-                <option value="250">250V — small motors</option>
+                <option value="370">{t("prh_v370", lang)}</option>
+                <option value="440">{t("prh_v440", lang)}</option>
+                <option value="370/440">{t("prh_v370_440", lang)}</option>
+                <option value="250">{t("prh_v250", lang)}</option>
               </select>
             </div>
             <div>
-              <label style={lbl}>Type</label>
+              <label style={lbl}>{t("prh_label_type", lang)}</label>
               <select style={inp} value={capType} onChange={e => setCapType(e.target.value)}>
-                <option>Dual Run</option>
-                <option>Single Run — Compressor</option>
-                <option>Single Run — Fan</option>
-                <option>Start Capacitor</option>
+                <option value="Dual Run">{t("prh_type_dual_run", lang)}</option>
+                <option value="Single Run — Compressor">{t("prh_type_single_run_comp", lang)}</option>
+                <option value="Single Run — Fan">{t("prh_type_single_run_fan", lang)}</option>
+                <option value="Start Capacitor">{t("prh_type_start_cap", lang)}</option>
               </select>
             </div>
           </div>
-          <button style={searchBtn} onClick={() => setCapResult(findCapacitor(capMfd, capVoltage, capType))}>
-            Find Capacitor
+          <button style={searchBtn} onClick={() => setCapResult(findCapacitor(capMfd, capVoltage, capType, lang))}>
+            {t("btn_find_capacitor", lang)}
           </button>
 
           {capResult && (
@@ -250,16 +251,16 @@ export function PartsReferenceHub() {
                 <div style={{ fontSize: 14, fontWeight: 800, color: "#166534", marginBottom: 6 }}>
                   {capResult.mfd} MFD · {capResult.voltage}V · {capResult.type}
                 </div>
-                <div style={{ fontSize: 13, color: "#374151", marginBottom: 4 }}><strong>Terminals:</strong> {capResult.terminals}</div>
-                <div style={{ fontSize: 13, color: "#374151" }}><strong>Common use:</strong> {capResult.commonUse}</div>
+                <div style={{ fontSize: 13, color: "#374151", marginBottom: 4 }}><strong>{t("prh_label_terminals", lang)}</strong> {capResult.terminals}</div>
+                <div style={{ fontSize: 13, color: "#374151" }}><strong>{t("prh_label_common_use", lang)}</strong> {capResult.commonUse}</div>
               </div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "#64748b", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>Search suppliers</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#64748b", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>{t("prh_search_suppliers", lang)}</div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8 }}>
                 {capResult.suppliers.map(s => (
                   <button key={s.name} onClick={() => openSearch(s.partNote.replace("Search: ", ""), s.name.toLowerCase().includes("grainger") ? "grainger" : s.name.toLowerCase().includes("amazon") ? "amazon" : "johnstone")}
                     style={{ padding: "10px 12px", background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, cursor: "pointer", fontFamily: "inherit", textAlign: "left" as const }}>
                     <div style={{ fontSize: 12, fontWeight: 700, color: "#0f1f3d" }}>{s.name}</div>
-                    <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 2 }}>Opens in new tab →</div>
+                    <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 2 }}>{t("prh_opens_new_tab", lang)}</div>
                   </button>
                 ))}
               </div>
@@ -272,31 +273,31 @@ export function PartsReferenceHub() {
       {tab === "motor" && (
         <div>
           <div style={{ background: "#eff6ff", border: "1px solid #bae6fd", borderRadius: 8, padding: "8px 12px", marginBottom: 14, fontSize: 12, color: "#1d4ed8" }}>
-            <strong>📋 Before ordering:</strong> Note shaft diameter, shaft length, rotation direction, and mounting type. ECM replacements available for most PSC blower motors — worth considering.
+            <strong>{t("prh_motor_before_ordering", lang)}</strong> {t("prh_motor_before_body", lang)}
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
             <div>
-              <label style={lbl}>Motor Type</label>
+              <label style={lbl}>{t("prh_label_motor_type", lang)}</label>
               <select style={inp} value={motorType} onChange={e => setMotorType(e.target.value)}>
-                <option value="condenser">Condenser Fan Motor</option>
-                <option value="blower">Blower / Air Handler Motor</option>
-                <option value="exhaust">Exhaust / Ventilation Fan</option>
+                <option value="condenser">{t("prh_motor_type_condenser", lang)}</option>
+                <option value="blower">{t("prh_motor_type_blower", lang)}</option>
+                <option value="exhaust">{t("prh_motor_type_exhaust", lang)}</option>
               </select>
             </div>
             <div>
-              <label style={lbl}>Horsepower (HP)</label>
+              <label style={lbl}>{t("prh_label_hp", lang)}</label>
               <select style={inp} value={motorHp} onChange={e => setMotorHp(e.target.value)}>
-                <option value="">Select HP...</option>
+                <option value="">{t("prh_select_hp", lang)}</option>
                 {["1/20","1/15","1/12","1/10","1/8","1/6","1/5","1/4","1/3","1/2","3/4","1","1.5","2","3","5"].map(h => (
                   <option key={h} value={h}>{h} HP</option>
                 ))}
               </select>
             </div>
             <div>
-              <label style={lbl}>RPM</label>
+              <label style={lbl}>{t("prh_label_rpm", lang)}</label>
               <select style={inp} value={motorRpm} onChange={e => setMotorRpm(e.target.value)}>
                 <option value="825">825 RPM</option>
-                <option value="1075">1075 RPM — most common</option>
+                <option value="1075">{t("prh_rpm_most_common", lang)}</option>
                 <option value="1100">1100 RPM</option>
                 <option value="1200">1200 RPM</option>
                 <option value="1550">1550 RPM</option>
@@ -306,21 +307,21 @@ export function PartsReferenceHub() {
               </select>
             </div>
             <div>
-              <label style={lbl}>Voltage</label>
+              <label style={lbl}>{t("prh_label_voltage", lang)}</label>
               <select style={inp} value={motorVoltage} onChange={e => setMotorVoltage(e.target.value)}>
                 <option value="115">115V</option>
-                <option value="208-230">208-230V — most common</option>
-                <option value="460">460V — 3-phase</option>
-                <option value="208-230/460">208-230/460V — dual voltage</option>
+                <option value="208-230">{t("prh_v208_230_common", lang)}</option>
+                <option value="460">{t("prh_v460_3ph", lang)}</option>
+                <option value="208-230/460">{t("prh_v208_230_460", lang)}</option>
               </select>
             </div>
           </div>
           <div style={{ marginBottom: 12 }}>
-            <label style={lbl}>Frame (optional — e.g. 48, 56)</label>
-            <input style={inp} placeholder="e.g. 48, 56 — check motor nameplate" value={motorFrame} onChange={e => setMotorFrame(e.target.value)} />
+            <label style={lbl}>{t("prh_label_frame", lang)}</label>
+            <input style={inp} placeholder={t("prh_frame_placeholder", lang)} value={motorFrame} onChange={e => setMotorFrame(e.target.value)} />
           </div>
-          <button style={searchBtn} onClick={() => setMotorResult(findMotor(motorHp, motorRpm, motorVoltage, motorFrame, motorType))} disabled={!motorHp}>
-            Find Motor
+          <button style={searchBtn} onClick={() => setMotorResult(findMotor(motorHp, motorRpm, motorVoltage, motorFrame, motorType, lang))} disabled={!motorHp}>
+            {t("btn_find_motor", lang)}
           </button>
 
           {motorResult && (
@@ -328,13 +329,13 @@ export function PartsReferenceHub() {
               <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 10, padding: "12px 14px" }}>
                 <div style={{ fontSize: 14, fontWeight: 800, color: "#166534", marginBottom: 4 }}>
                   {motorResult.hp} HP · {motorResult.rpm} RPM · {motorResult.voltage}V
-                  {motorResult.frame ? ` · Frame ${motorResult.frame}` : ""}
+                  {motorResult.frame ? ` ${t("prh_label_frame_colon", lang)} ${motorResult.frame}` : ""}
                 </div>
-                <div style={{ fontSize: 12, color: "#374151", marginBottom: 2 }}><strong>Enclosure:</strong> {motorResult.enclosure}</div>
+                <div style={{ fontSize: 12, color: "#374151", marginBottom: 2 }}><strong>{t("prh_label_enclosure", lang)}</strong> {motorResult.enclosure}</div>
                 <div style={{ fontSize: 12, color: "#dc2626" }}><strong>⚠ {motorResult.rotation}</strong></div>
               </div>
               <div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: "#64748b", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 8 }}>Common replacements</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#64748b", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 8 }}>{t("prh_label_common_replacements", lang)}</div>
                 <div style={{ display: "flex", flexDirection: "column" as const, gap: 6 }}>
                   {motorResult.commonParts.map(p => (
                     <div key={p.brand} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: "10px 14px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
@@ -344,7 +345,7 @@ export function PartsReferenceHub() {
                       </div>
                       <button onClick={() => openSearch(motorResult.searchTerms)}
                         style={{ padding: "5px 12px", background: "#0f1f3d", color: "#fff", border: "none", borderRadius: 6, fontWeight: 700, fontSize: 11, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}>
-                        Search →
+                        {t("btn_search_arrow", lang)}
                       </button>
                     </div>
                   ))}
@@ -359,19 +360,19 @@ export function PartsReferenceHub() {
       {tab === "contactor" && (
         <div>
           <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 8, padding: "8px 12px", marginBottom: 14, fontSize: 12, color: "#92400e" }}>
-            <strong>⚠️ Always verify:</strong> Coil voltage (almost always 24V on residential), amp rating, number of poles, and that contacts aren't just dirty — clean before condemning.
+            <strong>{t("prh_cont_verify_title", lang)}</strong> {t("prh_cont_verify_body", lang)}
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 12 }}>
             <div>
-              <label style={lbl}>Number of Poles</label>
+              <label style={lbl}>{t("prh_label_poles", lang)}</label>
               <select style={inp} value={contPoles} onChange={e => setContPoles(e.target.value)}>
-                <option value="1">1 Pole — single phase small load</option>
-                <option value="2">2 Pole — standard compressor</option>
-                <option value="3">3 Pole — 3-phase equipment</option>
+                <option value="1">{t("prh_pole1", lang)}</option>
+                <option value="2">{t("prh_pole2", lang)}</option>
+                <option value="3">{t("prh_pole3", lang)}</option>
               </select>
             </div>
             <div>
-              <label style={lbl}>Amp Rating (FLA)</label>
+              <label style={lbl}>{t("prh_label_amp_rating", lang)}</label>
               <select style={inp} value={contAmps} onChange={e => setContAmps(e.target.value)}>
                 {["20","25","30","40","50","60","75","90","100"].map(a => (
                   <option key={a} value={a}>{a}A</option>
@@ -379,40 +380,40 @@ export function PartsReferenceHub() {
               </select>
             </div>
             <div>
-              <label style={lbl}>Coil Voltage</label>
+              <label style={lbl}>{t("prh_label_coil_voltage", lang)}</label>
               <select style={inp} value={contCoil} onChange={e => setContCoil(e.target.value)}>
-                <option value="24V">24V — standard residential/light commercial</option>
+                <option value="24V">{t("prh_coil_24v", lang)}</option>
                 <option value="120V">120V</option>
                 <option value="208-240V">208-240V</option>
-                <option value="480V">480V — 3-phase</option>
+                <option value="480V">{t("prh_coil_480v", lang)}</option>
               </select>
             </div>
           </div>
-          <button style={searchBtn} onClick={() => setContResult(findContactor(contPoles, contAmps, contCoil))}>
-            Find Contactor
+          <button style={searchBtn} onClick={() => setContResult(findContactor(contPoles, contAmps, contCoil, lang))}>
+            {t("btn_find_contactor", lang)}
           </button>
 
           {contResult && (
             <div style={{ marginTop: 14, display: "flex", flexDirection: "column" as const, gap: 10 }}>
               <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 10, padding: "12px 14px" }}>
                 <div style={{ fontSize: 14, fontWeight: 800, color: "#166534", marginBottom: 4 }}>
-                  {contResult.poles}-Pole · {contResult.amps}A · {contResult.coilVoltage} Coil
+                  {contResult.poles}-Pole · {contResult.amps}A · {contResult.coilVoltage} {t("prh_pole_coil", lang)}
                 </div>
                 <div style={{ fontSize: 12, color: "#374151" }}>{contResult.type}</div>
               </div>
               <div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: "#64748b", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 8 }}>Common replacements</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#64748b", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginBottom: 8 }}>{t("prh_label_common_replacements", lang)}</div>
                 <div style={{ display: "flex", flexDirection: "column" as const, gap: 6 }}>
                   {contResult.commonParts.map(p => (
                     <div key={p.brand} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: "10px 14px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
                       <div>
                         <div style={{ fontSize: 13, fontWeight: 700, color: "#1e293b" }}>{p.brand}</div>
-                        <div style={{ fontSize: 12, color: "#374151", marginTop: 1 }}>Part ref: {p.part}</div>
+                        <div style={{ fontSize: 12, color: "#374151", marginTop: 1 }}>{t("prh_part_ref", lang)} {p.part}</div>
                         <div style={{ fontSize: 11, color: "#64748b", marginTop: 1 }}>{p.note}</div>
                       </div>
                       <button onClick={() => openSearch(contResult.searchTerms)}
                         style={{ padding: "5px 12px", background: "#0f1f3d", color: "#fff", border: "none", borderRadius: 6, fontWeight: 700, fontSize: 11, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}>
-                        Search →
+                        {t("btn_search_arrow", lang)}
                       </button>
                     </div>
                   ))}
@@ -424,7 +425,7 @@ export function PartsReferenceHub() {
       )}
 
       <div style={{ marginTop: 14, fontSize: 11, color: "#94a3b8", lineHeight: 1.6 }}>
-        Cross-reference results are starting points — always verify part numbers and specs against the original nameplate before ordering.
+        {t("prh_footer_disclaimer", lang)}
       </div>
     </div>
   );
