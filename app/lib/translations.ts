@@ -2312,6 +2312,28 @@ export const translations = {
   wr5_tip4: { en: "Safety controls in series means any open switch kills the call. High pressure, low pressure, limit, freeze stat — measure across each one with R to see which one is open.", es: "Los controles de seguridad en serie significan que cualquier interruptor abierto mata la llamada. Alta presión, baja presión, limitador, termostato anticongelante — mide a través de cada uno con R para ver cuál está abierto." },
   wr5_tip5: { en: "Jump R to Y at the board carefully and only momentarily to isolate thermostat vs board vs wiring. Never jump R to Y at the thermostat terminals.", es: "Puentea R a Y en la tarjeta con cuidado y solo momentáneamente para aislar termostato vs tarjeta vs cableado. Nunca puentees R a Y en las terminales del termostato." },
   wr5_tip6: { en: "Voltage drop under load: a marginal transformer may read 26V with no load and drop to 18V under load. Measure with the system running, not just when the system is off.", es: "Caída de voltaje bajo carga: un transformador marginal puede marcar 26V sin carga y caer a 18V bajo carga. Mide con el sistema funcionando, no solo cuando el sistema está apagado." },
+
+  // ── Parts & Manuals Assist ───────────────────────────────────
+  pma_enter_manufacturer_hint: { en: "Enter manufacturer, model, and equipment type to improve manual and parts suggestions.", es: "Ingresa el fabricante, modelo, y tipo de equipo para mejorar las sugerencias de manuales y partes." },
+  pma_manual_search: { en: "Manual Search:", es: "Búsqueda de Manual:" },
+  pma_current_symptom_search: { en: "Current Symptom Search:", es: "Búsqueda del Síntoma Actual:" },
+  pma_history_hint: { en: "History hint:", es: "Pista del historial:" },
+  pma_history_hint_body: { en: "Based on this unit's saved history, start by checking {value}.", es: "Según el historial guardado de esta unidad, empieza por revisar {value}." },
+  pma_history_based_parts: { en: "History-Based Likely Parts", es: "Partes Probables Basadas en Historial" },
+  pma_no_likely_parts: { en: "No likely parts yet. Add more history or a symptom to improve suggestions.", es: "Aún no hay partes probables. Agrega más historial o un síntoma para mejorar las sugerencias." },
+  btn_open_manual_search: { en: "Open Manual Search", es: "Abrir Búsqueda de Manual" },
+  btn_open_broad_parts_search: { en: "Open Broad Parts Search", es: "Abrir Búsqueda Amplia de Partes" },
+  btn_open_history_aware_search: { en: "Open History-Aware Parts Search", es: "Abrir Búsqueda de Partes Basada en Historial" },
+  part_capacitor: { en: "Capacitor", es: "Capacitor" },
+  part_contactor: { en: "Contactor", es: "Contactor" },
+  part_motor: { en: "Motor", es: "Motor" },
+  part_compressor: { en: "Compressor", es: "Compresor" },
+  part_refrigerant_circuit: { en: "Refrigerant Circuit", es: "Circuito de Refrigerante" },
+  part_filter_drier: { en: "Filter/Drier", es: "Filtro/Secador" },
+  part_sensor: { en: "Sensor", es: "Sensor" },
+  part_control_board: { en: "Control Board", es: "Tarjeta de Control" },
+  part_drain_float_switch: { en: "Drain / Float Switch", es: "Drenaje / Interruptor de Flotador" },
+  part_txv: { en: "TXV", es: "TXV" },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

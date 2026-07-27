@@ -2,6 +2,8 @@
 
 import { SmallHint } from "./SmallHint";
 import { useJobIdentity } from "../context/JobIdentity";
+import { useLang } from "../../components/LanguageContext";
+import { t } from "../../lib/translations";
 
 type ServiceEvent = {
   final_confirmed_cause?: string | null;
@@ -16,6 +18,7 @@ export function PartsManualsAssist({
   equipmentType: string;
   serviceHistory: ServiceEvent[];
 }) {
+  const { lang } = useLang();
   const { manufacturer, model, symptom } = useJobIdentity();
 
   const baseUnitQuery = [manufacturer, model, equipmentType]
@@ -84,16 +87,16 @@ export function PartsManualsAssist({
     const v = String(value || "").toLowerCase();
     const out: string[] = [];
 
-    if (v.includes("capacitor")) out.push("Capacitor");
-    if (v.includes("contactor")) out.push("Contactor");
-    if (v.includes("motor") || v.includes("blower") || v.includes("fan")) out.push("Motor");
-    if (v.includes("compressor")) out.push("Compressor");
-    if (v.includes("refrigerant") || v.includes("low charge") || v.includes("low temp")) out.push("Refrigerant Circuit");
-    if (v.includes("drier") || v.includes("filter")) out.push("Filter/Drier");
-    if (v.includes("sensor")) out.push("Sensor");
-    if (v.includes("control") || v.includes("board")) out.push("Control Board");
-    if (v.includes("drain") || v.includes("water leak") || v.includes("float")) out.push("Drain / Float Switch");
-    if (v.includes("txv")) out.push("TXV");
+    if (v.includes("capacitor")) out.push(t("part_capacitor", lang));
+    if (v.includes("contactor")) out.push(t("part_contactor", lang));
+    if (v.includes("motor") || v.includes("blower") || v.includes("fan")) out.push(t("part_motor", lang));
+    if (v.includes("compressor")) out.push(t("part_compressor", lang));
+    if (v.includes("refrigerant") || v.includes("low charge") || v.includes("low temp")) out.push(t("part_refrigerant_circuit", lang));
+    if (v.includes("drier") || v.includes("filter")) out.push(t("part_filter_drier", lang));
+    if (v.includes("sensor")) out.push(t("part_sensor", lang));
+    if (v.includes("control") || v.includes("board")) out.push(t("part_control_board", lang));
+    if (v.includes("drain") || v.includes("water leak") || v.includes("float")) out.push(t("part_drain_float_switch", lang));
+    if (v.includes("txv")) out.push(t("part_txv", lang));
 
     return out;
   };
@@ -109,7 +112,7 @@ export function PartsManualsAssist({
 
   return !baseUnitQuery ? (
     <SmallHint>
-      Enter manufacturer, model, and equipment type to improve manual and parts suggestions.
+      {t("pma_enter_manufacturer_hint", lang)}
     </SmallHint>
   ) : (
     <div style={{ display: "grid", gap: 10 }}>
@@ -121,10 +124,10 @@ export function PartsManualsAssist({
         }}
       >
         <div>
-          <b>Manual Search:</b> {manualSearchQuery || "-"}
+          <b>{t("pma_manual_search", lang)}</b> {manualSearchQuery || "-"}
         </div>
         <div>
-          <b>Current Symptom Search:</b> {broadPartsSearchQuery || "-"}
+          <b>{t("pma_current_symptom_search", lang)}</b> {broadPartsSearchQuery || "-"}
         </div>
       </div>
 
@@ -137,8 +140,10 @@ export function PartsManualsAssist({
         }}
       >
         <SmallHint>
-          <b>History hint:</b> Based on this unit’s saved history, start by checking{" "}
-          <b>{likelyCheck}</b>.
+          <b>{t("pma_history_hint", lang)}</b>{" "}
+          {t("pma_history_hint_body", lang).split("{value}")[0]}
+          <b>{likelyCheck}</b>
+          {t("pma_history_hint_body", lang).split("{value}")[1]}
         </SmallHint>
       </div>
 
@@ -150,7 +155,7 @@ export function PartsManualsAssist({
           background: "#fafafa",
         }}
       >
-        <div style={{ fontWeight: 900, marginBottom: 8 }}>History-Based Likely Parts</div>
+        <div style={{ fontWeight: 900, marginBottom: 8 }}>{t("pma_history_based_parts", lang)}</div>
 
         {suggestedParts.length ? (
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -173,7 +178,7 @@ export function PartsManualsAssist({
             ))}
           </div>
         ) : (
-          <SmallHint>No likely parts yet. Add more history or a symptom to improve suggestions.</SmallHint>
+          <SmallHint>{t("pma_no_likely_parts", lang)}</SmallHint>
         )}
       </div>
 
@@ -197,7 +202,7 @@ export function PartsManualsAssist({
             boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
           }}
         >
-          Open Manual Search
+          {t("btn_open_manual_search", lang)}
         </button>
 
         <button
@@ -219,7 +224,7 @@ export function PartsManualsAssist({
             boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
           }}
         >
-          Open Broad Parts Search
+          {t("btn_open_broad_parts_search", lang)}
         </button>
 
         <button
@@ -241,7 +246,7 @@ export function PartsManualsAssist({
             boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
           }}
         >
-          Open History-Aware Parts Search
+          {t("btn_open_history_aware_search", lang)}
         </button>
       </div>
     </div>
