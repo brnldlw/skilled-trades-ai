@@ -1,6 +1,8 @@
 "use client";
 
 import { SmallHint } from "./SmallHint";
+import { useLang } from "../../components/LanguageContext";
+import { t } from "../../lib/translations";
 
 type Drafts = {
   customerSummary: string;
@@ -50,6 +52,7 @@ export function DiagnosticCloseoutBuilder({
   onStartFollowUpDictation: () => void;
   onStopFollowUpDictation: () => void;
 }) {
+  const { lang } = useLang();
   const followUpDictationSupported = browserSupportsFollowUpDictation();
 
   return (
@@ -65,26 +68,26 @@ export function DiagnosticCloseoutBuilder({
       }}
     >
       <div style={{ fontWeight: 900, fontSize: 16 }}>
-        One-Tap Diagnostic Closeout Builder
+        {t("closeout_builder_title", lang)}
       </div>
 
       <SmallHint>
-        Builds a customer-friendly explanation, an internal tech summary, and a follow-up note from the current call data.
+        {t("closeout_builder_hint", lang)}
       </SmallHint>
 
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
         <button type="button" onClick={onGenerate} style={btnStyle}>
-          Generate Closeout Drafts
+          {t("btn_generate_closeout_drafts", lang)}
         </button>
 
         <button type="button" onClick={onPushInternalSummary} style={btnStyle}>
-          Add Internal Summary to Tech Notes
+          {t("btn_add_internal_summary", lang)}
         </button>
       </div>
 
       {message ? (
         <SmallHint>
-          <b>Closeout Builder:</b> {message}
+          <b>{t("label_closeout_builder_colon", lang)}</b> {message}
         </SmallHint>
       ) : null}
 
@@ -105,7 +108,7 @@ export function DiagnosticCloseoutBuilder({
             gap: 8,
           }}
         >
-          <div style={{ fontWeight: 900 }}>Customer Summary</div>
+          <div style={{ fontWeight: 900 }}>{t("label_customer_summary", lang)}</div>
           <textarea
             data-auto-grow="true"
             onInput={onAutoGrow}
@@ -115,7 +118,7 @@ export function DiagnosticCloseoutBuilder({
             style={{ width: "100%", padding: 8 }}
           />
           <button type="button" onClick={() => onCopy("customerSummary")} style={btnStyle}>
-            Copy Customer Summary
+            {t("btn_copy_customer_summary", lang)}
           </button>
         </div>
 
@@ -129,7 +132,7 @@ export function DiagnosticCloseoutBuilder({
             gap: 8,
           }}
         >
-          <div style={{ fontWeight: 900 }}>Internal Tech Summary</div>
+          <div style={{ fontWeight: 900 }}>{t("label_internal_tech_summary", lang)}</div>
           <textarea
             data-auto-grow="true"
             onInput={onAutoGrow}
@@ -139,7 +142,7 @@ export function DiagnosticCloseoutBuilder({
             style={{ width: "100%", padding: 8 }}
           />
           <button type="button" onClick={() => onCopy("internalSummary")} style={btnStyle}>
-            Copy Internal Summary
+            {t("btn_copy_internal_summary", lang)}
           </button>
         </div>
 
@@ -153,7 +156,7 @@ export function DiagnosticCloseoutBuilder({
             gap: 8,
           }}
         >
-          <div style={{ fontWeight: 900 }}>Recommended Follow-Up</div>
+          <div style={{ fontWeight: 900 }}>{t("label_recommended_followup", lang)}</div>
           <textarea
             data-auto-grow="true"
             onInput={onAutoGrow}
@@ -181,7 +184,7 @@ export function DiagnosticCloseoutBuilder({
                 opacity: !followUpDictationSupported || followUpListening ? 0.7 : 1,
               }}
             >
-              {followUpListening ? "Listening..." : "Start Follow-Up Dictation"}
+              {followUpListening ? t("dictation_listening", lang) : t("btn_start_followup_dictation", lang)}
             </button>
 
             <button
@@ -200,24 +203,24 @@ export function DiagnosticCloseoutBuilder({
                 opacity: followUpListening ? 1 : 0.7,
               }}
             >
-              Stop Dictation
+              {t("btn_stop_dictation", lang)}
             </button>
           </div>
 
           {!followUpDictationSupported ? (
             <SmallHint style={{ marginTop: 6 }}>
-              Dictation is not supported in this browser. Try Chrome or Edge.
+              {t("dictation_not_supported", lang)}
             </SmallHint>
           ) : null}
 
           {followUpDictationMessage ? (
             <SmallHint style={{ marginTop: 6 }}>
-              <b>Follow-Up Dictation:</b> {followUpDictationMessage}
+              <b>{t("label_followup_dictation_colon", lang)}</b> {followUpDictationMessage}
             </SmallHint>
           ) : null}
 
           <button type="button" onClick={() => onCopy("followUp")} style={btnStyle}>
-            Copy Follow-Up
+            {t("btn_copy_followup", lang)}
           </button>
         </div>
       </div>

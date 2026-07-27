@@ -8382,18 +8382,18 @@ return (
             gap: 6,
           }}
         >
-          <div style={{ fontWeight: 900, fontSize: 18 }}>Step 5 — Closeout + Follow-Up</div>
+          <div style={{ fontWeight: 900, fontSize: 18 }}>{t("step5_title", lang)}</div>
           <SmallHint>
-            Commit what was verified or replaced, generate the closeout, and leave with a follow-up watchlist that lowers callback risk.
+            {t("step5_hint", lang)}
           </SmallHint>
         </div>
       </div>
 
 {/* customer-report-v1 */}
       <div style={{ marginTop: 10 }}>
-        <SectionCard title="📄 Customer Service Report" id="customer-report">
+        <SectionCard title={`📄 ${t("customer_report_section_title", lang)}`} id="customer-report">
           <SmallHint>
-            Generate a professional, plain-English service report to share with the customer. One tap — no jargon.
+            {t("customer_report_hint", lang)}
           </SmallHint>
           <div style={{ marginTop: 12 }}>
             {!can("customer_reports") ? (
@@ -8427,10 +8427,9 @@ return (
 
 {/* callback-prevention-checklist-v1 */}
       <div style={{ marginTop: 10 }}>
-        <SectionCard title="✅ Callback Prevention Checklist" id="callback-checklist">
+        <SectionCard title={`✅ ${t("callback_checklist_section_title", lang)}`} id="callback-checklist">
           <SmallHint>
-            Verify these items before you leave. Generated automatically based on what you fixed.
-            Critical items must be completed — standard items are strongly recommended.
+            {t("callback_checklist_hint", lang)}
           </SmallHint>
           <div style={{ marginTop: 12 }}>
             <CallbackPreventionChecklist
@@ -8466,9 +8465,9 @@ return (
 
 {/* suggested-follow-up-watchlist-v1 */}
       <div style={{ marginTop: 10 }}>
-        <SectionCard title="Suggested Follow-Up Watchlist">
+        <SectionCard title={t("followup_watchlist_title", lang)}>
           <SmallHint>
-            Builds a watchlist from the verified repair path so the tech knows what to monitor next and what may still trigger a callback.
+            {t("followup_watchlist_hint", lang)}
           </SmallHint>
 
           <SuggestedFollowUpWatchlist
@@ -8481,9 +8480,9 @@ return (
 
 {/* verification-outcome-repair-commit-v1 */}
       <div style={{ marginTop: 10 }}>
-        <SectionCard title="Verification Outcome + Repair Commit">
+        <SectionCard title={t("verification_outcome_title", lang)}>
           <SmallHint>
-            Mark what happened after you checked the part so the app can document the decision path and commit the repair more cleanly.
+            {t("verification_outcome_hint", lang)}
           </SmallHint>
 
           <VerificationOutcomeRepairCommit
@@ -11294,7 +11293,7 @@ return (
 
         </div>
 
-<SectionCard title="Service Event Photos">
+<SectionCard title={t("service_event_photos_title", lang)}>
     <ServiceEventPhotos
       photoUrls={serviceEventPhotoUrls}
       busy={serviceEventPhotoBusy}
@@ -11307,7 +11306,7 @@ return (
   </SectionCard>
 </div>
 
-<SectionCard title="Case Outcome / Learning Feedback">
+<SectionCard title={t("case_outcome_title", lang)}>
     {editingServiceEventId ? (
       <div style={{ marginTop: 10 }}>
         <span
@@ -11322,12 +11321,12 @@ return (
             fontWeight: 900,
           }}
         >
-          EDITING SAVED EVENT
+          {t("editing_saved_event", lang)}
         </span>
       </div>
     ) : null}
     <SmallHint>
-      Use this after the job is diagnosed or completed. This is how the app starts learning what actually fixed the unit.
+      {t("case_outcome_hint", lang)}
     </SmallHint>
 
     <div
@@ -11351,7 +11350,7 @@ return (
       </div>
 
  <div style={{ gridColumn: "1 / -1" }}>
-  <label style={{ fontWeight: 900 }}>{"Service Date"}</label>
+  <label style={{ fontWeight: 900 }}>{t("job_form_service_date", lang)}</label>
   <br />
   <input
     type="date"
@@ -11481,7 +11480,7 @@ return (
               boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
             }}
   >
-    Save Current Call to Timeline
+    {t("btn_save_call_to_timeline", lang)}
   </button>
               <button
                 onClick={saveHistoricalCallAndReset}
@@ -11496,7 +11495,7 @@ return (
                   boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
                 }}
               >
-                Save & Add Another
+                {t("btn_save_add_another", lang)}
               </button>
               {editingServiceEventId ? (
                 <button
@@ -11512,7 +11511,7 @@ return (
                     boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
                   }}
                 >
-                  Update Event
+                  {t("btn_update_event", lang)}
                 </button>
               ) : null}
 
@@ -11530,41 +11529,41 @@ return (
                     boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
                   }}
                 >
-                  Cancel Edit
+                  {t("btn_cancel_edit", lang)}
                 </button>
               ) : null}
 
   {!currentLoadedUnitId ? (
     <SmallHint>
-      Load a unit first or save the unit before saving the current call.
+      {t("save_call_hint_no_unit", lang)}
     </SmallHint>
   ) : (
     <SmallHint>
-      This will add the current diagnosis/fix/outcome as a service event on the loaded unit.
+      {t("save_call_hint_with_unit", lang)}
     </SmallHint>
   )}
 </div>
 
             <div style={{ marginTop: 12 }}>
-              <div style={{ fontWeight: 900 }}>Complaint</div>
+              <div style={{ fontWeight: 900 }}>{t("label_complaint", lang)}</div>
               <SmallHint style={{ marginTop: 4 }}>
-                {symptom || "No complaint entered yet."}
+                {symptom || t("no_complaint_yet", lang)}
               </SmallHint>
             </div>
 
             <div style={{ marginTop: 12 }}>
-              <div style={{ fontWeight: 900 }}>Diagnosis Summary</div>
+              <div style={{ fontWeight: 900 }}>{t("label_diagnosis_summary", lang)}</div>
               <SmallHint style={{ marginTop: 4 }}>
-                {parsed?.summary || "No AI diagnosis summary available yet."}
+                {parsed?.summary || t("no_ai_summary_yet", lang)}
               </SmallHint>
             </div>
 
             <div style={{ marginTop: 12 }}>
-              <div style={{ fontWeight: 900 }}>Measurements Included</div>
+              <div style={{ fontWeight: 900 }}>{t("label_measurements_included", lang)}</div>
               <SmallHint style={{ marginTop: 4 }}>
                 {observations.length
-                  ? `${observations.length} measurement(s) will be included in the report.`
-                  : "No measurements added yet."}
+                  ? `${observations.length} ${t("measurements_included_count", lang)}`
+                  : t("no_measurements_yet", lang)}
               </SmallHint>
             </div>
           </div>

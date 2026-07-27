@@ -1,6 +1,8 @@
 "use client";
 
 import { SmallHint } from "./SmallHint";
+import { useLang } from "../../components/LanguageContext";
+import { t } from "../../lib/translations";
 
 type WatchlistPayload = {
   selectedPart: string;
@@ -20,6 +22,7 @@ export function SuggestedFollowUpWatchlist({
   message: string;
   onApply: () => void;
 }) {
+  const { lang } = useLang();
   return (
     <div style={{ marginTop: 12, display: "grid", gap: 12 }}>
       <div
@@ -31,19 +34,19 @@ export function SuggestedFollowUpWatchlist({
       >
         <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10, background: "#fafafa" }}>
           <div style={{ fontWeight: 900, fontSize: 12, color: "#666", textTransform: "uppercase" }}>
-            Selected Part
+            {t("label_selected_part", lang)}
           </div>
           <div style={{ marginTop: 4, fontWeight: 700 }}>
-            {payload.selectedPart || "Choose a part in Part Verification Checklist"}
+            {payload.selectedPart || t("label_choose_part_in_checklist", lang)}
           </div>
         </div>
 
         <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10, background: "#fafafa" }}>
           <div style={{ fontWeight: 900, fontSize: 12, color: "#666", textTransform: "uppercase" }}>
-            Verification Outcome
+            {t("label_verification_outcome", lang)}
           </div>
           <div style={{ marginTop: 4, fontWeight: 700 }}>
-            {payload.selectedOutcome || "Choose an outcome in Verification Outcome + Repair Commit"}
+            {payload.selectedOutcome || t("label_choose_outcome", lang)}
           </div>
         </div>
       </div>
@@ -56,7 +59,7 @@ export function SuggestedFollowUpWatchlist({
         }}
       >
         <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 12, background: "#fafafa" }}>
-          <div style={{ fontWeight: 900 }}>Watch Next</div>
+          <div style={{ fontWeight: 900 }}>{t("label_watch_next", lang)}</div>
           <ul style={{ marginTop: 8, paddingLeft: 18 }}>
             {payload.watchNext.map((item, idx) => (
               <li key={idx}>
@@ -67,7 +70,7 @@ export function SuggestedFollowUpWatchlist({
         </div>
 
         <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 12, background: "#fafafa" }}>
-          <div style={{ fontWeight: 900 }}>Recheck Items</div>
+          <div style={{ fontWeight: 900 }}>{t("label_recheck_items", lang)}</div>
           <ul style={{ marginTop: 8, paddingLeft: 18 }}>
             {payload.recheckItems.map((item, idx) => (
               <li key={idx}>
@@ -78,7 +81,7 @@ export function SuggestedFollowUpWatchlist({
         </div>
 
         <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 12, background: "#fafafa" }}>
-          <div style={{ fontWeight: 900 }}>Callback Risk</div>
+          <div style={{ fontWeight: 900 }}>{t("label_callback_risk", lang)}</div>
           <ul style={{ marginTop: 8, paddingLeft: 18 }}>
             {payload.callbackRisk.map((item, idx) => (
               <li key={idx}>
@@ -89,7 +92,7 @@ export function SuggestedFollowUpWatchlist({
         </div>
 
         <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 12, background: "#fafafa" }}>
-          <div style={{ fontWeight: 900 }}>Monitoring Notes</div>
+          <div style={{ fontWeight: 900 }}>{t("label_monitoring_notes", lang)}</div>
           <ul style={{ marginTop: 8, paddingLeft: 18 }}>
             {payload.monitoringNote.map((item, idx) => (
               <li key={idx}>
@@ -115,13 +118,13 @@ export function SuggestedFollowUpWatchlist({
             boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
           }}
         >
-          Add Watchlist to Follow-Up + Tech Notes
+          {t("btn_add_watchlist_to_followup", lang)}
         </button>
       </div>
 
       {message ? (
         <SmallHint>
-          <b>Watchlist:</b> {message}
+          <b>{t("label_watchlist_colon", lang)}</b> {message}
         </SmallHint>
       ) : null}
     </div>

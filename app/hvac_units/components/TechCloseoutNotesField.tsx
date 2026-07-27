@@ -1,16 +1,18 @@
 "use client";
 
 import { SmallHint } from "./SmallHint";
+import { useLang } from "../../components/LanguageContext";
+import { t, type TranslationKey } from "../../lib/translations";
 
-const QUICK_NOTES = [
-  { label: "Verified Operation", value: "Verified operation after repair." },
-  { label: "Advised Customer", value: "Advised customer of findings and repair performed." },
-  { label: "Recommend Follow-Up", value: "Recommend follow-up." },
-  { label: "Monitor Unit", value: "Monitor unit operation." },
-  { label: "Temporary Repair", value: "Temporary repair completed. Return visit may be needed." },
-  { label: "Parts Ordered", value: "Parts ordered. Return visit required after parts arrive." },
-  { label: "Operating At Departure", value: "Unit operating at departure." },
-  { label: "Customer Declined", value: "Customer declined additional repair at this time." },
+const QUICK_NOTES: { labelKey: TranslationKey; valueKey: TranslationKey }[] = [
+  { labelKey: "quick_note_verified_operation_label", valueKey: "quick_note_verified_operation_value" },
+  { labelKey: "quick_note_advised_customer_label", valueKey: "quick_note_advised_customer_value" },
+  { labelKey: "quick_note_recommend_followup_label", valueKey: "quick_note_recommend_followup_value" },
+  { labelKey: "quick_note_monitor_unit_label", valueKey: "quick_note_monitor_unit_value" },
+  { labelKey: "quick_note_temp_repair_label", valueKey: "quick_note_temp_repair_value" },
+  { labelKey: "quick_note_parts_ordered_label", valueKey: "quick_note_parts_ordered_value" },
+  { labelKey: "quick_note_operating_departure_label", valueKey: "quick_note_operating_departure_value" },
+  { labelKey: "quick_note_customer_declined_label", valueKey: "quick_note_customer_declined_value" },
 ];
 
 function browserSupportsTechCloseoutDictation() {
@@ -36,11 +38,12 @@ export function TechCloseoutNotesField({
   onStartDictation: () => void;
   onStopDictation: () => void;
 }) {
+  const { lang } = useLang();
   const dictationSupported = browserSupportsTechCloseoutDictation();
 
   return (
     <>
-      <label style={{ fontWeight: 900 }}>Tech Closeout Notes</label>
+      <label style={{ fontWeight: 900 }}>{t("label_tech_closeout_notes", lang)}</label>
       <br />
       <textarea
         data-auto-grow="true"
@@ -66,7 +69,7 @@ export function TechCloseoutNotesField({
             opacity: !dictationSupported || listening ? 0.7 : 1,
           }}
         >
-          {listening ? "Listening..." : "Start Note Dictation"}
+          {listening ? t("dictation_listening", lang) : t("btn_start_note_dictation", lang)}
         </button>
 
         <button
@@ -85,27 +88,27 @@ export function TechCloseoutNotesField({
             opacity: listening ? 1 : 0.7,
           }}
         >
-          Stop Dictation
+          {t("btn_stop_dictation", lang)}
         </button>
       </div>
 
       {!dictationSupported ? (
         <SmallHint style={{ marginTop: 6 }}>
-          Dictation is not supported in this browser. Try Chrome or Edge.
+          {t("dictation_not_supported", lang)}
         </SmallHint>
       ) : null}
 
       {dictationMessage ? (
         <SmallHint style={{ marginTop: 6 }}>
-          <b>Dictation:</b> {dictationMessage}
+          <b>{t("label_dictation_colon", lang)}</b> {dictationMessage}
         </SmallHint>
       ) : null}
 
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
         {QUICK_NOTES.map((note) => (
           <button
-            key={note.label}
-            onClick={() => onChange(note.value)}
+            key={note.labelKey}
+            onClick={() => onChange(t(note.valueKey, lang))}
             style={{
               padding: "8px 12px",
               fontWeight: 900,
@@ -117,7 +120,7 @@ export function TechCloseoutNotesField({
               boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
             }}
           >
-            {note.label}
+            {t(note.labelKey, lang)}
           </button>
         ))}
       </div>

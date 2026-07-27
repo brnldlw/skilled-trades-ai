@@ -1,6 +1,8 @@
 "use client";
 
 import { SmallHint } from "./SmallHint";
+import { useLang } from "../../components/LanguageContext";
+import { t, type TranslationKey } from "../../lib/translations";
 
 const OUTCOMES = [
   "Verified bad",
@@ -9,6 +11,14 @@ const OUTCOMES = [
   "Replaced",
   "Not the cause",
 ];
+
+const OUTCOME_KEYS: Record<string, TranslationKey> = {
+  "Verified bad": "outcome_verified_bad",
+  "Tested good": "outcome_tested_good",
+  "Needs more testing": "outcome_needs_more_testing",
+  "Replaced": "outcome_replaced",
+  "Not the cause": "outcome_not_the_cause",
+};
 
 export function VerificationOutcomeRepairCommit({
   selectedPart,
@@ -27,6 +37,7 @@ export function VerificationOutcomeRepairCommit({
   onApply: () => void;
   message: string;
 }) {
+  const { lang } = useLang();
   return (
     <div style={{ marginTop: 12, display: "grid", gap: 12 }}>
       <div
@@ -38,19 +49,19 @@ export function VerificationOutcomeRepairCommit({
       >
         <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10, background: "#fafafa" }}>
           <div style={{ fontWeight: 900, fontSize: 12, color: "#666", textTransform: "uppercase" }}>
-            Current Part Focus
+            {t("label_current_part_focus", lang)}
           </div>
           <div style={{ marginTop: 4, fontWeight: 700 }}>
-            {selectedPart || "Choose a part in Part Verification Checklist"}
+            {selectedPart || t("label_choose_part_in_checklist", lang)}
           </div>
         </div>
 
         <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10, background: "#fafafa" }}>
           <div style={{ fontWeight: 900, fontSize: 12, color: "#666", textTransform: "uppercase" }}>
-            Current Outcome
+            {t("label_current_outcome", lang)}
           </div>
           <div style={{ marginTop: 4, fontWeight: 700 }}>
-            {selectedOutcome || "Not selected"}
+            {selectedOutcome ? (OUTCOME_KEYS[selectedOutcome] ? t(OUTCOME_KEYS[selectedOutcome], lang) : selectedOutcome) : t("label_not_selected", lang)}
           </div>
         </div>
       </div>
@@ -74,20 +85,20 @@ export function VerificationOutcomeRepairCommit({
                 boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
               }}
             >
-              {outcome}
+              {t(OUTCOME_KEYS[outcome], lang)}
             </button>
           );
         })}
       </div>
 
       <div style={{ display: "grid", gap: 6 }}>
-        <label style={{ fontWeight: 900 }}>Verification Note (optional)</label>
+        <label style={{ fontWeight: 900 }}>{t("label_verification_note_optional", lang)}</label>
         <textarea
           value={note}
           onChange={(e) => onNoteChange(e.target.value)}
           rows={4}
           style={{ width: "100%", padding: 8 }}
-          placeholder="Example: coil voltage present, contacts burnt, replaced contactor and rechecked operation"
+          placeholder={t("verification_note_placeholder", lang)}
         />
       </div>
 
@@ -106,13 +117,13 @@ export function VerificationOutcomeRepairCommit({
             boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
           }}
         >
-          Apply Verification Outcome
+          {t("btn_apply_verification_outcome", lang)}
         </button>
       </div>
 
       {message ? (
         <SmallHint>
-          <b>Verification Outcome:</b> {message}
+          <b>{t("label_verification_outcome_colon", lang)}</b> {message}
         </SmallHint>
       ) : null}
     </div>

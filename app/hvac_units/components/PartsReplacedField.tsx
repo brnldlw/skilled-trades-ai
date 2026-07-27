@@ -1,6 +1,8 @@
 "use client";
 
 import { SmallHint } from "./SmallHint";
+import { useLang } from "../../components/LanguageContext";
+import { t } from "../../lib/translations";
 
 function browserSupportsPartsReplacedDictation() {
   if (typeof window === "undefined") return false;
@@ -27,11 +29,12 @@ export function PartsReplacedField({
   chips: string[];
   onAddChip: (chip: string) => void;
 }) {
+  const { lang } = useLang();
   const dictationSupported = browserSupportsPartsReplacedDictation();
 
   return (
     <>
-      <label style={{ fontWeight: 900 }}>{"Parts Replaced"}</label>
+      <label style={{ fontWeight: 900 }}>{t("label_parts_replaced_field", lang)}</label>
       <br />
       <input
         value={value}
@@ -57,7 +60,7 @@ export function PartsReplacedField({
             opacity: !dictationSupported || listening ? 0.7 : 1,
           }}
         >
-          {listening ? "Listening..." : "Start Parts Replaced Dictation"}
+          {listening ? t("dictation_listening", lang) : t("btn_start_parts_replaced_dictation", lang)}
         </button>
 
         <button
@@ -76,26 +79,26 @@ export function PartsReplacedField({
             opacity: listening ? 1 : 0.7,
           }}
         >
-          Stop Dictation
+          {t("btn_stop_dictation", lang)}
         </button>
       </div>
 
       {!dictationSupported ? (
         <SmallHint style={{ marginTop: 6 }}>
-          Dictation is not supported in this browser. Try Chrome or Edge.
+          {t("dictation_not_supported", lang)}
         </SmallHint>
       ) : null}
 
       {dictationMessage ? (
         <SmallHint style={{ marginTop: 6 }}>
-          <b>Parts Replaced Dictation:</b> {dictationMessage}
+          <b>{t("label_parts_replaced_dictation_colon", lang)}</b> {dictationMessage}
         </SmallHint>
       ) : null}
 
       {chips.length ? (
         <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
           <SmallHint>
-            <b>Quick Parts Chips:</b> Tap to add common replacement parts faster.
+            <b>{t("quick_parts_chips_label", lang)}</b> {t("quick_parts_chips_hint", lang)}
           </SmallHint>
 
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>

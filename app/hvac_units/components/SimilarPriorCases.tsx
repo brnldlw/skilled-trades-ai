@@ -1,6 +1,8 @@
 "use client";
 
 import { SmallHint } from "./SmallHint";
+import { useLang } from "../../components/LanguageContext";
+import { t } from "../../lib/translations";
 
 type SimilarCase = {
   savedAt: string;
@@ -12,11 +14,12 @@ type SimilarCase = {
 };
 
 export function SimilarPriorCases({ cases }: { cases: SimilarCase[] }) {
+  const { lang } = useLang();
   if (!cases.length) return null;
 
   return (
     <div style={{ marginTop: 12 }}>
-      <div style={{ fontWeight: 900 }}>Similar prior cases</div>
+      <div style={{ fontWeight: 900 }}>{t("similar_prior_cases_title", lang)}</div>
       <div style={{ display: "grid", gap: 8, marginTop: 8 }}>
         {cases.map((item, i) => (
           <div
@@ -29,19 +32,19 @@ export function SimilarPriorCases({ cases }: { cases: SimilarCase[] }) {
             }}
           >
             <SmallHint>
-              <b>Saved:</b> {item.savedAt ? new Date(item.savedAt).toLocaleString() : "-"}
+              <b>{t("label_saved_colon", lang)}</b> {item.savedAt ? new Date(item.savedAt).toLocaleString() : "-"}
             </SmallHint>
             <SmallHint style={{ marginTop: 4 }}>
-              <b>Symptom:</b> {item.symptom || "-"}
+              <b>{t("label_symptom_colon", lang)}</b> {item.symptom || "-"}
             </SmallHint>
             <SmallHint style={{ marginTop: 4 }}>
-              <b>Confirmed cause:</b> {item.finalConfirmedCause || "-"}
+              <b>{t("label_confirmed_cause_colon", lang)}</b> {item.finalConfirmedCause || "-"}
             </SmallHint>
             <SmallHint style={{ marginTop: 4 }}>
-              <b>Actual fix:</b> {item.actualFixPerformed || "-"}
+              <b>{t("label_actual_fix_colon", lang)}</b> {item.actualFixPerformed || "-"}
             </SmallHint>
             <SmallHint style={{ marginTop: 4 }}>
-              <b>Outcome:</b> {item.outcomeStatus || "-"} • <b>Callback:</b> {item.callbackOccurred || "-"}
+              <b>{t("label_outcome_colon", lang)}</b> {item.outcomeStatus || "-"} • <b>{t("label_callback_colon", lang)}</b> {item.callbackOccurred || "-"}
             </SmallHint>
           </div>
         ))}

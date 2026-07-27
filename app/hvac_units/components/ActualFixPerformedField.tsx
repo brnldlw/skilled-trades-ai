@@ -1,6 +1,8 @@
 "use client";
 
 import { SmallHint } from "./SmallHint";
+import { useLang } from "../../components/LanguageContext";
+import { t, type TranslationKey } from "../../lib/translations";
 
 const QUICK_FIXES = [
   "Replaced Capacitor",
@@ -12,6 +14,17 @@ const QUICK_FIXES = [
   "Cleared Drain",
   "Replaced Sensor / Control",
 ];
+
+const QUICK_FIX_KEYS: Record<string, TranslationKey> = {
+  "Replaced Capacitor": "quick_fix_replaced_capacitor",
+  "Replaced Contactor": "quick_fix_replaced_contactor",
+  "Replaced Motor": "quick_fix_replaced_motor",
+  "Added Refrigerant": "quick_fix_added_refrigerant",
+  "Cleaned Condenser": "quick_fix_cleaned_condenser",
+  "Replaced Filter/Drier": "quick_fix_replaced_filter",
+  "Cleared Drain": "quick_fix_cleared_drain",
+  "Replaced Sensor / Control": "quick_fix_replaced_sensor",
+};
 
 function browserSupportsFieldDictation() {
   if (typeof window === "undefined") return false;
@@ -36,11 +49,12 @@ export function ActualFixPerformedField({
   onStartDictation: () => void;
   onStopDictation: () => void;
 }) {
+  const { lang } = useLang();
   const dictationSupported = browserSupportsFieldDictation();
 
   return (
     <>
-      <label style={{ fontWeight: 900 }}>{"Actual Fix Performed"}</label>
+      <label style={{ fontWeight: 900 }}>{t("label_actual_fix_performed", lang)}</label>
       <br />
       <textarea
         data-auto-grow="true"
@@ -68,7 +82,7 @@ export function ActualFixPerformedField({
             opacity: !dictationSupported || listening ? 0.7 : 1,
           }}
         >
-          {listening ? "Listening..." : "Start Actual Fix Dictation"}
+          {listening ? t("dictation_listening", lang) : t("btn_start_actual_fix_dictation", lang)}
         </button>
 
         <button
@@ -87,19 +101,19 @@ export function ActualFixPerformedField({
             opacity: listening ? 1 : 0.7,
           }}
         >
-          Stop Dictation
+          {t("btn_stop_dictation", lang)}
         </button>
       </div>
 
       {!dictationSupported ? (
         <SmallHint style={{ marginTop: 6 }}>
-          Dictation is not supported in this browser. Try Chrome or Edge.
+          {t("dictation_not_supported", lang)}
         </SmallHint>
       ) : null}
 
       {dictationMessage ? (
         <SmallHint style={{ marginTop: 6 }}>
-          <b>Actual Fix Dictation:</b> {dictationMessage}
+          <b>{t("label_actual_fix_dictation_colon", lang)}</b> {dictationMessage}
         </SmallHint>
       ) : null}
 
@@ -119,7 +133,7 @@ export function ActualFixPerformedField({
               boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
             }}
           >
-            {fix}
+            {t(QUICK_FIX_KEYS[fix], lang)}
           </button>
         ))}
       </div>

@@ -1,5 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { useLang } from "../../components/LanguageContext";
+import { t } from "../../lib/translations";
 
 type ChecklistItem = {
   id: string;
@@ -88,6 +90,7 @@ function buildChecklist(props: Props): ChecklistItem[] {
 }
 
 function CheckItem({item,checked,onToggle}:{item:ChecklistItem;checked:boolean;onToggle:()=>void}) {
+  const { lang } = useLang();
   const [showWhy,setShowWhy]=useState(false);
   const color=CATEGORY_COLORS[item.category];
   return (
@@ -98,7 +101,7 @@ function CheckItem({item,checked,onToggle}:{item:ChecklistItem;checked:boolean;o
           <span style={{fontSize:14,flexShrink:0}}>{CATEGORY_ICONS[item.category]}</span>
           <span style={{fontSize:13,fontWeight:item.critical?700:500,color:checked?"#64748b":"#1e293b",textDecoration:checked?"line-through":"none",lineHeight:1.4}}>{item.text}</span>
         </div>
-        <button onClick={()=>setShowWhy(v=>!v)} style={{background:"none",border:"none",color:"#94a3b8",fontSize:11,cursor:"pointer",fontFamily:"inherit",padding:"2px 0",marginTop:2}}>{showWhy?"▲ hide":"▼ why?"}</button>
+        <button onClick={()=>setShowWhy(v=>!v)} style={{background:"none",border:"none",color:"#94a3b8",fontSize:11,cursor:"pointer",fontFamily:"inherit",padding:"2px 0",marginTop:2}}>{showWhy?`▲ ${t("callback_hide", lang)}`:`▼ ${t("callback_why", lang)}`}</button>
         {showWhy&&<div style={{fontSize:11,color:"#64748b",marginTop:4,padding:"6px 8px",background:"#f8fafc",borderRadius:6,lineHeight:1.5}}>{item.why}</div>}
       </div>
       <span style={{fontSize:9,fontWeight:700,padding:"2px 6px",borderRadius:10,background:`${color}18`,color,flexShrink:0,marginTop:2}}>{item.category}</span>
@@ -107,6 +110,7 @@ function CheckItem({item,checked,onToggle}:{item:ChecklistItem;checked:boolean;o
 }
 
 export function CallbackPreventionChecklist(props:Props) {
+  const { lang } = useLang();
   const [checked,setChecked]=useState<Set<string>>(new Set());
   const [items,setItems]=useState<ChecklistItem[]>([]);
   const [collapsed,setCollapsed]=useState(false);
@@ -114,7 +118,7 @@ export function CallbackPreventionChecklist(props:Props) {
   useEffect(()=>{setItems(buildChecklist(props));setChecked(new Set());},[props.actualFixPerformed,props.partsReplaced,props.finalConfirmedCause,props.equipmentType]);
 
   const hasContext=!!(props.actualFixPerformed||props.partsReplaced||props.finalConfirmedCause);
-  if(!hasContext) return <div style={{padding:"12px 14px",background:"#f8fafc",borderRadius:10,border:"1px solid #e2e8f0",fontSize:13,color:"#94a3b8"}}>Fill in confirmed cause, work performed, or parts replaced to generate your callback prevention checklist.</div>;
+  if(!hasContext) return <div style={{padding:"12px 14px",background:"#f8fafc",borderRadius:10,border:"1px solid #e2e8f0",fontSize:13,color:"#94a3b8"}}>{t("callback_checklist_empty", lang)}</div>;
 
   const criticalItems=items.filter(i=>i.critical);
   const normalItems=items.filter(i=>!i.critical);
@@ -130,9 +134,9 @@ export function CallbackPreventionChecklist(props:Props) {
       <div onClick={()=>setCollapsed(v=>!v)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",marginBottom:collapsed?0:12}}>
         <div style={{flex:1}}>
           <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap" as const}}>
-            <span style={{fontSize:13,fontWeight:700,color:allDone?"#16a34a":"#1e293b"}}>{allDone?"✅ All checks complete — safe to leave":`${totalDone} of ${items.length} checks done`}</span>
-            {!allCriticalDone&&criticalItems.length>0&&<span style={{fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:20,background:"#fee2e2",color:"#dc2626"}}>{criticalItems.length-criticalDone} CRITICAL remaining</span>}
-            {allCriticalDone&&!allDone&&<span style={{fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:20,background:"#dcfce7",color:"#16a34a"}}>Critical items done ✓</span>}
+            <span style={{fontSize:13,fontWeight:700,color:allDone?"#16a34a":"#1e293b"}}>{allDone?`✅ ${t("callback_all_complete", lang)}`:`${totalDone} ${t("callback_checks_done_of", lang)} ${items.length} ${t("callback_checks_done_suffix", lang)}`}</span>
+            {!allCriticalDone&&criticalItems.length>0&&<span style={{fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:20,background:"#fee2e2",color:"#dc2626"}}>{criticalItems.length-criticalDone} {t("callback_critical_remaining", lang)}</span>}
+            {allCriticalDone&&!allDone&&<span style={{fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:20,background:"#dcfce7",color:"#16a34a"}}>{t("callback_critical_done", lang)} ✓</span>}
           </div>
           <div style={{marginTop:6,height:4,background:"#f1f5f9",borderRadius:2,overflow:"hidden",maxWidth:300}}>
             <div style={{height:"100%",width:`${pct}%`,background:allDone?"#16a34a":"#2563eb",borderRadius:2,transition:"width 0.3s ease"}}/>
@@ -144,18 +148,18 @@ export function CallbackPreventionChecklist(props:Props) {
         <div>
           {criticalItems.length>0&&(
             <div style={{marginBottom:12}}>
-              <div style={{fontSize:11,fontWeight:700,color:"#dc2626",letterSpacing:"0.08em",textTransform:"uppercase" as const,marginBottom:6}}>🚨 Critical — do not leave without completing</div>
+              <div style={{fontSize:11,fontWeight:700,color:"#dc2626",letterSpacing:"0.08em",textTransform:"uppercase" as const,marginBottom:6}}>🚨 {t("callback_critical_header", lang)}</div>
               <div style={{display:"flex",flexDirection:"column",gap:6}}>{criticalItems.map(item=><CheckItem key={item.id} item={item} checked={checked.has(item.id)} onToggle={()=>toggle(item.id)}/>)}</div>
             </div>
           )}
           {normalItems.length>0&&(
             <div>
-              <div style={{fontSize:11,fontWeight:700,color:"#64748b",letterSpacing:"0.08em",textTransform:"uppercase" as const,marginBottom:6}}>Standard verification</div>
+              <div style={{fontSize:11,fontWeight:700,color:"#64748b",letterSpacing:"0.08em",textTransform:"uppercase" as const,marginBottom:6}}>{t("callback_standard_header", lang)}</div>
               <div style={{display:"flex",flexDirection:"column",gap:6}}>{normalItems.map(item=><CheckItem key={item.id} item={item} checked={checked.has(item.id)} onToggle={()=>toggle(item.id)}/>)}</div>
             </div>
           )}
-          {allDone&&<div style={{marginTop:12,padding:"12px 14px",background:"#f0fdf4",border:"1px solid #bbf7d0",borderRadius:10,display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:24}}>✅</span><div><div style={{fontSize:14,fontWeight:700,color:"#16a34a"}}>All {items.length} checks complete</div><div style={{fontSize:12,color:"#4ade80",marginTop:2}}>You're clear to leave. Good work.</div></div></div>}
-          <div style={{marginTop:10,fontSize:11,color:"#94a3b8"}}>Checklist generated based on: {[props.finalConfirmedCause,props.partsReplaced,props.actualFixPerformed].filter(Boolean).join(", ")}</div>
+          {allDone&&<div style={{marginTop:12,padding:"12px 14px",background:"#f0fdf4",border:"1px solid #bbf7d0",borderRadius:10,display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:24}}>✅</span><div><div style={{fontSize:14,fontWeight:700,color:"#16a34a"}}>{items.length} {t("callback_all_n_complete", lang)}</div><div style={{fontSize:12,color:"#4ade80",marginTop:2}}>{t("callback_clear_to_leave", lang)}</div></div></div>}
+          <div style={{marginTop:10,fontSize:11,color:"#94a3b8"}}>{t("callback_generated_based_on", lang)} {[props.finalConfirmedCause,props.partsReplaced,props.actualFixPerformed].filter(Boolean).join(", ")}</div>
         </div>
       )}
     </div>

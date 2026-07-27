@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+import { useLang } from "../../components/LanguageContext";
+import { t } from "../../lib/translations";
 
 type CustomerReportProps = {
   customerName?: string;
@@ -23,6 +25,7 @@ type CustomerReportProps = {
 };
 
 export function CustomerReport(props: CustomerReportProps) {
+  const { lang } = useLang();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -35,19 +38,19 @@ export function CustomerReport(props: CustomerReportProps) {
       const res = await fetch("/api/customer-report", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(props),
+        body: JSON.stringify({ ...props, lang }),
       });
       if (!res.ok) {
-        setError("Failed to generate report. Try again.");
+        setError(t("customer_report_failed", lang));
         return;
       }
       const html = await res.text();
       const blob = new Blob([html], { type: "text/html" });
       const url = URL.createObjectURL(blob);
       const win = window.open(url, "_blank");
-      if (!win) setError("Pop-up blocked. Allow pop-ups and try again.");
+      if (!win) setError(t("customer_report_popup_blocked", lang));
     } catch (err: any) {
-      setError("Error: " + (err?.message || "Unknown error"));
+      setError(t("error_prefix", lang) + " " + (err?.message || t("unknown_error", lang)));
     } finally {
       setLoading(false);
     }
@@ -60,9 +63,9 @@ export function CustomerReport(props: CustomerReportProps) {
       const res = await fetch("/api/customer-report", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(props),
+        body: JSON.stringify({ ...props, lang }),
       });
-      if (!res.ok) { setError("Failed to generate report."); return; }
+      if (!res.ok) { setError(t("customer_report_failed_short", lang)); return; }
       const html = await res.text();
       const blob = new Blob([html], { type: "text/html" });
       const url = URL.createObjectURL(blob);
@@ -74,7 +77,7 @@ export function CustomerReport(props: CustomerReportProps) {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (err: any) {
-      setError("Error: " + (err?.message || "Unknown error"));
+      setError(t("error_prefix", lang) + " " + (err?.message || t("unknown_error", lang)));
     } finally {
       setLoading(false);
     }
@@ -91,10 +94,10 @@ export function CustomerReport(props: CustomerReportProps) {
         <span style={{ fontSize: 20 }}>📄</span>
         <div>
           <div style={{ fontWeight: 800, fontSize: 14, color: "#0c4a6e" }}>
-            Customer Service Report
+            {t("customer_report_section_title", lang)}
           </div>
           <div style={{ fontSize: 12, color: "#0369a1", marginTop: 1 }}>
-            AI-generated plain-English summary for the customer
+            {t("customer_report_ai_subtitle", lang)}
           </div>
         </div>
       </div>
@@ -108,7 +111,7 @@ export function CustomerReport(props: CustomerReportProps) {
           padding: "8px 12px",
           marginBottom: 10,
         }}>
-          Fill in symptom, confirmed cause, or work performed to generate a report.
+          {t("customer_report_fill_prompt", lang)}
         </div>
       )}
 
@@ -128,7 +131,7 @@ export function CustomerReport(props: CustomerReportProps) {
             fontFamily: "inherit",
           }}
         >
-          {loading ? "Generating..." : "📋 Preview Report"}
+          {loading ? t("btn_generating", lang) : `📋 ${t("btn_preview_report", lang)}`}
         </button>
 
         <button
@@ -146,7 +149,7 @@ export function CustomerReport(props: CustomerReportProps) {
             fontFamily: "inherit",
           }}
         >
-          ⬇️ Download
+          {`⬇️ ${t("btn_download", lang)}`}
         </button>
       </div>
 
@@ -155,7 +158,7 @@ export function CustomerReport(props: CustomerReportProps) {
       )}
 
       <div style={{ marginTop: 10, fontSize: 11, color: "#7dd3fc" }}>
-        The report includes: customer info, equipment details, what was found, work performed, parts used, and field readings.
+        {t("customer_report_includes", lang)}
       </div>
     </div>
   );

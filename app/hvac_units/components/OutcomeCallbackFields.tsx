@@ -1,5 +1,8 @@
 "use client";
 
+import { useLang } from "../../components/LanguageContext";
+import { t } from "../../lib/translations";
+
 const btnStyle: React.CSSProperties = {
   padding: "8px 12px",
   fontWeight: 900,
@@ -22,57 +25,58 @@ export function OutcomeCallbackFields({
   callbackOccurred: string;
   onCallbackOccurredChange: (value: string) => void;
 }) {
+  const { lang } = useLang();
   return (
     <>
       <div>
-        <label style={{ fontWeight: 900 }}>{"Outcome Status"}</label>
+        <label style={{ fontWeight: 900 }}>{t("label_outcome_status", lang)}</label>
         <br />
         <select
           value={outcomeStatus}
           onChange={(e) => onOutcomeStatusChange(e.target.value)}
           style={{ width: "100%", padding: 8 }}
         >
-          <option>Not Set</option>
-          <option>Fixed</option>
-          <option>Partially Fixed</option>
-          <option>Needs More Work</option>
-          <option>Monitoring</option>
+          <option value="Not Set">{t("outcome_status_not_set", lang)}</option>
+          <option value="Fixed">{t("outcome_status_fixed", lang)}</option>
+          <option value="Partially Fixed">{t("outcome_status_partially_fixed", lang)}</option>
+          <option value="Needs More Work">{t("outcome_status_needs_more_work", lang)}</option>
+          <option value="Monitoring">{t("outcome_status_monitoring", lang)}</option>
         </select>
 
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
           <button onClick={() => onOutcomeStatusChange("Fixed")} style={btnStyle}>
-            Fixed
+            {t("outcome_status_fixed", lang)}
           </button>
           <button onClick={() => onOutcomeStatusChange("Needs Follow-Up")} style={btnStyle}>
-            Needs Follow-Up
+            {t("btn_needs_followup", lang)}
           </button>
           <button onClick={() => onOutcomeStatusChange("Partial")} style={btnStyle}>
-            Partial
+            {t("btn_partial", lang)}
           </button>
           <button onClick={() => onOutcomeStatusChange("Not Set")} style={btnStyle}>
-            Not Set
+            {t("outcome_status_not_set", lang)}
           </button>
         </div>
       </div>
 
       <div>
-        <label style={{ fontWeight: 900 }}>Callback Occurred</label>
+        <label style={{ fontWeight: 900 }}>{t("label_callback_occurred", lang)}</label>
         <br />
         <select
           value={callbackOccurred}
           onChange={(e) => onCallbackOccurredChange(e.target.value)}
           style={{ width: "100%", padding: 8 }}
         >
-          <option>No</option>
-          <option>Yes</option>
+          <option value="No">{t("option_no", lang)}</option>
+          <option value="Yes">{t("option_yes", lang)}</option>
         </select>
 
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
           <button onClick={() => onCallbackOccurredChange("No")} style={btnStyle}>
-            Callback No
+            {t("btn_callback_no", lang)}
           </button>
           <button onClick={() => onCallbackOccurredChange("Yes")} style={btnStyle}>
-            Callback Yes
+            {t("btn_callback_yes", lang)}
           </button>
         </div>
       </div>

@@ -1,6 +1,8 @@
 "use client";
 
 import { SmallHint } from "./SmallHint";
+import { useLang } from "../../components/LanguageContext";
+import { t, type TranslationKey } from "../../lib/translations";
 
 const QUICK_CAUSES = [
   "Bad Capacitor",
@@ -12,6 +14,17 @@ const QUICK_CAUSES = [
   "Drain Issue",
   "Sensor / Control Issue",
 ];
+
+const QUICK_CAUSE_KEYS: Record<string, TranslationKey> = {
+  "Bad Capacitor": "quick_cause_bad_capacitor",
+  "Failed Contactor": "quick_cause_failed_contactor",
+  "Failed Motor": "quick_cause_failed_motor",
+  "Low Refrigerant": "quick_cause_low_refrigerant",
+  "Dirty Condenser": "quick_cause_dirty_condenser",
+  "Restricted Filter/Drier": "quick_cause_restricted_filter",
+  "Drain Issue": "quick_cause_drain_issue",
+  "Sensor / Control Issue": "quick_cause_sensor_control",
+};
 
 function browserSupportsFieldDictation() {
   if (typeof window === "undefined") return false;
@@ -36,11 +49,12 @@ export function FinalConfirmedCauseField({
   onStartDictation: () => void;
   onStopDictation: () => void;
 }) {
+  const { lang } = useLang();
   const dictationSupported = browserSupportsFieldDictation();
 
   return (
     <>
-      <label style={{ fontWeight: 900 }}>{"Final Confirmed Cause"}</label>
+      <label style={{ fontWeight: 900 }}>{t("label_final_confirmed_cause", lang)}</label>
       <br />
       <textarea
         data-auto-grow="true"
@@ -68,7 +82,7 @@ export function FinalConfirmedCauseField({
             opacity: !dictationSupported || listening ? 0.7 : 1,
           }}
         >
-          {listening ? "Listening..." : "Start Confirmed Cause Dictation"}
+          {listening ? t("dictation_listening", lang) : t("btn_start_confirmed_cause_dictation", lang)}
         </button>
 
         <button
@@ -87,19 +101,19 @@ export function FinalConfirmedCauseField({
             opacity: listening ? 1 : 0.7,
           }}
         >
-          Stop Dictation
+          {t("btn_stop_dictation", lang)}
         </button>
       </div>
 
       {!dictationSupported ? (
         <SmallHint style={{ marginTop: 6 }}>
-          Dictation is not supported in this browser. Try Chrome or Edge.
+          {t("dictation_not_supported", lang)}
         </SmallHint>
       ) : null}
 
       {dictationMessage ? (
         <SmallHint style={{ marginTop: 6 }}>
-          <b>Confirmed Cause Dictation:</b> {dictationMessage}
+          <b>{t("label_confirmed_cause_dictation_colon", lang)}</b> {dictationMessage}
         </SmallHint>
       ) : null}
 
@@ -119,7 +133,7 @@ export function FinalConfirmedCauseField({
               boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
             }}
           >
-            {cause}
+            {t(QUICK_CAUSE_KEYS[cause], lang)}
           </button>
         ))}
       </div>

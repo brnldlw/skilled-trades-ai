@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { SmallHint } from "./SmallHint";
+import { useLang } from "../../components/LanguageContext";
+import { t } from "../../lib/translations";
 
 export function ServiceEventPhotos({
   photoUrls,
@@ -16,6 +18,7 @@ export function ServiceEventPhotos({
   onUploadPhotos: (files: File[] | FileList | null) => void | Promise<void>;
   onRemovePhoto: (index: number) => void;
 }) {
+  const { lang } = useLang();
   const [showPhotos, setShowPhotos] = useState(false);
 
   return (
@@ -33,13 +36,13 @@ export function ServiceEventPhotos({
           boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
         }}
       >
-        {showPhotos ? "Hide Photos" : "Show Photos"}
+        {showPhotos ? t("btn_hide_photos", lang) : t("btn_show_photos", lang)}
       </button>
 
       {showPhotos ? (
         <div style={{ marginTop: 12 }}>
           <SmallHint>
-            Attach field photos to this service event so the next tech can see what happened.
+            {t("service_photos_hint", lang)}
           </SmallHint>
 
           <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
@@ -63,7 +66,7 @@ export function ServiceEventPhotos({
             ) : null}
 
             {busy ? (
-              <SmallHint>Uploading photo(s)...</SmallHint>
+              <SmallHint>{t("uploading_photos", lang)}</SmallHint>
             ) : null}
 
             {photoUrls.length ? (
@@ -95,7 +98,7 @@ export function ServiceEventPhotos({
                         cursor: "pointer",
                         overflow: "hidden",
                       }}
-                      title="Open full photo"
+                      title={t("btn_open_full_photo", lang)}
                     >
                       <img
                         src={url}
@@ -125,19 +128,19 @@ export function ServiceEventPhotos({
                         boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
                       }}
                     >
-                      Remove Photo
+                      {t("btn_remove_photo", lang)}
                     </button>
                   </div>
                 ))}
               </div>
             ) : (
-              <SmallHint>No service event photos attached yet.</SmallHint>
+              <SmallHint>{t("no_service_photos_yet", lang)}</SmallHint>
             )}
           </div>
         </div>
       ) : (
         <SmallHint style={{ marginTop: 12 }}>
-          Hidden by default to keep the main workflow clean.
+          {t("hidden_by_default", lang)}
         </SmallHint>
       )}
     </>

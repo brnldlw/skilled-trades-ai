@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { t, type Language } from "../../lib/translations";
 
 export const runtime = "nodejs";
 
@@ -20,12 +21,15 @@ type ReportRequest = {
   techCloseoutNotes?: string;
   observations?: { label: string; value: string; unit: string }[];
   companyName?: string;
+  lang?: Language;
 };
 
 function buildReportHTML(data: ReportRequest, aiSummary: string): string {
+  const lang: Language = data.lang === "es" ? "es" : "en";
+  const dateLocale = lang === "es" ? "es-US" : "en-US";
   const date = data.serviceDate
-    ? new Date(data.serviceDate).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })
-    : new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+    ? new Date(data.serviceDate).toLocaleDateString(dateLocale, { weekday: "long", year: "numeric", month: "long", day: "numeric" })
+    : new Date().toLocaleDateString(dateLocale, { weekday: "long", year: "numeric", month: "long", day: "numeric" });
 
   const statusColor =
     data.outcomeStatus === "Resolved" ? "#16a34a" :
@@ -36,8 +40,8 @@ function buildReportHTML(data: ReportRequest, aiSummary: string): string {
   const readingsHTML = Array.isArray(data.observations) && data.observations.length
     ? `<table style="width:100%;border-collapse:collapse;margin-top:8px">
         <tr style="background:#f8fafc">
-          <th style="text-align:left;padding:6px 10px;font-size:11px;color:#64748b;font-weight:600;border-bottom:1px solid #e2e8f0">Reading</th>
-          <th style="text-align:right;padding:6px 10px;font-size:11px;color:#64748b;font-weight:600;border-bottom:1px solid #e2e8f0">Value</th>
+          <th style="text-align:left;padding:6px 10px;font-size:11px;color:#64748b;font-weight:600;border-bottom:1px solid #e2e8f0">${t("report_table_reading", lang)}</th>
+          <th style="text-align:right;padding:6px 10px;font-size:11px;color:#64748b;font-weight:600;border-bottom:1px solid #e2e8f0">${t("report_table_value", lang)}</th>
         </tr>
         ${data.observations.map(o => `
         <tr>
@@ -45,14 +49,14 @@ function buildReportHTML(data: ReportRequest, aiSummary: string): string {
           <td style="padding:6px 10px;font-size:12px;color:#111827;font-weight:600;text-align:right;border-bottom:1px solid #f1f5f9">${o.value} ${o.unit}</td>
         </tr>`).join("")}
       </table>`
-    : "<p style='font-size:12px;color:#94a3b8;margin-top:6px'>No field readings recorded.</p>";
+    : `<p style='font-size:12px;color:#94a3b8;margin-top:6px'>${t("report_no_readings", lang)}</p>`;
 
   return `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Service Report — ${data.customerName || "Customer"}</title>
+<title>${t("report_title", lang)} — ${data.customerName || "Customer"}</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; color: #1e293b; }
@@ -84,84 +88,84 @@ function buildReportHTML(data: ReportRequest, aiSummary: string): string {
 <body>
 <div class="page">
   <div class="header">
-    <div class="company">${data.companyName || "HVAC/R Pro Service"}</div>
-    <div class="report-title">Service Report</div>
+    <div class="company">${data.companyName || t("report_default_company", lang)}</div>
+    <div class="report-title">${t("report_title", lang)}</div>
     <div class="report-date">${date}</div>
   </div>
   <div class="status-bar">
-    <div class="status-text">Status: ${data.outcomeStatus || "Service Completed"}</div>
+    <div class="status-text">${t("report_status_prefix", lang)} ${data.outcomeStatus || t("report_status_default", lang)}</div>
   </div>
 
   <div class="content">
 
     <div class="section">
-      <div class="section-title">Customer & Location</div>
+      <div class="section-title">${t("report_section_customer_location", lang)}</div>
       <div class="info-grid">
         <div class="info-item">
-          <div class="info-label">Customer</div>
+          <div class="info-label">${t("report_label_customer", lang)}</div>
           <div class="info-value">${data.customerName || "—"}</div>
         </div>
         <div class="info-item">
-          <div class="info-label">Site</div>
+          <div class="info-label">${t("report_label_site", lang)}</div>
           <div class="info-value">${data.siteName || "—"}</div>
         </div>
         <div class="info-item">
-          <div class="info-label">Address</div>
+          <div class="info-label">${t("report_label_address", lang)}</div>
           <div class="info-value">${data.siteAddress || "—"}</div>
         </div>
         <div class="info-item">
-          <div class="info-label">Service Date</div>
+          <div class="info-label">${t("report_label_service_date", lang)}</div>
           <div class="info-value">${data.serviceDate || date}</div>
         </div>
       </div>
     </div>
 
     <div class="section">
-      <div class="section-title">Equipment</div>
+      <div class="section-title">${t("report_section_equipment", lang)}</div>
       <div class="info-grid">
         <div class="info-item">
-          <div class="info-label">Type</div>
+          <div class="info-label">${t("report_label_type", lang)}</div>
           <div class="info-value">${data.equipmentType || "—"}</div>
         </div>
         <div class="info-item">
-          <div class="info-label">Manufacturer</div>
+          <div class="info-label">${t("report_label_manufacturer", lang)}</div>
           <div class="info-value">${data.manufacturer || "—"}</div>
         </div>
         <div class="info-item">
-          <div class="info-label">Model</div>
+          <div class="info-label">${t("report_label_model", lang)}</div>
           <div class="info-value">${data.model || "—"}</div>
         </div>
         <div class="info-item">
-          <div class="info-label">Serial Number</div>
+          <div class="info-label">${t("report_label_serial", lang)}</div>
           <div class="info-value">${data.serialNumber || "—"}</div>
         </div>
         ${data.refrigerantType && data.refrigerantType !== "Unknown" ? `
         <div class="info-item">
-          <div class="info-label">Refrigerant</div>
+          <div class="info-label">${t("report_label_refrigerant", lang)}</div>
           <div class="info-value">${data.refrigerantType}</div>
         </div>` : ""}
       </div>
     </div>
 
     <div class="section">
-      <div class="section-title">Summary — What We Found & What We Did</div>
+      <div class="section-title">${t("report_section_summary", lang)}</div>
       <div class="summary-box">
         <div class="summary-text">${aiSummary}</div>
       </div>
     </div>
 
     <div class="section">
-      <div class="section-title">Service Details</div>
-      ${data.symptom ? `<div class="highlight"><div class="highlight-label">Reported Problem</div><div class="highlight-value">${data.symptom}</div></div>` : ""}
-      ${data.finalConfirmedCause ? `<div class="highlight"><div class="highlight-label">Confirmed Cause</div><div class="highlight-value">${data.finalConfirmedCause}</div></div>` : ""}
-      ${data.actualFixPerformed ? `<div class="highlight"><div class="highlight-label">Work Performed</div><div class="highlight-value">${data.actualFixPerformed}</div></div>` : ""}
-      ${data.partsReplaced ? `<div class="highlight"><div class="highlight-label">Parts Replaced</div><div class="highlight-value">${data.partsReplaced}</div></div>` : ""}
-      ${data.techCloseoutNotes ? `<div class="highlight"><div class="highlight-label">Technician Notes</div><div class="highlight-value">${data.techCloseoutNotes}</div></div>` : ""}
+      <div class="section-title">${t("report_section_service_details", lang)}</div>
+      ${data.symptom ? `<div class="highlight"><div class="highlight-label">${t("report_label_reported_problem", lang)}</div><div class="highlight-value">${data.symptom}</div></div>` : ""}
+      ${data.finalConfirmedCause ? `<div class="highlight"><div class="highlight-label">${t("report_label_confirmed_cause", lang)}</div><div class="highlight-value">${data.finalConfirmedCause}</div></div>` : ""}
+      ${data.actualFixPerformed ? `<div class="highlight"><div class="highlight-label">${t("report_label_work_performed", lang)}</div><div class="highlight-value">${data.actualFixPerformed}</div></div>` : ""}
+      ${data.partsReplaced ? `<div class="highlight"><div class="highlight-label">${t("report_label_parts_replaced", lang)}</div><div class="highlight-value">${data.partsReplaced}</div></div>` : ""}
+      ${data.techCloseoutNotes ? `<div class="highlight"><div class="highlight-label">${t("report_label_tech_notes", lang)}</div><div class="highlight-value">${data.techCloseoutNotes}</div></div>` : ""}
     </div>
 
     ${Array.isArray(data.observations) && data.observations.length ? `
     <div class="section">
-      <div class="section-title">Field Readings Taken</div>
+      <div class="section-title">${t("report_section_field_readings", lang)}</div>
       ${readingsHTML}
     </div>` : ""}
 
@@ -169,9 +173,9 @@ function buildReportHTML(data: ReportRequest, aiSummary: string): string {
 
   <div class="footer">
     <div class="footer-text">
-      This report was generated by HVAC/R Pro field diagnostic platform.<br>
-      For questions about this service visit, contact your service provider.<br>
-      Report generated: ${new Date().toLocaleString()}
+      ${t("report_footer_line1", lang)}<br>
+      ${t("report_footer_line2", lang)}<br>
+      ${t("report_footer_generated", lang)} ${new Date().toLocaleString(dateLocale)}
     </div>
   </div>
 </div>
@@ -182,12 +186,16 @@ function buildReportHTML(data: ReportRequest, aiSummary: string): string {
 export async function POST(req: NextRequest) {
   try {
     const body: ReportRequest = await req.json();
+    const lang: Language = body.lang === "es" ? "es" : "en";
 
     const apiKey = process.env.ANTHROPIC_API_KEY || "";
 
     let aiSummary = "";
 
     if (apiKey) {
+      const langInstruction = lang === "es"
+        ? "\n\nWrite the summary in Spanish (español), in plain language a Spanish-speaking homeowner or building manager can understand."
+        : "";
       const prompt = `You are writing a customer-friendly service report summary for an HVAC/R service visit.
 Write 2-4 sentences in plain English that a homeowner or building manager can understand.
 NO technical jargon. Explain what was wrong, what was done, and what the current status is.
@@ -202,7 +210,7 @@ Job details:
 - Current status: ${body.outcomeStatus || "Service completed"}
 - Tech notes: ${body.techCloseoutNotes || ""}
 
-Write only the summary paragraph. No headers, no bullets, no preamble.`;
+Write only the summary paragraph. No headers, no bullets, no preamble.${langInstruction}`;
 
       const response = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
@@ -225,14 +233,20 @@ Write only the summary paragraph. No headers, no bullets, no preamble.`;
     }
 
     if (!aiSummary) {
-      const parts = [
+      const parts = lang === "es" ? [
+        body.symptom ? `Respondimos a un reporte de ${body.symptom} en su ${body.equipmentType || "sistema HVAC"}.` : `Realizamos una visita de servicio en su ${body.equipmentType || "sistema HVAC"}.`,
+        body.finalConfirmedCause ? `Nuestro técnico identificó la causa como ${body.finalConfirmedCause}.` : "",
+        body.actualFixPerformed ? `Se realizó el siguiente trabajo: ${body.actualFixPerformed}.` : "",
+        body.partsReplaced ? `Partes reemplazadas: ${body.partsReplaced}.` : "",
+        body.outcomeStatus && body.outcomeStatus !== "Not Set" ? `Estado actual del sistema: ${body.outcomeStatus}.` : "El sistema ha sido reparado.",
+      ] : [
         body.symptom ? `We responded to a report of ${body.symptom} on your ${body.equipmentType || "HVAC system"}.` : `We performed a service visit on your ${body.equipmentType || "HVAC system"}.`,
         body.finalConfirmedCause ? `Our technician identified the cause as ${body.finalConfirmedCause}.` : "",
         body.actualFixPerformed ? `The following work was performed: ${body.actualFixPerformed}.` : "",
         body.partsReplaced ? `Parts replaced: ${body.partsReplaced}.` : "",
         body.outcomeStatus && body.outcomeStatus !== "Not Set" ? `Current system status: ${body.outcomeStatus}.` : "The system has been serviced.",
-      ].filter(Boolean);
-      aiSummary = parts.join(" ");
+      ];
+      aiSummary = parts.filter(Boolean).join(" ");
     }
 
     const html = buildReportHTML(body, aiSummary);
