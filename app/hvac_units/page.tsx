@@ -8264,18 +8264,18 @@ return (
             gap: 6,
           }}
         >
-          <div style={{ fontWeight: 900, fontSize: 18 }}>Step 4 — Repair</div>
+          <div style={{ fontWeight: 900, fontSize: 18 }}>{t("step4_title", lang)}</div>
           <SmallHint>
-            Once a part is selected, use these sections to verify it correctly, focus on the right manual/parts area, and execute the repair safely.
+            {t("step4_hint", lang)}
           </SmallHint>
         </div>
       </div>
 
 {/* repair-execution-assist-v1 */}
       <div style={{ marginTop: 10 }}>
-        <SectionCard title="Repair Execution Assist">
+        <SectionCard title={t("repair_execution_title", lang)}>
           <SmallHint>
-            For the selected part, shows what to verify first, how to approach replacement, safety/watch-outs, common mistakes, and quick video/search links.
+            {t("repair_execution_hint", lang)}
           </SmallHint>
 
           <RepairExecutionAssist payload={buildRepairExecutionAssist()} />
@@ -8284,9 +8284,9 @@ return (
 
 {/* part-verification-checklist-v1 */}
       <div style={{ marginTop: 10 }}>
-        <SectionCard title="Part Verification Checklist">
+        <SectionCard title={t("part_verification_title", lang)}>
           <SmallHint>
-            Pick a likely part and the app gives the exact checks to perform before replacing it.
+            {t("part_verification_hint", lang)}
           </SmallHint>
 
           <PartVerificationChecklist
