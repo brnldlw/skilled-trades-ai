@@ -1,6 +1,8 @@
 "use client";
 
 import { SmallHint } from "./SmallHint";
+import { useLang } from "../../components/LanguageContext";
+import { t } from "../../lib/translations";
 
 type ComponentOption = {
   id: string;
@@ -20,11 +22,11 @@ export function AffectedComponentSelect({
   systemType: string;
   onSelect: (id: string, label: string) => void;
 }) {
+  const { lang } = useLang();
   return (
     <>
       <SmallHint>
-        Select the exact piece of equipment this call is about. This is required for split systems,
-        walk-ins, mini-splits, and any multi-component setup so history stays tied to the right component.
+        {t("affected_component_hint", lang)}
       </SmallHint>
 
       <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
@@ -37,7 +39,7 @@ export function AffectedComponentSelect({
           }}
           style={{ width: "100%", padding: 8 }}
         >
-          <option value="">Select affected component</option>
+          <option value="">{t("affected_component_select_placeholder", lang)}</option>
           {options.map((option) => (
             <option key={option.id} value={option.id}>
               {option.label}
@@ -47,15 +49,15 @@ export function AffectedComponentSelect({
 
         {affectedComponentId ? (
           <SmallHint>
-            Selected: <b>{affectedComponentLabel || affectedComponentId}</b>
+            {t("affected_component_selected", lang)} <b>{affectedComponentLabel || affectedComponentId}</b>
           </SmallHint>
         ) : systemType !== "single" ? (
           <SmallHint>
-            Required for multi-component systems.
+            {t("affected_component_required_multi", lang)}
           </SmallHint>
         ) : (
           <SmallHint>
-            For single-equipment calls this will default to the primary component if you leave it blank.
+            {t("affected_component_default_single", lang)}
           </SmallHint>
         )}
       </div>

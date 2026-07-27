@@ -2,6 +2,8 @@
 
 import { SmallHint } from "./SmallHint";
 import { useJobIdentity } from "../context/JobIdentity";
+import { useLang } from "../../components/LanguageContext";
+import { t } from "../../lib/translations";
 
 type LinkedComponent = {
   role: string;
@@ -31,6 +33,7 @@ export function CurrentLoadedUnit({
   linkedEquipmentComponents: LinkedComponent[];
 }) {
   const { manufacturer, model } = useJobIdentity();
+  const { lang } = useLang();
 
   return (
     <div
@@ -63,7 +66,7 @@ export function CurrentLoadedUnit({
             fontWeight: 900,
           }}
         >
-          {currentLoadedUnitId ? "UNIT LOADED" : "NO UNIT LOADED"}
+          {currentLoadedUnitId ? t("clu_unit_loaded", lang) : t("clu_no_unit_loaded", lang)}
         </span>
 
         {currentLoadedUnitId ? (
@@ -91,16 +94,16 @@ export function CurrentLoadedUnit({
           gap: 10,
         }}
       >
-        <div><b>Customer:</b> {customerName || "-"}</div>
-        <div><b>Site:</b> {siteName || "-"}</div>
-        <div><b>Unit Tag:</b> {unitNickname || "-"}</div>
-        <div><b>Manufacturer:</b> {manufacturer || "-"}</div>
-        <div><b>Model:</b> {model || "-"}</div>
-        <div><b>Serial:</b> {serialNumber || "-"}</div>
-        <div><b>System Type:</b> {systemType || "single"}</div>
-        <div><b>Primary Role:</b> {primaryComponentRole || "unit"}</div>
+        <div><b>{t("clu_customer", lang)}</b> {customerName || "-"}</div>
+        <div><b>{t("clu_site", lang)}</b> {siteName || "-"}</div>
+        <div><b>{t("clu_unit_tag", lang)}</b> {unitNickname || "-"}</div>
+        <div><b>{t("clu_manufacturer", lang)}</b> {manufacturer || "-"}</div>
+        <div><b>{t("clu_model", lang)}</b> {model || "-"}</div>
+        <div><b>{t("clu_serial", lang)}</b> {serialNumber || "-"}</div>
+        <div><b>{t("clu_system_type", lang)}</b> {systemType || "single"}</div>
+        <div><b>{t("clu_primary_role", lang)}</b> {primaryComponentRole || "unit"}</div>
         <div style={{ gridColumn: "1 / -1" }}>
-          <b>Linked Equipment:</b>{" "}
+          <b>{t("clu_linked_equipment", lang)}</b>{" "}
           {linkedEquipmentComponents.length
             ? linkedEquipmentComponents.map((component, idx) => {
                 const bits = [
@@ -112,12 +115,12 @@ export function CurrentLoadedUnit({
                 ].filter(Boolean);
                 return bits.join(" • ");
               }).join(" | ")
-            : "None"}
+            : t("clu_none", lang)}
         </div>
       </div>
 
       <SmallHint style={{ marginTop: 10 }}>
-        Always verify this banner before saving historical calls so they stay attached to the correct unit.
+        {t("clu_hint", lang)}
       </SmallHint>
     </div>
   );

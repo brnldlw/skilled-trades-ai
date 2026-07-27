@@ -1,16 +1,19 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useLang } from "../../components/LanguageContext";
+import { t, type TranslationKey } from "../../lib/translations";
 
-const STEPS = [
-  { num: 1, label: "Identify", anchor: "new-job" },
-  { num: 2, label: "Complaint", anchor: "measurements" },
-  { num: 3, label: "Diagnose", anchor: "ai-chat" },
-  { num: 4, label: "Repair", anchor: "repair" },
-  { num: 5, label: "Closeout", anchor: "customer-report" },
+const STEPS: { num: number; labelKey: TranslationKey; anchor: string }[] = [
+  { num: 1, labelKey: "step_identify", anchor: "new-job" },
+  { num: 2, labelKey: "step_complaint", anchor: "measurements" },
+  { num: 3, labelKey: "step_diagnose", anchor: "ai-chat" },
+  { num: 4, labelKey: "step_repair", anchor: "repair" },
+  { num: 5, labelKey: "step_closeout", anchor: "customer-report" },
 ];
 
 export function StepProgressBar() {
+  const { lang } = useLang();
   const [activeStep, setActiveStep] = useState(1);
 
   useEffect(() => {
@@ -106,7 +109,7 @@ export function StepProgressBar() {
               textTransform: "uppercase",
               lineHeight: 1,
             }}>
-              {step.label}
+              {t(step.labelKey, lang)}
             </div>
             {/* Active indicator */}
             {isActive && (

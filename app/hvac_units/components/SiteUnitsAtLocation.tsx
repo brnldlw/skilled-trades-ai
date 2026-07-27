@@ -3,6 +3,8 @@
 import { SmallHint } from "./SmallHint";
 import { PillButton } from "./PillButton";
 import type { SavedUnitRecord } from "../../lib/unit-store";
+import { useLang } from "../../components/LanguageContext";
+import { t } from "../../lib/translations";
 
 export function SiteUnitsAtLocation({
   customerName,
@@ -17,10 +19,12 @@ export function SiteUnitsAtLocation({
   currentLoadedUnitId: string;
   onLoadUnit: (record: SavedUnitRecord) => void;
 }) {
+  const { lang } = useLang();
+
   if (!customerName.trim() || !siteName.trim()) {
     return (
       <SmallHint>
-        Enter customer and site to see other units already saved at this location.
+        {t("site_units_empty_prompt", lang)}
       </SmallHint>
     );
   }
@@ -28,7 +32,7 @@ export function SiteUnitsAtLocation({
   if (!siteUnitsAtLocation.length) {
     return (
       <SmallHint>
-        No saved units found yet for this customer/site.
+        {t("site_units_none_found", lang)}
       </SmallHint>
     );
   }
@@ -36,7 +40,7 @@ export function SiteUnitsAtLocation({
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <SmallHint>
-        Saved units already at this site: <b>{siteUnitsAtLocation.length}</b>
+        {t("site_units_count", lang)} <b>{siteUnitsAtLocation.length}</b>
       </SmallHint>
 
       {siteUnitsAtLocation.map((unit) => (
@@ -61,7 +65,7 @@ export function SiteUnitsAtLocation({
             }}
           >
             <div style={{ fontWeight: 900 }}>
-              {unit.unitNickname || "No Unit Tag"}
+              {unit.unitNickname || t("site_units_no_tag", lang)}
             </div>
 
             <span
@@ -76,7 +80,7 @@ export function SiteUnitsAtLocation({
                 fontWeight: 900,
               }}
             >
-              {unit.equipmentType || "Unknown Type"}
+              {unit.equipmentType || t("site_units_unknown_type", lang)}
             </span>
 
             {currentLoadedUnitId && currentLoadedUnitId === unit.id ? (
@@ -92,7 +96,7 @@ export function SiteUnitsAtLocation({
                   fontWeight: 900,
                 }}
               >
-                CURRENTLY LOADED
+                {t("site_units_currently_loaded", lang)}
               </span>
             ) : null}
           </div>
@@ -102,7 +106,7 @@ export function SiteUnitsAtLocation({
           </SmallHint>
 
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
-            <PillButton text="Load This Unit" onClick={() => onLoadUnit(unit)} />
+            <PillButton text={t("btn_load_this_unit", lang)} onClick={() => onLoadUnit(unit)} />
           </div>
         </div>
       ))}

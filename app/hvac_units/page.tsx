@@ -114,8 +114,8 @@ import { FailurePredictionDashboard } from "../components/FailurePredictionDashb
 
 import { StepProgressBar } from "./components/StepProgressBar";
 import { OnboardingTour } from "./components/OnboardingTour";
-import { useLang } from "../components/LanguageContext";
-import { t } from "../lib/translations";
+import { useLang, type Language } from "../components/LanguageContext";
+import { t, type TranslationKey } from "../lib/translations";
 
 // ── View As Banner (admin impersonation) ─────────────────────
 function ViewAsBanner() {
@@ -236,6 +236,8 @@ import {
   refrigerantOptions,
   unitOptions,
   equipmentTypeGroups,
+  translateEquipmentType,
+  translateEquipmentGroupLabel,
   coolingPresets,
   heatingPresets,
   refrigerationPresets,
@@ -1603,6 +1605,45 @@ const linkedEquipmentRoleOptions = [
   { value: "indoor_head", label: "Indoor Head" },
   { value: "other", label: "Other" },
 ] as const;
+
+const ROLE_LABEL_KEYS: Record<string, TranslationKey> = {
+  "Linked Component": "role_linked_component",
+  "Indoor Unit": "role_indoor_unit",
+  "Outdoor Unit": "role_outdoor_unit",
+  "Furnace": "role_furnace",
+  "Air Handler": "role_air_handler",
+  "Condensing Unit": "role_condensing_unit",
+  "Evaporator": "role_evaporator",
+  "Indoor Head": "role_indoor_head",
+  "Other": "role_other",
+};
+function translateRoleLabel(label: string, lang: Language): string {
+  const key = ROLE_LABEL_KEYS[label];
+  return key ? t(key, lang) : label;
+}
+
+const SYMPTOM_PACK_LABEL_KEYS: Record<string, TranslationKey> = {
+  "No Cooling": "pack_no_cooling",
+  "Freezing Up": "pack_freezing_up",
+  "No Heat (Gas)": "pack_no_heat_gas",
+  "Box Warm": "pack_box_warm",
+  "Iced Evaporator": "pack_iced_evaporator",
+  "Defrost Failure": "pack_defrost_failure",
+  "Short Cycling": "pack_short_cycling",
+  "Compressor Not Starting": "pack_compressor_not_starting",
+  "Mini-Split No Cool": "pack_minisplit_no_cool",
+  "Mini-Split No Heat": "pack_minisplit_no_heat",
+  "Mini-Split Water Leak": "pack_minisplit_water_leak",
+  "Mini-Split Error Code": "pack_minisplit_error_code",
+  "Ice Machine Not Making Ice": "pack_ice_not_making",
+  "Ice Machine Low Production": "pack_ice_low_production",
+  "Ice Machine Harvest Problem": "pack_ice_harvest_problem",
+  "Ice Machine Water Fill Problem": "pack_ice_water_fill_problem",
+};
+function translateSymptomPackLabel(label: string, lang: Language): string {
+  const key = SYMPTOM_PACK_LABEL_KEYS[label];
+  return key ? t(key, lang) : label;
+}
 
 const addLinkedEquipmentComponent = (roleOverride?: string) => {
   const defaults = systemStructureDefaults[systemType] || systemStructureDefaults.single;
@@ -7344,7 +7385,7 @@ return (
     <StepProgressBar />
   <div style={{ padding: "12px 14px 48px", maxWidth: 820, margin: "0 auto" }}>
       <h1 style={{ fontSize: 22, fontWeight: 900, color: "#0f1f3d", marginBottom: 4 }}>
-        My HVAC/R Tool
+        {t("app_title", lang)}
       </h1>
 
       <div
@@ -7362,7 +7403,7 @@ return (
   }}
 >
   <div>
-    <b>Logged in:</b> {userEmail || "Unknown user"}
+    <b>{t("logged_in_as", lang)}</b> {userEmail || t("unknown_user", lang)}
   </div>
 
   <button
@@ -7378,7 +7419,7 @@ return (
             boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
           }}
 >
-  Load Unit
+  {t("btn_load_unit", lang)}
 </button>
 
   <button
@@ -7394,7 +7435,7 @@ return (
             boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
           }}
   >
-    {showSavedUnitHistory ? "Hide History" : "Show History"}
+    {showSavedUnitHistory ? t("btn_hide_history", lang) : t("btn_show_history", lang)}
   </button>
 
   <button onClick={handleSignOut} style={{
@@ -7407,7 +7448,7 @@ return (
             cursor: "pointer",
             boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
           }}>
-    Sign out
+    {t("btn_sign_out", lang)}
   </button>
 </div>
 
@@ -7706,10 +7747,10 @@ return (
           </SectionCard>
         </div>
 
-        <SectionCard title={"Customer / Site / Unit"} id="new-job">
+        <SectionCard title={t("intake_title", lang)} id="new-job">
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             <div>
-              <label style={{ fontWeight: 900 }}>{"Customer Name"}</label>
+              <label style={{ fontWeight: 900 }}>{t("job_form_customer", lang)}</label>
               <input
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
@@ -7717,17 +7758,17 @@ return (
               />
             </div>
             <div>
-              <label style={{ fontWeight: 900 }}>{"Company Name"}</label>
+              <label style={{ fontWeight: 900 }}>{t("intake_company_name", lang)}</label>
               <br />
               <input
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
-                placeholder="Example: ABC Mechanical"
+                placeholder={t("intake_company_placeholder", lang)}
                 style={{ width: "100%", padding: 8 }}
               />
             </div>
             <div>
-              <label style={{ fontWeight: 900 }}>{"Site Name"}</label>
+              <label style={{ fontWeight: 900 }}>{t("intake_site_name", lang)}</label>
               <input
                 value={siteName}
                 onChange={(e) => setSiteName(e.target.value)}
@@ -7735,7 +7776,7 @@ return (
               />
             </div>
             <div style={{ gridColumn: "1 / -1" }}>
-              <label style={{ fontWeight: 900 }}>{"Site Address"}</label>
+              <label style={{ fontWeight: 900 }}>{t("intake_site_address", lang)}</label>
               <input
                 value={siteAddress}
                 onChange={(e) => setSiteAddress(e.target.value)}
@@ -7743,14 +7784,14 @@ return (
               />
             </div>
             <div>
-              <label style={{ fontWeight: 900, fontSize: 16 }}>{"Unit Nickname / Tag *"}</label>
+              <label style={{ fontWeight: 900, fontSize: 16 }}>{t("intake_unit_tag_required", lang)}</label>
           <SmallHint>
-            Use a clear unit tag like RTU-1, RTU-2, WIC-1, Reach-In 3, or Merchandiser 2.
+            {t("intake_unit_tag_hint", lang)}
           </SmallHint>
               <input
                 value={unitNickname}
                 onChange={(e) => setUnitNickname(e.target.value)}
-                placeholder="RTU-1, Office Furnace, Walk-in Cooler"
+                placeholder={t("intake_unit_tag_placeholder", lang)}
                 style={{ width: "100%", padding: 8 }}
               />
             </div>
@@ -7770,13 +7811,11 @@ return (
   }}
 >
   <div style={{ fontWeight: 900, fontSize: 16 }}>
-    System Structure / Linked Equipment
+    {t("sysstruct_title", lang)}
   </div>
 
   <SmallHint>
-    The Unit Tag / Manufacturer / Model / Serial fields above are the primary piece of equipment for
-    this call. Use this section when the system has linked equipment like outdoor + indoor, furnace +
-    AC, condensing unit + evaporator, or multiple evaporators / indoor heads.
+    {t("sysstruct_hint", lang)}
   </SmallHint>
 
   <div
@@ -7787,7 +7826,7 @@ return (
     }}
   >
     <label style={{ display: "grid", gap: 6 }}>
-      <span style={{ fontWeight: 900 }}>System Type</span>
+      <span style={{ fontWeight: 900 }}>{t("sysstruct_system_type", lang)}</span>
       <select
         value={systemType}
         onChange={(e) => {
@@ -7823,39 +7862,39 @@ return (
         }}
         style={{ width: "100%", padding: 8 }}
       >
-        <option value="single">Single piece of equipment (RTU, package unit, window AC, etc.)</option>
-        <option value="split_system">Split system — outdoor condensing unit + indoor air handler/coil</option>
-        <option value="furnace_ac">Furnace + AC — gas furnace + condensing unit + coil</option>
-        <option value="heat_pump_air_handler">Heat pump + air handler</option>
-        <option value="walk_in">Walk-in — remote condensing unit + evaporator(s)</option>
-        <option value="mini_split">Mini-split — outdoor + one or more indoor heads</option>
-        <option value="ice_machine_remote">Ice machine head + remote condenser</option>
-        <option value="reach_in_remote">Reach-in / display case + remote condensing unit</option>
-        <option value="other_multi">Other multi-component system</option>
+        <option value="single">{t("sysstruct_type_single", lang)}</option>
+        <option value="split_system">{t("sysstruct_type_split", lang)}</option>
+        <option value="furnace_ac">{t("sysstruct_type_furnace_ac", lang)}</option>
+        <option value="heat_pump_air_handler">{t("sysstruct_type_heat_pump_ah", lang)}</option>
+        <option value="walk_in">{t("sysstruct_type_walkin", lang)}</option>
+        <option value="mini_split">{t("sysstruct_type_mini_split", lang)}</option>
+        <option value="ice_machine_remote">{t("sysstruct_type_ice_remote", lang)}</option>
+        <option value="reach_in_remote">{t("sysstruct_type_reachin_remote", lang)}</option>
+        <option value="other_multi">{t("sysstruct_type_other_multi", lang)}</option>
       </select>
     </label>
 
     <label style={{ display: "grid", gap: 6 }}>
-      <span style={{ fontWeight: 900 }}>Primary Component Role</span>
+      <span style={{ fontWeight: 900 }}>{t("sysstruct_primary_role", lang)}</span>
       <select
         value={primaryComponentRole}
         onChange={(e) => setPrimaryComponentRole(e.target.value)}
         style={{ width: "100%", padding: 8 }}
       >
-        <option value="unit">Unit</option>
-        <option value="outdoor_unit">Outdoor Unit</option>
-        <option value="indoor_unit">Indoor Unit</option>
-        <option value="furnace">Furnace</option>
-        <option value="air_handler">Air Handler</option>
-        <option value="condensing_unit">Condensing Unit</option>
-        <option value="evaporator">Evaporator</option>
-        <option value="indoor_head">Indoor Head</option>
-        <option value="primary_component">Primary Component</option>
+        <option value="unit">{t("role_unit", lang)}</option>
+        <option value="outdoor_unit">{t("role_outdoor_unit", lang)}</option>
+        <option value="indoor_unit">{t("role_indoor_unit", lang)}</option>
+        <option value="furnace">{t("role_furnace", lang)}</option>
+        <option value="air_handler">{t("role_air_handler", lang)}</option>
+        <option value="condensing_unit">{t("role_condensing_unit", lang)}</option>
+        <option value="evaporator">{t("role_evaporator", lang)}</option>
+        <option value="indoor_head">{t("role_indoor_head", lang)}</option>
+        <option value="primary_component">{t("role_primary_component", lang)}</option>
       </select>
     </label>
 
     <label style={{ display: "grid", gap: 6 }}>
-      <span style={{ fontWeight: 900 }}>Primary Tag Status</span>
+      <span style={{ fontWeight: 900 }}>{t("tag_status_label", lang)}</span>
       <select
         value={primaryTagStatus}
         onChange={(e) =>
@@ -7863,9 +7902,9 @@ return (
         }
         style={{ width: "100%", padding: 8 }}
       >
-        <option value="readable">Readable</option>
-        <option value="partial">Partial / damaged</option>
-        <option value="unreadable">Unreadable / destroyed</option>
+        <option value="readable">{t("tag_status_readable", lang)}</option>
+        <option value="partial">{t("tag_status_partial", lang)}</option>
+        <option value="unreadable">{t("tag_status_unreadable", lang)}</option>
       </select>
     </label>
   </div>
@@ -7881,20 +7920,19 @@ return (
         gap: 10,
       }}
     >
-      <div style={{ fontWeight: 900 }}>Primary component damaged or unreadable tag workflow</div>
+      <div style={{ fontWeight: 900 }}>{t("tag_issue_title", lang)}</div>
 
       <SmallHint>
-        Check inside the electrical, fan, or control area for an internal label before saving
-        incomplete primary component information.
+        {t("tag_issue_hint", lang)}
       </SmallHint>
 
       <label style={{ display: "grid", gap: 6 }}>
-        <span style={{ fontWeight: 900 }}>Reason primary tag could not be fully read</span>
+        <span style={{ fontWeight: 900 }}>{t("tag_issue_reason_label", lang)}</span>
         <textarea
           value={primaryTagIssueReason}
           onChange={(e) => setPrimaryTagIssueReason(e.target.value)}
           rows={3}
-          placeholder="Example: Outdoor tag sun-faded. Checked inside control panel and found partial serial only."
+          placeholder={t("tag_issue_reason_placeholder", lang)}
           style={{ width: "100%", padding: 8 }}
         />
       </label>
@@ -7912,7 +7950,7 @@ return (
           checked={primaryCheckedInsideForInternalLabel}
           onChange={(e) => setPrimaryCheckedInsideForInternalLabel(e.target.checked)}
         />
-        I checked inside the electrical / fan / control area for an internal label.
+        {t("tag_issue_checkbox", lang)}
       </label>
     </div>
   ) : null}
@@ -7930,9 +7968,9 @@ return (
     >
       <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
         <div>
-          <div style={{ fontWeight: 900 }}>Linked Equipment Components</div>
+          <div style={{ fontWeight: 900 }}>{t("linked_equip_title", lang)}</div>
           <SmallHint>
-            Add every linked piece of equipment for this system so history does not get mixed up.
+            {t("linked_equip_hint", lang)}
           </SmallHint>
         </div>
 
@@ -7950,7 +7988,7 @@ return (
               cursor: "pointer",
             }}
           >
-            Add {systemStructureDefaults[systemType]?.linkedLabel || "Linked Component"}
+            {t("linked_equip_add_prefix", lang)} {translateRoleLabel(systemStructureDefaults[systemType]?.linkedLabel || "Linked Component", lang)}
           </button>
 
           {systemType === "walk_in" ? (
@@ -7967,7 +8005,7 @@ return (
                 cursor: "pointer",
               }}
             >
-              Add Evaporator
+              {t("linked_equip_add_evaporator", lang)}
             </button>
           ) : null}
 
@@ -7985,7 +8023,7 @@ return (
                 cursor: "pointer",
               }}
             >
-              Add Indoor Head
+              {t("linked_equip_add_indoor_head", lang)}
             </button>
           ) : null}
         </div>
@@ -8001,7 +8039,7 @@ return (
             fontWeight: 700,
           }}
         >
-          This system type needs linked equipment entered before save.
+          {t("linked_equip_needed_warning", lang)}
         </div>
       ) : null}
 
@@ -8018,7 +8056,7 @@ return (
           }}
         >
           <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
-            <div style={{ fontWeight: 900 }}>Linked Component {idx + 1}</div>
+            <div style={{ fontWeight: 900 }}>{t("linked_equip_component_n", lang)} {idx + 1}</div>
 
             <button
               type="button"
@@ -8033,7 +8071,7 @@ return (
                 cursor: "pointer",
               }}
             >
-              Remove
+              {t("btn_remove", lang)}
             </button>
           </div>
 
@@ -8045,7 +8083,7 @@ return (
             }}
           >
             <label style={{ display: "grid", gap: 6 }}>
-              <span style={{ fontWeight: 900 }}>Component Role</span>
+              <span style={{ fontWeight: 900 }}>{t("linked_equip_role", lang)}</span>
               <select
                 value={component.role}
                 onChange={(e) => updateLinkedEquipmentComponent(component.id, "role", e.target.value)}
@@ -8053,24 +8091,24 @@ return (
               >
                 {linkedEquipmentRoleOptions.map((option) => (
                   <option key={option.value} value={option.value}>
-                    {option.label}
+                    {translateRoleLabel(option.label, lang)}
                   </option>
                 ))}
               </select>
             </label>
 
             <label style={{ display: "grid", gap: 6 }}>
-              <span style={{ fontWeight: 900 }}>Component Tag</span>
+              <span style={{ fontWeight: 900 }}>{t("linked_equip_tag", lang)}</span>
               <input
                 value={component.tag}
                 onChange={(e) => updateLinkedEquipmentComponent(component.id, "tag", e.target.value)}
-                placeholder="Example: EVAP-2, Indoor Head 3"
+                placeholder={t("linked_equip_tag_placeholder", lang)}
                 style={{ width: "100%", padding: 8 }}
               />
             </label>
 
             <label style={{ display: "grid", gap: 6 }}>
-              <span style={{ fontWeight: 900 }}>Manufacturer</span>
+              <span style={{ fontWeight: 900 }}>{t("job_form_manufacturer", lang)}</span>
               <input
                 value={component.manufacturer}
                 onChange={(e) =>
@@ -8081,7 +8119,7 @@ return (
             </label>
 
             <label style={{ display: "grid", gap: 6 }}>
-              <span style={{ fontWeight: 900 }}>Model</span>
+              <span style={{ fontWeight: 900 }}>{t("job_form_model", lang)}</span>
               <input
                 value={component.model}
                 onChange={(e) => updateLinkedEquipmentComponent(component.id, "model", e.target.value)}
@@ -8090,7 +8128,7 @@ return (
             </label>
 
             <label style={{ display: "grid", gap: 6 }}>
-              <span style={{ fontWeight: 900 }}>Serial</span>
+              <span style={{ fontWeight: 900 }}>{t("job_form_serial", lang)}</span>
               <input
                 value={component.serial}
                 onChange={(e) => updateLinkedEquipmentComponent(component.id, "serial", e.target.value)}
@@ -8099,7 +8137,7 @@ return (
             </label>
 
             <label style={{ display: "grid", gap: 6 }}>
-              <span style={{ fontWeight: 900 }}>Tag Status</span>
+              <span style={{ fontWeight: 900 }}>{t("linked_equip_tag_status", lang)}</span>
               <select
                 value={component.tagStatus}
                 onChange={(e) =>
@@ -8107,9 +8145,9 @@ return (
                 }
                 style={{ width: "100%", padding: 8 }}
               >
-                <option value="readable">Readable</option>
-                <option value="partial">Partial / damaged</option>
-                <option value="unreadable">Unreadable / destroyed</option>
+                <option value="readable">{t("tag_status_readable", lang)}</option>
+                <option value="partial">{t("tag_status_partial", lang)}</option>
+                <option value="unreadable">{t("tag_status_unreadable", lang)}</option>
               </select>
             </label>
           </div>
@@ -8126,12 +8164,11 @@ return (
               }}
             >
               <SmallHint>
-                Check inside the electrical, fan, or control area for another label for this linked
-                component before saving incomplete information.
+                {t("linked_equip_tag_issue_hint", lang)}
               </SmallHint>
 
               <label style={{ display: "grid", gap: 6 }}>
-                <span style={{ fontWeight: 900 }}>Reason tag could not be fully read</span>
+                <span style={{ fontWeight: 900 }}>{t("linked_equip_tag_issue_reason", lang)}</span>
                 <textarea
                   value={component.tagIssueReason}
                   onChange={(e) =>
@@ -8161,7 +8198,7 @@ return (
                     )
                   }
                 />
-                I checked inside the electrical / fan / control area for an internal label.
+                {t("tag_issue_checkbox", lang)}
               </label>
             </div>
           ) : null}
@@ -8172,9 +8209,9 @@ return (
 </div>
 
 <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
-            <PillButton text="Save Current Unit" onClick={saveCurrentUnit} />
-              {currentLoadedUnitId ? <PillButton text="Update Loaded Unit" onClick={updateCurrentLoadedUnit} /> : null}
-            <PillButton text="Clear Current Form" onClick={clearCurrentForm} />
+            <PillButton text={t("btn_save_current_unit", lang)} onClick={saveCurrentUnit} />
+              {currentLoadedUnitId ? <PillButton text={t("btn_update_loaded_unit", lang)} onClick={updateCurrentLoadedUnit} /> : null}
+            <PillButton text={t("btn_clear_current_form", lang)} onClick={clearCurrentForm} />
           </div>
         </SectionCard>
 
@@ -8183,7 +8220,7 @@ return (
             marginTop: 16,
           }}
         >
-          <SectionCard title="Current Loaded Unit">
+          <SectionCard title={t("clu_title", lang)}>
             <CurrentLoadedUnit
               currentLoadedUnitId={currentLoadedUnitId}
               customerName={customerName}
@@ -8199,7 +8236,7 @@ return (
 
       {/* affected-component-ui-v1 */}
       <div style={{ marginTop: 10 }}>
-        <SectionCard title="Affected Component for This Call">
+        <SectionCard title={t("affected_component_title", lang)}>
           <AffectedComponentSelect
             options={getAffectedComponentOptions()}
             affectedComponentId={affectedComponentId}
@@ -9587,10 +9624,10 @@ return (
               style={{ width: "100%", padding: 8 }}
             >
               {equipmentTypeGroups.map((group) => (
-                <optgroup key={group.groupLabel} label={group.groupLabel}>
+                <optgroup key={group.groupLabel} label={translateEquipmentGroupLabel(group.groupLabel, lang)}>
                   {group.options.map((option) => (
                     <option key={option} value={option}>
-                      {option}
+                      {translateEquipmentType(option, lang)}
                     </option>
                   ))}
                 </optgroup>
@@ -9658,9 +9695,9 @@ return (
                 gap: 12,
               }}
             >
-              <div style={{ fontWeight: 900, fontSize: 18 }}>Step 1 — Identify Equipment</div>
+              <div style={{ fontWeight: 900, fontSize: 18 }}>{t("step1_title", lang)}</div>
               <SmallHint>
-                Fill out the site, unit tag, property type, and equipment type first so the rest of the call stays tied to the right machine.
+                {t("step1_hint", lang)}
               </SmallHint>
 
               <div
@@ -9671,7 +9708,7 @@ return (
                 }}
               >
                 <div>
-                  <label style={{ fontWeight: 900 }}>{"Customer Name"}</label>
+                  <label style={{ fontWeight: 900 }}>{t("job_form_customer", lang)}</label>
                   <input
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
@@ -9680,7 +9717,7 @@ return (
                 </div>
 
                 <div>
-                  <label style={{ fontWeight: 900 }}>{"Site Name"}</label>
+                  <label style={{ fontWeight: 900 }}>{t("intake_site_name", lang)}</label>
                   <input
                     value={siteName}
                     onChange={(e) => setSiteName(e.target.value)}
@@ -9689,7 +9726,7 @@ return (
                 </div>
 
                 <div style={{ gridColumn: "1 / -1" }}>
-                  <label style={{ fontWeight: 900 }}>{"Site Address"}</label>
+                  <label style={{ fontWeight: 900 }}>{t("intake_site_address", lang)}</label>
                   <input
                     value={siteAddress}
                     onChange={(e) => setSiteAddress(e.target.value)}
@@ -9698,7 +9735,7 @@ return (
                 </div>
 
                 <div>
-                  <label style={{ fontWeight: 900 }}>{"Unit Nickname / Tag"}</label>
+                  <label style={{ fontWeight: 900 }}>{t("intake_unit_tag", lang)}</label>
                   <input
                     value={unitNickname}
                     onChange={(e) => setUnitNickname(e.target.value)}
@@ -9708,33 +9745,33 @@ return (
                 </div>
 
                 <div>
-                  <label style={{ fontWeight: 900 }}>{"Property Type"}</label>
+                  <label style={{ fontWeight: 900 }}>{t("job_form_property_type", lang)}</label>
                   <select
                     value={propertyType}
                     onChange={(e) => setPropertyType(e.target.value)}
                     style={{ width: "100%", padding: 8 }}
                   >
-                    <option value="Commercial">Commercial</option>
-                    <option value="Residential">Residential</option>
-                    <option value="Industrial">Industrial</option>
-                    <option value="Institutional">Institutional</option>
-                    <option value="Mixed Use">Mixed Use</option>
-                    <option value="Other">Other</option>
+                    <option value="Commercial">{t("property_type_commercial", lang)}</option>
+                    <option value="Residential">{t("property_type_residential", lang)}</option>
+                    <option value="Industrial">{t("property_type_industrial", lang)}</option>
+                    <option value="Institutional">{t("property_type_institutional", lang)}</option>
+                    <option value="Mixed Use">{t("property_type_mixed_use", lang)}</option>
+                    <option value="Other">{t("property_type_other", lang)}</option>
                   </select>
                 </div>
 
                 <div>
-                  <label style={{ fontWeight: 900 }}>{"Equipment Type"}</label>
+                  <label style={{ fontWeight: 900 }}>{t("job_form_equipment_type", lang)}</label>
                   <select
                     value={equipmentType}
                     onChange={(e) => setEquipmentType(e.target.value)}
                     style={{ width: "100%", padding: 8 }}
                   >
                     {equipmentTypeGroups.map((group) => (
-                      <optgroup key={group.groupLabel} label={group.groupLabel}>
+                      <optgroup key={group.groupLabel} label={translateEquipmentGroupLabel(group.groupLabel, lang)}>
                         {group.options.map((option) => (
                           <option key={option} value={option}>
-                            {option}
+                            {translateEquipmentType(option, lang)}
                           </option>
                         ))}
                       </optgroup>
@@ -9749,7 +9786,7 @@ return (
 
           {/* top-site-units-block-v1 */}
           <div style={{ gridColumn: "1 / -1", marginTop: 12 }}>
-            <SectionCard title="Site Units at This Location">
+            <SectionCard title={t("site_units_title", lang)}>
               <SiteUnitsAtLocation
                 customerName={customerName}
                 siteName={siteName}
@@ -9772,9 +9809,9 @@ return (
                 gap: 12,
               }}
             >
-              <div style={{ fontWeight: 900, fontSize: 16 }}>Step 1B — Equipment Details</div>
+              <div style={{ fontWeight: 900, fontSize: 16 }}>{t("step1b_title", lang)}</div>
               <SmallHint>
-                Fill in the make, model, serial, and refrigerant early so diagnosis, manuals, and parts guidance stay tied to the correct equipment.
+                {t("step1b_hint", lang)}
               </SmallHint>
 
               <div
@@ -9785,7 +9822,7 @@ return (
                 }}
               >
                 <div>
-                  <label style={{ fontWeight: 900 }}>{"Manufacturer"}</label>
+                  <label style={{ fontWeight: 900 }}>{t("job_form_manufacturer", lang)}</label>
                   <input
                     value={manufacturer}
                     onChange={(e) => setManufacturer(e.target.value)}
@@ -9794,7 +9831,7 @@ return (
                 </div>
 
                 <div>
-                  <label style={{ fontWeight: 900 }}>Model</label>
+                  <label style={{ fontWeight: 900 }}>{t("job_form_model", lang)}</label>
                   <input
                     value={model}
                     onChange={(e) => setModel(e.target.value)}
@@ -9803,7 +9840,7 @@ return (
                 </div>
 
                 <div>
-                  <label style={{ fontWeight: 900 }}>{"Serial Number"}</label>
+                  <label style={{ fontWeight: 900 }}>{t("job_form_serial", lang)}</label>
                   <input
                     value={serialNumber}
                     onChange={(e) => setSerialNumber(e.target.value)}
@@ -9812,7 +9849,7 @@ return (
                 </div>
 
                 <div>
-                  <label style={{ fontWeight: 900 }}>{"Refrigerant Type"}</label>
+                  <label style={{ fontWeight: 900 }}>{t("job_form_refrigerant_type", lang)}</label>
                   <select
                     value={refrigerantType}
                     onChange={(e) => setRefrigerantType(e.target.value)}
@@ -9858,9 +9895,9 @@ return (
           gap: 12,
         }}
       >
-        <SectionCard title="Symptom Packs" right={<Badge text={selectedPack.label} />}>
+        <SectionCard title={t("symptom_packs_title", lang)} right={<Badge text={translateSymptomPackLabel(selectedPack.label, lang)} />}>
           <SymptomPacks
-            packs={SYMPTOM_PACKS}
+            packs={SYMPTOM_PACKS.map((p) => ({ id: p.id, label: translateSymptomPackLabel(p.label, lang) }))}
             selectedPackId={selectedPackId}
             onSelectPack={selectPack}
           />

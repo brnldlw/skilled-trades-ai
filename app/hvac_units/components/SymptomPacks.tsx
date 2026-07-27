@@ -2,6 +2,8 @@
 
 import { SmallHint } from "./SmallHint";
 import { PillButton } from "./PillButton";
+import { useLang } from "../../components/LanguageContext";
+import { t } from "../../lib/translations";
 
 type SymptomPackOption = {
   id: string;
@@ -17,9 +19,10 @@ export function SymptomPacks({
   selectedPackId: string;
   onSelectPack: (packId: string) => void;
 }) {
+  const { lang } = useLang();
   return (
     <>
-      <SmallHint>Choose a symptom pack to load a tech-style flowchart.</SmallHint>
+      <SmallHint>{t("symptom_packs_hint", lang)}</SmallHint>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10 }}>
         {packs.map((pack) => (
           <PillButton
