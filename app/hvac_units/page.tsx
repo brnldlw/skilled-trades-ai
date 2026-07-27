@@ -2007,7 +2007,9 @@ const [checkedInsideForInternalLabel, setCheckedInsideForInternalLabel] = useSta
 
         Object.entries(symptomCounts).forEach(([symptomValue, count]) => {
           if (count >= 2) {
-            warnings.push(`Repeat symptom on this component: "${symptomValue}" (${count} times)`);
+            warnings.push(
+              t("caw_repeat_symptom", lang).replace("{symptom}", symptomValue).replace("{count}", String(count))
+            );
           }
         });
 
@@ -2017,12 +2019,12 @@ const [checkedInsideForInternalLabel, setCheckedInsideForInternalLabel] = useSta
         }).length;
 
         if (callbackCount >= 1) {
-          warnings.push(`Callback history on this component: ${callbackCount}`);
+          warnings.push(t("caw_callback_history", lang).replace("{count}", String(callbackCount)));
         }
 
         const recentParts = getRecentSameComponentPartsForAssist();
         if (recentParts.length >= 2) {
-          warnings.push(`Multiple prior parts tied to this component: ${recentParts.join(" • ")}`);
+          warnings.push(t("caw_multiple_parts", lang).replace("{value}", recentParts.join(" • ")));
         }
 
         return warnings.slice(0, 6);
@@ -3982,288 +3984,290 @@ function browserSupportsSmartReadingsDictation() {
         const summaryParts: string[] = [];
 
         summaryParts.push(
-          `${photoCount ? `${photoCount} photo${photoCount === 1 ? "" : "s"} attached` : "No photos attached yet"}.`
+          photoCount
+            ? t("pds_photos_attached_count", lang).replace("{count}", String(photoCount))
+            : t("pds_no_photos_yet", lang)
         );
-        summaryParts.push(`Target component: ${targetComponent}.`);
+        summaryParts.push(t("pvc_note_target_component", lang).replace("{value}", targetComponent));
 
         const selectedPart = String(selectedVerificationPart || "").trim();
         const selectedOutcome = String(selectedVerificationOutcome || "").trim();
 
         if (selectedPart) {
-          summaryParts.push(`Selected verification part: ${selectedPart}.`);
+          summaryParts.push(t("pds_selected_verification_part", lang).replace("{value}", selectedPart));
         }
 
         if (selectedOutcome) {
-          summaryParts.push(`Verification outcome focus: ${selectedOutcome}.`);
+          summaryParts.push(t("pds_verification_outcome_focus", lang).replace("{value}", selectedOutcome));
         }
 
         if (sameComponentHistory.length) {
           summaryParts.push(
-            `This component has ${sameComponentHistory.length} prior same-component event${sameComponentHistory.length === 1 ? "" : "s"} in history.`
+            t("pds_prior_events_component", lang).replace("{count}", String(sameComponentHistory.length))
           );
         }
 
         if (photoAssistSubject === "iced_coil") {
           inspect.push(
-            "Look for a full frost pattern versus a partial frost pattern.",
-            "Check whether the fan is running and whether airflow is blocked by dirt or ice.",
-            "Look for drain issues, ice bridging, and signs of repeated icing."
+            t("pds_ice_inspect1", lang),
+            t("pds_ice_inspect2", lang),
+            t("pds_ice_inspect3", lang)
           );
           verifyNext.push(
-            "Verify fan operation, airflow, and defrost operation before condemning charge or TXV/EEV.",
-            "Compare frost pattern to current suction, superheat, and box/load condition."
+            t("pds_ice_verify1", lang),
+            t("pds_ice_verify2", lang)
           );
           repairDecisionEmphasis.push(
-            "Do not move into a refrigerant-side repair decision until airflow, drain, and defrost are checked.",
-            "Use the frost pattern to decide whether this is airflow/defrost versus feed/restriction."
+            t("pds_ice_repair1", lang),
+            t("pds_ice_repair2", lang)
           );
           partsToVerifyEmphasis.push(
-            "Evaporator Fan Motor",
-            "Defrost Heater",
-            "Defrost Termination / Defrost Control",
-            "TXV / EEV / Metering Device"
+            t("pds_part_evap_fan_motor", lang),
+            t("pds_part_defrost_heater", lang),
+            t("pds_part_defrost_term_control", lang),
+            t("pds_part_txv_eev_metering", lang)
           );
           photoCanSupport.push(
-            "Frost pattern clues",
-            "Airflow restriction clues",
-            "Drain/defrost pattern clues"
+            t("pds_ice_support1", lang),
+            t("pds_ice_support2", lang),
+            t("pds_ice_support3", lang)
           );
           photoCannotProve.push(
-            "Exact TXV/EEV failure by itself",
-            "Exact refrigerant charge by itself"
+            t("pds_ice_cannot1", lang),
+            t("pds_ice_cannot2", lang)
           );
           watchOuts.push(
-            "Do not jump straight to refrigerant-side parts if the photo points more toward airflow or defrost."
+            t("pds_ice_watch1", lang)
           );
         }
 
         if (photoAssistSubject === "contactor_capacitor") {
           inspect.push(
-            "Look for pitted contacts, burnt insulation, swelling, oil leakage, or heat discoloration.",
-            "Check wire terminations, loose lugs, and signs of overheating."
+            t("pds_cc_inspect1", lang),
+            t("pds_cc_inspect2", lang)
           );
           verifyNext.push(
-            "Meter line/load voltage, verify coil pull-in, and test capacitor value before replacing other parts.",
-            "Confirm the failed part is the root cause and not the result of another electrical problem."
+            t("pds_cc_verify1", lang),
+            t("pds_cc_verify2", lang)
           );
           repairDecisionEmphasis.push(
-            "Bias the repair decision toward electrical verification first before refrigerant-side conclusions.",
-            "Prove whether the contactor/capacitor is the failure or a symptom of motor/compressor load."
+            t("pds_cc_repair1", lang),
+            t("pds_cc_repair2", lang)
           );
           partsToVerifyEmphasis.push(
-            "Contactor",
-            "Run Capacitor",
-            "Condenser Fan Motor",
-            "Compressor"
+            t("pds_part_contactor", lang),
+            t("pds_part_run_capacitor", lang),
+            t("pds_part_condenser_fan_motor", lang),
+            t("pds_part_compressor", lang)
           );
           photoCanSupport.push(
-            "Burnt contacts",
-            "Heat damage",
-            "Swollen/leaking capacitor clues",
-            "Loose lug / overheated wire clues"
+            t("pds_cc_support1", lang),
+            t("pds_cc_support2", lang),
+            t("pds_cc_support3", lang),
+            t("pds_cc_support4", lang)
           );
           photoCannotProve.push(
-            "Actual voltage drop under load",
-            "Actual coil control signal",
-            "Actual capacitance value"
+            t("pds_cc_cannot1", lang),
+            t("pds_cc_cannot2", lang),
+            t("pds_cc_cannot3", lang)
           );
           watchOuts.push(
-            "A bad contactor or capacitor can be the symptom of motor/compressor issues, not always the root cause."
+            t("pds_cc_watch1", lang)
           );
         }
 
         if (photoAssistSubject === "control_board") {
           inspect.push(
-            "Look for burnt traces, loose plugs, water intrusion, and failed relays.",
-            "Check whether the board is actually receiving the correct inputs before condemning it."
+            t("pds_cb_inspect1", lang),
+            t("pds_cb_inspect2", lang)
           );
           verifyNext.push(
-            "Verify incoming power, control signals, safeties, and outputs with a meter before replacing the board."
+            t("pds_cb_verify1", lang)
           );
           repairDecisionEmphasis.push(
-            "Push the repair decision toward proving inputs and outputs instead of replacing the board from appearance alone."
+            t("pds_cb_repair1", lang)
           );
           partsToVerifyEmphasis.push(
-            "Control Board",
-            "Relay / Sequencer",
-            "Pressure Switch",
-            "Ignitor / Flame Sensor"
+            t("pds_part_control_board", lang),
+            t("pds_part_relay_sequencer", lang),
+            t("pds_part_pressure_switch", lang),
+            t("pds_part_ignitor_flame_sensor", lang)
           );
           photoCanSupport.push(
-            "Burnt trace clues",
-            "Water intrusion clues",
-            "Loose connector clues"
+            t("pds_cb_support1", lang),
+            t("pds_cb_support2", lang),
+            t("pds_cb_support3", lang)
           );
           photoCannotProve.push(
-            "Correct board inputs",
-            "Correct board outputs",
-            "Board failure by appearance alone"
+            t("pds_cb_cannot1", lang),
+            t("pds_cb_cannot2", lang),
+            t("pds_cb_cannot3", lang)
           );
           watchOuts.push(
-            "Board replacement without verifying inputs/outputs often creates callbacks."
+            t("pds_cb_watch1", lang)
           );
         }
 
         if (photoAssistSubject === "wiring") {
           inspect.push(
-            "Look for rubbed insulation, burnt conductors, loose terminations, and wrong landed wires.",
-            "Check for signs of field modifications or bypassed safeties."
+            t("pds_wire_inspect1", lang),
+            t("pds_wire_inspect2", lang)
           );
           verifyNext.push(
-            "Ohm/check continuity only after confirming safe isolation. Then verify live voltage path as needed."
+            t("pds_wire_verify1", lang)
           );
           repairDecisionEmphasis.push(
-            "Pause any part replacement until wiring integrity and landed connections are verified."
+            t("pds_wire_repair1", lang)
           );
           partsToVerifyEmphasis.push(
-            "Contactor",
-            "Control Board",
-            "Relay / Sequencer",
-            "Pressure Switch"
+            t("pds_part_contactor", lang),
+            t("pds_part_control_board", lang),
+            t("pds_part_relay_sequencer", lang),
+            t("pds_part_pressure_switch", lang)
           );
           photoCanSupport.push(
-            "Loose connection clues",
-            "Heat damage clues",
-            "Miswired field modification clues"
+            t("pds_wire_support1", lang),
+            t("pds_wire_support2", lang),
+            t("pds_wire_support3", lang)
           );
           photoCannotProve.push(
-            "Actual live voltage path by appearance alone",
-            "Intermittent open under load by appearance alone"
+            t("pds_wire_cannot1", lang),
+            t("pds_wire_cannot2", lang)
           );
           watchOuts.push(
-            "A wiring photo can explain repeated intermittent failures if connections are loose or heat damaged."
+            t("pds_wire_watch1", lang)
           );
         }
 
         if (photoAssistSubject === "nameplate_tag") {
           inspect.push(
-            "Confirm model, serial, refrigerant, electrical data, and any internal/paired component relationship.",
-            "Check whether the nameplate supports the selected affected component and equipment type."
+            t("pds_tag_inspect1", lang),
+            t("pds_tag_inspect2", lang)
           );
           verifyNext.push(
-            "Use the tag to tighten parts/manuals lookup and confirm the correct system section is being diagnosed."
+            t("pds_tag_verify1", lang)
           );
           repairDecisionEmphasis.push(
-            "Use the tag to narrow the repair path to the correct system section before ordering or replacing anything."
+            t("pds_tag_repair1", lang)
           );
           partsToVerifyEmphasis.push(
-            "Model-specific OEM part verification",
-            "Correct paired-equipment part lookup"
+            t("pds_tag_parts1", lang),
+            t("pds_tag_parts2", lang)
           );
           photoCanSupport.push(
-            "Correct model/serial identification",
-            "Correct paired-equipment side identification"
+            t("pds_tag_support1", lang),
+            t("pds_tag_support2", lang)
           );
           photoCannotProve.push(
-            "That the selected part is bad by itself",
-            "That the wrong side of the system is the failure"
+            t("pds_tag_cannot1", lang),
+            t("pds_tag_cannot2", lang)
           );
           watchOuts.push(
-            "Do not order parts off the wrong tag when paired equipment is involved."
+            t("pds_tag_watch1", lang)
           );
         }
 
         if (photoAssistSubject === "drain_defrost") {
           inspect.push(
-            "Look for blocked drains, failed heat, ice build-up, and wiring/sensor issues in the defrost path.",
-            "Check whether fan delay, termination, or schedule issues show up in the photo context."
+            t("pds_drain_inspect1", lang),
+            t("pds_drain_inspect2", lang)
           );
           verifyNext.push(
-            "Verify defrost controls, termination, heaters, drain heat, and fan delay before replacing refrigeration parts."
+            t("pds_drain_verify1", lang)
           );
           repairDecisionEmphasis.push(
-            "Lean the repair decision toward the complete defrost path before refrigerant-side replacement."
+            t("pds_drain_repair1", lang)
           );
           partsToVerifyEmphasis.push(
-            "Defrost Heater",
-            "Defrost Termination",
-            "Defrost Control",
-            "Drain Heater"
+            t("pds_part_defrost_heater2", lang),
+            t("pds_part_defrost_termination", lang),
+            t("pds_part_defrost_control", lang),
+            t("pds_part_drain_heater", lang)
           );
           photoCanSupport.push(
-            "Drain blockage clues",
-            "Ice pattern clues around defrost path",
-            "Heater/termination wiring clues"
+            t("pds_drain_support1", lang),
+            t("pds_drain_support2", lang),
+            t("pds_drain_support3", lang)
           );
           photoCannotProve.push(
-            "Actual control timing by appearance alone",
-            "Actual heater continuity by appearance alone"
+            t("pds_drain_cannot1", lang),
+            t("pds_drain_cannot2", lang)
           );
           watchOuts.push(
-            "Repeated icing or water issues often come back if the defrost path is not fully checked."
+            t("pds_drain_watch1", lang)
           );
         }
 
         if (photoAssistSubject === "dirty_coil_airflow") {
           inspect.push(
-            "Look for heavy dirt loading, matted fins, blocked return/supply path, and fan problems.",
-            "Check whether the photo supports an airflow-driven complaint."
+            t("pds_dirty_inspect1", lang),
+            t("pds_dirty_inspect2", lang)
           );
           verifyNext.push(
-            "Verify airflow and cleanliness first, then compare readings before calling charge/feed issues."
+            t("pds_dirty_verify1", lang)
           );
           repairDecisionEmphasis.push(
-            "Push the repair path toward airflow correction before refrigerant-side parts replacement."
+            t("pds_dirty_repair1", lang)
           );
           partsToVerifyEmphasis.push(
-            "Condenser Fan Motor",
-            "Evaporator Fan Motor",
-            "Blower Motor"
+            t("pds_part_condenser_fan_motor", lang),
+            t("pds_part_evap_fan_motor", lang),
+            t("pds_part_blower_motor", lang)
           );
           photoCanSupport.push(
-            "Dirty coil clues",
-            "Blocked airflow path clues",
-            "Fan/blower airflow restriction clues"
+            t("pds_dirty_support1", lang),
+            t("pds_dirty_support2", lang),
+            t("pds_dirty_support3", lang)
           );
           photoCannotProve.push(
-            "Charge condition by appearance alone",
-            "Metering-device failure by appearance alone"
+            t("pds_dirty_cannot1", lang),
+            t("pds_dirty_cannot2", lang)
           );
           watchOuts.push(
-            "Dirty coil / airflow problems can distort pressures, split, box temp, and frost pattern."
+            t("pds_dirty_watch1", lang)
           );
         }
 
         if (photoAssistSubject === "compressor_section") {
           inspect.push(
-            "Look for oil staining, overheated terminals, damaged insulation, and start component condition.",
-            "Check whether the compressor area photo suggests electrical failure versus system condition."
+            t("pds_comp_inspect1", lang),
+            t("pds_comp_inspect2", lang)
           );
           verifyNext.push(
-            "Verify voltage, amp draw, start components, and compressor protection before condemning the compressor."
+            t("pds_comp_verify1", lang)
           );
           repairDecisionEmphasis.push(
-            "Keep the repair decision on electrical and protection verification before calling the compressor."
+            t("pds_comp_repair1", lang)
           );
           partsToVerifyEmphasis.push(
-            "Run Capacitor",
-            "Contactor",
-            "Compressor Protection",
-            "Compressor"
+            t("pds_part_run_capacitor", lang),
+            t("pds_part_contactor", lang),
+            t("pds_part_compressor_protection", lang),
+            t("pds_part_compressor", lang)
           );
           photoCanSupport.push(
-            "Overheated terminal clues",
-            "Oil-stain clues",
-            "Start-component area clues"
+            t("pds_comp_support1", lang),
+            t("pds_comp_support2", lang),
+            t("pds_comp_support3", lang)
           );
           photoCannotProve.push(
-            "Internal compressor mechanical failure by appearance alone",
-            "Correct amp draw by appearance alone"
+            t("pds_comp_cannot1", lang),
+            t("pds_comp_cannot2", lang)
           );
           watchOuts.push(
-            "Do not call a compressor from a photo alone. Verify electrically and against system conditions."
+            t("pds_comp_watch1", lang)
           );
         }
 
         if (issue.includes("ice") || issue.includes("icing") || issue.includes("freeze")) {
           verifyNext.push(
-            "Because the complaint involves icing/freezing, compare the photo with fan operation, airflow, drain condition, and defrost behavior."
+            t("pds_issue_icing_verify", lang)
           );
         }
 
         if (issue.includes("not cooling") || issue.includes("no cool")) {
           verifyNext.push(
-            "Because this is a no-cool complaint, use the photo to support or eliminate electrical, airflow, and heat-rejection issues before major part replacement."
+            t("pds_issue_nocool_verify", lang)
           );
         }
 
@@ -4273,19 +4277,19 @@ function browserSupportsSmartReadingsDictation() {
           componentLabelLower.includes("condenser")
         ) {
           verifyNext.push(
-            "Outdoor/condensing-side photos should be tied back to contactor, capacitor, fan, coil, and heat rejection checks first."
+            t("pds_comp_outdoor_verify", lang)
           );
         }
 
         if (componentLabelLower.includes("evaporator") || componentLabelLower.includes("indoor head")) {
           verifyNext.push(
-            "Evaporator/indoor-side photos should be tied back to fan, ice pattern, drain, airflow, and defrost/feed checks first."
+            t("pds_comp_evap_verify", lang)
           );
         }
 
         if (equipment.includes("walk-in")) {
           verifyNext.push(
-            "For walk-ins, compare the photo against actual box temp, defrost schedule, door openings, and load."
+            t("pds_walkin_verify", lang)
           );
         }
 
@@ -4296,56 +4300,56 @@ function browserSupportsSmartReadingsDictation() {
         const selectedPartLower = selectedPart.toLowerCase();
 
         if (selectedPartLower.includes("contactor") && photoAssistSubject === "contactor_capacitor") {
-          photoPartTieIn.push("This photo should help support burnt contacts, heat damage, and lug condition on the contactor.");
-          photoCannotProve.push("This photo cannot prove coil voltage or contact drop under load.");
-          verifyNext.push("Use the photo as visual support, then meter line/load and coil voltage before replacement.");
+          photoPartTieIn.push(t("pds_tiein_contactor_support", lang));
+          photoCannotProve.push(t("pds_tiein_contactor_cannot", lang));
+          verifyNext.push(t("pds_tiein_contactor_verify", lang));
         }
 
         if (selectedPartLower.includes("capacitor") && photoAssistSubject === "contactor_capacitor") {
-          photoPartTieIn.push("This photo should help support visible capacitor swelling, leakage, and terminal condition.");
-          photoCannotProve.push("This photo cannot prove actual µF value.");
-          verifyNext.push("Use the photo as visual support, then test actual capacitance before replacement.");
+          photoPartTieIn.push(t("pds_tiein_capacitor_support", lang));
+          photoCannotProve.push(t("pds_tiein_capacitor_cannot", lang));
+          verifyNext.push(t("pds_tiein_capacitor_verify", lang));
         }
 
         if (
           (selectedPartLower.includes("txv") || selectedPartLower.includes("eev") || selectedPartLower.includes("metering")) &&
           photoAssistSubject === "iced_coil"
         ) {
-          photoPartTieIn.push("This photo may support frost pattern clues that help decide whether feed/restriction is even in play.");
-          photoCannotProve.push("This photo cannot prove TXV/EEV failure by itself.");
-          verifyNext.push("Tie the frost pattern back to airflow, SH/SC, and restriction checks before replacing the metering device.");
+          photoPartTieIn.push(t("pds_tiein_txv_support", lang));
+          photoCannotProve.push(t("pds_tiein_txv_cannot", lang));
+          verifyNext.push(t("pds_tiein_txv_verify", lang));
         }
 
         if (
           (selectedPartLower.includes("defrost") || selectedPartLower.includes("drain heater")) &&
           (photoAssistSubject === "iced_coil" || photoAssistSubject === "drain_defrost")
         ) {
-          photoPartTieIn.push("This photo should help support icing pattern, drain issues, and overall defrost-path clues.");
-          photoCannotProve.push("This photo cannot prove the exact failed defrost component by itself.");
-          verifyNext.push("Use the photo to support the defrost pattern, then verify heater/control/termination electrically.");
+          photoPartTieIn.push(t("pds_tiein_defrost_support", lang));
+          photoCannotProve.push(t("pds_tiein_defrost_cannot", lang));
+          verifyNext.push(t("pds_tiein_defrost_verify", lang));
         }
 
         if (selectedPartLower.includes("control board") && photoAssistSubject === "control_board") {
-          photoPartTieIn.push("This photo should help support burnt trace, water intrusion, and connector condition clues.");
-          photoCannotProve.push("This photo cannot prove correct inputs/outputs by itself.");
-          verifyNext.push("Use the photo to support board suspicion, then verify inputs and outputs with a meter before replacement.");
+          photoPartTieIn.push(t("pds_tiein_board_support", lang));
+          photoCannotProve.push(t("pds_tiein_board_cannot", lang));
+          verifyNext.push(t("pds_tiein_board_verify", lang));
         }
 
         if (
           (selectedPartLower.includes("blower motor") || selectedPartLower.includes("evaporator fan motor") || selectedPartLower.includes("condenser fan motor")) &&
           photoAssistSubject === "dirty_coil_airflow"
         ) {
-          photoPartTieIn.push("This photo should help support airflow restriction or dirty-coil context around the motor decision.");
-          photoCannotProve.push("This photo cannot prove the motor is electrically failed by itself.");
-          verifyNext.push("Use the photo to support airflow context, then verify motor voltage/amp draw before replacement.");
+          photoPartTieIn.push(t("pds_tiein_motor_support", lang));
+          photoCannotProve.push(t("pds_tiein_motor_cannot", lang));
+          verifyNext.push(t("pds_tiein_motor_verify", lang));
         }
 
         if (selectedOutcome === "Tested good") {
-          photoPartTieIn.push("Current outcome says the selected part tested good, so use the photo to help rule it out rather than justify replacement.");
+          photoPartTieIn.push(t("pds_tiein_outcome_tested_good", lang));
         }
 
         if (selectedOutcome === "Replaced") {
-          photoPartTieIn.push("Current outcome says the selected part was replaced, so the photo should support why the repair path made sense.");
+          photoPartTieIn.push(t("pds_tiein_outcome_replaced", lang));
         }
 
         const dedupe = (items: string[]) => {
@@ -4374,20 +4378,20 @@ function browserSupportsSmartReadingsDictation() {
       function generatePhotoDrivenDiagnosticAssist() {
         const payload = buildPhotoDrivenDiagnosticAssistPayload();
         if (!payload.inspect.length && !payload.verifyNext.length && !payload.watchOuts.length) {
-          setPhotoAssistMessage("No photo assist guidance was generated.");
+          setPhotoAssistMessage(t("pds_no_guidance_generated", lang));
           return;
         }
-        setPhotoAssistMessage("Photo diagnostic assist refreshed.");
+        setPhotoAssistMessage(t("pds_refreshed", lang));
       }
 
       function addPhotoAssistToTechCloseoutNotes() {
         const payload = buildPhotoDrivenDiagnosticAssistPayload();
         const text = [
-          "Photo Diagnostic Assist",
+          t("pds_notes_title", lang),
           payload.summary,
-          payload.inspect.length ? "Inspect:\n- " + payload.inspect.join("\n- ") : "",
-          payload.verifyNext.length ? "Verify Next:\n- " + payload.verifyNext.join("\n- ") : "",
-          payload.watchOuts.length ? "Watch-Outs:\n- " + payload.watchOuts.join("\n- ") : "",
+          payload.inspect.length ? t("pds_notes_inspect", lang) + payload.inspect.join("\n- ") : "",
+          payload.verifyNext.length ? t("pds_notes_verify_next", lang) + payload.verifyNext.join("\n- ") : "",
+          payload.watchOuts.length ? t("pds_notes_watch_outs", lang) + payload.watchOuts.join("\n- ") : "",
         ]
           .filter(Boolean)
           .join("\n\n");
@@ -4395,7 +4399,7 @@ function browserSupportsSmartReadingsDictation() {
         setTechCloseoutNotes((prev) =>
           [String(prev || "").trim(), text].filter(Boolean).join("\n\n")
         );
-        setPhotoAssistMessage("Photo assist added to Tech Closeout Notes.");
+        setPhotoAssistMessage(t("pds_added_to_notes", lang));
       }
 
       // repair-decision-panel-v2
