@@ -4,7 +4,7 @@ import { SmallHint } from "./SmallHint";
 import { PillButton } from "./PillButton";
 import { useLang } from "../../components/LanguageContext";
 import { t } from "../../lib/translations";
-import { translateMeasurementLabel } from "../data/presets";
+import { translateMeasurementLabel, translateFlowTitle, translateFlowQuestion, translateFlowHow } from "../data/presets";
 
 type FlowNode = {
   title: string;
@@ -34,10 +34,10 @@ export function RealFlowchartEngine({
   const { lang } = useLang();
   return (
     <div style={{ border: "1px solid #eee", borderRadius: 12, padding: 12 }}>
-      <div style={{ fontWeight: 900 }}>{node.title}</div>
-      <div style={{ marginTop: 6, fontSize: 16 }}>{node.question}</div>
+      <div style={{ fontWeight: 900 }}>{translateFlowTitle(node.title, lang)}</div>
+      <div style={{ marginTop: 6, fontSize: 16 }}>{translateFlowQuestion(node.question, lang)}</div>
       {node.how ? (
-        <SmallHint style={{ marginTop: 8 }}>{t("label_how", lang)} {node.how}</SmallHint>
+        <SmallHint style={{ marginTop: 8 }}>{t("label_how", lang)} {translateFlowHow(node.how, lang)}</SmallHint>
       ) : null}
       {node.suggestedMeasurement ? (
         <SmallHint style={{ marginTop: 8 }}>
@@ -47,8 +47,8 @@ export function RealFlowchartEngine({
 
       {!node.terminal ? (
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
-          <PillButton text={node.passLabel || t("default_pass", lang)} onClick={onPass} />
-          <PillButton text={node.failLabel || t("default_fail", lang)} onClick={onFail} />
+          <PillButton text={node.passLabel === "Yes" || node.passLabel === "No" ? t(node.passLabel === "Yes" ? "option_yes" : "option_no", lang) : node.passLabel || t("default_pass", lang)} onClick={onPass} />
+          <PillButton text={node.failLabel === "Yes" || node.failLabel === "No" ? t(node.failLabel === "Yes" ? "option_yes" : "option_no", lang) : node.failLabel || t("default_fail", lang)} onClick={onFail} />
           <PillButton
             text={t("btn_use_suggested_reading", lang)}
             onClick={onUseSuggestedReading}
