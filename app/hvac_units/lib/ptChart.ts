@@ -19,6 +19,9 @@
  * temperatures) -- see git history for details.
  */
 
+import type { Language } from "../../lib/translations";
+import { t } from "../../lib/translations";
+
 export type PTEntry = {
   tempF: number;
   psig: number;
@@ -229,11 +232,12 @@ export function calcSuperheat(
   refrigerant: string,
   suctionPsig: number,
   suctionLineTempF: number,
-  metering: "txv" | "fixed_orifice" = "txv"
+  metering: "txv" | "fixed_orifice" = "txv",
+  lang: Language = "en"
 ): SuperheatResult {
   const satTemp = tempFromPsig(refrigerant, suctionPsig);
   if (satTemp === null) {
-    return { suctionSatTempF: null, superheatF: null, status: "unknown", note: "Refrigerant PT data unavailable." };
+    return { suctionSatTempF: null, superheatF: null, status: "unknown", note: t("sh_note_refrigerant_unavailable", lang) };
   }
 
   const sh = Math.round((suctionLineTempF - satTemp) * 10) / 10;
@@ -242,17 +246,17 @@ export function calcSuperheat(
   let note: string;
 
   if (metering === "txv") {
-    if (sh < 4) { status = "low"; note = "Superheat dangerously low — risk of liquid slugging the compressor. Check TXV bulb charge, TXV setting, or overcharge."; }
-    else if (sh < 8) { status = "low"; note = "Slightly low superheat. Possible overcharge, poor TXV bulb contact, or low load condition."; }
-    else if (sh <= 12) { status = "normal"; note = "Superheat within normal TXV range (8–12°F). System is likely properly charged."; }
-    else if (sh <= 20) { status = "high"; note = "High superheat. Suspect low charge, restricted filter-drier, TXV starving, or low evaporator airflow."; }
-    else { status = "very_high"; note = "Very high superheat. Check for significant low charge, badly restricted metering device, or evaporator coil restriction."; }
+    if (sh < 4) { status = "low"; note = t("sh_note_txv_low_danger", lang); }
+    else if (sh < 8) { status = "low"; note = t("sh_note_txv_slightly_low", lang); }
+    else if (sh <= 12) { status = "normal"; note = t("sh_note_txv_normal", lang); }
+    else if (sh <= 20) { status = "high"; note = t("sh_note_txv_high", lang); }
+    else { status = "very_high"; note = t("sh_note_txv_very_high", lang); }
   } else {
     // Fixed orifice: target varies by outdoor + return air temp, rough normal is 10–20°F
-    if (sh < 5) { status = "low"; note = "Very low superheat on fixed orifice — possible overcharge or flooding."; }
-    else if (sh <= 20) { status = "normal"; note = "Superheat in typical fixed orifice range. Verify against manufacturer target chart for ambient + return air conditions."; }
-    else if (sh <= 30) { status = "high"; note = "High superheat. Check charge level, airflow, and metering device for restrictions."; }
-    else { status = "very_high"; note = "Very high superheat — significant undercharge or metering device restriction."; }
+    if (sh < 5) { status = "low"; note = t("sh_note_fixed_very_low", lang); }
+    else if (sh <= 20) { status = "normal"; note = t("sh_note_fixed_normal", lang); }
+    else if (sh <= 30) { status = "high"; note = t("sh_note_fixed_high", lang); }
+    else { status = "very_high"; note = t("sh_note_fixed_very_high", lang); }
   }
 
   return { suctionSatTempF: satTemp, superheatF: sh, status, note };
@@ -265,11 +269,12 @@ export function calcSuperheat(
 export function calcSubcool(
   refrigerant: string,
   liquidLinePsig: number,
-  liquidLineTempF: number
+  liquidLineTempF: number,
+  lang: Language = "en"
 ): SubcoolResult {
   const satTemp = tempFromPsig(refrigerant, liquidLinePsig);
   if (satTemp === null) {
-    return { condSatTempF: null, subcoolF: null, status: "unknown", note: "Refrigerant PT data unavailable." };
+    return { condSatTempF: null, subcoolF: null, status: "unknown", note: t("sh_note_refrigerant_unavailable", lang) };
   }
 
   const sc = Math.round((satTemp - liquidLineTempF) * 10) / 10;
@@ -277,9 +282,9 @@ export function calcSubcool(
   let status: SubcoolResult["status"];
   let note: string;
 
-  if (sc < 5) { status = "low"; note = "Low subcooling — indicates undercharge or liquid line restriction causing flash gas before the metering device."; }
-  else if (sc <= 20) { status = "normal"; note = "Subcooling within normal range (10–20°F). Charge level is likely correct."; }
-  else { status = "high"; note = "High subcooling — possible overcharge, liquid line too long, or condenser subcooling coil issue."; }
+  if (sc < 5) { status = "low"; note = t("sc_note_low", lang); }
+  else if (sc <= 20) { status = "normal"; note = t("sc_note_normal", lang); }
+  else { status = "high"; note = t("sc_note_high", lang); }
 
   return { condSatTempF: satTemp, subcoolF: sc, status, note };
 }

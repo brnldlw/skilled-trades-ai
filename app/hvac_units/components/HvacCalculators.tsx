@@ -8,6 +8,8 @@ import {
   calcSubcool,
   availableRefrigerants,
 } from "../lib/ptChart";
+import { useLang } from "../../components/LanguageContext";
+import { t } from "../../lib/translations";
 
 // ─── tiny shared styles ───────────────────────────────────────────────
 const card: React.CSSProperties = {
@@ -78,6 +80,7 @@ type Tab = "pt" | "shsc" | "deltat" | "cfm" | "ohm" | "mfd" | "gas";
 // PT Chart Tab
 // ═══════════════════════════════════════════════════════════════
 function PTChartCalc() {
+  const { lang } = useLang();
   const refOpts = availableRefrigerants();
   const [ref, setRef] = useState("R-410A");
   const [mode, setMode] = useState<"psig_to_temp" | "temp_to_psig">("psig_to_temp");
@@ -88,47 +91,47 @@ function PTChartCalc() {
     if (mode === "psig_to_temp") {
       const p = n(psigVal);
       if (!psigVal) return null;
-      const t = tempFromPsig(ref, p);
-      return t !== null ? `Saturation Temp = ${t}°F` : "Out of range for this refrigerant.";
+      const tp = tempFromPsig(ref, p);
+      return tp !== null ? t("calc_pt_result_sat_temp", lang).replace("{value}", String(tp)) : t("calc_pt_out_of_range", lang);
     } else {
-      const t = n(tempVal);
+      const tv = n(tempVal);
       if (!tempVal) return null;
-      const p = psigFromTemp(ref, t);
-      return p !== null ? `Saturation Pressure = ${p} PSIG` : "Out of range for this refrigerant.";
+      const p = psigFromTemp(ref, tv);
+      return p !== null ? t("calc_pt_result_sat_pressure", lang).replace("{value}", String(p)) : t("calc_pt_out_of_range", lang);
     }
-  }, [ref, mode, psigVal, tempVal]);
+  }, [ref, mode, psigVal, tempVal, lang]);
 
   return (
     <div>
-      <div style={sectionTitle}>PT Chart — Saturation Lookup</div>
+      <div style={sectionTitle}>{t("calc_pt_title", lang)}</div>
       <p style={{ fontSize: 12, color: "#888", marginBottom: 10 }}>
-        Convert between pressure and saturation temperature for any refrigerant. Works offline.
+        {t("calc_pt_hint", lang)}
       </p>
 
-      <label style={label}>Refrigerant</label>
+      <label style={label}>{t("calc_label_refrigerant", lang)}</label>
       <select style={select} value={ref} onChange={(e) => setRef(e.target.value)}>
         {refOpts.map((r) => <option key={r} value={r}>{r}</option>)}
       </select>
 
-      <label style={label}>Convert</label>
+      <label style={label}>{t("calc_label_convert", lang)}</label>
       <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
         <button style={tabBtn(mode === "psig_to_temp")} onClick={() => setMode("psig_to_temp")}>
-          PSIG → Sat. Temp
+          {t("calc_psig_to_temp", lang)}
         </button>
         <button style={tabBtn(mode === "temp_to_psig")} onClick={() => setMode("temp_to_psig")}>
-          Temp → PSIG
+          {t("calc_temp_to_psig", lang)}
         </button>
       </div>
 
       {mode === "psig_to_temp" ? (
         <>
-          <label style={label}>Gauge Pressure (PSIG)</label>
+          <label style={label}>{t("calc_label_gauge_pressure", lang)}</label>
           <input style={input} type="number" placeholder="e.g. 120" value={psigVal}
             onChange={(e) => setPsigVal(e.target.value)} />
         </>
       ) : (
         <>
-          <label style={label}>Temperature (°F)</label>
+          <label style={label}>{t("calc_label_temperature", lang)}</label>
           <input style={input} type="number" placeholder="e.g. 40" value={tempVal}
             onChange={(e) => setTempVal(e.target.value)} />
         </>
@@ -147,6 +150,7 @@ function PTChartCalc() {
 // Superheat / Subcooling Tab
 // ═══════════════════════════════════════════════════════════════
 function ShScCalc() {
+  const { lang } = useLang();
   const refOpts = availableRefrigerants();
   const [ref, setRef] = useState("R-410A");
   const [mode, setMode] = useState<"sh" | "sc">("sh");
@@ -162,55 +166,63 @@ function ShScCalc() {
 
   const shResult = useMemo(() => {
     if (mode !== "sh" || !suctionPsig || !suctionLineTemp) return null;
-    return calcSuperheat(ref, n(suctionPsig), n(suctionLineTemp), metering);
-  }, [ref, mode, metering, suctionPsig, suctionLineTemp]);
+    return calcSuperheat(ref, n(suctionPsig), n(suctionLineTemp), metering, lang);
+  }, [ref, mode, metering, suctionPsig, suctionLineTemp, lang]);
 
   const scResult = useMemo(() => {
     if (mode !== "sc" || !liquidPsig || !liquidLineTemp) return null;
-    return calcSubcool(ref, n(liquidPsig), n(liquidLineTemp));
-  }, [ref, mode, liquidPsig, liquidLineTemp]);
+    return calcSubcool(ref, n(liquidPsig), n(liquidLineTemp), lang);
+  }, [ref, mode, liquidPsig, liquidLineTemp, lang]);
 
   const statusColor = (s: string) => {
     if (s === "normal") return true;
     return false;
   };
 
+  const statusLabel = (s: string) => {
+    if (s === "low") return t("calc_status_low", lang);
+    if (s === "normal") return t("calc_status_normal", lang);
+    if (s === "high") return t("calc_status_high", lang);
+    if (s === "very_high") return t("calc_status_very_high", lang);
+    return t("calc_status_unknown", lang);
+  };
+
   return (
     <div>
-      <div style={sectionTitle}>Superheat / Subcooling Calculator</div>
+      <div style={sectionTitle}>{t("calc_shsc_title", lang)}</div>
       <p style={{ fontSize: 12, color: "#888", marginBottom: 10 }}>
-        Enter gauge readings to instantly calculate SH or SC with diagnosis.
+        {t("calc_shsc_hint", lang)}
       </p>
 
-      <label style={label}>Refrigerant</label>
+      <label style={label}>{t("calc_label_refrigerant", lang)}</label>
       <select style={select} value={ref} onChange={(e) => setRef(e.target.value)}>
         {refOpts.map((r) => <option key={r} value={r}>{r}</option>)}
       </select>
 
       <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-        <button style={tabBtn(mode === "sh")} onClick={() => setMode("sh")}>Superheat</button>
-        <button style={tabBtn(mode === "sc")} onClick={() => setMode("sc")}>Subcooling</button>
+        <button style={tabBtn(mode === "sh")} onClick={() => setMode("sh")}>{t("calc_tab_superheat", lang)}</button>
+        <button style={tabBtn(mode === "sc")} onClick={() => setMode("sc")}>{t("calc_tab_subcooling", lang)}</button>
       </div>
 
       {mode === "sh" && (
         <>
-          <label style={label}>Metering Device</label>
+          <label style={label}>{t("calc_label_metering_device", lang)}</label>
           <select style={select} value={metering} onChange={(e) => setMetering(e.target.value as any)}>
-            <option value="txv">TXV / EEV</option>
-            <option value="fixed_orifice">Fixed Orifice / Piston</option>
+            <option value="txv">{t("calc_metering_txv", lang)}</option>
+            <option value="fixed_orifice">{t("calc_metering_fixed", lang)}</option>
           </select>
-          <label style={label}>Suction Pressure (PSIG)</label>
+          <label style={label}>{t("calc_label_suction_pressure", lang)}</label>
           <input style={input} type="number" placeholder="e.g. 120" value={suctionPsig}
             onChange={(e) => setSuctionPsig(e.target.value)} />
-          <label style={label}>Suction Line Temp at Service Valve (°F)</label>
+          <label style={label}>{t("calc_label_suction_line_temp", lang)}</label>
           <input style={input} type="number" placeholder="e.g. 52" value={suctionLineTemp}
             onChange={(e) => setSuctionLineTemp(e.target.value)} />
           {shResult && (
             <div style={resultBox(statusColor(shResult.status))}>
-              <div><strong>Sat. Suction Temp:</strong> {shResult.suctionSatTempF}°F</div>
-              <div><strong>Superheat:</strong> {shResult.superheatF}°F
+              <div><strong>{t("calc_label_sat_suction_temp", lang)}</strong> {shResult.suctionSatTempF}°F</div>
+              <div><strong>{t("calc_label_superheat", lang)}</strong> {shResult.superheatF}°F
                 <span style={{ marginLeft: 8, fontWeight: 700, color: shResult.status === "normal" ? "#16a34a" : "#d97706" }}>
-                  [{shResult.status.replace("_", " ").toUpperCase()}]
+                  [{statusLabel(shResult.status)}]
                 </span>
               </div>
               <div style={{ marginTop: 8, color: "#444" }}>{shResult.note}</div>
@@ -221,18 +233,18 @@ function ShScCalc() {
 
       {mode === "sc" && (
         <>
-          <label style={label}>Liquid Line / Head Pressure (PSIG)</label>
+          <label style={label}>{t("calc_label_liquid_pressure", lang)}</label>
           <input style={input} type="number" placeholder="e.g. 380" value={liquidPsig}
             onChange={(e) => setLiquidPsig(e.target.value)} />
-          <label style={label}>Liquid Line Temp at Condenser Outlet (°F)</label>
+          <label style={label}>{t("calc_label_liquid_line_temp", lang)}</label>
           <input style={input} type="number" placeholder="e.g. 98" value={liquidLineTemp}
             onChange={(e) => setLiquidLineTemp(e.target.value)} />
           {scResult && (
             <div style={resultBox(statusColor(scResult.status))}>
-              <div><strong>Sat. Condensing Temp:</strong> {scResult.condSatTempF}°F</div>
-              <div><strong>Subcooling:</strong> {scResult.subcoolF}°F
+              <div><strong>{t("calc_label_sat_cond_temp", lang)}</strong> {scResult.condSatTempF}°F</div>
+              <div><strong>{t("calc_label_subcooling", lang)}</strong> {scResult.subcoolF}°F
                 <span style={{ marginLeft: 8, fontWeight: 700, color: scResult.status === "normal" ? "#16a34a" : "#d97706" }}>
-                  [{scResult.status.toUpperCase()}]
+                  [{statusLabel(scResult.status)}]
                 </span>
               </div>
               <div style={{ marginTop: 8, color: "#444" }}>{scResult.note}</div>
@@ -248,6 +260,7 @@ function ShScCalc() {
 // Delta-T Tab
 // ═══════════════════════════════════════════════════════════════
 function DeltaTCalc() {
+  const { lang } = useLang();
   const [ret, setRet] = useState("");
   const [sup, setSup] = useState("");
   const [wb, setWb] = useState("");
@@ -267,59 +280,66 @@ function DeltaTCalc() {
       const expectedDT = wbN >= 60 ? 18 : wbN >= 55 ? 17 : wbN >= 50 ? 15 : 14;
       if (dt >= expectedDT - 2 && dt <= expectedDT + 4) {
         status = "NORMAL";
-        note = `Delta-T of ${dt}°F is within expected range for WB ${wbN}°F. System is likely performing correctly.`;
+        note = t("deltat_note_normal_wb", lang).replace("{dt}", String(dt)).replace("{wb}", String(wbN));
       } else if (dt < expectedDT - 2) {
         status = "LOW";
-        note = `Delta-T is below expected ${expectedDT}°F for WB ${wbN}°F. Check airflow (dirty filter/coil), check charge.`;
+        note = t("deltat_note_low_wb", lang).replace("{value}", String(expectedDT)).replace("{wb}", String(wbN));
       } else {
         status = "HIGH";
-        note = `Delta-T is above expected for these conditions. Possible low airflow (duct restriction, dirty coil).`;
+        note = t("deltat_note_high_wb", lang);
       }
     } else {
       if (dt >= 15 && dt <= 22) {
         status = "NORMAL";
-        note = `Delta-T of ${dt}°F is in the typical comfort cooling range of 15–22°F.`;
+        note = t("deltat_note_normal", lang).replace("{dt}", String(dt));
       } else if (dt < 15) {
         status = "LOW";
-        note = `Delta-T below 15°F — check airflow, charge, or that the unit is running in full cooling mode.`;
+        note = t("deltat_note_low", lang);
       } else {
         status = "HIGH";
-        note = `Delta-T above 22°F — check for restricted airflow (dirty filter, blocked returns, closed supply dampers).`;
+        note = t("deltat_note_high", lang);
       }
     }
 
     return { dt, status, note };
-  }, [ret, sup, wb, hasWb]);
+  }, [ret, sup, wb, hasWb, lang]);
+
+  const statusLabel = (s: string) => {
+    if (s === "NORMAL") return t("calc_status_normal", lang);
+    if (s === "LOW") return t("calc_status_low", lang);
+    if (s === "HIGH") return t("calc_status_high", lang);
+    return s;
+  };
 
   return (
     <div>
-      <div style={sectionTitle}>Delta-T (Return / Supply) Calculator</div>
+      <div style={sectionTitle}>{t("calc_deltat_title", lang)}</div>
       <p style={{ fontSize: 12, color: "#888", marginBottom: 10 }}>
-        Measures system cooling performance. Normal sensible cooling: 15–22°F. Use WB for more accuracy.
+        {t("calc_deltat_hint", lang)}
       </p>
 
-      <label style={label}>Return Air Temp (°F)</label>
+      <label style={label}>{t("calc_label_return_temp", lang)}</label>
       <input style={input} type="number" placeholder="e.g. 76" value={ret} onChange={(e) => setRet(e.target.value)} />
-      <label style={label}>Supply Air Temp (°F)</label>
+      <label style={label}>{t("calc_label_supply_temp", lang)}</label>
       <input style={input} type="number" placeholder="e.g. 58" value={sup} onChange={(e) => setSup(e.target.value)} />
 
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10 }}>
         <input type="checkbox" id="hasWb" checked={hasWb} onChange={(e) => setHasWb(e.target.checked)} />
-        <label htmlFor="hasWb" style={{ fontSize: 13, cursor: "pointer" }}>I have wet-bulb temp</label>
+        <label htmlFor="hasWb" style={{ fontSize: 13, cursor: "pointer" }}>{t("calc_label_have_wb", lang)}</label>
       </div>
 
       {hasWb && (
         <>
-          <label style={label}>Return Air Wet Bulb (°F)</label>
+          <label style={label}>{t("calc_label_return_wb", lang)}</label>
           <input style={input} type="number" placeholder="e.g. 63" value={wb} onChange={(e) => setWb(e.target.value)} />
         </>
       )}
 
       {result && (
         <div style={resultBox(result.status === "NORMAL")}>
-          <div><strong>Delta-T:</strong> {result.dt}°F
+          <div><strong>{t("calc_label_deltat", lang)}</strong> {result.dt}°F
             <span style={{ marginLeft: 8, fontWeight: 700, color: result.status === "NORMAL" ? "#16a34a" : "#d97706" }}>
-              [{result.status}]
+              [{statusLabel(result.status)}]
             </span>
           </div>
           <div style={{ marginTop: 8 }}>{result.note}</div>
@@ -333,6 +353,7 @@ function DeltaTCalc() {
 // CFM Calculator Tab
 // ═══════════════════════════════════════════════════════════════
 function CfmCalc() {
+  const { lang } = useLang();
   const [mode, setMode] = useState<"duct" | "btuh" | "fpm">("duct");
 
   // Duct sizing
@@ -379,53 +400,53 @@ function CfmCalc() {
 
   return (
     <div>
-      <div style={sectionTitle}>CFM Calculator</div>
+      <div style={sectionTitle}>{t("calc_cfm_title", lang)}</div>
       <p style={{ fontSize: 12, color: "#888", marginBottom: 10 }}>
-        Calculate airflow from duct size, BTU/h, or velocity measurements.
+        {t("calc_cfm_hint", lang)}
       </p>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" as const, marginBottom: 12 }}>
-        <button style={tabBtn(mode === "duct")} onClick={() => setMode("duct")}>Duct Size</button>
-        <button style={tabBtn(mode === "btuh")} onClick={() => setMode("btuh")}>BTU/h Method</button>
-        <button style={tabBtn(mode === "fpm")} onClick={() => setMode("fpm")}>FPM × Area</button>
+        <button style={tabBtn(mode === "duct")} onClick={() => setMode("duct")}>{t("calc_tab_duct_size", lang)}</button>
+        <button style={tabBtn(mode === "btuh")} onClick={() => setMode("btuh")}>{t("calc_tab_btuh_method", lang)}</button>
+        <button style={tabBtn(mode === "fpm")} onClick={() => setMode("fpm")}>{t("calc_tab_fpm_area", lang)}</button>
       </div>
 
       {mode === "duct" && (
         <>
           <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-            <button style={tabBtn(!isRound)} onClick={() => setIsRound(false)}>Rectangular</button>
-            <button style={tabBtn(isRound)} onClick={() => setIsRound(true)}>Round</button>
+            <button style={tabBtn(!isRound)} onClick={() => setIsRound(false)}>{t("calc_tab_rectangular", lang)}</button>
+            <button style={tabBtn(isRound)} onClick={() => setIsRound(true)}>{t("calc_tab_round", lang)}</button>
           </div>
           {isRound ? (
             <>
-              <label style={label}>Duct Diameter (inches)</label>
+              <label style={label}>{t("calc_label_duct_diameter", lang)}</label>
               <input style={input} type="number" placeholder="e.g. 12" value={ductD} onChange={(e) => setDuctD(e.target.value)} />
             </>
           ) : (
             <>
-              <label style={label}>Duct Width (inches)</label>
+              <label style={label}>{t("calc_label_duct_width", lang)}</label>
               <input style={input} type="number" placeholder="e.g. 20" value={ductW} onChange={(e) => setDuctW(e.target.value)} />
-              <label style={label}>Duct Height (inches)</label>
+              <label style={label}>{t("calc_label_duct_height", lang)}</label>
               <input style={input} type="number" placeholder="e.g. 16" value={ductH} onChange={(e) => setDuctH(e.target.value)} />
             </>
           )}
-          <label style={label}>Air Velocity (FPM) — typical supply: 600–900, return: 400–700</label>
+          <label style={label}>{t("calc_label_air_velocity", lang)}</label>
           <input style={input} type="number" value={velocity} onChange={(e) => setVelocity(e.target.value)} />
           {ductResult !== null && (
-            <div style={resultBox(true)}><strong>CFM ≈ {ductResult}</strong> at {velocity} FPM</div>
+            <div style={resultBox(true)}><strong>CFM ≈ {ductResult}</strong> {t("calc_cfm_at_fpm", lang).replace("{value}", velocity)}</div>
           )}
         </>
       )}
 
       {mode === "btuh" && (
         <>
-          <label style={label}>System Capacity (BTU/h)</label>
+          <label style={label}>{t("calc_label_system_capacity", lang)}</label>
           <input style={input} type="number" placeholder="e.g. 36000" value={btuh} onChange={(e) => setBtuh(e.target.value)} />
-          <label style={label}>Delta-T (°F) — use 20°F default if unknown</label>
+          <label style={label}>{t("calc_label_deltat_default", lang)}</label>
           <input style={input} type="number" value={dt} onChange={(e) => setDt(e.target.value)} />
           {btuhResult !== null && (
             <div style={resultBox(true)}>
-              <strong>Required CFM ≈ {btuhResult}</strong>
-              <div style={{ marginTop: 6, fontSize: 12, color: "#666" }}>Formula: BTU/h ÷ (1.085 × ΔT)</div>
+              <strong>{t("calc_required_cfm", lang).replace("{value}", String(btuhResult))}</strong>
+              <div style={{ marginTop: 6, fontSize: 12, color: "#666" }}>{t("calc_formula_btuh", lang)}</div>
             </div>
           )}
         </>
@@ -433,14 +454,14 @@ function CfmCalc() {
 
       {mode === "fpm" && (
         <>
-          <label style={label}>Air Velocity (FPM) — from anemometer or velometer</label>
+          <label style={label}>{t("calc_label_air_velocity_anemometer", lang)}</label>
           <input style={input} type="number" placeholder="e.g. 750" value={fpm} onChange={(e) => setFpm(e.target.value)} />
-          <label style={label}>Opening / Grille Area (sq inches)</label>
+          <label style={label}>{t("calc_label_grille_area", lang)}</label>
           <input style={input} type="number" placeholder="e.g. 96" value={areaIn} onChange={(e) => setAreaIn(e.target.value)} />
           {fpmResult !== null && (
             <div style={resultBox(true)}>
               <strong>CFM ≈ {fpmResult}</strong>
-              <div style={{ marginTop: 6, fontSize: 12, color: "#666" }}>Multiply by 0.75 for free area correction on standard grilles.</div>
+              <div style={{ marginTop: 6, fontSize: 12, color: "#666" }}>{t("calc_free_area_correction", lang)}</div>
             </div>
           )}
         </>
@@ -453,6 +474,7 @@ function CfmCalc() {
 // Ohm's Law Tab
 // ═══════════════════════════════════════════════════════════════
 function OhmCalc() {
+  const { lang } = useLang();
   const [solve, setSolve] = useState<"V" | "I" | "R" | "W">("W");
   const [v, setV] = useState(""); const [i, setI] = useState("");
   const [r, setR] = useState(""); const [w, setW] = useState("");
@@ -460,19 +482,19 @@ function OhmCalc() {
   const result = useMemo(() => {
     const vN = n(v); const iN = n(i); const rN = n(r); const wN = n(w);
     switch (solve) {
-      case "V": if (iN && rN) return { label: "Voltage", value: round1(iN * rN), unit: "V" }; break;
-      case "I": if (vN && rN) return { label: "Current", value: round1(vN / rN), unit: "A" }; break;
-      case "R": if (vN && iN) return { label: "Resistance", value: round1(vN / iN), unit: "Ω" }; break;
-      case "W": if (vN && iN) return { label: "Power", value: round1(vN * iN), unit: "W" }; break;
+      case "V": if (iN && rN) return { label: t("calc_ohm_voltage", lang), value: round1(iN * rN), unit: "V" }; break;
+      case "I": if (vN && rN) return { label: t("calc_ohm_current", lang), value: round1(vN / rN), unit: "A" }; break;
+      case "R": if (vN && iN) return { label: t("calc_ohm_resistance", lang), value: round1(vN / iN), unit: "Ω" }; break;
+      case "W": if (vN && iN) return { label: t("calc_ohm_power", lang), value: round1(vN * iN), unit: "W" }; break;
     }
     return null;
-  }, [solve, v, i, r, w]);
+  }, [solve, v, i, r, w, lang]);
 
-  const fields: { key: "V"|"I"|"R"|"W", label: string, unit: string, ph: string }[] = [
-    { key: "V", label: "Voltage (V)", unit: "volts", ph: "e.g. 240" },
-    { key: "I", label: "Current (I)", unit: "amps", ph: "e.g. 18" },
-    { key: "R", label: "Resistance (R)", unit: "ohms", ph: "e.g. 13.3" },
-    { key: "W", label: "Power (W)", unit: "watts", ph: "e.g. 4320" },
+  const fields: { key: "V"|"I"|"R"|"W", labelKey: Parameters<typeof t>[0], unit: string, ph: string }[] = [
+    { key: "V", labelKey: "calc_label_voltage_v", unit: "volts", ph: "e.g. 240" },
+    { key: "I", labelKey: "calc_label_current_i", unit: "amps", ph: "e.g. 18" },
+    { key: "R", labelKey: "calc_label_resistance_r", unit: "ohms", ph: "e.g. 13.3" },
+    { key: "W", labelKey: "calc_label_power_w", unit: "watts", ph: "e.g. 4320" },
   ];
 
   const vals = { V: v, I: i, R: r, W: w };
@@ -480,21 +502,21 @@ function OhmCalc() {
 
   return (
     <div>
-      <div style={sectionTitle}>Ohm's Law Calculator</div>
+      <div style={sectionTitle}>{t("calc_ohm_title", lang)}</div>
       <p style={{ fontSize: 12, color: "#888", marginBottom: 10 }}>
-        V = IR · W = VI · Enter any two values to solve for a third.
+        {t("calc_ohm_hint", lang)}
       </p>
-      <label style={label}>Solve for</label>
+      <label style={label}>{t("calc_label_solve_for", lang)}</label>
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap" as const, marginBottom: 10 }}>
         {(["V","I","R","W"] as const).map((k) => (
           <button key={k} style={tabBtn(solve === k)} onClick={() => setSolve(k)}>
-            {k === "V" ? "Voltage" : k === "I" ? "Current" : k === "R" ? "Resistance" : "Power"}
+            {k === "V" ? t("calc_ohm_voltage", lang) : k === "I" ? t("calc_ohm_current", lang) : k === "R" ? t("calc_ohm_resistance", lang) : t("calc_ohm_power", lang)}
           </button>
         ))}
       </div>
       {fields.filter((f) => f.key !== solve).map((f) => (
         <div key={f.key}>
-          <label style={label}>{f.label}</label>
+          <label style={label}>{t(f.labelKey, lang)}</label>
           <input style={input} type="number" placeholder={f.ph}
             value={vals[f.key]} onChange={(e) => setters[f.key](e.target.value)} />
         </div>
@@ -512,6 +534,7 @@ function OhmCalc() {
 // Capacitor MFD Check Tab
 // ═══════════════════════════════════════════════════════════════
 function MfdCalc() {
+  const { lang } = useLang();
   const [rated, setRated] = useState("");
   const [measured, setMeasured] = useState("");
 
@@ -526,24 +549,24 @@ function MfdCalc() {
       diff: diff > 0 ? `+${diff} MFD` : `${diff} MFD`,
       pass,
       note: pass
-        ? `Capacitor is within ±10% tolerance. It is serviceable.`
-        : `Capacitor is ${Math.abs(pct)}% out of tolerance (>10% = failed). Replace it.`,
+        ? t("mfd_note_pass", lang)
+        : t("mfd_note_fail", lang).replace("{value}", String(Math.abs(pct))),
     };
-  }, [rated, measured]);
+  }, [rated, measured, lang]);
 
   return (
     <div>
-      <div style={sectionTitle}>Capacitor MFD Checker</div>
+      <div style={sectionTitle}>{t("calc_mfd_title", lang)}</div>
       <p style={{ fontSize: 12, color: "#888", marginBottom: 10 }}>
-        Acceptable tolerance is ±6% (strict) to ±10% (common). Any reading beyond ±10% = failed capacitor.
+        {t("calc_mfd_hint", lang)}
       </p>
-      <label style={label}>Rated MFD (from label)</label>
+      <label style={label}>{t("calc_label_rated_mfd", lang)}</label>
       <input style={input} type="number" placeholder="e.g. 35" value={rated} onChange={(e) => setRated(e.target.value)} />
-      <label style={label}>Measured MFD (from meter)</label>
+      <label style={label}>{t("calc_label_measured_mfd", lang)}</label>
       <input style={input} type="number" placeholder="e.g. 31.2" value={measured} onChange={(e) => setMeasured(e.target.value)} />
       {result && (
         <div style={resultBox(result.pass)}>
-          <div><strong>Deviation:</strong> {result.pct} ({result.diff})</div>
+          <div><strong>{t("calc_label_deviation", lang)}</strong> {result.pct} ({result.diff})</div>
           <div style={{ marginTop: 6 }}>{result.note}</div>
         </div>
       )}
@@ -555,6 +578,7 @@ function MfdCalc() {
 // Gas Heat Rise Tab
 // ═══════════════════════════════════════════════════════════════
 function GasHeatCalc() {
+  const { lang } = useLang();
   const [ret, setRet] = useState("");
   const [sup, setSup] = useState("");
   const [cfm, setCfm] = useState("");
@@ -582,43 +606,43 @@ function GasHeatCalc() {
 
     let note = "";
     if (actualRise < normalMin) {
-      note = `Heat rise of ${actualRise}°F is below the typical 40–70°F range. Check for: oversized unit, excessive airflow, inducer issue, or heat exchanger problem.`;
+      note = t("gas_note_low", lang).replace("{value}", String(actualRise));
     } else if (actualRise > normalMax) {
-      note = `Heat rise of ${actualRise}°F is above the typical 40–70°F range. Check for: low airflow (dirty filter/blower), restricted duct, or cracked heat exchanger.`;
+      note = t("gas_note_high", lang).replace("{value}", String(actualRise));
     } else {
-      note = `Heat rise of ${actualRise}°F is within the normal 40–70°F range.`;
+      note = t("gas_note_normal", lang).replace("{value}", String(actualRise));
     }
 
     return { actualRise, expectedRise, pass, note };
-  }, [ret, sup, cfm, inputBtu, effPct]);
+  }, [ret, sup, cfm, inputBtu, effPct, lang]);
 
   return (
     <div>
-      <div style={sectionTitle}>Gas Heat Rise Calculator</div>
+      <div style={sectionTitle}>{t("calc_gas_title", lang)}</div>
       <p style={{ fontSize: 12, color: "#888", marginBottom: 10 }}>
-        Normal heat rise range is 40–70°F. Check manufacturer nameplate for specific allowed range.
+        {t("calc_gas_hint", lang)}
       </p>
-      <label style={label}>Return Air Temp (°F)</label>
+      <label style={label}>{t("calc_label_return_temp", lang)}</label>
       <input style={input} type="number" placeholder="e.g. 68" value={ret} onChange={(e) => setRet(e.target.value)} />
-      <label style={label}>Supply Air Temp (°F) — measured at heat exchanger outlet</label>
+      <label style={label}>{t("calc_label_supply_temp_outlet", lang)}</label>
       <input style={input} type="number" placeholder="e.g. 125" value={sup} onChange={(e) => setSup(e.target.value)} />
-      <label style={{ ...label, color: "#999", marginTop: 14 }}>Optional — Expected Rise Check</label>
-      <label style={label}>Input BTU/h (from nameplate)</label>
+      <label style={{ ...label, color: "#999", marginTop: 14 }}>{t("calc_label_optional_expected_rise", lang)}</label>
+      <label style={label}>{t("calc_label_input_btuh", lang)}</label>
       <input style={input} type="number" placeholder="e.g. 80000" value={inputBtu} onChange={(e) => setInputBtu(e.target.value)} />
-      <label style={label}>Efficiency (%)</label>
+      <label style={label}>{t("calc_label_efficiency", lang)}</label>
       <input style={input} type="number" placeholder="e.g. 80" value={effPct} onChange={(e) => setEffPct(e.target.value)} />
-      <label style={label}>System Airflow CFM (if known)</label>
+      <label style={label}>{t("calc_label_system_airflow", lang)}</label>
       <input style={input} type="number" placeholder="e.g. 1200" value={cfm} onChange={(e) => setCfm(e.target.value)} />
 
       {result && (
         <div style={resultBox(result.pass)}>
-          <div><strong>Actual Heat Rise:</strong> {result.actualRise}°F
+          <div><strong>{t("calc_label_actual_heat_rise", lang)}</strong> {result.actualRise}°F
             <span style={{ marginLeft: 8, fontWeight: 700, color: result.pass ? "#16a34a" : "#d97706" }}>
-              [{result.pass ? "NORMAL" : "OUT OF RANGE"}]
+              [{result.pass ? t("calc_status_normal", lang) : t("calc_status_out_of_range", lang)}]
             </span>
           </div>
           {result.expectedRise !== null && (
-            <div><strong>Expected Rise:</strong> {result.expectedRise}°F</div>
+            <div><strong>{t("calc_label_expected_rise", lang)}</strong> {result.expectedRise}°F</div>
           )}
           <div style={{ marginTop: 8 }}>{result.note}</div>
         </div>
@@ -631,16 +655,17 @@ function GasHeatCalc() {
 // Main Export
 // ═══════════════════════════════════════════════════════════════
 export function HvacCalculators() {
+  const { lang } = useLang();
   const [activeTab, setActiveTab] = useState<Tab>("pt");
 
   const tabs: { id: Tab; label: string }[] = [
-    { id: "pt", label: "PT Chart" },
-    { id: "shsc", label: "SH / SC" },
-    { id: "deltat", label: "Delta-T" },
-    { id: "cfm", label: "CFM" },
-    { id: "ohm", label: "Ohm's Law" },
-    { id: "mfd", label: "Capacitor MFD" },
-    { id: "gas", label: "Gas Heat Rise" },
+    { id: "pt", label: t("calc_tab_pt", lang) },
+    { id: "shsc", label: t("calc_tab_shsc", lang) },
+    { id: "deltat", label: t("calc_tab_deltat", lang) },
+    { id: "cfm", label: t("calc_tab_cfm", lang) },
+    { id: "ohm", label: t("calc_tab_ohm", lang) },
+    { id: "mfd", label: t("calc_tab_mfd", lang) },
+    { id: "gas", label: t("calc_tab_gas", lang) },
   ];
 
   return (
@@ -656,9 +681,9 @@ export function HvacCalculators() {
           borderBottom: "1px solid #e2e8f0",
         }}
       >
-        {tabs.map((t) => (
-          <button key={t.id} style={tabBtn(activeTab === t.id)} onClick={() => setActiveTab(t.id)}>
-            {t.label}
+        {tabs.map((tb) => (
+          <button key={tb.id} style={tabBtn(activeTab === tb.id)} onClick={() => setActiveTab(tb.id)}>
+            {tb.label}
           </button>
         ))}
       </div>
