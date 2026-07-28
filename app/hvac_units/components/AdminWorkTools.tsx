@@ -8,6 +8,8 @@ import {
   findStrongUnitMatchForCurrentUser,
 } from "../../lib/supabase/work-orders";
 import { makeId } from "../lib/fileHelpers";
+import { useLang } from "../../components/LanguageContext";
+import { t } from "../../lib/translations";
 
 function parseSimpleCsv(text: string): Record<string, string>[] {
   const lines = text
@@ -43,6 +45,7 @@ const btnStyle: React.CSSProperties = {
 };
 
 export function AdminWorkTools() {
+  const { lang } = useLang();
   const [showBulkImportTools, setShowBulkImportTools] = useState(false);
   const [workOrderImportText, setWorkOrderImportText] = useState("");
   const [workOrderImportRows, setWorkOrderImportRows] = useState<Record<string, string>[]>([]);
@@ -59,19 +62,19 @@ export function AdminWorkTools() {
       setWorkOrderImportResults([]);
       setWorkOrderImportMessage(
         rows.length
-          ? `Parsed ${rows.length} row(s). Review before import.`
-          : "No valid rows found. Make sure the first row contains headers."
+          ? t("awt_parsed_rows", lang).replace("{count}", String(rows.length))
+          : t("awt_no_valid_rows", lang)
       );
     } catch {
       setWorkOrderImportRows([]);
       setWorkOrderImportResults([]);
-      setWorkOrderImportMessage("Could not parse CSV text.");
+      setWorkOrderImportMessage(t("awt_csv_parse_failed", lang));
     }
   }
 
   async function importWorkOrderRows() {
     if (!workOrderImportRows.length) {
-      setWorkOrderImportMessage("Nothing to import yet. Paste CSV and click Preview first.");
+      setWorkOrderImportMessage(t("awt_nothing_to_import", lang));
       return;
     }
 
@@ -134,12 +137,12 @@ export function AdminWorkTools() {
       }
 
       setWorkOrderImportResults(results);
-      setWorkOrderImportMessage(`Imported ${results.length} work-order row(s).`);
+      setWorkOrderImportMessage(t("awt_imported_count", lang).replace("{count}", String(results.length)));
       setWorkOrderImportText("");
       setWorkOrderImportRows([]);
     } catch (err) {
       console.error(err);
-      setWorkOrderImportMessage("Import failed.");
+      setWorkOrderImportMessage(t("awt_import_failed", lang));
     } finally {
       setWorkOrderImportLoading(false);
     }
@@ -148,28 +151,27 @@ export function AdminWorkTools() {
   return (
     <>
       <button onClick={() => setShowBulkImportTools((v) => !v)} style={btnStyle}>
-        {showBulkImportTools ? "Hide Bulk Import" : "Show Bulk Import"}
+        {showBulkImportTools ? t("btn_hide_bulk_import", lang) : t("btn_show_bulk_import", lang)}
       </button>
 
       {showBulkImportTools ? (
         <div style={{ marginTop: 12 }}>
           <SmallHint>
-            Paste CSV with a header row. Required columns for best matching:
-            customer_name,site_name,site_address,unit_nickname,property_type,equipment_type,manufacturer,model,serial,refrigerant_type,service_date,symptom,diagnosis_summary,final_confirmed_cause,parts_replaced,actual_fix_performed,outcome_status,callback_occurred,tech_closeout_notes
+            {t("awt_csv_hint", lang)}
           </SmallHint>
 
           <div style={{ marginTop: 12 }}>
             <textarea
               value={workOrderImportText}
               onChange={(e) => setWorkOrderImportText(e.target.value)}
-              placeholder="Paste work-order CSV here..."
+              placeholder={t("awt_csv_placeholder", lang)}
               style={{ width: "100%", minHeight: 180, padding: 10 }}
             />
           </div>
 
           <div style={{ display: "flex", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
             <button onClick={previewWorkOrderImport} style={btnStyle}>
-              Preview Import
+              {t("btn_preview_import", lang)}
             </button>
 
             <button
@@ -177,7 +179,7 @@ export function AdminWorkTools() {
               disabled={workOrderImportLoading || !workOrderImportRows.length}
               style={btnStyle}
             >
-              {workOrderImportLoading ? "Importing..." : "Import Rows"}
+              {workOrderImportLoading ? t("btn_importing", lang) : t("btn_import_rows", lang)}
             </button>
           </div>
 
@@ -227,19 +229,24 @@ export function AdminWorkTools() {
                 </tbody>
               </table>
               <SmallHint style={{ marginTop: 8 }}>
-                Showing first {Math.min(10, workOrderImportRows.length)} row(s) of {workOrderImportRows.length}.
+                {t("awt_showing_rows", lang)
+                  .replace("{count}", String(Math.min(10, workOrderImportRows.length)))
+                  .replace("{total}", String(workOrderImportRows.length))}
               </SmallHint>
             </div>
           ) : null}
 
           {workOrderImportResults.length ? (
             <div style={{ marginTop: 12 }}>
-              <div style={{ fontWeight: 900 }}>Import Results</div>
+              <div style={{ fontWeight: 900 }}>{t("awt_import_results", lang)}</div>
               <ul style={{ marginTop: 8, paddingLeft: 18 }}>
                 {workOrderImportResults.map((item, idx) => (
                   <li key={idx}>
                     <SmallHint>
-                      Row {item.rowNumber}: {item.action} → unit {item.unitId}
+                      {t("awt_row_label", lang)
+                        .replace("{number}", String(item.rowNumber))
+                        .replace("{action}", item.action === "created-new-unit" ? t("awt_action_created", lang) : item.action === "matched-existing-unit" ? t("awt_action_matched", lang) : item.action)
+                        .replace("{unitId}", item.unitId)}
                     </SmallHint>
                   </li>
                 ))}
@@ -249,7 +256,7 @@ export function AdminWorkTools() {
         </div>
       ) : (
         <SmallHint style={{ marginTop: 12 }}>
-          Bulk import is hidden by default to keep the field workflow clean.
+          {t("awt_hidden_by_default", lang)}
         </SmallHint>
       )}
     </>

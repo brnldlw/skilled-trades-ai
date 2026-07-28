@@ -4,6 +4,8 @@ import { useState } from "react";
 import { SmallHint } from "./SmallHint";
 import { SectionCard } from "./SectionCard";
 import { createClient } from "../../lib/supabase/client";
+import { useLang } from "../../components/LanguageContext";
+import { t } from "../../lib/translations";
 
 type CompanyMember = {
   id: string;
@@ -26,6 +28,7 @@ const btnStyle: React.CSSProperties = {
 };
 
 export function CompanyAdminPanel() {
+  const { lang } = useLang();
   const [showAddTechTools, setShowAddTechTools] = useState(false);
   const [addTechEmail, setAddTechEmail] = useState("");
   const [addTechBusy, setAddTechBusy] = useState(false);
@@ -73,7 +76,7 @@ export function CompanyAdminPanel() {
             ? JSON.stringify(err)
             : String(err);
 
-      setCompanyMembersMessage(`Could not load company team: ${msg}`);
+      setCompanyMembersMessage(t("cap_load_team_failed", lang).replace("{value}", msg));
       setCompanyMembers([]);
     } finally {
       setCompanyMembersBusy(false);
@@ -83,7 +86,7 @@ export function CompanyAdminPanel() {
   async function handleAddTechToCompany() {
     const email = addTechEmail.trim().toLowerCase();
     if (!email) {
-      setAddTechMessage("Enter the tech email.");
+      setAddTechMessage(t("cap_enter_tech_email", lang));
       return;
     }
 
@@ -119,9 +122,9 @@ export function CompanyAdminPanel() {
       }
 
       if (data?.alreadyMember) {
-        setAddTechMessage("That user is already attached to this company.");
+        setAddTechMessage(t("cap_already_member", lang));
       } else {
-        setAddTechMessage("Tech added to company.");
+        setAddTechMessage(t("cap_tech_added", lang));
       }
 
       setAddTechEmail("");
@@ -135,7 +138,7 @@ export function CompanyAdminPanel() {
             ? JSON.stringify(err)
             : String(err);
 
-      setAddTechMessage(`Add tech failed: ${msg}`);
+      setAddTechMessage(t("cap_add_tech_failed", lang).replace("{value}", msg));
     } finally {
       setAddTechBusy(false);
     }
@@ -143,15 +146,15 @@ export function CompanyAdminPanel() {
 
   return (
     <>
-      <SectionCard title="Company Admin / Add Tech">
+      <SectionCard title={t("cap_title", lang)}>
         <button onClick={() => setShowAddTechTools((v) => !v)} style={btnStyle}>
-          {showAddTechTools ? "Hide Add Tech" : "Show Add Tech"}
+          {showAddTechTools ? t("btn_hide_add_tech", lang) : t("btn_show_add_tech", lang)}
         </button>
 
         {showAddTechTools ? (
           <div style={{ marginTop: 12 }}>
             <SmallHint>
-              Add an existing user account to your company as a tech.
+              {t("cap_add_tech_hint", lang)}
             </SmallHint>
 
             <div
@@ -164,7 +167,7 @@ export function CompanyAdminPanel() {
               }}
             >
               <div>
-                <label style={{ fontWeight: 900 }}>"Tech Email"</label>
+                <label style={{ fontWeight: 900 }}>{t("cap_tech_email_label", lang)}</label>
                 <br />
                 <input
                   value={addTechEmail}
@@ -179,7 +182,7 @@ export function CompanyAdminPanel() {
                 disabled={addTechBusy}
                 style={btnStyle}
               >
-                {addTechBusy ? "Adding..." : "Add Tech"}
+                {addTechBusy ? t("btn_adding", lang) : t("btn_add_tech", lang)}
               </button>
             </div>
 
@@ -189,21 +192,21 @@ export function CompanyAdminPanel() {
           </div>
         ) : (
           <SmallHint style={{ marginTop: 12 }}>
-            Hidden by default to keep the main workflow clean.
+            {t("cap_hidden_by_default", lang)}
           </SmallHint>
         )}
       </SectionCard>
 
       <div style={{ marginTop: 10 }}>
-        <SectionCard title="Company Team">
+        <SectionCard title={t("cap_team_title", lang)}>
           <button onClick={() => setShowCompanyTeam((v) => !v)} style={btnStyle}>
-            {showCompanyTeam ? "Hide Team" : "Show Team"}
+            {showCompanyTeam ? t("btn_hide_team", lang) : t("btn_show_team", lang)}
           </button>
 
           {showCompanyTeam ? (
             <div style={{ marginTop: 12 }}>
               {companyMembersBusy ? (
-                <SmallHint>Loading company team...</SmallHint>
+                <SmallHint>{t("cap_loading_team", lang)}</SmallHint>
               ) : companyMembers.length ? (
                 <div style={{ display: "grid", gap: 8 }}>
                   {companyMembers.map((member) => (
@@ -220,20 +223,20 @@ export function CompanyAdminPanel() {
                         {member.full_name || member.email || member.user_id}
                       </div>
                       <SmallHint style={{ marginTop: 4 }}>
-                        {member.email || "No email"} • {member.role || "-"} • {member.status || "-"}
+                        {member.email || t("cap_no_email", lang)} • {member.role || "-"} • {member.status || "-"}
                       </SmallHint>
                     </div>
                   ))}
                 </div>
               ) : (
                 <SmallHint>
-                  {companyMembersMessage || "No company members found yet."}
+                  {companyMembersMessage || t("cap_no_members_found", lang)}
                 </SmallHint>
               )}
             </div>
           ) : (
             <SmallHint style={{ marginTop: 12 }}>
-              Hidden by default to keep the main workflow clean.
+              {t("cap_hidden_by_default", lang)}
             </SmallHint>
           )}
         </SectionCard>

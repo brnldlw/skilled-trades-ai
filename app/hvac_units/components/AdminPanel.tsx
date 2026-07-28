@@ -9,13 +9,17 @@ import {
   type UserProfile,
   type SubscriptionTier,
 } from "../../lib/supabase/subscription";
+import { useLang } from "../../components/LanguageContext";
+import { t, type Language } from "../../lib/translations";
 
-const TIERS: { value: SubscriptionTier; label: string }[] = [
-  { value: "free", label: "Free" },
-  { value: "solo", label: "Solo Tech ($19/mo)" },
-  { value: "shop_5", label: "Shop 5 Techs ($79/mo)" },
-  { value: "shop_10", label: "Shop 10 Techs ($139/mo)" },
-];
+function tierList(lang: Language): { value: SubscriptionTier; label: string }[] {
+  return [
+    { value: "free", label: t("adm_tier_free", lang) },
+    { value: "solo", label: t("adm_tier_solo", lang) },
+    { value: "shop_5", label: t("adm_tier_shop5", lang) },
+    { value: "shop_10", label: t("adm_tier_shop10", lang) },
+  ];
+}
 
 function tierColor(tier: SubscriptionTier): string {
   if (tier === "free") return "#94a3b8";
@@ -33,13 +37,13 @@ function tierBg(tier: SubscriptionTier): string {
   return "#f1f5f9";
 }
 
-function formatExpiry(s: string | null | undefined): string {
-  if (!s) return "No expiry";
+function formatExpiry(s: string | null | undefined, lang: Language): string {
+  if (!s) return t("adm_no_expiry", lang);
   const d = new Date(s);
   const now = new Date();
-  if (d < now) return "EXPIRED";
+  if (d < now) return t("adm_expired", lang);
   const days = Math.ceil((d.getTime() - now.getTime()) / 86400000);
-  return `${days} day${days !== 1 ? "s" : ""} left`;
+  return t("adm_days_left", lang).replace("{count}", String(days));
 }
 
 type OverrideFormProps = {
@@ -49,6 +53,8 @@ type OverrideFormProps = {
 };
 
 function OverrideForm({ user, onSave, onCancel }: OverrideFormProps) {
+  const { lang } = useLang();
+  const TIERS = tierList(lang);
   const [tier, setTier] = useState<SubscriptionTier>(user.override_tier || "solo");
   const [hasExpiry, setHasExpiry] = useState(!!user.override_expires_at);
   const [expiry, setExpiry] = useState(
@@ -76,12 +82,12 @@ function OverrideForm({ user, onSave, onCancel }: OverrideFormProps) {
       });
       if (!res.ok) {
         const err = await res.json();
-        setError(err?.error || "Save failed");
+        setError(err?.error || t("adm_save_failed", lang));
         return;
       }
       onSave();
     } catch (e: any) {
-      setError(e?.message || "Save failed");
+      setError(e?.message || t("adm_save_failed", lang));
     } finally {
       setSaving(false);
     }
@@ -95,34 +101,34 @@ function OverrideForm({ user, onSave, onCancel }: OverrideFormProps) {
   return (
     <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 10, padding: 16, marginTop: 8 }}>
       <div style={{ fontWeight: 700, fontSize: 13, color: "#1e293b", marginBottom: 12 }}>
-        Set Override Access for {user.email}
+        {t("adm_set_override_for", lang).replace("{value}", user.email || "")}
       </div>
 
-      <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 4 }}>Access Level</label>
+      <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 4 }}>{t("adm_access_level", lang)}</label>
       <select style={inp} value={tier} onChange={e => setTier(e.target.value as SubscriptionTier)}>
-        {TIERS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+        {TIERS.map(tr => <option key={tr.value} value={tr.value}>{tr.label}</option>)}
       </select>
 
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10 }}>
         <input type="checkbox" id="hasExpiry" checked={hasExpiry} onChange={e => setHasExpiry(e.target.checked)} />
         <label htmlFor="hasExpiry" style={{ fontSize: 13, cursor: "pointer", color: "#374151" }}>
-          Set expiry date (for trials)
+          {t("adm_set_expiry_checkbox", lang)}
         </label>
       </div>
 
       {hasExpiry && (
         <>
-          <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 4, marginTop: 10 }}>Expires On</label>
+          <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 4, marginTop: 10 }}>{t("adm_expires_on", lang)}</label>
           <input style={inp} type="date" value={expiry} onChange={e => setExpiry(e.target.value)}
             min={new Date().toISOString().slice(0, 10)} />
           <div style={{ fontSize: 11, color: "#64748b", marginTop: 4 }}>
-            Access automatically reverts to their paid plan (or free) when this date passes.
+            {t("adm_expiry_hint", lang)}
           </div>
         </>
       )}
 
-      <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 4, marginTop: 10 }}>Note (optional)</label>
-      <input style={inp} type="text" placeholder="e.g. Trial for ABC HVAC, my tech John, conference promo"
+      <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 4, marginTop: 10 }}>{t("adm_note_optional", lang)}</label>
+      <input style={inp} type="text" placeholder={t("adm_note_placeholder", lang)}
         value={note} onChange={e => setNote(e.target.value)} />
 
       {error && <div style={{ fontSize: 12, color: "#dc2626", marginTop: 8 }}>{error}</div>}
@@ -133,26 +139,26 @@ function OverrideForm({ user, onSave, onCancel }: OverrideFormProps) {
           disabled={saving}
           style={{ padding: "9px 16px", background: "#0f1f3d", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}
         >
-          {saving ? "Saving..." : "Save Override"}
+          {saving ? t("btn_saving", lang) : t("btn_save_override", lang)}
         </button>
         <button
           onClick={onCancel}
           style={{ padding: "9px 16px", background: "#fff", color: "#374151", border: "1px solid #e2e8f0", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}
         >
-          Cancel
+          {t("btn_cancel", lang)}
         </button>
       </div>
 
       <div style={{ borderTop: "1px solid #e2e8f0", marginTop: 16, paddingTop: 14 }}>
         <div style={{ fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 10 }}>
-          💰 Estimator Add-on Override
+          {t("adm_estimator_addon_override", lang)}
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" as const }}>
           {[
-            { label: "1 Free Quote", tier: "single", credits: 1 },
-            { label: "3 Free Quotes", tier: "single", credits: 3 },
-            { label: "Monthly 20", tier: "monthly_20", credits: 0 },
-            { label: "Unlimited", tier: "monthly_unlimited", credits: 0 },
+            { label: t("adm_1_free_quote", lang), tier: "single", credits: 1 },
+            { label: t("adm_3_free_quotes", lang), tier: "single", credits: 3 },
+            { label: t("adm_monthly_20", lang), tier: "monthly_20", credits: 0 },
+            { label: t("adm_unlimited", lang), tier: "monthly_unlimited", credits: 0 },
           ].map(opt => (
             <button
               key={opt.label}
@@ -174,7 +180,7 @@ function OverrideForm({ user, onSave, onCancel }: OverrideFormProps) {
               }}
               style={{ padding: "7px 14px", background: "#f97316", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
             >
-              Grant: {opt.label}
+              {t("adm_grant_colon", lang).replace("{value}", opt.label)}
             </button>
           ))}
           <button
@@ -192,17 +198,17 @@ function OverrideForm({ user, onSave, onCancel }: OverrideFormProps) {
             }}
             style={{ padding: "7px 14px", background: "#fff", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
           >
-            Revoke Estimator
+            {t("btn_revoke_estimator", lang)}
           </button>
         </div>
         <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 8 }}>
-          Grant a free trial — tech gets the estimator unlocked instantly. Perfect for converting fence-sitters.
+          {t("adm_estimator_hint", lang)}
         </div>
       </div>
 
       <div style={{ borderTop: "1px solid #e2e8f0", marginTop: 16, paddingTop: 14 }}>
         <div style={{ fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 10 }}>
-          📊 Manager Dashboard Access
+          {t("adm_manager_dashboard_access", lang)}
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" as const }}>
           <button
@@ -220,7 +226,7 @@ function OverrideForm({ user, onSave, onCancel }: OverrideFormProps) {
             }}
             style={{ padding: "7px 14px", background: "#2563eb", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
           >
-            Grant Manager Access
+            {t("btn_grant_manager_access", lang)}
           </button>
           <button
             onClick={async () => {
@@ -237,21 +243,21 @@ function OverrideForm({ user, onSave, onCancel }: OverrideFormProps) {
             }}
             style={{ padding: "7px 14px", background: "#fff", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
           >
-            Revoke Manager Access
+            {t("btn_revoke_manager_access", lang)}
           </button>
         </div>
         <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 8 }}>
-          Manager can view all team jobs, callback rates, failure patterns, and export CSV. They cannot edit service records.
+          {t("adm_manager_hint", lang)}
         </div>
       </div>
 
       <div style={{ borderTop: "1px solid #e2e8f0", marginTop: 16, paddingTop: 14 }}>
         <div style={{ fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 6 }}>
-          👤 Tech Identity in Job History
+          {t("adm_tech_identity_title", lang)}
         </div>
         <div style={{ fontSize: 12, color: "#64748b", marginBottom: 10, lineHeight: 1.5 }}>
-          When ON — tech name is visible to other techs viewing unit history. Enables accountability and knowledge transfer.<br/>
-          When OFF — tech name is hidden from other techs. Managers always see full names.
+          {t("adm_tech_identity_hint", lang)}<br/>
+          {t("adm_tech_identity_hint2", lang)}
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <button
@@ -269,7 +275,7 @@ function OverrideForm({ user, onSave, onCancel }: OverrideFormProps) {
             }}
             style={{ padding: "7px 14px", background: "#16a34a", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
           >
-            ✓ Show Tech Names (Default)
+            {t("btn_show_tech_names", lang)}
           </button>
           <button
             onClick={async () => {
@@ -286,11 +292,11 @@ function OverrideForm({ user, onSave, onCancel }: OverrideFormProps) {
             }}
             style={{ padding: "7px 14px", background: "#fff", color: "#374151", border: "1px solid #e2e8f0", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
           >
-            Hide Tech Names
+            {t("btn_hide_tech_names", lang)}
           </button>
         </div>
         <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 8 }}>
-          This setting applies company-wide. Managers always see full tech names regardless of this setting.
+          {t("adm_tech_identity_footer", lang)}
         </div>
       </div>
     </div>
@@ -301,6 +307,7 @@ function OverrideForm({ user, onSave, onCancel }: OverrideFormProps) {
 // Main Admin Panel
 // ═══════════════════════════════════════════════════════════════
 export function AdminPanel() {
+  const { lang } = useLang();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -315,13 +322,13 @@ export function AdminPanel() {
       const res = await fetch("/api/admin/users");
       if (!res.ok) {
         const err = await res.json();
-        setError(err?.error || "Failed to load users");
+        setError(err?.error || t("adm_failed_load_users", lang));
         return;
       }
       const data = await res.json();
       setUsers(data.users || []);
     } catch (e: any) {
-      setError(e?.message || "Failed to load users");
+      setError(e?.message || t("adm_failed_load_users", lang));
     } finally {
       setLoading(false);
     }
@@ -330,7 +337,7 @@ export function AdminPanel() {
   useEffect(() => { load(); }, []);
 
   async function handleRevoke(userId: string) {
-    if (!confirm("Revoke override access? User will revert to their paid plan or free tier.")) return;
+    if (!confirm(t("adm_confirm_revoke", lang))) return;
     setRevoking(userId);
     try {
       const res = await fetch("/api/admin/users", {
@@ -338,11 +345,11 @@ export function AdminPanel() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, overrideTier: null, overrideExpiresAt: null, overrideNote: null }),
       });
-      if (!res.ok) throw new Error("Revoke failed");
-      setMessage("Override revoked.");
+      if (!res.ok) throw new Error(t("adm_revoke_failed", lang));
+      setMessage(t("adm_override_revoked", lang));
       await load();
     } catch (e: any) {
-      setError(e?.message || "Revoke failed");
+      setError(e?.message || t("adm_revoke_failed", lang));
     } finally {
       setRevoking(null);
     }
@@ -365,10 +372,10 @@ export function AdminPanel() {
       {/* Stats */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 16 }}>
         {[
-          { label: "Total Users", value: stats.total, color: "#2563eb" },
-          { label: "Paid", value: stats.paid, color: "#16a34a" },
-          { label: "Active Overrides", value: stats.overrides, color: "#d97706" },
-          { label: "Free Tier", value: stats.free, color: "#64748b" },
+          { label: t("adm_stat_total_users", lang), value: stats.total, color: "#2563eb" },
+          { label: t("adm_stat_paid", lang), value: stats.paid, color: "#16a34a" },
+          { label: t("adm_stat_active_overrides", lang), value: stats.overrides, color: "#d97706" },
+          { label: t("adm_stat_free_tier", lang), value: stats.free, color: "#64748b" },
         ].map(s => (
           <div key={s.label} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 10, padding: "12px 14px", textAlign: "center" }}>
             <div style={{ fontSize: 24, fontWeight: 800, color: s.color }}>{s.value}</div>
@@ -381,7 +388,7 @@ export function AdminPanel() {
       <input
         value={search}
         onChange={e => setSearch(e.target.value)}
-        placeholder="Search by email..."
+        placeholder={t("adm_search_placeholder", lang)}
         style={{ width: "100%", padding: "10px 14px", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: 14, fontFamily: "inherit", marginBottom: 12, background: "#fafafa" }}
       />
 
@@ -397,7 +404,7 @@ export function AdminPanel() {
         </div>
       )}
 
-      {loading && <div style={{ textAlign: "center", padding: 24, color: "#64748b" }}>Loading users...</div>}
+      {loading && <div style={{ textAlign: "center", padding: 24, color: "#64748b" }}>{t("adm_loading_users", lang)}</div>}
 
       {/* User list */}
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -416,7 +423,7 @@ export function AdminPanel() {
                     </span>
                     {user.is_admin && (
                       <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: "#f0fdf4", color: "#166534" }}>
-                        ADMIN
+                        {t("adm_admin_badge", lang)}
                       </span>
                     )}
                     <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: tierBg(effectiveTier), color: tierColor(effectiveTier) }}>
@@ -424,16 +431,16 @@ export function AdminPanel() {
                     </span>
                     {hasOverride && (
                       <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: "#fef9c3", color: "#854d0e" }}>
-                        OVERRIDE {user.override_expires_at ? `— ${formatExpiry(user.override_expires_at)}` : "— No expiry"}
+                        {t("adm_override_badge_dash", lang).replace("{value}", user.override_expires_at ? formatExpiry(user.override_expires_at, lang) : t("adm_no_expiry", lang))}
                       </span>
                     )}
                   </div>
                   {user.override_note && (
-                    <div style={{ fontSize: 12, color: "#64748b" }}>Note: {user.override_note}</div>
+                    <div style={{ fontSize: 12, color: "#64748b" }}>{t("adm_note_colon", lang).replace("{value}", user.override_note)}</div>
                   )}
                   {user.current_period_end && (
                     <div style={{ fontSize: 11, color: "#94a3b8" }}>
-                      Subscription renews: {new Date(user.current_period_end).toLocaleDateString()}
+                      {t("adm_subscription_renews", lang).replace("{value}", new Date(user.current_period_end).toLocaleDateString())}
                     </div>
                   )}
                 </div>
@@ -443,7 +450,7 @@ export function AdminPanel() {
                     onClick={() => setEditingId(isEditing ? null : user.id)}
                     style={{ padding: "6px 12px", background: "#0f1f3d", color: "#fff", border: "none", borderRadius: 6, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
                   >
-                    {isEditing ? "Cancel" : "Override"}
+                    {isEditing ? t("btn_cancel", lang) : t("btn_override", lang)}
                   </button>
                   {hasOverride && (
                     <button
@@ -451,7 +458,7 @@ export function AdminPanel() {
                       disabled={revoking === user.id}
                       style={{ padding: "6px 12px", background: "#fff", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 6, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
                     >
-                      {revoking === user.id ? "..." : "Revoke"}
+                      {revoking === user.id ? "..." : t("btn_revoke", lang)}
                     </button>
                   )}
                 </div>
@@ -462,7 +469,7 @@ export function AdminPanel() {
                   user={user}
                   onSave={async () => {
                     setEditingId(null);
-                    setMessage(`Override set for ${user.email}`);
+                    setMessage(t("adm_override_set_for", lang).replace("{value}", user.email || ""));
                     await load();
                   }}
                   onCancel={() => setEditingId(null)}
@@ -475,7 +482,7 @@ export function AdminPanel() {
 
       {!loading && filtered.length === 0 && (
         <div style={{ textAlign: "center", padding: 24, color: "#94a3b8", fontSize: 13 }}>
-          {search ? "No users found matching your search." : "No users yet."}
+          {search ? t("adm_no_users_found", lang) : t("adm_no_users_yet", lang)}
         </div>
       )}
     </div>
