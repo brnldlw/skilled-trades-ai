@@ -5,6 +5,8 @@ import type { SavedUnitRecord } from "../../lib/unit-store";
 import type { ServiceEventRow } from "../../lib/supabase/work-orders";
 import { calcSystemHealthScore } from "../lib/systemHealthScore";
 import { SystemHealthScore } from "./SystemHealthScore";
+import { useLang } from "../../components/LanguageContext";
+import { t } from "../../lib/translations";
 
 // ─── helpers ──────────────────────────────────────────────────
 function formatDate(s: string | null | undefined): string {
@@ -45,22 +47,24 @@ function StatBox({ value, label, color = "#2563eb", sub }: { value: string | num
 }
 
 function OutcomeBadge({ status }: { status: string }) {
-  const map: Record<string, { bg: string; color: string }> = {
-    "Resolved": { bg: "#dcfce7", color: "#16a34a" },
-    "Monitoring": { bg: "#fef9c3", color: "#ca8a04" },
-    "Callback": { bg: "#fee2e2", color: "#dc2626" },
-    "Parts on Order": { bg: "#dbeafe", color: "#2563eb" },
+  const { lang } = useLang();
+  const map: Record<string, { bg: string; color: string; labelKey: Parameters<typeof t>[0] }> = {
+    "Resolved": { bg: "#dcfce7", color: "#16a34a", labelKey: "upp_outcome_resolved" },
+    "Monitoring": { bg: "#fef9c3", color: "#ca8a04", labelKey: "upp_outcome_monitoring" },
+    "Callback": { bg: "#fee2e2", color: "#dc2626", labelKey: "upp_outcome_callback" },
+    "Parts on Order": { bg: "#dbeafe", color: "#2563eb", labelKey: "upp_outcome_parts_on_order" },
   };
-  const s = map[status] || { bg: "#f1f5f9", color: "#64748b" };
+  const s = map[status];
   return (
-    <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: s.bg, color: s.color, whiteSpace: "nowrap" }}>
-      {status || "Open"}
+    <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: s?.bg ?? "#f1f5f9", color: s?.color ?? "#64748b", whiteSpace: "nowrap" }}>
+      {s ? t(s.labelKey, lang) : (status || t("upp_outcome_open", lang))}
     </span>
   );
 }
 
 // ─── Timeline event card ──────────────────────────────────────
 function TimelineEvent({ event, idx }: { event: ServiceEventRow; idx: number }) {
+  const { lang } = useLang();
   const [expanded, setExpanded] = useState(false);
   const isCallback = event.callback_occurred === "Yes" || event.outcome_status === "Callback";
 
@@ -87,10 +91,10 @@ function TimelineEvent({ event, idx }: { event: ServiceEventRow; idx: number }) 
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" as const, marginBottom: 3 }}>
             <span style={{ fontSize: 13, fontWeight: 700, color: "#1e293b" }}>
-              {event.symptom || "No symptom recorded"}
+              {event.symptom || t("upp_no_symptom_recorded", lang)}
             </span>
             {event.outcome_status && <OutcomeBadge status={event.outcome_status} />}
-            {isCallback && <span style={{ fontSize: 10, fontWeight: 700, color: "#dc2626" }}>⚠ CALLBACK</span>}
+            {isCallback && <span style={{ fontSize: 10, fontWeight: 700, color: "#dc2626" }}>{t("upp_badge_callback", lang)}</span>}
           </div>
           <div style={{ fontSize: 11, color: "#64748b" }}>
             {formatDate(event.service_date)}
@@ -106,37 +110,37 @@ function TimelineEvent({ event, idx }: { event: ServiceEventRow; idx: number }) 
           <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 10 }}>
             {event.final_confirmed_cause && (
               <div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", marginBottom: 2 }}>Confirmed Cause</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", marginBottom: 2 }}>{t("upp_label_confirmed_cause", lang)}</div>
                 <div style={{ fontSize: 13, color: "#374151" }}>{event.final_confirmed_cause}</div>
               </div>
             )}
             {event.actual_fix_performed && (
               <div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", marginBottom: 2 }}>Work Performed</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", marginBottom: 2 }}>{t("upp_label_work_performed", lang)}</div>
                 <div style={{ fontSize: 13, color: "#374151" }}>{event.actual_fix_performed}</div>
               </div>
             )}
             {event.parts_replaced && (
               <div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", marginBottom: 2 }}>Parts Replaced</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", marginBottom: 2 }}>{t("upp_label_parts_replaced", lang)}</div>
                 <div style={{ fontSize: 13, color: "#374151" }}>{event.parts_replaced}</div>
               </div>
             )}
             {event.tech_closeout_notes && (
               <div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", marginBottom: 2 }}>Tech Notes</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", marginBottom: 2 }}>{t("upp_label_tech_notes", lang)}</div>
                 <div style={{ fontSize: 13, color: "#374151" }}>{event.tech_closeout_notes}</div>
               </div>
             )}
             {event.diagnosis_summary && (
               <div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", marginBottom: 2 }}>Diagnosis Summary</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", marginBottom: 2 }}>{t("upp_label_diagnosis_summary", lang)}</div>
                 <div style={{ fontSize: 13, color: "#374151" }}>{event.diagnosis_summary}</div>
               </div>
             )}
             {Array.isArray(event.photo_urls) && event.photo_urls.length > 0 && (
               <div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", marginBottom: 6 }}>Photos ({event.photo_urls.length})</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", marginBottom: 6 }}>{t("upp_label_photos", lang).replace("{value}", String(event.photo_urls.length))}</div>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap" as const }}>
                   {event.photo_urls.map((url, i) => (
                     <a key={i} href={url} target="_blank" rel="noopener noreferrer">
@@ -204,6 +208,7 @@ export function UnitProfilePanel({
   onClose,
   onLoad,
 }: UnitProfilePanelProps) {
+  const { lang } = useLang();
   const [activeTab, setActiveTab] = useState<"overview" | "history" | "patterns">("overview");
 
   if (!unit) return null;
@@ -212,7 +217,7 @@ export function UnitProfilePanel({
   const totalCalls = timeline.length;
   const callbacks = timeline.filter(e => e.callback_occurred === "Yes" || e.outcome_status === "Callback").length;
   const resolved = timeline.filter(e => e.outcome_status === "Resolved").length;
-  const lastService = timeline.length ? formatDate(timeline[0]?.service_date) : "Never";
+  const lastService = timeline.length ? formatDate(timeline[0]?.service_date) : t("upp_stat_never", lang);
   const daysSinceService = timeline.length ? daysSince(timeline[0]?.service_date) : null;
 
   // Pattern analysis
@@ -266,10 +271,10 @@ export function UnitProfilePanel({
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 16 }}>
             <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4 }}>
-                Unit Profile · My HVACR Tool
+                {t("upp_header_title", lang)}
               </div>
               <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", lineHeight: 1.2 }}>
-                {unit.customerName || "Unknown Customer"}
+                {unit.customerName || t("upp_unknown_customer", lang)}
               </div>
               <div style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", marginTop: 3 }}>
                 {unit.siteName ? `${unit.siteName}` : ""}
@@ -293,7 +298,7 @@ export function UnitProfilePanel({
                   fontFamily: "inherit",
                 }}
               >
-                Load Job
+                {t("btn_load_job", lang)}
               </button>
               <button
                 onClick={onClose}
@@ -309,16 +314,16 @@ export function UnitProfilePanel({
                   fontFamily: "inherit",
                 }}
               >
-                ✕ Close
+                {t("btn_close_x", lang)}
               </button>
             </div>
           </div>
 
           {/* Tab bar */}
           <div style={{ display: "flex", gap: 0, overflowX: "auto", scrollbarWidth: "none" }}>
-            <Tab label="Overview" active={activeTab === "overview"} onClick={() => setActiveTab("overview")} />
-            <Tab label="Service History" active={activeTab === "history"} onClick={() => setActiveTab("history")} badge={totalCalls} />
-            <Tab label="Patterns" active={activeTab === "patterns"} onClick={() => setActiveTab("patterns")} />
+            <Tab label={t("upp_tab_overview", lang)} active={activeTab === "overview"} onClick={() => setActiveTab("overview")} />
+            <Tab label={t("upp_tab_service_history", lang)} active={activeTab === "history"} onClick={() => setActiveTab("history")} badge={totalCalls} />
+            <Tab label={t("upp_tab_patterns", lang)} active={activeTab === "patterns"} onClick={() => setActiveTab("patterns")} />
           </div>
         </div>
 
@@ -334,21 +339,21 @@ export function UnitProfilePanel({
 
               {/* Stats */}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
-                <StatBox value={totalCalls} label="Total Calls" color="#2563eb" />
+                <StatBox value={totalCalls} label={t("upp_stat_total_calls", lang)} color="#2563eb" />
                 <StatBox
                   value={resolved}
-                  label="Resolved"
+                  label={t("upp_stat_resolved", lang)}
                   color="#16a34a"
                   sub={totalCalls ? `${Math.round(resolved / totalCalls * 100)}%` : undefined}
                 />
                 <StatBox
                   value={callbacks}
-                  label="Callbacks"
+                  label={t("upp_stat_callbacks", lang)}
                   color={callbacks > 0 ? "#dc2626" : "#64748b"}
                 />
                 <StatBox
                   value={daysSinceService !== null ? `${daysSinceService}d` : "—"}
-                  label="Since Last"
+                  label={t("upp_stat_since_last", lang)}
                   color={daysSinceService !== null && daysSinceService > 365 ? "#d97706" : "#64748b"}
                   sub={lastService}
                 />
@@ -356,29 +361,29 @@ export function UnitProfilePanel({
 
               {/* Equipment details */}
               <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, padding: 16 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 12 }}>Equipment Details</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 12 }}>{t("upp_equipment_details_title", lang)}</div>
                 <InfoGrid items={[
-                  { label: "Equipment Type", value: unit.equipmentType },
-                  { label: "Unit Tag", value: unit.unitNickname },
-                  { label: "Manufacturer", value: unit.manufacturer },
-                  { label: "Model", value: unit.model },
-                  { label: "Serial Number", value: unit.serialNumber || "" },
-                  { label: "Refrigerant", value: unit.refrigerantType },
-                  { label: "Property Type", value: unit.propertyType },
-                  { label: "System Type", value: unit.systemType || "" },
+                  { label: t("upp_field_equipment_type", lang), value: unit.equipmentType },
+                  { label: t("upp_field_unit_tag", lang), value: unit.unitNickname },
+                  { label: t("upp_field_manufacturer", lang), value: unit.manufacturer },
+                  { label: t("upp_field_model", lang), value: unit.model },
+                  { label: t("upp_field_serial_number", lang), value: unit.serialNumber || "" },
+                  { label: t("upp_field_refrigerant", lang), value: unit.refrigerantType },
+                  { label: t("upp_field_property_type", lang), value: unit.propertyType },
+                  { label: t("upp_field_system_type", lang), value: unit.systemType || "" },
                 ]} />
               </div>
 
               {/* Most recent visit */}
               {timeline.length > 0 && (
                 <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, padding: 16 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 12 }}>Most Recent Visit</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 12 }}>{t("upp_most_recent_visit", lang)}</div>
                   <TimelineEvent event={timeline[0]} idx={0} />
                 </div>
               )}
 
               {loading && (
-                <div style={{ textAlign: "center", padding: 24, color: "#64748b", fontSize: 13 }}>Loading history...</div>
+                <div style={{ textAlign: "center", padding: 24, color: "#64748b", fontSize: 13 }}>{t("upp_loading_history", lang)}</div>
               )}
               {message && !loading && (
                 <div style={{ textAlign: "center", padding: 16, color: "#64748b", fontSize: 13, background: "#f8fafc", borderRadius: 10 }}>{message}</div>
@@ -390,17 +395,17 @@ export function UnitProfilePanel({
           {activeTab === "history" && (
             <div>
               {loading && (
-                <div style={{ textAlign: "center", padding: 32, color: "#64748b", fontSize: 13 }}>Loading service history...</div>
+                <div style={{ textAlign: "center", padding: 32, color: "#64748b", fontSize: 13 }}>{t("upp_loading_service_history", lang)}</div>
               )}
               {!loading && timeline.length === 0 && (
                 <div style={{ textAlign: "center", padding: 32, color: "#94a3b8", fontSize: 13, background: "#fff", borderRadius: 12, border: "1px solid #e2e8f0" }}>
-                  No service history on record for this unit yet.
+                  {t("upp_no_history_yet", lang)}
                 </div>
               )}
               {!loading && timeline.length > 0 && (
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   <div style={{ fontSize: 12, color: "#64748b", marginBottom: 4 }}>
-                    {timeline.length} service visit{timeline.length !== 1 ? "s" : ""} · Most recent first
+                    {t("upp_visits_most_recent", lang).replace("{count}", String(timeline.length))}
                   </div>
                   {timeline.map((event, idx) => (
                     <TimelineEvent key={event.id} event={event} idx={idx} />
@@ -415,14 +420,14 @@ export function UnitProfilePanel({
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               {timeline.length < 2 ? (
                 <div style={{ textAlign: "center", padding: 32, color: "#94a3b8", fontSize: 13, background: "#fff", borderRadius: 12, border: "1px solid #e2e8f0" }}>
-                  Need at least 2 service visits to show patterns. Log more visits to unlock this view.
+                  {t("upp_need_2_visits", lang)}
                 </div>
               ) : (
                 <>
                   {/* Recurring symptoms */}
                   {topSymptoms.length > 0 && (
                     <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, padding: 16 }}>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 12 }}>Recurring Symptoms</div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 12 }}>{t("upp_recurring_symptoms", lang)}</div>
                       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                         {topSymptoms.map(([symptom, count]) => (
                           <div key={symptom} style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -440,7 +445,7 @@ export function UnitProfilePanel({
                   {/* Top causes */}
                   {topCauses.length > 0 && (
                     <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, padding: 16 }}>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 12 }}>Confirmed Causes</div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 12 }}>{t("upp_confirmed_causes", lang)}</div>
                       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                         {topCauses.map(([cause, count]) => (
                           <div key={cause} style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -455,7 +460,7 @@ export function UnitProfilePanel({
                   {/* Parts history */}
                   {topParts.length > 0 && (
                     <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, padding: 16 }}>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 12 }}>Parts Replaced</div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 12 }}>{t("upp_parts_replaced_title", lang)}</div>
                       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                         {topParts.map(([part, count]) => (
                           <div key={part} style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -470,12 +475,15 @@ export function UnitProfilePanel({
                   {/* Callback analysis */}
                   <div style={{ background: callbacks > 0 ? "#fef2f2" : "#f0fdf4", border: `1px solid ${callbacks > 0 ? "#fecaca" : "#bbf7d0"}`, borderRadius: 12, padding: 16 }}>
                     <div style={{ fontSize: 12, fontWeight: 700, color: callbacks > 0 ? "#dc2626" : "#16a34a", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>
-                      {callbacks > 0 ? "⚠ Callback History" : "✓ No Callbacks"}
+                      {callbacks > 0 ? t("upp_callback_history", lang) : t("upp_no_callbacks", lang)}
                     </div>
                     <div style={{ fontSize: 13, color: "#374151" }}>
                       {callbacks > 0
-                        ? `This unit has ${callbacks} callback${callbacks !== 1 ? "s" : ""} recorded across ${totalCalls} service visits (${Math.round(callbacks / totalCalls * 100)}% callback rate). Review the service history tab to identify unresolved root causes.`
-                        : `No callbacks recorded across ${totalCalls} service visit${totalCalls !== 1 ? "s" : ""}. System has been reliably serviced.`
+                        ? t("upp_callback_analysis", lang)
+                            .replace("{count}", String(callbacks))
+                            .replace("{total}", String(totalCalls))
+                            .replace("{pct}", String(Math.round(callbacks / totalCalls * 100)))
+                        : t("upp_no_callback_analysis", lang).replace("{total}", String(totalCalls))
                       }
                     </div>
                   </div>
