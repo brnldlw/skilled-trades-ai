@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+import { useLang } from "../../components/LanguageContext";
+import { t, type Language } from "../../lib/translations";
 
 type EstimatorPlan = {
   id: string;
@@ -12,32 +14,34 @@ type EstimatorPlan = {
   tag?: string;
 };
 
-const PLANS: EstimatorPlan[] = [
-  {
-    id: "estimator_single",
-    label: "Single Quote",
-    price: "$6",
-    period: "one time",
-    description: "One complete AI-generated replacement quote. No subscription.",
-    tag: "Try it out",
-  },
-  {
-    id: "estimator_monthly_20",
-    label: "Estimator 20",
-    price: "$29",
-    period: "/ month",
-    description: "Up to 20 quotes per month. Best for shops doing occasional replacements.",
-  },
-  {
-    id: "estimator_monthly_unlimited",
-    label: "Estimator Unlimited",
-    price: "$49",
-    period: "/ month",
-    description: "Unlimited quotes. Best for busy shops doing regular replacement work.",
-    highlight: true,
-    tag: "Most popular",
-  },
-];
+function getPlans(lang: Language): EstimatorPlan[] {
+  return [
+    {
+      id: "estimator_single",
+      label: t("eup_plan_single_label", lang),
+      price: "$6",
+      period: t("eup_plan_single_period", lang),
+      description: t("eup_plan_single_desc", lang),
+      tag: t("eup_plan_single_tag", lang),
+    },
+    {
+      id: "estimator_monthly_20",
+      label: t("eup_plan_20_label", lang),
+      price: "$29",
+      period: t("eup_per_month", lang),
+      description: t("eup_plan_20_desc", lang),
+    },
+    {
+      id: "estimator_monthly_unlimited",
+      label: t("eup_plan_unlimited_label", lang),
+      price: "$49",
+      period: t("eup_per_month", lang),
+      description: t("eup_plan_unlimited_desc", lang),
+      highlight: true,
+      tag: t("eup_plan_unlimited_tag", lang),
+    },
+  ];
+}
 
 type Props = {
   onClose?: () => void;
@@ -45,6 +49,8 @@ type Props = {
 };
 
 export function EstimatorUpgradePrompt({ onClose, context = "modal" }: Props) {
+  const { lang } = useLang();
+  const PLANS = getPlans(lang);
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState("");
 
@@ -61,10 +67,10 @@ export function EstimatorUpgradePrompt({ onClose, context = "modal" }: Props) {
       if (data.url) {
         window.location.href = data.url;
       } else {
-        setError(data.error || "Could not start checkout. Please try again.");
+        setError(data.error || t("eup_checkout_failed", lang));
       }
     } catch (e: any) {
-      setError(e?.message || "Something went wrong.");
+      setError(e?.message || t("eup_something_wrong", lang));
     } finally {
       setLoading(null);
     }
@@ -82,27 +88,26 @@ export function EstimatorUpgradePrompt({ onClose, context = "modal" }: Props) {
       <div style={{ textAlign: "center" as const, marginBottom: 20 }}>
         <div style={{ fontSize: 32, marginBottom: 8 }}>📋</div>
         <div style={{ fontSize: 20, fontWeight: 800, color: "#0f1f3d", marginBottom: 6 }}>
-          Replacement Quote Estimator
+          {t("eup_title", lang)}
         </div>
         <div style={{ fontSize: 13, color: "#64748b", lineHeight: 1.6, maxWidth: 380, margin: "0 auto" }}>
-          Photo the job site, answer a few questions, and AI generates a complete replacement quote —
-          scope of work, crane requirements, equipment options, obstacles, and itemized pricing.
+          {t("eup_subtitle", lang)}
         </div>
       </div>
 
       {/* What you get */}
       <div style={{ background: "#f8fafc", borderRadius: 10, padding: "12px 16px", marginBottom: 20 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", letterSpacing: "0.07em", textTransform: "uppercase" as const, marginBottom: 10 }}>What's included</div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", letterSpacing: "0.07em", textTransform: "uppercase" as const, marginBottom: 10 }}>{t("eup_whats_included", lang)}</div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 12px" }}>
           {[
-            "AI site survey — guided questions",
-            "Photo analysis — detects obstacles",
-            "Crane & rigging requirements",
-            "2-3 equipment options with rebates",
-            "Full scope of work — removal + install",
-            "Special tools list",
-            "Itemized pricing estimate",
-            "Professional PDF to send customer",
+            t("eup_feature_survey", lang),
+            t("eup_feature_photo", lang),
+            t("eup_feature_crane", lang),
+            t("eup_feature_equipment", lang),
+            t("eup_feature_scope", lang),
+            t("eup_feature_tools", lang),
+            t("eup_feature_pricing", lang),
+            t("eup_feature_pdf", lang),
           ].map(item => (
             <div key={item} style={{ fontSize: 12, color: "#374151", display: "flex", gap: 6, alignItems: "flex-start" }}>
               <span style={{ color: "#16a34a", flexShrink: 0, marginTop: 1 }}>✓</span>
@@ -165,10 +170,10 @@ export function EstimatorUpgradePrompt({ onClose, context = "modal" }: Props) {
               }}
             >
               {loading === plan.id
-                ? "Opening checkout..."
+                ? t("eup_opening_checkout", lang)
                 : plan.id === "estimator_single"
-                ? "Buy Single Quote — $6"
-                : `Subscribe — ${plan.price}/mo`}
+                ? t("eup_buy_single_quote", lang)
+                : t("eup_subscribe_price", lang).replace("{value}", plan.price)}
             </button>
           </div>
         ))}
@@ -185,13 +190,12 @@ export function EstimatorUpgradePrompt({ onClose, context = "modal" }: Props) {
           onClick={onClose}
           style={{ width: "100%", padding: "10px", background: "none", border: "1px solid #e2e8f0", borderRadius: 8, color: "#64748b", fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}
         >
-          Not right now
+          {t("eup_not_right_now", lang)}
         </button>
       )}
 
       <div style={{ marginTop: 12, fontSize: 11, color: "#94a3b8", textAlign: "center" as const, lineHeight: 1.5 }}>
-        Subscriptions cancel anytime. Single quotes never expire.
-        Powered by Stripe — secure checkout.
+        {t("eup_footer_note", lang)}
       </div>
     </div>
   );
@@ -199,6 +203,7 @@ export function EstimatorUpgradePrompt({ onClose, context = "modal" }: Props) {
 
 // ── Locked overlay wrapper ─────────────────────────────────────
 export function EstimatorLockedOverlay({ children }: { children: React.ReactNode }) {
+  const { lang } = useLang();
   const [showModal, setShowModal] = useState(false);
 
   return (
@@ -226,13 +231,13 @@ export function EstimatorLockedOverlay({ children }: { children: React.ReactNode
       >
         <div style={{ fontSize: 36, marginBottom: 10 }}>🔒</div>
         <div style={{ fontSize: 16, fontWeight: 800, color: "#fff", marginBottom: 6 }}>
-          Replacement Quote Estimator
+          {t("eup_title", lang)}
         </div>
         <div style={{ fontSize: 13, color: "rgba(255,255,255,0.8)", marginBottom: 16, textAlign: "center" as const, maxWidth: 260 }}>
-          AI-generated replacement quotes from $6. Tap to unlock.
+          {t("eup_locked_desc", lang)}
         </div>
         <div style={{ padding: "10px 24px", background: "#f97316", color: "#fff", borderRadius: 8, fontWeight: 700, fontSize: 14 }}>
-          Unlock Estimator
+          {t("eup_unlock_estimator", lang)}
         </div>
       </div>
 
