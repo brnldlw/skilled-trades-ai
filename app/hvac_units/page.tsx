@@ -8301,9 +8301,9 @@ return (
             
       {/* failure-prediction-v1 */}
       <div style={{ marginTop: 10 }}>
-        <SectionCard title="🔮 Fleet Failure Prediction" id="failure-prediction">
+        <SectionCard title={t("card_title_fleet_failure_prediction", lang)} id="failure-prediction">
           <SmallHint>
-            All your tracked units ranked by failure risk. Units scoring below 75 need attention before the next callback.
+            {t("card_hint_fleet_failure_prediction", lang)}
           </SmallHint>
           <div style={{ marginTop: 12 }}>
             <FailurePredictionDashboard maxItems={10} />
@@ -8313,10 +8313,9 @@ return (
 
 {/* learning-hub-v1 */}
       <div style={{ marginTop: 10 }}>
-        <SectionCard title="📚 Learning Hub" id="learning-hub">
+        <SectionCard title={t("card_title_learning_hub", lang)} id="learning-hub">
           <SmallHint>
-            Curated training resources for HVAC/R techs — videos, forums, manuals, and courses.
-            Resources are highlighted based on your current job context.
+            {t("card_hint_learning_hub", lang)}
           </SmallHint>
           <div style={{ marginTop: 12 }}>
             <LearningHub
@@ -8330,16 +8329,15 @@ return (
 
 {/* refrigerant-log-v1 */}
       <div style={{ marginTop: 10 }}>
-        <SectionCard title="🧪 Refrigerant Log" id="refrigerant-log">
+        <SectionCard title={t("card_title_refrigerant_log", lang)} id="refrigerant-log">
           <SmallHint>
-            EPA 608 compliant refrigerant tracking. Log every pound added or recovered.
-            Export a compliance CSV at any time. A2L safety warnings included.
+            {t("card_hint_refrigerant_log", lang)}
           </SmallHint>
           <div style={{ marginTop: 12 }}>
             {!can("refrigerant_log") ? (
               <UpgradePrompt
-                feature="Refrigerant Compliance Log"
-                reason="EPA 608 refrigerant tracking is a Solo and Shop plan feature. Upgrade to log refrigerant, generate compliance CSVs, and avoid $44,000 fines."
+                feature={t("up_feature_refrigerant_log", lang)}
+                reason={t("up_reason_refrigerant_log", lang)}
               />
             ) : (
             <RefrigerantLog
@@ -8385,8 +8383,8 @@ return (
           <div style={{ marginTop: 12 }}>
             {!can("customer_reports") ? (
               <UpgradePrompt
-                feature="Customer Service Reports"
-                reason="AI-written customer reports are a Solo and Shop plan feature. Upgrade to generate professional plain-English reports in one tap."
+                feature={t("up_feature_customer_reports", lang)}
+                reason={t("up_reason_customer_reports", lang)}
               />
             ) : (
             <CustomerReport
@@ -8433,10 +8431,9 @@ return (
 
 {/* parts-lookup-v1 */}
       <div style={{ marginTop: 10 }}>
-        <SectionCard title="🔍 Parts Lookup" id="parts-lookup">
+        <SectionCard title={t("card_title_parts_lookup", lang)} id="parts-lookup">
           <SmallHint>
-            Search for parts across Johnstone Supply, Grainger, PartsTown, Winsupply, and more — in one tap.
-            Part names and your equipment info are pre-filled automatically.
+            {t("card_hint_parts_lookup", lang)}
           </SmallHint>
           <div style={{ marginTop: 12 }}>
             <PartsLookup
@@ -8934,8 +8931,8 @@ return (
               <div style={{ marginTop: 12 }}>
                 {!can("ai_queries_per_day") ? (
                   <UpgradePrompt
-                    feature="Unlimited AI Diagnosis"
-                    reason="Free plan is limited to 3 AI queries per day. Upgrade to Solo for unlimited diagnosis assistance."
+                    feature={t("up_feature_unlimited_ai", lang)}
+                    reason={t("up_reason_unlimited_ai", lang)}
                   />
                 ) : (
                 <AiChatBot
@@ -8957,10 +8954,9 @@ return (
 
       {/* HVAC Calculators */}
       <div style={{ marginTop: 10 }}>
-        <SectionCard title="🧮 HVAC Calculators" id="calculators">
+        <SectionCard title={t("card_title_hvac_calculators", lang)} id="calculators">
           <SmallHint>
-            Offline-capable calculators: PT chart lookup, superheat/subcooling, delta-T, CFM, Ohm's law,
-            capacitor MFD check, and gas heat rise. Works without internet.
+            {t("card_hint_hvac_calculators", lang)}
           </SmallHint>
           <div style={{ marginTop: 10 }}>
             <button
@@ -8976,14 +8972,14 @@ return (
                 cursor: "pointer",
               }}
             >
-              {showHvacCalculators ? "▲ Hide Calculators" : "▼ Open Calculators"}
+              {showHvacCalculators ? t("btn_hide_calculators", lang) : t("btn_open_calculators", lang)}
             </button>
             {showHvacCalculators && (
               <div style={{ marginTop: 12 }}>
                 {!can("sh_sc_calculator") ? (
                   <UpgradePrompt
-                    feature="Full Calculator Suite"
-                    reason="Free plan includes Delta-T and Ohm's Law only. Upgrade to Solo for superheat, subcooling, CFM, capacitor MFD, and gas heat rise calculators."
+                    feature={t("up_feature_full_calc_suite", lang)}
+                    reason={t("up_reason_full_calc_suite", lang)}
                   />
                 ) : (
                   <HvacCalculators />
@@ -8998,10 +8994,9 @@ return (
 
 {/* belt-reference-v1 */}
       <div style={{ marginTop: 10 }}>
-        <SectionCard title="🔄 Belt Cross-Reference" id="belt-reference">
+        <SectionCard title={t("card_title_belt_reference", lang)} id="belt-reference">
           <SmallHint>
-            Search by belt part number or dimensions to find cross-references across Gates, Dayco, and Browning.
-            Works offline.
+            {t("card_hint_belt_reference", lang)}
           </SmallHint>
           <div style={{ marginTop: 12 }}>
             <BeltReference />
@@ -9011,10 +9006,9 @@ return (
 
 {/* parts-reference-hub-v1 */}
       <div style={{ marginTop: 10 }}>
-        <SectionCard title="🧰 Parts Cross-Reference" id="parts-reference">
+        <SectionCard title={t("card_title_parts_reference", lang)} id="parts-reference">
           <SmallHint>
-            Find replacement capacitors, motors, and contactors by specs.
-            Enter what's on the nameplate and get cross-reference options and supplier links.
+            {t("card_hint_parts_reference", lang)}
           </SmallHint>
           <div style={{ marginTop: 12 }}>
             <PartsReferenceHub />
@@ -9024,10 +9018,9 @@ return (
 
 {/* filter-reference-v1 */}
       <div style={{ marginTop: 10 }}>
-        <SectionCard title="🌬️ Filter Cross-Reference" id="filter-reference">
+        <SectionCard title={t("card_title_filter_reference", lang)} id="filter-reference">
           <SmallHint>
-            Find filters by dimensions or part number. Covers residential and commercial sizes.
-            MERV guide included so you always select the right filtration level.
+            {t("card_hint_filter_reference", lang)}
           </SmallHint>
           <div style={{ marginTop: 12 }}>
             <FilterReference />
@@ -9037,10 +9030,9 @@ return (
 
 {/* refrigerant-reference-v1 */}
       <div style={{ marginTop: 10 }}>
-        <SectionCard title="❄️ Refrigerant Quick-Reference" id="refrigerant-reference">
+        <SectionCard title={t("card_title_refrigerant_reference", lang)} id="refrigerant-reference">
           <SmallHint>
-            GWP, safety class, oil type, what it replaces, and A2L handling notes for every major refrigerant.
-            Critical as the industry transitions away from R-410A and R-404A.
+            {t("card_hint_refrigerant_reference", lang)}
           </SmallHint>
           <div style={{ marginTop: 12 }}>
             <RefrigerantReference />
@@ -9050,10 +9042,9 @@ return (
 
 {/* wiring-reference-v1 */}
       <div style={{ marginTop: 10 }}>
-        <SectionCard title="⚡ Wiring Reference Library" id="wiring-reference">
+        <SectionCard title={t("card_title_wiring_reference", lang)} id="wiring-reference">
           <SmallHint>
-            Common HVAC/R control circuit logic — operation sequences, common faults, and tech tips.
-            Covers single stage cooling, heat pump, gas furnace, walk-in refrigeration, and 24V troubleshooting.
+            {t("card_hint_wiring_reference", lang)}
           </SmallHint>
           <div style={{ marginTop: 12 }}>
             <WiringReference equipmentType={equipmentType} />
