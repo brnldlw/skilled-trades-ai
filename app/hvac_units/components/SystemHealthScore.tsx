@@ -2,6 +2,8 @@
 
 import React, { useState } from "react";
 import type { HealthScoreResult, HealthFactor } from "../lib/systemHealthScore";
+import { useLang } from "../../components/LanguageContext";
+import { t } from "../../lib/translations";
 
 type SystemHealthScoreProps = {
   result: HealthScoreResult;
@@ -114,6 +116,7 @@ export function SystemHealthScore({
   unitName,
   compact = false,
 }: SystemHealthScoreProps) {
+  const { lang } = useLang();
   const [showFactors, setShowFactors] = useState(false);
 
   if (compact) {
@@ -146,7 +149,7 @@ export function SystemHealthScore({
           <div style={{ fontSize: 11, fontWeight: 700, color: result.color }}>
             {result.label}
           </div>
-          <div style={{ fontSize: 10, color: "#64748b" }}>Health Score</div>
+          <div style={{ fontSize: 10, color: "#64748b" }}>{t("shs_health_score_label", lang)}</div>
         </div>
       </div>
     );
@@ -186,7 +189,7 @@ export function SystemHealthScore({
         <div style={{ flex: 1, minWidth: 180 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
             <div style={{ fontWeight: 800, fontSize: 16, color: "#1e293b" }}>
-              System Health Score
+              {t("shs_title", lang)}
             </div>
           </div>
           {unitName && (
@@ -211,7 +214,7 @@ export function SystemHealthScore({
             color: "#1e293b",
             lineHeight: 1.5,
           }}>
-            <span style={{ fontWeight: 700, color: result.color }}>Recommendation: </span>
+            <span style={{ fontWeight: 700, color: result.color }}>{t("shs_recommendation_colon", lang)} </span>
             {result.recommendation}
           </div>
         </div>
@@ -241,11 +244,11 @@ export function SystemHealthScore({
           marginTop: 3,
           padding: "0 2px",
         }}>
-          <span>Critical</span>
-          <span>Poor</span>
-          <span>Fair</span>
-          <span>Good</span>
-          <span>Excellent</span>
+          <span>{t("shs_band_scale_critical", lang)}</span>
+          <span>{t("shs_band_scale_poor", lang)}</span>
+          <span>{t("shs_band_scale_fair", lang)}</span>
+          <span>{t("shs_band_scale_good", lang)}</span>
+          <span>{t("shs_band_scale_excellent", lang)}</span>
         </div>
       </div>
 
@@ -273,10 +276,10 @@ export function SystemHealthScore({
             }}
           >
             <span>
-              {showFactors ? "▲" : "▼"} Score breakdown ({result.factors.length} factor{result.factors.length !== 1 ? "s" : ""})
+              {showFactors ? "▲" : "▼"} {t("shs_score_breakdown", lang).replace("{value}", String(result.factors.length))}
             </span>
             <span style={{ fontSize: 11, color: "#94a3b8", fontWeight: 400 }}>
-              Starts at 100
+              {t("shs_starts_at_100", lang)}
             </span>
           </button>
 
@@ -294,11 +297,11 @@ export function SystemHealthScore({
                 justifyContent: "space-between",
                 alignItems: "center",
               }}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "#374151" }}>Final Score</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#374151" }}>{t("shs_final_score", lang)}</span>
                 <span style={{ fontSize: 18, fontWeight: 800, color: result.color }}>{result.score}</span>
               </div>
               <div style={{ marginTop: 8, fontSize: 11, color: "#94a3b8", lineHeight: 1.5 }}>
-                Score calculated from service history. Updates automatically after each service visit is logged.
+                {t("shs_footer_note", lang)}
               </div>
             </div>
           )}

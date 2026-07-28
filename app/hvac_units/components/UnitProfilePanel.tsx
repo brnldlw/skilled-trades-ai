@@ -213,7 +213,7 @@ export function UnitProfilePanel({
 
   if (!unit) return null;
 
-  const healthScore = calcSystemHealthScore(timeline);
+  const healthScore = calcSystemHealthScore(timeline, undefined, lang);
   const totalCalls = timeline.length;
   const callbacks = timeline.filter(e => e.callback_occurred === "Yes" || e.outcome_status === "Callback").length;
   const resolved = timeline.filter(e => e.outcome_status === "Resolved").length;

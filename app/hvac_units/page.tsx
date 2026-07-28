@@ -9544,7 +9544,7 @@ return (
 <div style={{ marginTop: 16, display: showSavedUnitHistory ? "block" : "none" }}>
   {/* system-health-score-v1 */}
 {unitServiceTimeline.length > 0 && (() => {
-  const __healthResult = calcSystemHealthScore(unitServiceTimeline);
+  const __healthResult = calcSystemHealthScore(unitServiceTimeline, undefined, lang);
   return (
     <div style={{ marginBottom: 16 }}>
       <SystemHealthScore
