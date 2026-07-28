@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { useLang } from "../../components/LanguageContext";
+import { t, type Language } from "../../lib/translations";
 
 type FormField = {
   id: string;
@@ -23,14 +25,16 @@ type PMForm = {
 
 type FieldValues = Record<string, string | boolean>;
 
-const CATEGORY_CONFIG = {
-  equipment: { label: "Equipment Info", icon: "🔧", color: "#2563eb" },
-  customer:  { label: "Customer / Site", icon: "🏢", color: "#16a34a" },
-  tech:      { label: "Technician", icon: "👷", color: "#7c3aed" },
-  readings:  { label: "Field Readings", icon: "📊", color: "#d97706" },
-  date:      { label: "Dates", icon: "📅", color: "#0891b2" },
-  other:     { label: "Other", icon: "📋", color: "#64748b" },
-};
+function getCategoryConfig(lang: Language) {
+  return {
+    equipment: { label: t("pmf_cat_equipment", lang), icon: "🔧", color: "#2563eb" },
+    customer:  { label: t("pmf_cat_customer", lang), icon: "🏢", color: "#16a34a" },
+    tech:      { label: t("pmf_cat_tech", lang), icon: "👷", color: "#7c3aed" },
+    readings:  { label: t("pmf_cat_readings", lang), icon: "📊", color: "#d97706" },
+    date:      { label: t("pmf_cat_date", lang), icon: "📅", color: "#0891b2" },
+    other:     { label: t("pmf_cat_other", lang), icon: "📋", color: "#64748b" },
+  };
+}
 
 // ── Voice input hook ──────────────────────────────────────────
 function useVoiceInput(onResult: (text: string) => void) {
@@ -76,6 +80,8 @@ export function PMFormFiller({
   refrigerantType?: string;
   equipmentType?: string;
 }) {
+  const { lang } = useLang();
+  const CATEGORY_CONFIG = getCategoryConfig(lang);
   const [forms, setForms] = useState<PMForm[]>([]);
   const [selectedForm, setSelectedForm] = useState<PMForm | null>(null);
   const [values, setValues] = useState<FieldValues>({});
@@ -148,7 +154,7 @@ export function PMFormFiller({
 
   async function handleUpload(file: File, formName: string) {
     setUploading(true);
-    setUploadMsg("Reading your form and identifying fields...");
+    setUploadMsg(t("pmf_reading_form", lang));
     try {
       const fd = new FormData();
       fd.append("action", "analyze_form");
@@ -159,17 +165,21 @@ export function PMFormFiller({
       const json = await res.json();
 
       if (!res.ok || json.error) {
-        setUploadMsg("❌ Error: " + (json.error || "Upload failed. Check that your PDF has readable text (not a scanned image)."));
+        setUploadMsg(t("pmf_error_prefix", lang).replace("{value}", json.error || t("pmf_upload_failed_generic", lang)));
         return;
       }
 
       const fieldCount = json?.fields?.length || 0;
       if (fieldCount === 0) {
-        setUploadMsg("⚠️ No fields detected. Make sure the PDF is not a scanned image — it must have readable text. Try a different PDF.");
+        setUploadMsg(t("pmf_no_fields_detected", lang));
         return;
       }
       const autoMapped = json.autoMapped || 0;
-      setUploadMsg(`✅ Found ${fieldCount} fields. ${autoMapped > 0 ? `AI auto-mapped ${autoMapped} fields. ` : ""}Opening form...`);
+      setUploadMsg(
+        t("pmf_found_fields", lang).replace("{count}", String(fieldCount)) +
+        (autoMapped > 0 ? t("pmf_ai_auto_mapped", lang).replace("{count}", String(autoMapped)) : "") +
+        t("pmf_opening_form", lang)
+      );
       const returnedForm = json.form || { id: null, name: formName, fields: json.fields, file_name: "" };
       returnedForm.fields = json.fields;
       setSelectedForm(returnedForm);
@@ -194,7 +204,7 @@ export function PMFormFiller({
         setTimeout(() => setView("map"), 1000);
       }
     } catch (e: any) {
-      setUploadMsg("Error: " + e?.message);
+      setUploadMsg(t("pmf_error_colon", lang).replace("{value}", e?.message || ""));
     } finally {
       setUploading(false);
     }
@@ -244,13 +254,13 @@ export function PMFormFiller({
 
         const count = Object.keys(fills).length;
         setValues(prev => ({ ...prev, ...fills }));
-        if (count === 0) alert("Nameplate read but no matching form fields found. Fields may need different labels.");
+        if (count === 0) alert(t("pmf_nameplate_no_match", lang));
       } else {
-        alert("Could not read nameplate: " + (json?.error || "Make sure the photo clearly shows the unit data plate."));
+        alert(t("pmf_could_not_read_nameplate", lang).replace("{value}", json?.error || t("pmf_photo_show_dataplate", lang)));
       }
     } catch (e: any) {
       console.error("Photo analysis failed:", e);
-      alert("Photo analysis failed: " + e?.message);
+      alert(t("pmf_photo_analysis_failed", lang).replace("{value}", e?.message || ""));
     } finally {
       setAnalyzingPhoto(false);
     }
@@ -264,9 +274,9 @@ export function PMFormFiller({
   function generateFilledFormText(): string {
     if (!selectedForm) return "";
     const lines: string[] = [
-      `MY HVAC/R TOOL — PM FORM`,
-      `Form: ${selectedForm.name}`,
-      `Generated: ${new Date().toLocaleString()}`,
+      t("pmf_report_title", lang),
+      t("pmf_report_form_colon", lang).replace("{value}", selectedForm.name),
+      t("pmf_report_generated_colon", lang).replace("{value}", new Date().toLocaleString()),
       ``,
     ];
 
@@ -281,7 +291,7 @@ export function PMFormFiller({
       lines.push(`── ${cfg.label} ──`);
       fields.forEach(f => {
         const val = values[f.id];
-        lines.push(`${f.label}: ${typeof val === "boolean" ? (val ? "Yes" : "No") : val}`);
+        lines.push(`${f.label}: ${typeof val === "boolean" ? (val ? t("option_yes", lang) : t("option_no", lang)) : val}`);
       });
       lines.push("");
     });
@@ -289,7 +299,7 @@ export function PMFormFiller({
     // Empty fields
     const empty = selectedForm.fields.filter(f => !values[f.id]);
     if (empty.length > 0) {
-      lines.push("── Not Filled ──");
+      lines.push(t("pmf_report_not_filled", lang));
       empty.forEach(f => lines.push(`${f.label}: ___________`));
     }
 
@@ -302,7 +312,7 @@ export function PMFormFiller({
       return;
     }
     setSaved(false);
-    setDownloadStatus("Filling PDF fields...");
+    setDownloadStatus(t("pmf_filling_pdf", lang));
     try {
       const filledValues = Object.fromEntries(
         Object.entries(values).filter(([_, v]) => v !== "" && v !== false && v !== undefined)
@@ -317,7 +327,7 @@ export function PMFormFiller({
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         console.error("PDF fill error:", err);
-        setDownloadStatus("PDF fill failed — downloading as text instead.");
+        setDownloadStatus(t("pmf_pdf_fill_failed", lang));
         downloadTextFallback();
         return;
       }
@@ -331,11 +341,11 @@ export function PMFormFiller({
       a.click();
       URL.revokeObjectURL(url);
       setSaved(true);
-      setDownloadStatus(`✅ PDF downloaded with ${filledCount} fields filled.`);
+      setDownloadStatus(t("pmf_pdf_downloaded_count", lang).replace("{count}", String(filledCount)));
       setTimeout(() => { setSaved(false); setDownloadStatus(""); }, 4000);
     } catch (e: any) {
       console.error("Download failed:", e);
-      setDownloadStatus("Error — downloading as text instead.");
+      setDownloadStatus(t("pmf_download_error_fallback", lang));
       downloadTextFallback();
     }
   }
@@ -372,24 +382,24 @@ export function PMFormFiller({
       <div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
           <div style={{ fontSize: 13, color: "#64748b" }}>
-            {loadingForms ? "Loading forms..." : `${forms.length} form${forms.length !== 1 ? "s" : ""} saved`}
+            {loadingForms ? t("pmf_loading_forms", lang) : t("pmf_forms_saved", lang).replace("{count}", String(forms.length))}
           </div>
           <button onClick={() => { setView("upload"); setUploadMsg(""); }}
             style={{ padding: "8px 16px", background: "#0f1f3d", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>
-            + Upload Form
+            {t("btn_upload_form", lang)}
           </button>
         </div>
 
         {forms.length === 0 && !loadingForms && (
           <div style={{ padding: 24, textAlign: "center" as const, background: "#f8fafc", borderRadius: 10, border: "1px solid #e2e8f0" }}>
             <div style={{ fontSize: 32, marginBottom: 10 }}>📄</div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: "#374151", marginBottom: 6 }}>No forms uploaded yet</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: "#374151", marginBottom: 6 }}>{t("pmf_no_forms_title", lang)}</div>
             <div style={{ fontSize: 13, color: "#64748b", marginBottom: 16, lineHeight: 1.5 }}>
-              Upload your company PM form or asset sheet. The AI will read it and identify every field automatically.
+              {t("pmf_no_forms_body", lang)}
             </div>
             <button onClick={() => setView("upload")}
               style={{ padding: "10px 20px", background: "#f97316", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}>
-              Upload Your First Form
+              {t("btn_upload_first_form", lang)}
             </button>
           </div>
         )}
@@ -400,7 +410,7 @@ export function PMFormFiller({
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 14, fontWeight: 700, color: "#1e293b" }}>{form.name}</div>
                 <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>
-                  {form.fields?.length || 0} fields · {form.file_name}
+                  {t("pmf_fields_count_file", lang).replace("{count}", String(form.fields?.length || 0)).replace("{value}", form.file_name)}
                 </div>
               </div>
               <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
@@ -428,10 +438,10 @@ export function PMFormFiller({
                   } else setView("fill");
                 }}
                   style={{ padding: "8px 16px", background: "#2563eb", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>
-                  Fill Form →
+                  {t("btn_fill_form_arrow", lang)}
                 </button>
                 <button onClick={async () => {
-                  if (!confirm(`Delete "${form.name}"?`)) return;
+                  if (!confirm(t("pmf_confirm_delete_form", lang).replace("{value}", form.name))) return;
                   const fd = new FormData();
                   fd.append("action", "delete_form");
                   fd.append("formId", form.id);
@@ -439,7 +449,7 @@ export function PMFormFiller({
                   await loadForms();
                 }}
                   style={{ padding: "8px 12px", background: "#fff", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>
-                  Delete
+                  {t("btn_delete", lang)}
                 </button>
               </div>
             </div>
@@ -447,7 +457,7 @@ export function PMFormFiller({
         </div>
 
         <div style={{ marginTop: 12, padding: "10px 14px", background: "#eff6ff", border: "1px solid #bae6fd", borderRadius: 8, fontSize: 12, color: "#1d4ed8", lineHeight: 1.6 }}>
-          <strong>How it works:</strong> Upload any PDF form once. The AI reads it and identifies every field. On a job, take a photo of the unit nameplate and equipment info fills automatically. Talk-to-text for customer info and notes. Download the completed form to send wherever you need.
+          <strong>{t("pmf_how_it_works_title", lang)}</strong> {t("pmf_how_it_works_body", lang)}
         </div>
       </div>
     );
@@ -500,11 +510,11 @@ export function PMFormFiller({
       <div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
           <button onClick={() => setView("list")} style={{ padding: "7px 14px", background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit", color: "#374151" }}>
-            ← Forms
+            {t("btn_forms_back", lang)}
           </button>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 14, fontWeight: 700, color: "#0f1f3d" }}>{selectedForm.name}</div>
-            <div style={{ fontSize: 11, color: "#64748b" }}>{filledCount} of {totalCount} fields filled</div>
+            <div style={{ fontSize: 11, color: "#64748b" }}>{t("pmf_fields_filled_of", lang).replace("{filled}", String(filledCount)).replace("{total}", String(totalCount))}</div>
           </div>
         </div>
 
@@ -519,14 +529,14 @@ export function PMFormFiller({
             onClick={() => photoInputRef.current?.click()}
             disabled={analyzingPhoto}
             style={{ padding: "8px 14px", background: analyzingPhoto ? "#e2e8f0" : "#0f1f3d", color: analyzingPhoto ? "#94a3b8" : "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", gap: 6 }}>
-            📷 {analyzingPhoto ? "Reading nameplate..." : "Photo Nameplate → Auto-fill"}
+            {analyzingPhoto ? t("pmf_reading_nameplate", lang) : t("pmf_photo_autofill", lang)}
           </button>
           <input ref={photoInputRef} type="file" accept="image/*" capture="environment" style={{ display: "none" }}
             onChange={e => e.target.files?.[0] && handleNameplatePhoto(e.target.files[0])} />
 
           {(manufacturer || model || serial) && (
             <div style={{ padding: "6px 12px", background: "#dcfce7", border: "1px solid #bbf7d0", borderRadius: 8, fontSize: 12, color: "#166534", display: "flex", alignItems: "center", gap: 6 }}>
-              ✓ Job data auto-filled where matched
+              {t("pmf_job_data_autofilled", lang)}
             </div>
           )}
         </div>
@@ -557,11 +567,11 @@ export function PMFormFiller({
         {/* Download / Save actions */}
         <div style={{ marginTop: 20, padding: "16px", background: "#f8fafc", borderRadius: 10, border: "1px solid #e2e8f0" }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 4 }}>
-            {pct === 100 ? "✅ Form complete — ready to download" : `Form ${pct}% complete`}
+            {pct === 100 ? t("pmf_form_complete", lang) : t("pmf_form_pct_complete", lang).replace("{value}", String(pct))}
           </div>
           {pdfFieldCount > 0 && (
             <div style={{ fontSize: 12, color: "#64748b", marginBottom: 12 }}>
-              PDF has {pdfFieldCount} fillable fields — values will be written directly into the PDF.
+              {t("pmf_pdf_fillable_fields", lang).replace("{count}", String(pdfFieldCount))}
             </div>
           )}
           {downloadStatus && (
@@ -572,11 +582,11 @@ export function PMFormFiller({
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" as const }}>
             <button onClick={downloadFilledPDF}
               style={{ padding: "10px 18px", background: "#16a34a", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}>
-              {saved ? "✅ Downloaded!" : "⬇️ Download Filled PDF"}
+              {saved ? t("pmf_downloaded", lang) : t("btn_download_filled_pdf", lang)}
             </button>
             <button onClick={copyToClipboard}
               style={{ padding: "10px 18px", background: "#fff", color: "#374151", border: "1px solid #e2e8f0", borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}>
-              📋 Copy as Text
+              {t("btn_copy_as_text", lang)}
             </button>
           </div>
         </div>
@@ -599,6 +609,7 @@ function FieldInput({
   onChange: (val: string | boolean) => void;
   isAutoFilled: boolean;
 }) {
+  const { lang } = useLang();
   const [listening, setListening] = useState(false);
   const recRef = useRef<any>(null);
 
@@ -650,7 +661,7 @@ function FieldInput({
       <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#374151", marginBottom: 4, letterSpacing: "0.04em", textTransform: "uppercase" as const }}>
         {field.label}
         {field.required && <span style={{ color: "#dc2626", marginLeft: 3 }}>*</span>}
-        {isAutoFilled && <span style={{ fontSize: 9, fontWeight: 700, marginLeft: 6, padding: "1px 6px", borderRadius: 10, background: "#dcfce7", color: "#16a34a" }}>AUTO-FILLED</span>}
+        {isAutoFilled && <span style={{ fontSize: 9, fontWeight: 700, marginLeft: 6, padding: "1px 6px", borderRadius: 10, background: "#dcfce7", color: "#16a34a" }}>{t("pmf_auto_filled_badge", lang)}</span>}
       </label>
       <div style={{ display: "flex", gap: 6 }}>
         <input
@@ -666,7 +677,7 @@ function FieldInput({
             type="button"
             onClick={startVoice}
             disabled={listening}
-            title="Speak to fill"
+            title={t("pmf_speak_to_fill", lang)}
             style={{
               width: 38, height: 38, borderRadius: 8, border: `1px solid ${listening ? "#dc2626" : "#e2e8f0"}`,
               background: listening ? "#fef2f2" : "#f8fafc", cursor: "pointer",
@@ -688,6 +699,7 @@ function UploadView({ onBack, onUpload, uploading, message }: {
   uploading: boolean;
   message: string;
 }) {
+  const { lang } = useLang();
   const [formName, setFormName] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -698,36 +710,36 @@ function UploadView({ onBack, onUpload, uploading, message }: {
     <div>
       <button onClick={onBack}
         style={{ marginBottom: 14, padding: "7px 14px", background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit", color: "#374151" }}>
-        ← Back
+        {t("tour_back", lang)}
       </button>
 
       <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, padding: "20px 24px", display: "flex", flexDirection: "column" as const, gap: 16 }}>
         <div>
-          <div style={{ fontSize: 16, fontWeight: 800, color: "#0f1f3d", marginBottom: 4 }}>Upload Company PM Form</div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: "#0f1f3d", marginBottom: 4 }}>{t("pmf_upload_title", lang)}</div>
           <div style={{ fontSize: 13, color: "#64748b", lineHeight: 1.6 }}>
-            Upload your company PM or asset sheet as a PDF. AI reads it and identifies every field automatically.
-            <strong> PDF must have selectable text</strong> — scanned image PDFs won't work.
+            {t("pmf_upload_body", lang)}
+            <strong> {t("pmf_upload_body_bold", lang)}</strong>{t("pmf_upload_body_end", lang)}
           </div>
         </div>
 
         {/* Step 1: Name */}
         <div>
           <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 6, textTransform: "uppercase" as const, letterSpacing: "0.04em" }}>
-            Step 1 — Give this form a name
+            {t("pmf_step1_name", lang)}
           </label>
           <input
             value={formName}
             onChange={e => setFormName(e.target.value)}
-            placeholder="e.g. Annual PM Checklist, Customer Asset Sheet"
+            placeholder={t("pmf_form_name_placeholder", lang)}
             style={{ width: "100%", padding: "11px 14px", border: `2px solid ${formName.trim() ? "#16a34a" : "#e2e8f0"}`, borderRadius: 8, fontSize: 14, fontFamily: "inherit", background: "#fafafa" }}
           />
-          {formName.trim() && <div style={{ fontSize: 11, color: "#16a34a", marginTop: 4 }}>✓ Name entered</div>}
+          {formName.trim() && <div style={{ fontSize: 11, color: "#16a34a", marginTop: 4 }}>{t("pmf_name_entered", lang)}</div>}
         </div>
 
         {/* Step 2: File */}
         <div>
           <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 6, textTransform: "uppercase" as const, letterSpacing: "0.04em" }}>
-            Step 2 — Select your PDF
+            {t("pmf_step2_select_pdf", lang)}
           </label>
           <div
             onClick={() => fileRef.current?.click()}
@@ -736,13 +748,13 @@ function UploadView({ onBack, onUpload, uploading, message }: {
               <div>
                 <div style={{ fontSize: 28, marginBottom: 6 }}>✅</div>
                 <div style={{ fontSize: 14, fontWeight: 700, color: "#166534" }}>{selectedFile.name}</div>
-                <div style={{ fontSize: 12, color: "#16a34a", marginTop: 2 }}>{(selectedFile.size / 1024).toFixed(0)} KB — tap to change</div>
+                <div style={{ fontSize: 12, color: "#16a34a", marginTop: 2 }}>{t("pmf_kb_tap_to_change", lang).replace("{value}", (selectedFile.size / 1024).toFixed(0))}</div>
               </div>
             ) : (
               <div>
                 <div style={{ fontSize: 32, marginBottom: 8 }}>📄</div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: "#374151", marginBottom: 4 }}>Tap to select PDF</div>
-                <div style={{ fontSize: 12, color: "#94a3b8" }}>Max 10MB · PDF files only</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "#374151", marginBottom: 4 }}>{t("pmf_tap_to_select_pdf", lang)}</div>
+                <div style={{ fontSize: 12, color: "#94a3b8" }}>{t("pmf_max_10mb", lang)}</div>
               </div>
             )}
           </div>
@@ -783,18 +795,18 @@ function UploadView({ onBack, onUpload, uploading, message }: {
           }}
         >
           {uploading
-            ? "🤖 AI is reading your form — please wait..."
+            ? t("pmf_ai_reading_wait", lang)
             : !formName.trim() && !selectedFile
-            ? "Enter a name and select a PDF to continue"
+            ? t("pmf_enter_name_and_select", lang)
             : !formName.trim()
-            ? "Enter a name for this form first"
+            ? t("pmf_enter_name_first", lang)
             : !selectedFile
-            ? "Select a PDF file to continue"
-            : "🤖 Upload & Analyze Form"}
+            ? t("pmf_select_pdf_continue", lang)
+            : t("btn_upload_analyze_form", lang)}
         </button>
 
         <div style={{ fontSize: 11, color: "#94a3b8", lineHeight: 1.6 }}>
-          The AI reads the PDF and identifies every blank field. Works best with editable/fillable PDFs or PDFs with real text (not scanned images). Processing takes 15-30 seconds.
+          {t("pmf_upload_footer_note", lang)}
         </div>
       </div>
     </div>
@@ -809,6 +821,7 @@ function MapView({ form, pdfFieldNames, onSave, onSkip, onBack }: {
   onSkip: () => void;
   onBack: () => void;
 }) {
+  const { lang } = useLang();
   const fields: any[] = Array.isArray(form.fields) ? form.fields : [];
 
   // Sort PDF field names numerically so 1,2,3...10,11 not 1,10,11,2,3
@@ -832,24 +845,24 @@ function MapView({ form, pdfFieldNames, onSave, onSkip, onBack }: {
   return (
     <div>
       <button onClick={onBack} style={{ marginBottom: 14, padding: "7px 14px", background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit", color: "#374151" }}>
-        ← Back
+        {t("tour_back", lang)}
       </button>
 
       <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 10, padding: "12px 16px", marginBottom: 12 }}>
-        <div style={{ fontSize: 14, fontWeight: 800, color: "#92400e", marginBottom: 4 }}>📋 Map fields once — works forever after</div>
+        <div style={{ fontSize: 14, fontWeight: 800, color: "#92400e", marginBottom: 4 }}>{t("pmf_map_title", lang)}</div>
         <div style={{ fontSize: 12, color: "#92400e", lineHeight: 1.6 }}>
-          Open your PDF and press <strong>Tab</strong> to move through each field in order. The field that highlights = the PDF slot number. Match your field label on the left to the correct slot on the right.
-          {sortedPdfFields.length > 0 && <span> PDF has <strong>{sortedPdfFields.length}</strong> slots (Text Field 1–{sortedPdfFields[sortedPdfFields.length - 1]}).</span>}
+          {t("pmf_map_body", lang)} <strong>{t("pmf_map_body_tab", lang)}</strong> {t("pmf_map_body_rest", lang)}
+          {sortedPdfFields.length > 0 && <span>{t("pmf_map_pdf_slots", lang).replace("{count}", String(sortedPdfFields.length)).replace("{value}", sortedPdfFields[sortedPdfFields.length - 1])}</span>}
         </div>
       </div>
 
       <div style={{ marginBottom: 8, padding: "8px 12px", background: "#f0fdf4", borderRadius: 8, fontSize: 12, color: "#16a34a" }}>
-        {mappedCount} of {fields.length} fields mapped
+        {t("pmf_fields_mapped_of", lang).replace("{mapped}", String(mappedCount)).replace("{total}", String(fields.length))}
       </div>
 
       <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-        <div style={{ flex: 2, fontSize: 11, fontWeight: 700, color: "#64748b", padding: "4px 8px" }}>FIELD LABEL</div>
-        <div style={{ flex: 3, fontSize: 11, fontWeight: 700, color: "#64748b", padding: "4px 8px" }}>PDF SLOT (select from list)</div>
+        <div style={{ flex: 2, fontSize: 11, fontWeight: 700, color: "#64748b", padding: "4px 8px" }}>{t("pmf_col_field_label", lang)}</div>
+        <div style={{ flex: 3, fontSize: 11, fontWeight: 700, color: "#64748b", padding: "4px 8px" }}>{t("pmf_col_pdf_slot", lang)}</div>
       </div>
 
       <div style={{ display: "flex", flexDirection: "column" as const, gap: 5, maxHeight: 450, overflowY: "auto" as const, paddingRight: 4 }}>
@@ -864,7 +877,7 @@ function MapView({ form, pdfFieldNames, onSave, onSkip, onBack }: {
               onChange={e => setMappings(prev => ({ ...prev, [field.id]: e.target.value }))}
               style={{ flex: 3, padding: "7px 8px", border: `1px solid ${mappings[field.id] ? "#16a34a" : "#e2e8f0"}`, borderRadius: 6, fontSize: 12, fontFamily: "inherit", background: mappings[field.id] ? "#f0fdf4" : "#fafafa" }}
             >
-              <option value="">-- select PDF slot --</option>
+              <option value="">{t("pmf_select_pdf_slot_option", lang)}</option>
               {sortedPdfFields.map(name => (
                 <option key={name} value={name}>{name}</option>
               ))}
@@ -878,17 +891,17 @@ function MapView({ form, pdfFieldNames, onSave, onSkip, onBack }: {
           onClick={() => onSave(mappings)}
           style={{ flex: 1, padding: "12px", background: "#16a34a", color: "#fff", border: "none", borderRadius: 8, fontWeight: 800, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}
         >
-          ✅ Save & Fill Form ({mappedCount} fields mapped)
+          {t("pmf_save_and_fill_form", lang).replace("{count}", String(mappedCount))}
         </button>
         <button
           onClick={onSkip}
           style={{ padding: "10px 14px", background: "#fff", color: "#64748b", border: "1px solid #e2e8f0", borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}
         >
-          Skip
+          {t("btn_skip", lang)}
         </button>
       </div>
       <div style={{ marginTop: 8, fontSize: 11, color: "#94a3b8" }}>
-        Mapping saves to this device. Re-upload the form if field slots change.
+        {t("pmf_map_footer_note", lang)}
       </div>
     </div>
   );
