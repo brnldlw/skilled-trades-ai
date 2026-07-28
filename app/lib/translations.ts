@@ -2651,6 +2651,34 @@ export const translations = {
   rl_delete_title: { en: "Delete entry", es: "Eliminar entrada" },
   rl_compliance_title: { en: "EPA 608 Compliance:", es: "Cumplimiento EPA 608:" },
   rl_compliance_body: { en: "Federal law requires records of refrigerant purchases and use for systems with 50+ lbs of refrigerant. Violations up to $44,539 per day per violation. Export CSV to maintain compliant records. A2L refrigerants (R-32, R-454B) require certified recovery equipment.", es: "La ley federal requiere registros de compras y uso de refrigerante para sistemas con 50+ lbs de refrigerante. Las infracciones pueden llegar a $44,539 por día por infracción. Exporta el CSV para mantener registros conformes. Los refrigerantes A2L (R-32, R-454B) requieren equipo de recuperación certificado." },
+
+  // ── Nameplate Reader ──────────────────────────────────────────
+  nr_reading: { en: "Reading...", es: "Leyendo..." },
+  nr_read_nameplate: { en: "Read nameplate", es: "Leer placa" },
+  nr_confidence_colon: { en: "Confidence:", es: "Confianza:" },
+  nr_upload_hint: { en: "Upload a clear nameplate photo to extract manufacturer/model/serial/refrigerant.", es: "Sube una foto clara de la placa para extraer fabricante/modelo/serie/refrigerante." },
+  label_serial_colon: { en: "Serial:", es: "Serie:" },
+
+  // ── Saved Unit History ────────────────────────────────────────
+  suh_search_placeholder: { en: "Search customer, site, model, symptom...", es: "Buscar cliente, sitio, modelo, síntoma..." },
+  suh_no_customer: { en: "No Customer", es: "Sin Cliente" },
+  suh_saved_colon: { en: "Saved:", es: "Guardado:" },
+  btn_load: { en: "Load", es: "Cargar" },
+  btn_delete: { en: "Delete", es: "Eliminar" },
+  suh_no_saved_units: { en: "No saved units yet.", es: "Aún no hay unidades guardadas." },
+
+  // ── Unit Service Timeline ─────────────────────────────────────
+  ust_shows_prior_events: { en: "Shows prior service events for the currently loaded unit.", es: "Muestra los eventos de servicio previos para la unidad actualmente cargada." },
+  ust_loading_timeline: { en: "Loading service timeline...", es: "Cargando línea de tiempo de servicio..." },
+  ust_filter_by_component: { en: "Filter Timeline by Component", es: "Filtrar Línea de Tiempo por Componente" },
+  ust_unknown_service_date: { en: "Unknown service date", es: "Fecha de servicio desconocida" },
+  label_diagnosis_colon: { en: "Diagnosis:", es: "Diagnóstico:" },
+  label_affected_component_colon: { en: "Affected Component:", es: "Componente Afectado:" },
+  label_parts_replaced_colon: { en: "Parts Replaced:", es: "Partes Reemplazadas:" },
+  label_notes_colon: { en: "Notes:", es: "Notas:" },
+  btn_edit_event: { en: "Edit Event", es: "Editar Evento" },
+  ust_no_events_match_filter: { en: "No service events match the selected component filter.", es: "Ningún evento de servicio coincide con el filtro de componente seleccionado." },
+  ust_load_unit_hint: { en: "Load a saved unit to view its service timeline.", es: "Carga una unidad guardada para ver su línea de tiempo de servicio." },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

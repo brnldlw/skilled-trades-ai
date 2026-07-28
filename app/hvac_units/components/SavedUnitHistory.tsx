@@ -5,6 +5,8 @@ import { SmallHint } from "./SmallHint";
 import { Badge } from "./Badge";
 import { PillButton } from "./PillButton";
 import type { SavedUnitRecord } from "../../lib/unit-store";
+import { useLang } from "../../components/LanguageContext";
+import { t } from "../../lib/translations";
 
 export function SavedUnitHistory({
   savedUnits,
@@ -15,6 +17,7 @@ export function SavedUnitHistory({
   onLoadUnit: (record: SavedUnitRecord) => void;
   onRemoveUnit: (id: string) => void;
 }) {
+  const { lang } = useLang();
   const [historyFilter, setHistoryFilter] = useState("");
 
   const filteredSavedUnits = useMemo(() => {
@@ -42,7 +45,7 @@ export function SavedUnitHistory({
       <input
         value={historyFilter}
         onChange={(e) => setHistoryFilter(e.target.value)}
-        placeholder="Search customer, site, model, symptom..."
+        placeholder={t("suh_search_placeholder", lang)}
         style={{ width: "100%", padding: 8 }}
       />
 
@@ -62,7 +65,7 @@ export function SavedUnitHistory({
               style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}
             >
               <div style={{ fontWeight: 900 }}>
-                {u.customerName || "No Customer"}
+                {u.customerName || t("suh_no_customer", lang)}
                 {u.companyName ? <Badge text={u.companyName} /> : null}
                 {u.unitNickname ? <Badge text={u.unitNickname} /> : null}
               </div>
@@ -71,16 +74,16 @@ export function SavedUnitHistory({
                 {u.equipmentType || "-"}
               </SmallHint>
               <SmallHint style={{ marginTop: 4 }}>
-                Saved: {new Date(u.savedAt).toLocaleString()}
+                {t("suh_saved_colon", lang)} {new Date(u.savedAt).toLocaleString()}
               </SmallHint>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 8 }}>
-                <PillButton text="Load" onClick={() => onLoadUnit(u)} />
-                <PillButton text="Delete" onClick={() => onRemoveUnit(u.id)} />
+                <PillButton text={t("btn_load", lang)} onClick={() => onLoadUnit(u)} />
+                <PillButton text={t("btn_delete", lang)} onClick={() => onRemoveUnit(u.id)} />
               </div>
             </div>
           ))
         ) : (
-          <SmallHint>No saved units yet.</SmallHint>
+          <SmallHint>{t("suh_no_saved_units", lang)}</SmallHint>
         )}
       </div>
     </>

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { SmallHint } from "./SmallHint";
+import { useLang } from "../../components/LanguageContext";
+import { t } from "../../lib/translations";
 
 type ServiceEvent = {
   id?: string;
@@ -33,17 +35,18 @@ export function UnitServiceTimeline({
   getComponentDisplayForEvent: (event: ServiceEvent) => string;
   onEditEvent: (event: ServiceEvent) => void;
 }) {
+  const { lang } = useLang();
   const [componentFilter, setComponentFilter] = useState("all");
 
   return (
     <>
       <SmallHint>
-        Shows prior service events for the currently loaded unit.
+        {t("ust_shows_prior_events", lang)}
       </SmallHint>
 
       {loading ? (
         <div style={{ marginTop: 12 }}>
-          <SmallHint>Loading service timeline...</SmallHint>
+          <SmallHint>{t("ust_loading_timeline", lang)}</SmallHint>
         </div>
       ) : events.length ? (
         <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
@@ -60,7 +63,7 @@ export function UnitServiceTimeline({
               <>
                 <div style={{ marginBottom: 10, display: "grid", gap: 6 }}>
                   <label style={{ display: "grid", gap: 6 }}>
-                    <span style={{ fontWeight: 900 }}>Filter Timeline by Component</span>
+                    <span style={{ fontWeight: 900 }}>{t("ust_filter_by_component", lang)}</span>
                     <select
                       value={activeFilter}
                       onChange={(e) => setComponentFilter(e.target.value)}
@@ -89,45 +92,45 @@ export function UnitServiceTimeline({
                       <div style={{ fontWeight: 900 }}>
                         {event.service_date
                           ? new Date(event.service_date).toLocaleDateString()
-                          : "Unknown service date"}
+                          : t("ust_unknown_service_date", lang)}
                       </div>
 
                       <div style={{ marginTop: 8 }}>
-                        <SmallHint><b>Symptom:</b> {event.symptom || "-"}</SmallHint>
+                        <SmallHint><b>{t("label_symptom_colon", lang)}</b> {event.symptom || "-"}</SmallHint>
                       </div>
 
                       <div style={{ marginTop: 4 }}>
-                        <SmallHint><b>Diagnosis:</b> {event.diagnosis_summary || "-"}</SmallHint>
+                        <SmallHint><b>{t("label_diagnosis_colon", lang)}</b> {event.diagnosis_summary || "-"}</SmallHint>
                       </div>
 
                       <div style={{ marginTop: 4 }}>
-                        <SmallHint><b>Confirmed Cause:</b> {event.final_confirmed_cause || "-"}</SmallHint>
+                        <SmallHint><b>{t("label_confirmed_cause_colon", lang)}</b> {event.final_confirmed_cause || "-"}</SmallHint>
                       </div>
 
                       {getComponentDisplayForEvent(event) ? (
                         <div style={{ marginTop: 4 }}>
                           <SmallHint>
-                            <b>Affected Component:</b> {getComponentDisplayForEvent(event)}
+                            <b>{t("label_affected_component_colon", lang)}</b> {getComponentDisplayForEvent(event)}
                           </SmallHint>
                         </div>
                       ) : null}
 
                       <div style={{ marginTop: 4 }}>
-                        <SmallHint><b>Parts Replaced:</b> {event.parts_replaced || "-"}</SmallHint>
+                        <SmallHint><b>{t("label_parts_replaced_colon", lang)}</b> {event.parts_replaced || "-"}</SmallHint>
                       </div>
 
                       <div style={{ marginTop: 4 }}>
-                        <SmallHint><b>Actual Fix:</b> {event.actual_fix_performed || "-"}</SmallHint>
+                        <SmallHint><b>{t("label_actual_fix_colon", lang)}</b> {event.actual_fix_performed || "-"}</SmallHint>
                       </div>
 
                       <div style={{ marginTop: 4 }}>
                         <SmallHint>
-                          <b>Outcome:</b> {event.outcome_status || "-"} • <b>Callback:</b> {event.callback_occurred || "-"}
+                          <b>{t("label_outcome_colon", lang)}</b> {event.outcome_status || "-"} • <b>{t("label_callback_colon", lang)}</b> {event.callback_occurred || "-"}
                         </SmallHint>
                       </div>
 
                       <div style={{ marginTop: 4 }}>
-                        <SmallHint><b>Notes:</b> {event.tech_closeout_notes || "-"}</SmallHint>
+                        <SmallHint><b>{t("label_notes_colon", lang)}</b> {event.tech_closeout_notes || "-"}</SmallHint>
 
                         <div style={{ marginTop: 8 }}>
                           <button
@@ -143,7 +146,7 @@ export function UnitServiceTimeline({
                               boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
                             }}
                           >
-                            Edit Event
+                            {t("btn_edit_event", lang)}
                           </button>
                         </div>
                       </div>
@@ -158,7 +161,7 @@ export function UnitServiceTimeline({
                       background: "#fafafa",
                     }}
                   >
-                    <SmallHint>No service events match the selected component filter.</SmallHint>
+                    <SmallHint>{t("ust_no_events_match_filter", lang)}</SmallHint>
                   </div>
                 )}
               </>
@@ -168,7 +171,7 @@ export function UnitServiceTimeline({
       ) : (
         <div style={{ marginTop: 12 }}>
           <SmallHint>
-            {message || "Load a saved unit to view its service timeline."}
+            {message || t("ust_load_unit_hint", lang)}
           </SmallHint>
         </div>
       )}

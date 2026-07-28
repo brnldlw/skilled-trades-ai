@@ -4,6 +4,8 @@ import type { RefObject } from "react";
 import { SmallHint } from "./SmallHint";
 import { PillButton } from "./PillButton";
 import type { NameplateResult } from "../../lib/unit-store";
+import { useLang } from "../../components/LanguageContext";
+import { t } from "../../lib/translations";
 
 export function NameplateReader({
   fileInputRef,
@@ -24,6 +26,7 @@ export function NameplateReader({
   onParse: () => void;
   onClear: () => void;
 }) {
+  const { lang } = useLang();
   return (
     <>
       <input
@@ -53,11 +56,11 @@ export function NameplateReader({
           />
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <PillButton
-              text={busy ? "Reading..." : "Read nameplate"}
+              text={busy ? t("nr_reading", lang) : t("nr_read_nameplate", lang)}
               onClick={onParse}
               disabled={busy}
             />
-            <PillButton text="Clear" onClick={onClear} />
+            <PillButton text={t("btn_clear", lang)} onClick={onClear} />
           </div>
           {error ? (
             <div style={{ color: "crimson", fontWeight: 800 }}>{error}</div>
@@ -65,20 +68,20 @@ export function NameplateReader({
           {nameplate ? (
             <div style={{ display: "grid", gap: 8 }}>
               <SmallHint>
-                Confidence: <b>{nameplate.confidence}</b> — {nameplate.notes}
+                {t("nr_confidence_colon", lang)} <b>{nameplate.confidence}</b> — {nameplate.notes}
               </SmallHint>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                <div><b>Manufacturer:</b> {nameplate.manufacturer ?? "-"}</div>
-                <div><b>Model:</b> {nameplate.model ?? "-"}</div>
-                <div><b>Serial:</b> {nameplate.serial ?? "-"}</div>
-                <div><b>Refrigerant:</b> {nameplate.refrigerant ?? "-"}</div>
+                <div><b>{t("label_manufacturer_colon", lang)}</b> {nameplate.manufacturer ?? "-"}</div>
+                <div><b>{t("label_model_colon", lang)}</b> {nameplate.model ?? "-"}</div>
+                <div><b>{t("label_serial_colon", lang)}</b> {nameplate.serial ?? "-"}</div>
+                <div><b>{t("label_refrigerant_colon", lang)}</b> {nameplate.refrigerant ?? "-"}</div>
               </div>
             </div>
           ) : null}
         </div>
       ) : (
         <SmallHint>
-          Upload a clear nameplate photo to extract manufacturer/model/serial/refrigerant.
+          {t("nr_upload_hint", lang)}
         </SmallHint>
       )}
     </>
