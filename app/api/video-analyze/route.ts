@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     if (!user) return NextResponse.json({ error: "Not logged in" }, { status: 401 });
 
     const body = await req.json();
-    const { videoBase64, mimeType, context } = body;
+    const { videoBase64, mimeType, context, lang } = body;
 
     if (!videoBase64) return NextResponse.json({ error: "No video provided" }, { status: 400 });
 
@@ -92,7 +92,7 @@ severity guide:
 - warning = adds cost, time, or complexity — plan for it
 - info = good to know, low risk
 
-Return [] if the video shows no notable obstacles. Return only the JSON array, no other text.`,
+Return [] if the video shows no notable obstacles. Return only the JSON array, no other text.${lang === "es" ? " Write the title, description, and question fields in Spanish." : ""}`,
             },
           ],
         }],
@@ -107,8 +107,10 @@ Return [] if the video shows no notable obstacles. Return only the JSON array, n
         ok: true,
         findings: [{
           severity: "info",
-          title: "Video received — manual review recommended",
-          description: "Video format may not support direct AI analysis. Review the walkthrough manually and add notes in the Additional Notes field.",
+          title: lang === "es" ? "Video recibido — se recomienda revisión manual" : "Video received — manual review recommended",
+          description: lang === "es"
+            ? "El formato de video puede no ser compatible con el análisis directo de IA. Revisa el recorrido manualmente y agrega notas en el campo de Notas Adicionales."
+            : "Video format may not support direct AI analysis. Review the walkthrough manually and add notes in the Additional Notes field.",
           question: null,
           answer: null,
         }],

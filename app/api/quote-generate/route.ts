@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
     if (!user) return NextResponse.json({ error: "Not logged in" }, { status: 401 });
 
     const body = await req.json();
-    const { survey, unitId } = body;
+    const { survey, unitId, lang } = body;
 
     if (!survey) return NextResponse.json({ error: "Survey data required" }, { status: 400 });
 
@@ -137,7 +137,7 @@ ${JSON.stringify({
   labor_rate_per_hour: 125,
   crane_rate_per_hour: 600,
   crane_minimum_hours: 3,
-}, null, 2)}`;
+}, null, 2)}${lang === "es" ? "\n\nWrite all natural-language text fields in the JSON (title, body, mitigation, description, tech_notes_suggested, confidence_notes, why_recommended, compatibility_notes, rebate_source) in Spanish. Keep JSON keys, enum values (severity, item_type, confidence_level), manufacturer names, and model numbers unchanged." : ""}`;
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) return NextResponse.json({ error: "API key not configured" }, { status: 500 });
