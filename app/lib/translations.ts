@@ -3323,6 +3323,59 @@ export const translations = {
   card_hint_refrigerant_reference: { en: "GWP, safety class, oil type, what it replaces, and A2L handling notes for every major refrigerant. Critical as the industry transitions away from R-410A and R-404A.", es: "PCG, clase de seguridad, tipo de aceite, qué reemplaza y notas de manejo A2L para cada refrigerante importante. Crítico mientras la industria hace la transición fuera del R-410A y R-404A." },
   card_title_wiring_reference: { en: "⚡ Wiring Reference Library", es: "⚡ Biblioteca de Referencia de Cableado" },
   card_hint_wiring_reference: { en: "Common HVAC/R control circuit logic — operation sequences, common faults, and tech tips. Covers single stage cooling, heat pump, gas furnace, walk-in refrigeration, and 24V troubleshooting.", es: "Lógica común de circuitos de control HVAC/R — secuencias de operación, fallas comunes y consejos técnicos. Cubre enfriamiento de una etapa, bomba de calor, horno de gas, refrigeración walk-in y solución de problemas de 24V." },
+
+  // ── Unit Library modal ──────────────────────────────
+  ul_title: { en: "Unit Library", es: "Biblioteca de Unidades" },
+  ul_hint: { en: "Search, filter, and load saved units.", es: "Busca, filtra y carga unidades guardadas." },
+  ul_search_placeholder: { en: "Search customer, site, address, tag, model...", es: "Buscar cliente, sitio, dirección, etiqueta, modelo..." },
+  ul_all_equipment_types: { en: "All Equipment Types", es: "Todos los Tipos de Equipo" },
+  ul_all_manufacturers: { en: "All Manufacturers", es: "Todos los Fabricantes" },
+  ul_all_models: { en: "All Models", es: "Todos los Modelos" },
+  ul_all_companies: { en: "All Companies", es: "Todas las Empresas" },
+  btn_recent: { en: "Recent", es: "Recientes" },
+  btn_all_units: { en: "All Units", es: "Todas las Unidades" },
+  btn_reset_filters: { en: "Reset Filters", es: "Restablecer Filtros" },
+  ul_showing_units_mode: { en: "Showing {count} unit(s) • Mode: {value}", es: "Mostrando {count} unidad(es) • Modo: {value}" },
+  ul_mode_recent_25: { en: "Recent 25", es: "25 Recientes" },
+  ul_mode_all: { en: "All", es: "Todas" },
+  ul_no_customer: { en: "No Customer", es: "Sin Cliente" },
+  ul_saved_colon: { en: "Saved: {value}", es: "Guardado: {value}" },
+  btn_view_profile: { en: "View Profile", es: "Ver Perfil" },
+  ul_no_units_matched: { en: "No units matched your search/filter.", es: "Ninguna unidad coincidió con tu búsqueda/filtro." },
+
+  // ── Gauge Photo Reader ──────────────────────────────
+  gpr_title: { en: "Gauge Photo Reader", es: "Lector de Foto de Manómetros" },
+  btn_choose_gauge_photo: { en: "Choose gauge photo", es: "Elegir foto de manómetros" },
+  btn_reading_ellipsis: { en: "Reading...", es: "Leyendo..." },
+  btn_read_gauges: { en: "Read Gauges", es: "Leer Manómetros" },
+  gpr_gauge_read: { en: "Gauge Read", es: "Lectura de Manómetros" },
+  gpr_suction: { en: "Suction:", es: "Succión:" },
+  gpr_head: { en: "Head:", es: "Descarga:" },
+  gpr_low_sat: { en: "Low Sat:", es: "Sat. Baja:" },
+  gpr_high_sat: { en: "High Sat:", es: "Sat. Alta:" },
+  gpr_quick_diagnosis: { en: "Quick diagnosis", es: "Diagnóstico rápido" },
+  label_notes: { en: "Notes", es: "Notas" },
+  btn_add_readings_to_measurements: { en: "Add these readings to measurements", es: "Agregar estas lecturas a las mediciones" },
+  gpr_empty_state: { en: "Upload a clear photo of the gauge set. The app will try to read low side, high side, and saturation temps.", es: "Sube una foto clara del juego de manómetros. La app intentará leer el lado bajo, el lado alto y las temperaturas de saturación." },
+
+  // ── Equipment Memory AI ──────────────────────────────
+  emai_title: { en: "Equipment Memory AI", es: "IA de Memoria del Equipo" },
+  emai_prior_matches_badge: { en: "{count} prior matches", es: "{count} coincidencias previas" },
+  emai_hint: { en: "This looks at saved history for matching customer/site/unit/model equipment and suggests what to check first today.", es: "Esto revisa el historial guardado de equipo coincidente de cliente/sitio/unidad/modelo y sugiere qué revisar primero hoy." },
+  emai_summary_title: { en: "AI Memory Summary", es: "Resumen de Memoria de IA" },
+  emai_repeated_symptoms: { en: "Repeated symptoms", es: "Síntomas repetidos" },
+  emai_repeated_causes: { en: "Repeated likely causes", es: "Causas probables repetidas" },
+  emai_repeated_patterns: { en: "Repeated measurement patterns", es: "Patrones de medición repetidos" },
+  emai_suggested_checks: { en: "Suggested first checks today", es: "Verificaciones sugeridas para hoy" },
+  emai_empty_state: { en: "Save more service history on this unit and this section will get smarter.", es: "Guarda más historial de servicio en esta unidad y esta sección se volverá más inteligente." },
+
+  // ── Photo Diagnosis / Nameplate Photo Reader ──────────────────────────
+  pd_title: { en: "Photo Diagnosis", es: "Diagnóstico por Foto" },
+  btn_choose_photo: { en: "Choose photo", es: "Elegir foto" },
+  btn_analyzing_ellipsis: { en: "Analyzing...", es: "Analizando..." },
+  btn_analyze_photo: { en: "Analyze Photo", es: "Analizar Foto" },
+  pd_empty_state: { en: "Upload a photo of a control board, capacitor, contactor, iced coil, wiring, gauges, or error code and let the app analyze it.", es: "Sube una foto de una tarjeta de control, capacitor, contactor, serpentín congelado, cableado, manómetros o código de error y deja que la app la analice." },
+  npr_title: { en: "Nameplate Photo Reader", es: "Lector de Foto de Placa" },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

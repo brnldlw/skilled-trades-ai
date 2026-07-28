@@ -8660,8 +8660,8 @@ return (
         }}
       >
         <SectionCard
-          title="Gauge Photo Reader"
-          right={<PillButton text="Choose gauge photo" onClick={() => gaugeInputRef.current?.click()} />}
+          title={t("gpr_title", lang)}
+          right={<PillButton text={t("btn_choose_gauge_photo", lang)} onClick={() => gaugeInputRef.current?.click()} />}
         >
           <input
             ref={gaugeInputRef}
@@ -8695,12 +8695,12 @@ return (
 
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                 <PillButton
-                  text={gaugeBusy ? "Reading..." : "Read Gauges"}
+                  text={gaugeBusy ? t("btn_reading_ellipsis", lang) : t("btn_read_gauges", lang)}
                   onClick={analyzeGaugePhoto}
                   disabled={gaugeBusy}
                 />
                 <PillButton
-                  text="Clear"
+                  text={t("btn_clear", lang)}
                   onClick={() => {
                     setGaugeImage("");
                     setGaugeErr("");
@@ -8716,7 +8716,7 @@ return (
               {gaugeRead ? (
                 <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10 }}>
                   <div style={{ fontWeight: 900 }}>
-                    Gauge Read
+                    {t("gpr_gauge_read", lang)}
                     <Badge text={gaugeRead.confidence} />
                   </div>
 
@@ -8729,36 +8729,36 @@ return (
                     }}
                   >
                     <div>
-                      <b>Suction:</b>{" "}
+                      <b>{t("gpr_suction", lang)}</b>{" "}
                       {gaugeRead.suction_psi !== null ? `${gaugeRead.suction_psi} psi` : "—"}
                     </div>
                     <div>
-                      <b>Head:</b>{" "}
+                      <b>{t("gpr_head", lang)}</b>{" "}
                       {gaugeRead.head_psi !== null ? `${gaugeRead.head_psi} psi` : "—"}
                     </div>
                     <div>
-                      <b>Low Sat:</b>{" "}
+                      <b>{t("gpr_low_sat", lang)}</b>{" "}
                       {gaugeRead.low_sat_f !== null ? `${gaugeRead.low_sat_f} °F` : "—"}
                     </div>
                     <div>
-                      <b>High Sat:</b>{" "}
+                      <b>{t("gpr_high_sat", lang)}</b>{" "}
                       {gaugeRead.high_sat_f !== null ? `${gaugeRead.high_sat_f} °F` : "—"}
                     </div>
                   </div>
 
                   <div style={{ marginTop: 10 }}>
-                    <div style={{ fontWeight: 900 }}>Quick diagnosis</div>
+                    <div style={{ fontWeight: 900 }}>{t("gpr_quick_diagnosis", lang)}</div>
                     <SmallHint style={{ marginTop: 4 }}>{gaugeRead.quick_diagnosis}</SmallHint>
                   </div>
 
                   <div style={{ marginTop: 10 }}>
-                    <div style={{ fontWeight: 900 }}>Notes</div>
+                    <div style={{ fontWeight: 900 }}>{t("label_notes", lang)}</div>
                     <SmallHint style={{ marginTop: 4 }}>{gaugeRead.notes}</SmallHint>
                   </div>
 
                   <div style={{ marginTop: 10 }}>
                     <PillButton
-                      text="Add these readings to measurements"
+                      text={t("btn_add_readings_to_measurements", lang)}
                       onClick={addGaugeReadingsToMeasurements}
                     />
                   </div>
@@ -8767,8 +8767,7 @@ return (
             </div>
           ) : (
             <SmallHint>
-              Upload a clear photo of the gauge set. The app will try to read low side,
-              high side, and saturation temps.
+              {t("gpr_empty_state", lang)}
             </SmallHint>
           )}
         </SectionCard>
@@ -8806,9 +8805,9 @@ return (
 </div>
 
    <SectionCard
-          title="Photo Diagnosis"
+          title={t("pd_title", lang)}
           id="photo-diagnose"
-          right={<PillButton text="Choose photo" onClick={() => photoInputRef.current?.click()} />}
+          right={<PillButton text={t("btn_choose_photo", lang)} onClick={() => photoInputRef.current?.click()} />}
         >
           <input
             ref={photoInputRef}
@@ -8841,12 +8840,12 @@ return (
               />
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                 <PillButton
-                  text={photoLoading ? "Analyzing..." : "Analyze Photo"}
+                  text={photoLoading ? t("btn_analyzing_ellipsis", lang) : t("btn_analyze_photo", lang)}
                   onClick={analyzePhoto}
                   disabled={photoLoading}
                 />
                 <PillButton
-                  text="Clear"
+                  text={t("btn_clear", lang)}
                   onClick={() => {
                     setPhotoImage("");
                     setPhotoResult("");
@@ -8874,8 +8873,7 @@ return (
             </div>
           ) : (
             <SmallHint>
-              Upload a photo of a control board, capacitor, contactor, iced coil, wiring,
-              gauges, or error code and let the app analyze it.
+              {t("pd_empty_state", lang)}
             </SmallHint>
           )}
         </SectionCard>
@@ -9842,9 +9840,9 @@ return (
           </div>
 
       <SectionCard
-          title="Nameplate Photo Reader"
+          title={t("npr_title", lang)}
           id="nameplate-reader"
-          right={<PillButton text="Choose photo" onClick={() => fileInputRef.current?.click()} />}
+          right={<PillButton text={t("btn_choose_photo", lang)} onClick={() => fileInputRef.current?.click()} />}
         >
           <NameplateReader
             fileInputRef={fileInputRef}
@@ -11546,11 +11544,11 @@ return (
 
       <div style={{ marginTop: 10 }}>
         <SectionCard
-          title="Equipment Memory AI"
-          right={<Badge text={`${equipmentMemory.relatedCount} prior matches`} />}
+          title={t("emai_title", lang)}
+          right={<Badge text={t("emai_prior_matches_badge", lang).replace("{count}", String(equipmentMemory.relatedCount))} />}
         >
           <SmallHint>
-            This looks at saved history for matching customer/site/unit/model equipment and suggests what to check first today.
+            {t("emai_hint", lang)}
           </SmallHint>
 
           <div
@@ -11562,14 +11560,14 @@ return (
               background: "#fafafa",
             }}
           >
-            <div style={{ fontWeight: 900 }}>AI Memory Summary</div>
+            <div style={{ fontWeight: 900 }}>{t("emai_summary_title", lang)}</div>
             <div style={{ fontSize: 16, fontWeight: 900, marginTop: 6 }}>
               {equipmentMemory.summary}
             </div>
 
             {equipmentMemory.repeatedSymptoms.length ? (
               <div style={{ marginTop: 12 }}>
-                <div style={{ fontWeight: 900 }}>Repeated symptoms</div>
+                <div style={{ fontWeight: 900 }}>{t("emai_repeated_symptoms", lang)}</div>
                 <ul style={{ marginTop: 8, paddingLeft: 18 }}>
                   {equipmentMemory.repeatedSymptoms.map((item, i) => (
                     <li key={i}>
@@ -11582,7 +11580,7 @@ return (
 
             {equipmentMemory.repeatedCauses.length ? (
               <div style={{ marginTop: 12 }}>
-                <div style={{ fontWeight: 900 }}>Repeated likely causes</div>
+                <div style={{ fontWeight: 900 }}>{t("emai_repeated_causes", lang)}</div>
                 <ul style={{ marginTop: 8, paddingLeft: 18 }}>
                   {equipmentMemory.repeatedCauses.map((item, i) => (
                     <li key={i}>
@@ -11595,7 +11593,7 @@ return (
 
             {equipmentMemory.repeatedMeasurementPatterns.length ? (
               <div style={{ marginTop: 12 }}>
-                <div style={{ fontWeight: 900 }}>Repeated measurement patterns</div>
+                <div style={{ fontWeight: 900 }}>{t("emai_repeated_patterns", lang)}</div>
                 <ul style={{ marginTop: 8, paddingLeft: 18 }}>
                   {equipmentMemory.repeatedMeasurementPatterns.map((item, i) => (
                     <li key={i}>
@@ -11608,7 +11606,7 @@ return (
 
             {equipmentMemory.suggestedFirstChecks.length ? (
               <div style={{ marginTop: 12 }}>
-                <div style={{ fontWeight: 900 }}>Suggested first checks today</div>
+                <div style={{ fontWeight: 900 }}>{t("emai_suggested_checks", lang)}</div>
                 <ul style={{ marginTop: 8, paddingLeft: 18 }}>
                   {equipmentMemory.suggestedFirstChecks.map((item, i) => (
                     <li key={i}>
@@ -11619,7 +11617,7 @@ return (
               </div>
             ) : (
               <SmallHint style={{ marginTop: 12 }}>
-                Save more service history on this unit and this section will get smarter.
+                {t("emai_empty_state", lang)}
               </SmallHint>
             )}
           </div>
@@ -11747,8 +11745,8 @@ return (
         }}
       >
         <div>
-          <div style={{ fontSize: 22, fontWeight: 900 }}>Unit Library</div>
-          <SmallHint>Search, filter, and load saved units.</SmallHint>
+          <div style={{ fontSize: 22, fontWeight: 900 }}>{t("ul_title", lang)}</div>
+          <SmallHint>{t("ul_hint", lang)}</SmallHint>
         </div>
 
         <button
@@ -11764,7 +11762,7 @@ return (
             boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
           }}
         >
-          Close
+          {t("btn_close", lang)}
         </button>
       </div>
 
@@ -11779,7 +11777,7 @@ return (
         <input
           value={unitLibrarySearch}
           onChange={(e) => setUnitLibrarySearch(e.target.value)}
-          placeholder="Search customer, site, address, tag, model..."
+          placeholder={t("ul_search_placeholder", lang)}
           style={{ width: "100%", padding: 8 }}
         />
 
@@ -11788,7 +11786,7 @@ return (
           onChange={(e) => setUnitLibraryEquipmentType(e.target.value)}
           style={{ width: "100%", padding: 8 }}
         >
-          <option value="">All Equipment Types</option>
+          <option value="">{t("ul_all_equipment_types", lang)}</option>
           {libraryEquipmentTypeOptions.map((option) => (
             <option key={option} value={option}>
               {option}
@@ -11801,7 +11799,7 @@ return (
           onChange={(e) => setUnitLibraryManufacturer(e.target.value)}
           style={{ width: "100%", padding: 8 }}
         >
-          <option value="">All Manufacturers</option>
+          <option value="">{t("ul_all_manufacturers", lang)}</option>
           {libraryManufacturerOptions.map((option) => (
             <option key={option} value={option}>
               {option}
@@ -11814,7 +11812,7 @@ return (
           onChange={(e) => setUnitLibraryModel(e.target.value)}
           style={{ width: "100%", padding: 8 }}
         >
-          <option value="">All Models</option>
+          <option value="">{t("ul_all_models", lang)}</option>
           {libraryModelOptions.map((option) => (
             <option key={option} value={option}>
               {option}
@@ -11827,7 +11825,7 @@ return (
           onChange={(e) => setUnitLibraryCompany(e.target.value)}
           style={{ width: "100%", padding: 8 }}
         >
-          <option value="">All Companies</option>
+          <option value="">{t("ul_all_companies", lang)}</option>
           {libraryCompanyOptions.map((option) => (
             <option key={option} value={option}>
               {option}
@@ -11862,7 +11860,7 @@ return (
             boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
           }}
         >
-          Recent
+          {t("btn_recent", lang)}
         </button>
 
         <button
@@ -11878,7 +11876,7 @@ return (
             boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
           }}
         >
-          All Units
+          {t("btn_all_units", lang)}
         </button>
 
         <button
@@ -11903,14 +11901,15 @@ return (
             boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
           }}
         >
-          Reset Filters
+          {t("btn_reset_filters", lang)}
         </button>
       </div>
 
       <div style={{ marginTop: 14 }}>
         <SmallHint>
-          Showing {filteredLibraryUnits.length} unit(s) • Mode:{" "}
-          {unitLibraryMode === "recent" ? "Recent 25" : "All"}
+          {t("ul_showing_units_mode", lang)
+            .replace("{count}", String(filteredLibraryUnits.length))
+            .replace("{value}", unitLibraryMode === "recent" ? t("ul_mode_recent_25", lang) : t("ul_mode_all", lang))}
         </SmallHint>
       </div>
 
@@ -11935,7 +11934,7 @@ return (
               }}
             >
               <div style={{ fontWeight: 900 }}>
-                {u.customerName || "No Customer"}
+                {u.customerName || t("ul_no_customer", lang)}
                 {u.unitNickname ? <Badge text={u.unitNickname} /> : null}
               </div>
 
@@ -11945,30 +11944,30 @@ return (
               </SmallHint>
 
               <SmallHint style={{ marginTop: 4 }}>
-                Saved: {u.savedAt ? new Date(u.savedAt).toLocaleString() : "-"}
+                {t("ul_saved_colon", lang).replace("{value}", u.savedAt ? new Date(u.savedAt).toLocaleString() : "-")}
               </SmallHint>
 
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 8 }}>
                 <PillButton
-                  text="View Profile"
+                  text={t("btn_view_profile", lang)}
                   onClick={() => {
                     setShowUnitLibrary(false);
                     openUnitProfile(u);
                   }}
                 />
                 <PillButton
-                  text="Load"
+                  text={t("btn_load", lang)}
                   onClick={() => {
                     loadUnit(u);
                     setShowUnitLibrary(false);
                   }}
                 />
-                <PillButton text="Delete" onClick={() => removeSavedUnit(u.id)} />
+                <PillButton text={t("btn_delete", lang)} onClick={() => removeSavedUnit(u.id)} />
               </div>
             </div>
           ))
         ) : (
-          <SmallHint>No units matched your search/filter.</SmallHint>
+          <SmallHint>{t("ul_no_units_matched", lang)}</SmallHint>
         )}
       </div>
     </div>
