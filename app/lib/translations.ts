@@ -3219,6 +3219,36 @@ export const translations = {
   qe_val_overhead_no_lines: { en: "No lines present", es: "No hay líneas presentes" },
   qe_val_overhead_hold_needed: { en: "Yes — lines present, utility hold needed", es: "Sí — hay líneas, se necesita espera de servicios públicos" },
   qe_val_overhead_clearance: { en: "Yes — lines present, safe clearance available", es: "Sí — hay líneas, hay espacio seguro disponible" },
+
+  // ── Historical Entry Mode / Help Quick Start card titles ──────────────
+  card_title_historical_entry_mode: { en: "Historical Entry Mode", es: "Modo de Entrada Histórica" },
+  card_title_help_quick_start: { en: "Help / Quick Start", es: "Ayuda / Inicio Rápido" },
+
+  // ── Help Quick Start ──────────────────────────────
+  btn_hide_quick_start: { en: "Hide Quick Start", es: "Ocultar Inicio Rápido" },
+  btn_show_quick_start: { en: "Show Quick Start", es: "Mostrar Inicio Rápido" },
+  hqs_1_title: { en: "1. Quick Start", es: "1. Inicio Rápido" },
+  hqs_1_body: { en: "Save a new unit or load an existing one. Enter the symptom, use the hints, add photos if needed, then save the call to the timeline.", es: "Guarda una unidad nueva o carga una existente. Ingresa el síntoma, usa las sugerencias, agrega fotos si es necesario, luego guarda la llamada en la línea de tiempo." },
+  hqs_2_title: { en: "2. Historical Entry", es: "2. Entrada Histórica" },
+  hqs_2_body: { en: "Load the unit first whenever possible. Turn on Historical Entry Mode to reduce clutter. Enter service date, symptom, cause, fix, outcome, callback, and notes. Use Save & Add Another for multiple old calls on the same unit.", es: "Carga la unidad primero cuando sea posible. Activa el Modo de Entrada Histórica para reducir el desorden. Ingresa la fecha de servicio, síntoma, causa, solución, resultado, retorno y notas. Usa Guardar y Agregar Otro para varias llamadas antiguas en la misma unidad." },
+  hqs_3_title: { en: "3. Photos", es: "3. Fotos" },
+  hqs_3_body: { en: "Open Service Event Photos, take or attach photos, then save the call so the photos stay with that service event and appear later in timeline/profile history.", es: "Abre Fotos del Evento de Servicio, toma o adjunta fotos, luego guarda la llamada para que las fotos permanezcan con ese evento de servicio y aparezcan después en el historial de línea de tiempo/perfil." },
+  hqs_4_title: { en: "4. Editing", es: "4. Edición" },
+  hqs_4_body: { en: "Load a unit and use Update Loaded Unit to correct unit details. In Unit Service Timeline, use Edit Event to fix a saved service entry, then use Update Event to save changes.", es: "Carga una unidad y usa Actualizar Unidad Cargada para corregir los detalles de la unidad. En la Línea de Tiempo de Servicio de la Unidad, usa Editar Evento para corregir una entrada de servicio guardada, luego usa Actualizar Evento para guardar los cambios." },
+  hqs_5_title: { en: "5. Parts / Manuals / Hints", es: "5. Piezas / Manuales / Sugerencias" },
+  hqs_5_body: { en: "Unit History Troubleshooting Hints uses saved history from that unit. Parts & Manuals Assist gives broad search and history-aware suggestions. History is guidance only and does not stop you from chasing a brand-new issue.", es: "Las Sugerencias de Solución de Problemas del Historial de la Unidad usan el historial guardado de esa unidad. Asistencia de Piezas y Manuales ofrece búsqueda amplia y sugerencias basadas en el historial. El historial es solo una guía y no te impide investigar un problema completamente nuevo." },
+  hqs_faq_title: { en: "FAQ", es: "Preguntas Frecuentes" },
+  hqs_faq_1_q: { en: "How do I avoid duplicates?", es: "¿Cómo evito duplicados?" },
+  hqs_faq_1_a: { en: "Load the unit first when possible. Serial number is the strongest identifier.", es: "Carga la unidad primero cuando sea posible. El número de serie es el identificador más fuerte." },
+  hqs_faq_2_q: { en: "How do I correct a unit?", es: "¿Cómo corrijo una unidad?" },
+  hqs_faq_2_a: { en: "Load it, change the fields, then click Update Loaded Unit.", es: "Cárgala, cambia los campos, luego haz clic en Actualizar Unidad Cargada." },
+  hqs_faq_3_q: { en: "How do I fix a saved call?", es: "¿Cómo corrijo una llamada guardada?" },
+  hqs_faq_3_a: { en: "Use Edit Event in the Unit Service Timeline.", es: "Usa Editar Evento en la Línea de Tiempo de Servicio de la Unidad." },
+  hqs_faq_4_q: { en: "How do I enter lots of old calls fast?", es: "¿Cómo ingreso muchas llamadas antiguas rápido?" },
+  hqs_faq_4_a: { en: "Use Historical Entry Mode and Save & Add Another.", es: "Usa el Modo de Entrada Histórica y Guardar y Agregar Otro." },
+  hqs_faq_5_q: { en: "Where do photos go?", es: "¿A dónde van las fotos?" },
+  hqs_faq_5_a: { en: "Photos attach to the service event and show in the timeline/profile later.", es: "Las fotos se adjuntan al evento de servicio y se muestran después en la línea de tiempo/perfil." },
+  hqs_hidden: { en: "Hidden to keep the main workflow clean.", es: "Oculto para mantener el flujo principal limpio." },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

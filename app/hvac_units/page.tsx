@@ -7721,7 +7721,7 @@ return (
         }}
       >
       <div style={{ marginTop: 10 }}>
-        <SectionCard title="Historical Entry Mode">
+        <SectionCard title={t("card_title_historical_entry_mode", lang)}>
           <HistoricalEntryModeToggle
             enabled={historicalEntryMode}
             onToggle={() => setHistoricalEntryMode((v) => !v)}
@@ -7730,7 +7730,7 @@ return (
       </div>
 
         <div style={{ marginTop: 10 }}>
-          <SectionCard title="Help / Quick Start">
+          <SectionCard title={t("card_title_help_quick_start", lang)}>
             <HelpQuickStart />
           </SectionCard>
         </div>
