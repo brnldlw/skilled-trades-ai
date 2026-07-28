@@ -2545,7 +2545,7 @@ function browserSupportsSmartReadingsDictation() {
           setFailureDashboardRefreshedAt(new Date().toISOString());
         } catch (err) {
           console.error("LOAD FAILURE DASHBOARD FAILED", err);
-          setFailureDashboardError("Could not load failure intelligence dashboard.");
+          setFailureDashboardError(t("fid_load_failed", lang));
         } finally {
           setFailureDashboardLoading(false);
         }
@@ -8650,7 +8650,7 @@ return (
           />
         </SectionCard>
 
-<SectionCard title="Parts & Manuals Assist" id="parts-manuals">
+<SectionCard title={t("nav_parts_manuals_assist", lang)} id="parts-manuals">
             <PartsManualsAssist equipmentType={equipmentType} serviceHistory={unitServiceTimeline} />
           </SectionCard>
           
@@ -9063,11 +9063,9 @@ return (
 
 {/* pm-form-filler-v1 */}
       <div style={{ marginTop: 10 }}>
-        <SectionCard title={"📋 PM Form Filler"} id="pm-forms">
+        <SectionCard title={t("card_title_pm_form_filler", lang)} id="pm-forms">
           <SmallHint>
-            Upload your company PM or asset tracking form. The AI reads it and identifies every field.
-            Photograph the unit nameplate to auto-fill equipment info. Talk-to-text for customer details.
-            Download the completed form to send anywhere.
+            {t("card_hint_pm_form_filler", lang)}
           </SmallHint>
           <div style={{ marginTop: 12 }}>
             <PMFormFiller
@@ -9083,10 +9081,9 @@ return (
 
 {/* estimator-section-v1 */}
       <div style={{ marginTop: 10 }}>
-        <SectionCard title={"📋 Replacement Quote Estimator"} id="estimator">
+        <SectionCard title={t("card_title_estimator", lang)} id="estimator">
           <SmallHint>
-            AI-powered replacement quote tool. Photo the job site, answer a few questions,
-            and get a complete scope of work, equipment options, crane requirements, and pricing estimate.
+            {t("card_hint_estimator", lang)}
           </SmallHint>
           <div style={{ marginTop: 12 }}>
             <EstimatorSection
@@ -9100,9 +9097,9 @@ return (
 
       {/* expert-hotline-v1 */}
       <div style={{ marginTop: 10 }}>
-        <SectionCard title={"📞 Expert Hotline"} id="expert-hotline">
+        <SectionCard title={t("card_title_expert_hotline", lang)} id="expert-hotline">
           <SmallHint>
-            Stuck on a tough call? Connect live with a verified master tech. Coming soon — leave your email to get notified and get your first call at half price.
+            {t("card_hint_expert_hotline", lang)}
           </SmallHint>
           <div style={{ marginTop: 12 }}>
             <ExpertHotline />
@@ -9358,9 +9355,9 @@ return (
             gap: 6,
           }}
         >
-          <div style={{ fontWeight: 900, fontSize: 18 }}>Step 6 — Advanced / Optional</div>
+          <div style={{ fontWeight: 900, fontSize: 18 }}>{t("step6_advanced_title", lang)}</div>
           <SmallHint>
-            These sections are useful, but they are not the main live-call path. Use them when you need extra intelligence or deeper context.
+            {t("step6_advanced_hint", lang)}
           </SmallHint>
         </div>
       </div>
@@ -9378,7 +9375,7 @@ return (
           }}
         >
           <div style={{ fontWeight: 900, fontSize: 16 }}>
-            Failure Intelligence Dashboard
+            {t("fid_title", lang)}
           </div>
 
           <button
@@ -9395,20 +9392,19 @@ return (
               boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
             }}
           >
-            {showFailureDashboard ? "Hide Dashboard" : "Open Dashboard"}
+            {showFailureDashboard ? t("btn_hide_dashboard", lang) : t("btn_open_dashboard", lang)}
           </button>
         </div>
 
         {showFailureDashboard ? (
-          <SectionCard title="Failure Intelligence Dashboard">
+          <SectionCard title={t("fid_title", lang)}>
             <SmallHint>
-              Company-wide pattern view across saved service history. Shows callback hotspots, repeat symptoms,
-              common cause/fix combinations, and the components getting hit most often.
+              {t("fid_hint", lang)}
             </SmallHint>
 
             {failureDashboardLoading ? (
               <div style={{ marginTop: 12 }}>
-                <SmallHint>Loading failure intelligence...</SmallHint>
+                <SmallHint>{t("fid_loading", lang)}</SmallHint>
               </div>
             ) : failureDashboardError ? (
               <div style={{ marginTop: 12 }}>
@@ -9420,7 +9416,7 @@ return (
               if (!data.totalEvents) {
                 return (
                   <div style={{ marginTop: 12 }}>
-                    <SmallHint>No service event history found yet.</SmallHint>
+                    <SmallHint>{t("fid_no_history", lang)}</SmallHint>
                   </div>
                 );
               }
@@ -9446,7 +9442,7 @@ return (
                       ))}
                     </ul>
                   ) : (
-                    <SmallHint style={{ marginTop: 8 }}>No data yet.</SmallHint>
+                    <SmallHint style={{ marginTop: 8 }}>{t("fid_no_data_yet", lang)}</SmallHint>
                   )}
                 </div>
               );
@@ -9462,21 +9458,21 @@ return (
                   >
                     <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10, background: "#fafafa" }}>
                       <div style={{ fontWeight: 900, fontSize: 12, color: "#666", textTransform: "uppercase" }}>
-                        Total Service Events
+                        {t("fid_total_service_events", lang)}
                       </div>
                       <div style={{ marginTop: 4, fontWeight: 700 }}>{data.totalEvents}</div>
                     </div>
 
                     <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10, background: "#fafafa" }}>
                       <div style={{ fontWeight: 900, fontSize: 12, color: "#666", textTransform: "uppercase" }}>
-                        Callback Events
+                        {t("fid_callback_events", lang)}
                       </div>
                       <div style={{ marginTop: 4, fontWeight: 700 }}>{data.callbackEvents}</div>
                     </div>
 
                     <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10, background: "#fafafa" }}>
                       <div style={{ fontWeight: 900, fontSize: 12, color: "#666", textTransform: "uppercase" }}>
-                        Top Failing Component
+                        {t("fid_top_failing_component", lang)}
                       </div>
                       <div style={{ marginTop: 4, fontWeight: 700 }}>
                         {data.topComponents.length ? data.topComponents[0][0] : "-"}
@@ -9485,7 +9481,7 @@ return (
 
                     <div style={{ border: "1px solid #eee", borderRadius: 10, padding: 10, background: "#fafafa" }}>
                       <div style={{ fontWeight: 900, fontSize: 12, color: "#666", textTransform: "uppercase" }}>
-                        Top Repeat Site
+                        {t("fid_top_repeat_site", lang)}
                       </div>
                       <div style={{ marginTop: 4, fontWeight: 700 }}>
                         {data.topSites.length ? data.topSites[0][0] : "-"}
@@ -9508,11 +9504,11 @@ return (
                         boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
                       }}
                     >
-                      Refresh Dashboard
+                      {t("btn_refresh_dashboard", lang)}
                     </button>
 
                     <SmallHint>
-                      Last refreshed:{" "}
+                      {t("fid_last_refreshed", lang)}{" "}
                       {failureDashboardRefreshedAt
                         ? new Date(failureDashboardRefreshedAt).toLocaleString()
                         : "-"}
@@ -9526,13 +9522,13 @@ return (
                       gap: 12,
                     }}
                   >
-                    {renderList("Top Failing Components", data.topComponents)}
-                    {renderList("Callback Hotspots", data.topCallbackComponents)}
-                    {renderList("Top Equipment Types", data.topEquipmentTypes)}
-                    {renderList("Top Repeat Sites", data.topSites)}
-                    {renderList("Top Repeat Symptoms", data.topSymptoms)}
-                    {renderList("Top Cause / Fix Combinations", data.topCauseFixes)}
-                    {renderList("Most Replaced Parts", data.topParts)}
+                    {renderList(t("fid_top_failing_components", lang), data.topComponents)}
+                    {renderList(t("fid_callback_hotspots", lang), data.topCallbackComponents)}
+                    {renderList(t("fid_top_equipment_types", lang), data.topEquipmentTypes)}
+                    {renderList(t("fid_top_repeat_sites", lang), data.topSites)}
+                    {renderList(t("fid_top_repeat_symptoms", lang), data.topSymptoms)}
+                    {renderList(t("fid_top_cause_fix", lang), data.topCauseFixes)}
+                    {renderList(t("fid_most_replaced_parts", lang), data.topParts)}
                   </div>
                 </div>
               );
@@ -9554,7 +9550,7 @@ return (
     </div>
   );
 })()}
-<SectionCard title="Unit Service Timeline">
+<SectionCard title={t("card_title_unit_service_timeline", lang)}>
     <UnitServiceTimeline
       loading={unitServiceTimelineLoading}
       events={unitServiceTimeline}
@@ -9568,7 +9564,7 @@ return (
 </div>
       <div style={{ marginTop: 16, display: showSavedUnitHistory ? "block" : "none" }}>
 
-        <SectionCard title="Saved Unit History" id="unit-library" right={<Badge text={`${savedUnits.length} saved`} />}>
+        <SectionCard title={t("card_title_saved_unit_history", lang)} id="unit-library" right={<Badge text={t("badge_saved_count", lang).replace("{count}", String(savedUnits.length))} />}>
           <SavedUnitHistory
             savedUnits={savedUnits}
             onLoadUnit={loadUnit}
@@ -11699,18 +11695,18 @@ return (
   <ErrorCodeGuidancePanel guidance={errorCodeGuidance} />
 </SectionCard>
 
-                    <SectionCard title="Advanced AI Output">
+                    <SectionCard title={t("card_title_advanced_ai_output", lang)}>
                       <AdvancedAiOutput rawResult={rawResult} />
                     </SectionCard>
             </div>
           ) : (
-            <SectionCard title="Advanced AI Output">
+            <SectionCard title={t("card_title_advanced_ai_output", lang)}>
               <AdvancedAiOutput rawResult={rawResult} />
             </SectionCard>
           )}
       </div>
 
-      <SectionCard title="Admin / Work Tools">
+      <SectionCard title={t("card_title_admin_work_tools", lang)}>
         <AdminWorkTools />
       </SectionCard>
 </div>

@@ -3249,6 +3249,48 @@ export const translations = {
   hqs_faq_5_q: { en: "Where do photos go?", es: "¿A dónde van las fotos?" },
   hqs_faq_5_a: { en: "Photos attach to the service event and show in the timeline/profile later.", es: "Las fotos se adjuntan al evento de servicio y se muestran después en la línea de tiempo/perfil." },
   hqs_hidden: { en: "Hidden to keep the main workflow clean.", es: "Oculto para mantener el flujo principal limpio." },
+
+  // ── Estimator / Expert Hotline SectionCard chrome (page.tsx) ──────────
+  card_title_estimator: { en: "📋 Replacement Quote Estimator", es: "📋 Cotizador de Reemplazo" },
+  card_hint_estimator: { en: "AI-powered replacement quote tool. Photo the job site, answer a few questions, and get a complete scope of work, equipment options, crane requirements, and pricing estimate.", es: "Herramienta de cotización de reemplazo con IA. Fotografía el sitio de trabajo, responde algunas preguntas y obtén un alcance de trabajo completo, opciones de equipo, requisitos de grúa y un estimado de precios." },
+  card_title_expert_hotline: { en: "📞 Expert Hotline", es: "📞 Línea de Expertos" },
+  card_hint_expert_hotline: { en: "Stuck on a tough call? Connect live with a verified master tech. Coming soon — leave your email to get notified and get your first call at half price.", es: "¿Atorado en una llamada difícil? Conéctate en vivo con un maestro técnico verificado. Próximamente — deja tu correo para recibir una notificación y obtén tu primera llamada a mitad de precio." },
+  card_title_pm_form_filler: { en: "📋 PM Form Filler", es: "📋 Llenado de Formularios PM" },
+  card_hint_pm_form_filler: { en: "Upload your company PM or asset tracking form. The AI reads it and identifies every field. Photograph the unit nameplate to auto-fill equipment info. Talk-to-text for customer details. Download the completed form to send anywhere.", es: "Sube el formulario de mantenimiento o seguimiento de activos de tu empresa. La IA lo lee e identifica cada campo. Fotografía la placa de la unidad para auto-llenar la info del equipo. Dictado por voz para detalles del cliente. Descarga el formulario completo para enviarlo donde sea." },
+
+  // ── Step 6 / Advanced section chrome ──────────────────────────────
+  step6_advanced_title: { en: "Step 6 — Advanced / Optional", es: "Paso 6 — Avanzado / Opcional" },
+  step6_advanced_hint: { en: "These sections are useful, but they are not the main live-call path. Use them when you need extra intelligence or deeper context.", es: "Estas secciones son útiles, pero no son la ruta principal de la llamada en vivo. Úsalas cuando necesites inteligencia adicional o contexto más profundo." },
+
+  // ── Failure Intelligence Dashboard (inline, page.tsx) ──────────────────
+  fid_title: { en: "Failure Intelligence Dashboard", es: "Panel de Inteligencia de Fallas" },
+  btn_hide_dashboard: { en: "Hide Dashboard", es: "Ocultar Panel" },
+  btn_open_dashboard: { en: "Open Dashboard", es: "Abrir Panel" },
+  fid_hint: { en: "Company-wide pattern view across saved service history. Shows callback hotspots, repeat symptoms, common cause/fix combinations, and the components getting hit most often.", es: "Vista de patrones de toda la empresa a través del historial de servicio guardado. Muestra puntos calientes de retornos, síntomas repetidos, combinaciones comunes de causa/solución y los componentes más afectados." },
+  fid_loading: { en: "Loading failure intelligence...", es: "Cargando inteligencia de fallas..." },
+  fid_load_failed: { en: "Could not load failure intelligence dashboard.", es: "No se pudo cargar el panel de inteligencia de fallas." },
+  fid_no_history: { en: "No service event history found yet.", es: "Aún no se encontró historial de eventos de servicio." },
+  fid_no_data_yet: { en: "No data yet.", es: "Aún no hay datos." },
+  fid_total_service_events: { en: "Total Service Events", es: "Total de Eventos de Servicio" },
+  fid_callback_events: { en: "Callback Events", es: "Eventos de Retorno" },
+  fid_top_failing_component: { en: "Top Failing Component", es: "Componente Con Más Fallas" },
+  fid_top_repeat_site: { en: "Top Repeat Site", es: "Sitio Más Repetido" },
+  btn_refresh_dashboard: { en: "Refresh Dashboard", es: "Actualizar Panel" },
+  fid_last_refreshed: { en: "Last refreshed:", es: "Última actualización:" },
+  fid_top_failing_components: { en: "Top Failing Components", es: "Componentes Con Más Fallas" },
+  fid_callback_hotspots: { en: "Callback Hotspots", es: "Puntos Calientes de Retornos" },
+  fid_top_equipment_types: { en: "Top Equipment Types", es: "Tipos de Equipo Principales" },
+  fid_top_repeat_sites: { en: "Top Repeat Sites", es: "Sitios Más Repetidos" },
+  fid_top_repeat_symptoms: { en: "Top Repeat Symptoms", es: "Síntomas Más Repetidos" },
+  fid_top_cause_fix: { en: "Top Cause / Fix Combinations", es: "Principales Combinaciones de Causa / Solución" },
+  fid_most_replaced_parts: { en: "Most Replaced Parts", es: "Piezas Más Reemplazadas" },
+
+  // ── Other missed SectionCard titles (page.tsx) ──────────────────────
+  card_title_unit_service_timeline: { en: "Unit Service Timeline", es: "Línea de Tiempo de Servicio de la Unidad" },
+  card_title_saved_unit_history: { en: "Saved Unit History", es: "Historial de Unidades Guardadas" },
+  badge_saved_count: { en: "{count} saved", es: "{count} guardadas" },
+  card_title_advanced_ai_output: { en: "Advanced AI Output", es: "Salida Avanzada de IA" },
+  card_title_admin_work_tools: { en: "Admin / Work Tools", es: "Admin / Herramientas de Trabajo" },
 } as const;
 
 export type TranslationKey = keyof typeof translations;
