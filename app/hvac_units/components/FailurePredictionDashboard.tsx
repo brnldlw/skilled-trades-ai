@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { listUnitsForCurrentUser, listServiceEventsForUnitForCurrentUser, type UnitRow, type ServiceEventRow } from "../../lib/supabase/work-orders";
 import { calcSystemHealthScore, type HealthScoreResult } from "../../hvac_units/lib/systemHealthScore";
+import { useLang } from "../../components/LanguageContext";
+import { t } from "../../lib/translations";
 
 type UnitRisk = {
   unit: UnitRow;
@@ -21,13 +23,14 @@ function daysSince(s?: string | null): number | null {
 }
 
 function RiskBadge({ score }: { score: number }) {
-  const level = score < 35 ? { label: "CRITICAL", bg: "#fee2e2", color: "#dc2626" }
-    : score < 55 ? { label: "HIGH RISK", bg: "#ffedd5", color: "#ea580c" }
-    : score < 75 ? { label: "WATCH", bg: "#fef9c3", color: "#ca8a04" }
-    : { label: "GOOD", bg: "#dcfce7", color: "#16a34a" };
+  const { lang } = useLang();
+  const level = score < 35 ? { labelKey: "fpd_risk_critical" as const, bg: "#fee2e2", color: "#dc2626" }
+    : score < 55 ? { labelKey: "fpd_risk_high" as const, bg: "#ffedd5", color: "#ea580c" }
+    : score < 75 ? { labelKey: "fpd_risk_watch" as const, bg: "#fef9c3", color: "#ca8a04" }
+    : { labelKey: "fpd_risk_good" as const, bg: "#dcfce7", color: "#16a34a" };
   return (
     <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 20, background: level.bg, color: level.color, letterSpacing: "0.05em" }}>
-      {level.label}
+      {t(level.labelKey, lang)}
     </span>
   );
 }
@@ -50,6 +53,7 @@ type Props = {
 };
 
 export function FailurePredictionDashboard({ compact = false, maxItems = 20 }: Props) {
+  const { lang } = useLang();
   const [units, setUnits] = useState<UnitRisk[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -73,13 +77,13 @@ export function FailurePredictionDashboard({ compact = false, maxItems = 20 }: P
           batch.map(async (unit) => {
             try {
               const events = await listServiceEventsForUnitForCurrentUser(unit.id);
-              const score = calcSystemHealthScore(events);
+              const score = calcSystemHealthScore(events, undefined, lang);
               const lastEvent = events[0];
               const daysAgo = daysSince(lastEvent?.service_date || lastEvent?.created_at);
 
               // Get the top negative factor
               const topNeg = score.factors.filter(f => f.impact < 0).sort((a, b) => a.impact - b.impact)[0];
-              const topReason = topNeg ? topNeg.label : score.factors[0]?.label || "No service history";
+              const topReason = topNeg ? topNeg.label : score.factors[0]?.label || t("fpd_no_service_history", lang);
 
               return {
                 unit,
@@ -102,7 +106,7 @@ export function FailurePredictionDashboard({ compact = false, maxItems = 20 }: P
       setUnits(results);
       setLastUpdated(new Date());
     } catch (e: any) {
-      setError(e?.message || "Failed to load units");
+      setError(e?.message || t("fpd_load_failed", lang));
     } finally {
       setLoading(false);
     }
@@ -127,7 +131,7 @@ export function FailurePredictionDashboard({ compact = false, maxItems = 20 }: P
     return (
       <div style={{ textAlign: "center", padding: 32, color: "#64748b", fontSize: 14 }}>
         <div style={{ fontSize: 24, marginBottom: 8 }}>🔍</div>
-        Analyzing unit health across your fleet...
+        {t("fpd_analyzing", lang)}
       </div>
     );
   }
@@ -136,7 +140,7 @@ export function FailurePredictionDashboard({ compact = false, maxItems = 20 }: P
     return (
       <div style={{ padding: 16, background: "#fef2f2", borderRadius: 10, color: "#dc2626", fontSize: 13 }}>
         {error}
-        <button onClick={load} style={{ marginLeft: 12, background: "none", border: "none", color: "#2563eb", cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: 700 }}>Retry</button>
+        <button onClick={load} style={{ marginLeft: 12, background: "none", border: "none", color: "#2563eb", cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: 700 }}>{t("btn_retry", lang)}</button>
       </div>
     );
   }
@@ -145,7 +149,7 @@ export function FailurePredictionDashboard({ compact = false, maxItems = 20 }: P
     return (
       <div style={{ textAlign: "center", padding: 32, color: "#94a3b8", fontSize: 14 }}>
         <div style={{ fontSize: 32, marginBottom: 10 }}>📋</div>
-        No units logged yet. Save a unit after your next job and health tracking starts automatically.
+        {t("fpd_no_units_yet", lang)}
       </div>
     );
   }
@@ -155,10 +159,10 @@ export function FailurePredictionDashboard({ compact = false, maxItems = 20 }: P
       {/* Summary stats */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 16 }}>
         {[
-          { label: "Total Units", value: units.length, color: "#2563eb" },
-          { label: "Critical", value: critical.length, color: critical.length > 0 ? "#dc2626" : "#94a3b8" },
-          { label: "High Risk", value: highRisk.length, color: highRisk.length > 0 ? "#ea580c" : "#94a3b8" },
-          { label: "Watch", value: watch.length, color: watch.length > 0 ? "#ca8a04" : "#94a3b8" },
+          { label: t("fpd_stat_total_units", lang), value: units.length, color: "#2563eb" },
+          { label: t("fpd_stat_critical", lang), value: critical.length, color: critical.length > 0 ? "#dc2626" : "#94a3b8" },
+          { label: t("fpd_stat_high_risk", lang), value: highRisk.length, color: highRisk.length > 0 ? "#ea580c" : "#94a3b8" },
+          { label: t("fpd_stat_watch", lang), value: watch.length, color: watch.length > 0 ? "#ca8a04" : "#94a3b8" },
         ].map(s => (
           <div key={s.label} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 10, padding: "12px 14px", textAlign: "center" }}>
             <div style={{ fontSize: 26, fontWeight: 800, color: s.color, lineHeight: 1 }}>{s.value}</div>
@@ -173,10 +177,10 @@ export function FailurePredictionDashboard({ compact = false, maxItems = 20 }: P
           <span style={{ fontSize: 20 }}>🚨</span>
           <div>
             <div style={{ fontSize: 14, fontWeight: 700, color: "#dc2626" }}>
-              {critical.length} unit{critical.length !== 1 ? "s" : ""} in critical condition
+              {t("fpd_critical_alert_title", lang).replace("{count}", String(critical.length))}
             </div>
             <div style={{ fontSize: 12, color: "#ef4444" }}>
-              These units need immediate attention — failure risk is high.
+              {t("fpd_critical_alert_body", lang)}
             </div>
           </div>
         </div>
@@ -185,25 +189,25 @@ export function FailurePredictionDashboard({ compact = false, maxItems = 20 }: P
       {/* Filter tabs */}
       <div style={{ display: "flex", gap: 6, marginBottom: 12, flexWrap: "wrap" as const }}>
         {([
-          { key: "all", label: `All Units (${units.length})` },
-          { key: "critical", label: `Critical (${critical.length})` },
-          { key: "high", label: `High Risk (${highRisk.length})` },
-          { key: "watch", label: `Watch (${watch.length})` },
+          { key: "all", labelKey: "fpd_filter_all_units" as const, count: units.length },
+          { key: "critical", labelKey: "fpd_filter_critical" as const, count: critical.length },
+          { key: "high", labelKey: "fpd_filter_high_risk" as const, count: highRisk.length },
+          { key: "watch", labelKey: "fpd_filter_watch" as const, count: watch.length },
         ] as const).map(f => (
           <button key={f.key} onClick={() => setFilter(f.key)}
             style={{ padding: "6px 14px", borderRadius: 20, border: `1px solid ${filter === f.key ? "#0f1f3d" : "#e2e8f0"}`, background: filter === f.key ? "#0f1f3d" : "#fff", color: filter === f.key ? "#fff" : "#374151", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-            {f.label}
+            {t(f.labelKey, lang).replace("{count}", String(f.count))}
           </button>
         ))}
         <button onClick={load} style={{ marginLeft: "auto", padding: "6px 12px", borderRadius: 20, border: "1px solid #e2e8f0", background: "#fff", color: "#64748b", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}>
-          ↻ Refresh
+          {t("btn_refresh_arrow", lang)}
         </button>
       </div>
 
       {/* Unit list */}
       {displayed.length === 0 ? (
         <div style={{ textAlign: "center", padding: 24, color: "#94a3b8", fontSize: 13, background: "#f8fafc", borderRadius: 10 }}>
-          No units in this category.
+          {t("fpd_no_units_category", lang)}
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -224,20 +228,20 @@ export function FailurePredictionDashboard({ compact = false, maxItems = 20 }: P
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" as const, marginBottom: 3 }}>
                       <span style={{ fontSize: 14, fontWeight: 700, color: "#1e293b" }}>
-                        {locationLabel || "Unknown Location"}
+                        {locationLabel || t("fpd_unknown_location", lang)}
                       </span>
                       <RiskBadge score={item.score.score} />
                       {callbacks > 0 && (
                         <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: "#fee2e2", color: "#dc2626" }}>
-                          {callbacks} CALLBACK{callbacks !== 1 ? "S" : ""}
+                          {t("fpd_callback_badge", lang).replace("{count}", String(callbacks))}
                         </span>
                       )}
                     </div>
-                    <div style={{ fontSize: 12, color: "#64748b", marginBottom: 2 }}>{unitLabel || "Equipment details pending"}</div>
+                    <div style={{ fontSize: 12, color: "#64748b", marginBottom: 2 }}>{unitLabel || t("fpd_equipment_pending", lang)}</div>
                     {item.daysSinceService !== null && (
                       <div style={{ fontSize: 11, color: item.daysSinceService > 365 ? "#dc2626" : "#94a3b8" }}>
-                        Last service: {item.daysSinceService} days ago
-                        {item.daysSinceService > 365 ? " ⚠️ Over a year" : ""}
+                        {t("fpd_last_service_days", lang).replace("{count}", String(item.daysSinceService))}
+                        {item.daysSinceService > 365 ? t("fpd_over_a_year", lang) : ""}
                       </div>
                     )}
                   </div>
@@ -245,7 +249,7 @@ export function FailurePredictionDashboard({ compact = false, maxItems = 20 }: P
                     href="/hvac_units#unit-library"
                     style={{ padding: "6px 12px", background: "#0f1f3d", color: "#fff", borderRadius: 6, fontWeight: 700, fontSize: 11, textDecoration: "none", flexShrink: 0 }}
                   >
-                    View Unit
+                    {t("btn_view_unit", lang)}
                   </a>
                 </div>
 
@@ -254,11 +258,11 @@ export function FailurePredictionDashboard({ compact = false, maxItems = 20 }: P
                 <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 6 }}>
                   <div style={{ fontSize: 12, color: "#374151", display: "flex", gap: 6 }}>
                     <span style={{ color: "#dc2626", flexShrink: 0 }}>⚠</span>
-                    <span><strong>Top risk factor:</strong> {item.topReason}</span>
+                    <span><strong>{t("fpd_top_risk_factor", lang)}</strong> {item.topReason}</span>
                   </div>
                   <div style={{ fontSize: 12, color: "#374151", display: "flex", gap: 6 }}>
                     <span style={{ color: "#2563eb", flexShrink: 0 }}>→</span>
-                    <span><strong>Recommended action:</strong> {item.recommendation}</span>
+                    <span><strong>{t("fpd_recommended_action", lang)}</strong> {item.recommendation}</span>
                   </div>
                 </div>
               </div>
@@ -269,7 +273,7 @@ export function FailurePredictionDashboard({ compact = false, maxItems = 20 }: P
 
       {lastUpdated && (
         <div style={{ marginTop: 10, fontSize: 11, color: "#94a3b8", textAlign: "right" }}>
-          Last updated: {lastUpdated.toLocaleTimeString()}
+          {t("fpd_last_updated", lang).replace("{value}", lastUpdated.toLocaleTimeString())}
         </div>
       )}
     </div>
