@@ -1,0 +1,53 @@
+{
+  "expo": {
+    "name": "My HVACR Tool",
+    "slug": "my-hvacr-tool",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "myhvacrtool",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#0f1f3d",
+    "ios": {
+      "bundleIdentifier": "com.myhvacrtool.app",
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Used to photograph equipment nameplates, gauges, wiring, and job site conditions for AI-assisted diagnostics.",
+        "NSMicrophoneUsageDescription": "Used for voice dictation and to record audio when capturing job walkthrough videos.",
+        "NSLocationWhenInUseUsageDescription": "Used to find nearby parts suppliers.",
+        "NSPhotoLibraryUsageDescription": "Used to attach existing photos to a service record."
+      }
+    },
+    "android": {
+      "package": "com.myhvacrtool.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#0f1f3d",
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "monochromeImage": "./assets/adaptive-icon.png"
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.READ_MEDIA_IMAGES"
+      ],
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 220,
+          "resizeMode": "contain",
+          "backgroundColor": "#0f1f3d"
+        }
+      ],
+      "expo-status-bar"
+    ]
+  }
+}
