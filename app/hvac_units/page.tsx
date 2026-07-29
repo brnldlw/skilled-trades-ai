@@ -116,6 +116,7 @@ import { StepProgressBar } from "./components/StepProgressBar";
 import { OnboardingTour } from "./components/OnboardingTour";
 import { useLang, type Language } from "../components/LanguageContext";
 import { t, type TranslationKey } from "../lib/translations";
+import { useNativeShell } from "../lib/nativeShell";
 
 // ── View As Banner (admin impersonation) ─────────────────────
 function ViewAsBanner() {
@@ -180,6 +181,7 @@ function ViewAsBanner() {
 function TrialBanner() {
   const { lang } = useLang();
   const es = lang === "es";
+  const native = useNativeShell();
 
   const [profile, setProfile] = React.useState<any>(null);
   React.useEffect(() => {
@@ -214,9 +216,15 @@ function TrialBanner() {
           </div>
         </div>
       </div>
-      <a href="/checkout" style={{ padding: "7px 16px", background: isLastDay ? "#dc2626" : "#f97316", color: "#fff", borderRadius: 8, fontWeight: 700, fontSize: 12, textDecoration: "none", flexShrink: 0, whiteSpace: "nowrap" as const }}>
-        {isLastDay ? (es ? "Suscribirse Ahora" : "Subscribe Now") : (es ? "Ver Planes" : "See Plans")}
-      </a>
+      {native ? (
+        <span style={{ fontSize: 11, fontWeight: 700, color: isLastDay ? "#dc2626" : "#1d4ed8", flexShrink: 0, textAlign: "right" as const }}>
+          {t("up_manage_on_web", lang)}
+        </span>
+      ) : (
+        <a href="/checkout" style={{ padding: "7px 16px", background: isLastDay ? "#dc2626" : "#f97316", color: "#fff", borderRadius: 8, fontWeight: 700, fontSize: 12, textDecoration: "none", flexShrink: 0, whiteSpace: "nowrap" as const }}>
+          {isLastDay ? (es ? "Suscribirse Ahora" : "Subscribe Now") : (es ? "Ver Planes" : "See Plans")}
+        </a>
+      )}
     </div>
   );
 }

@@ -3025,6 +3025,7 @@ export const translations = {
   up_queries_remaining_singular: { en: "{count} free AI query remaining today.", es: "{count} consulta gratuita de IA restante hoy." },
   up_queries_remaining_plural: { en: "{count} free AI queries remaining today.", es: "{count} consultas gratuitas de IA restantes hoy." },
   btn_get_unlimited: { en: "Get Unlimited", es: "Obtener Ilimitado" },
+  up_manage_on_web: { en: "Manage your plan at myhvacrtool.com", es: "Administra tu plan en myhvacrtool.com" },
 
   // ── Estimator Upgrade Prompt ──────────────────────────────
   eup_plan_single_label: { en: "Single Quote", es: "Cotización Única" },

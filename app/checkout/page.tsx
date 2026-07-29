@@ -4,15 +4,18 @@ import { Suspense } from "react";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { NavMenu } from "../components/NavMenu";
+import { useNativeShell } from "../lib/nativeShell";
 
 function CheckoutContent() {
   const params = useSearchParams();
   const plan = params.get("plan") || "solo";
   const billing = params.get("billing") || "monthly";
+  const native = useNativeShell();
   const [status, setStatus] = useState<"loading" | "redirecting" | "error">("loading");
   const [error, setError] = useState("");
 
   useEffect(() => {
+    if (native) return;
     async function startCheckout() {
       try {
         setStatus("redirecting");
@@ -34,7 +37,7 @@ function CheckoutContent() {
       }
     }
     startCheckout();
-  }, [plan, billing]);
+  }, [plan, billing, native]);
 
   const planNames: Record<string, string> = {
     solo: "Solo Tech — $19/mo",
@@ -44,7 +47,14 @@ function CheckoutContent() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "calc(100vh - 52px)", padding: 24, textAlign: "center" }}>
-      {status === "redirecting" && (
+      {native && (
+        <>
+          <div style={{ fontSize: 48, marginBottom: 20 }}>🔧</div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: "#f8fafc", marginBottom: 8 }}>Manage your plan at myhvacrtool.com</div>
+          <div style={{ fontSize: 14, color: "#64748b", maxWidth: 380 }}>Open a browser and visit myhvacrtool.com to subscribe or change your plan.</div>
+        </>
+      )}
+      {!native && status === "redirecting" && (
         <>
           <div style={{ fontSize: 48, marginBottom: 20 }}>🔧</div>
           <div style={{ fontSize: 20, fontWeight: 800, color: "#f8fafc", marginBottom: 8 }}>
@@ -57,7 +67,7 @@ function CheckoutContent() {
           <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </>
       )}
-      {status === "error" && (
+      {!native && status === "error" && (
         <>
           <div style={{ fontSize: 48, marginBottom: 20 }}>⚠️</div>
           <div style={{ fontSize: 20, fontWeight: 800, color: "#f8fafc", marginBottom: 8 }}>Something went wrong</div>

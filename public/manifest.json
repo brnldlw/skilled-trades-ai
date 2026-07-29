@@ -2,7 +2,7 @@
   "name": "My HVACR Tool",
   "short_name": "MyHVACR",
   "description": "AI-powered diagnostic platform for HVAC/R field technicians",
-  "start_url": "/",
+  "start_url": "/?src=pwa",
   "display": "standalone",
   "background_color": "#0f1f3d",
   "theme_color": "#0f1f3d",

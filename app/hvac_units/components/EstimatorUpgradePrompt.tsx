@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useLang } from "../../components/LanguageContext";
 import { t, type Language } from "../../lib/translations";
+import { useNativeShell } from "../../lib/nativeShell";
 
 type EstimatorPlan = {
   id: string;
@@ -50,6 +51,7 @@ type Props = {
 
 export function EstimatorUpgradePrompt({ onClose, context = "modal" }: Props) {
   const { lang } = useLang();
+  const native = useNativeShell();
   const PLANS = getPlans(lang);
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -118,6 +120,11 @@ export function EstimatorUpgradePrompt({ onClose, context = "modal" }: Props) {
       </div>
 
       {/* Plans */}
+      {native ? (
+        <div style={{ padding: "16px", background: "#f8fafc", borderRadius: 10, textAlign: "center" as const, marginBottom: 16, fontSize: 14, fontWeight: 700, color: "#0f1f3d" }}>
+          {t("up_manage_on_web", lang)}
+        </div>
+      ) : (
       <div style={{ display: "flex", flexDirection: "column" as const, gap: 10, marginBottom: 16 }}>
         {PLANS.map(plan => (
           <div key={plan.id}
@@ -178,8 +185,9 @@ export function EstimatorUpgradePrompt({ onClose, context = "modal" }: Props) {
           </div>
         ))}
       </div>
+      )}
 
-      {error && (
+      {!native && error && (
         <div style={{ padding: "10px 14px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, fontSize: 13, color: "#dc2626", marginBottom: 12 }}>
           {error}
         </div>
