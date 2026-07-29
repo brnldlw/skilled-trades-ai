@@ -164,7 +164,11 @@ export default function AuthPage() {
 
             {mode === "signup" && (
               <div style={{ fontSize: 11, color: "#475569", textAlign: "center", lineHeight: 1.6 }}>
-                By creating an account you agree to our Terms of Service and Privacy Policy. No credit card required.
+                By creating an account you agree to our{" "}
+                <a href="/terms" target="_blank" rel="noopener noreferrer" style={{ color: "#f97316", textDecoration: "none" }}>Terms of Service</a>
+                {" "}and{" "}
+                <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: "#f97316", textDecoration: "none" }}>Privacy Policy</a>
+                . No credit card required.
               </div>
             )}
           </div>

@@ -243,6 +243,10 @@ export function NavMenu({ currentPath = "" }: NavMenuProps) {
         <div style={{ flex: 1 }} />
 
         <div style={{ padding: "12px 16px 20px", borderTop: "1px solid rgba(255,255,255,0.08)", flexShrink: 0 }}>
+          <div style={{ display: "flex", justifyContent: "center", gap: 14, marginBottom: 8, fontSize: 11 }}>
+            <a href="/privacy" style={{ color: "rgba(255,255,255,0.35)", textDecoration: "none" }}>{t("nav_privacy_policy", lang)}</a>
+            <a href="/terms" style={{ color: "rgba(255,255,255,0.35)", textDecoration: "none" }}>{t("nav_terms_of_service", lang)}</a>
+          </div>
           <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 10, textAlign: "center" }}>
             My HVACR Tool · v1.0
           </div>

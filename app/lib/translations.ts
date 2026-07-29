@@ -3376,6 +3376,10 @@ export const translations = {
   btn_analyze_photo: { en: "Analyze Photo", es: "Analizar Foto" },
   pd_empty_state: { en: "Upload a photo of a control board, capacitor, contactor, iced coil, wiring, gauges, or error code and let the app analyze it.", es: "Sube una foto de una tarjeta de control, capacitor, contactor, serpentín congelado, cableado, manómetros o código de error y deja que la app la analice." },
   npr_title: { en: "Nameplate Photo Reader", es: "Lector de Foto de Placa" },
+
+  // ── Legal footer links ──────────────────────────────
+  nav_privacy_policy: { en: "Privacy Policy", es: "Política de Privacidad" },
+  nav_terms_of_service: { en: "Terms of Service", es: "Términos de Servicio" },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

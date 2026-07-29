@@ -115,6 +115,10 @@ export default function DashboardPage() {
             </div>
           ))}
         </div>
+        <div style={{ marginTop: 40, display: "flex", gap: 16, fontSize: 12 }}>
+          <a href="/privacy" style={{ color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>Privacy Policy</a>
+          <a href="/terms" style={{ color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>Terms of Service</a>
+        </div>
       </div>
     );
   }
