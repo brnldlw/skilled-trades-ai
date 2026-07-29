@@ -1,6 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
 export const runtime = "nodejs";
+
+async function getAuthedUser() {
+  const cookieStore = await cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } }
+  );
+  const { data: { user } } = await supabase.auth.getUser();
+  return user;
+}
 
 type ChatMessage = { role: "user" | "assistant"; content: string; };
 type ServiceEventContext = {
@@ -178,6 +191,9 @@ Equipment coverage: RTUs, splits, mini-splits, heat pumps, furnaces, boilers, ch
 
 export async function POST(req: NextRequest) {
   try {
+    const user = await getAuthedUser();
+    if (!user) return NextResponse.json({ error: "Not logged in" }, { status: 401 });
+
     const body: ChatRequest = await req.json();
 
     if (!Array.isArray(body.messages) || body.messages.length === 0) {

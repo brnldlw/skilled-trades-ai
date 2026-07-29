@@ -1,7 +1,20 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
 export const runtime = "nodejs";
+
+async function getAuthedUser() {
+  const cookieStore = await cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } }
+  );
+  const { data: { user } } = await supabase.auth.getUser();
+  return user;
+}
 
 type NameplateLike = {
   manufacturer?: string | null;
@@ -263,6 +276,9 @@ function tryParseJson(text: string): unknown | null {
 
 export async function POST(req: Request) {
   try {
+    const user = await getAuthedUser();
+    if (!user) return NextResponse.json({ error: "Not logged in" }, { status: 401 });
+
     const body = (await req.json()) as ManualsPartsRequest;
 
     const manufacturer = cleanString(body.manufacturer || body.nameplate?.manufacturer);
